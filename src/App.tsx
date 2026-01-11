@@ -12,6 +12,7 @@ import './App.css'
 
 const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
+const BGG_AUTH_TOKEN_STORAGE_KEY = 'bggAuthToken'
 type MainTab = 'finalGirl' | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail'
 
@@ -49,6 +50,9 @@ function App() {
   const [mainTab, setMainTab] = createSignal<MainTab>('finalGirl')
   const [playsView, setPlaysView] = createSignal<PlaysView>('plays')
   const [selectedGameKey, setSelectedGameKey] = createSignal<string | null>(null)
+  const [bggAuthToken, setBggAuthToken] = createSignal(
+    localStorage.getItem(BGG_AUTH_TOKEN_STORAGE_KEY) || '',
+  )
 
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
     new Map<string, string>(),
@@ -60,6 +64,9 @@ function App() {
   let thumbnailsEnabled = true
 
   createEffect(() => setPageDraft(String(page())))
+  createEffect(() => {
+    localStorage.setItem(BGG_AUTH_TOKEN_STORAGE_KEY, bggAuthToken())
+  })
 
   const allPlays = createMemo(() => parsePlaysXmlText(localPlaysXml))
   const totalPlayCount = createMemo(() =>
@@ -203,7 +210,9 @@ function App() {
           batch.map(async (objectid) => {
             objectIdsInFlight.add(objectid)
             try {
-              const thing = await fetchThingSummary(objectid)
+              const authToken = bggAuthToken().trim()
+              if (!authToken) return
+              const thing = await fetchThingSummary(objectid, { authToken })
               noteThumbnail(objectid, thing.thumbnail)
             } catch {
               objectIdsFailed.add(objectid)
@@ -229,7 +238,7 @@ function App() {
   }
 
   createEffect(() => {
-    thumbnailsEnabled = playsView() === 'byGame'
+    thumbnailsEnabled = playsView() === 'byGame' && Boolean(bggAuthToken().trim())
     if (!thumbnailsEnabled) return
 
     const ids = playsByGame()
@@ -260,6 +269,26 @@ function App() {
         </div>
         <div class="headerActions">
           <div class="muted">Using local XML: <span class="mono">data.xml</span></div>
+          <label class="tokenRow">
+            <span class="muted">BGG token</span>
+            <input
+              class="tokenInput mono"
+              type="password"
+              placeholder="(optional)"
+              value={bggAuthToken()}
+              onInput={(e) => setBggAuthToken(e.currentTarget.value)}
+              autocomplete="off"
+            />
+            <button
+              class="linkButton"
+              type="button"
+              onClick={() => setBggAuthToken('')}
+              disabled={!bggAuthToken()}
+              title="Clear token"
+            >
+              Clear
+            </button>
+          </label>
         </div>
       </header>
 
@@ -418,7 +447,7 @@ function App() {
           </div>
 
           <Show when={mainTab() === 'finalGirl'}>
-            <FinalGirlView plays={allPlays().plays} username={USERNAME} />
+            <FinalGirlView plays={allPlays().plays} username={USERNAME} authToken={bggAuthToken()} />
           </Show>
 
           <Show when={mainTab() === 'plays'}>
@@ -538,6 +567,10 @@ function App() {
                 Games: <span class="mono">{playsByGame().length.toLocaleString()}</span>
                 {' • '}
                 Total plays: <span class="mono">{totalPlayCount().toLocaleString()}</span>
+                <Show when={!bggAuthToken().trim()}>
+                  {' • '}
+                  <span class="muted">Add BGG token to load thumbnails</span>
+                </Show>
               </div>
 
               <div class="tableWrap">

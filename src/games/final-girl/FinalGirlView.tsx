@@ -1,7 +1,7 @@
-import { For, Show, createEffect, createMemo, createResource, createSignal } from 'solid-js'
+import { For, Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
-import { getBgStatsValue, parseBgStatsKeyValueSegments } from '../../bgstats'
+import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import ownedContentText from './content.txt?raw'
@@ -12,6 +12,7 @@ import {
   isOwnedFinalGirlVillain,
   normalizeFinalGirlName,
   parseOwnedFinalGirlContent,
+  resolveFinalGirlBgStatsTags,
 } from './ownedContent'
 
 const FINAL_GIRL_OBJECT_ID = '277659'
@@ -25,47 +26,12 @@ type FinalGirlEntry = {
 
 const ownedContent = parseOwnedFinalGirlContent(ownedContentText)
 
-function clampInt(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) return min
-  return Math.min(max, Math.max(min, Math.trunc(value)))
-}
-
-function readJsonRecordFromStorage(key: string): Record<string, number> {
-  if (typeof window === 'undefined') return {}
-  try {
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return {}
-    const parsed = JSON.parse(raw)
-    if (!parsed || typeof parsed !== 'object') return {}
-    const result: Record<string, number> = {}
-    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-      if (typeof v === 'number' && Number.isFinite(v)) result[k] = v
-    }
-    return result
-  } catch {
-    return {}
-  }
-}
-
-function writeJsonRecordToStorage(key: string, value: Record<string, number>) {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // ignore
-  }
-}
-
 function CountTable(props: {
   title: string
   counts: Record<string, number>
   keys?: string[]
   isOwned?: (key: string) => boolean
-  tracker?: {
-    max: number
-    getValue: (key: string) => number
-    setValue: (key: string, value: number) => void
-  }
+  getWarningTitle?: (key: string) => string | undefined
 }) {
   const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.counts))
   return (
@@ -77,9 +43,6 @@ function CountTable(props: {
             <tr>
               <th>Name</th>
               <th class="mono">Plays</th>
-              <Show when={props.tracker}>
-                <th class="mono trackerHead">Track</th>
-              </Show>
             </tr>
           </thead>
           <tbody>
@@ -90,47 +53,23 @@ function CountTable(props: {
                     dimRow: props.isOwned ? !(props.isOwned(key) ?? true) : false,
                   }}
                 >
-                  <td>{key}</td>
+                  <td>
+                    <span class="heatmapRowLabel">
+                      <span class="heatmapLabelText">{key}</span>
+                      <Show when={props.getWarningTitle?.(key)}>
+                        {(warningTitle) => (
+                          <span
+                            class="contentWarningIcon"
+                            title={warningTitle()}
+                            aria-label={warningTitle()}
+                          >
+                            ⚠
+                          </span>
+                        )}
+                      </Show>
+                    </span>
+                  </td>
                   <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
-                  <Show when={props.tracker}>
-                    {(tracker) => {
-                      const value = () => tracker().getValue(key)
-                      return (
-                        <td class="trackerCell">
-                          <div class="trackerRow">
-                            <button
-                              type="button"
-                              class="trackerBtn"
-                              aria-label={`Decrease ${props.title} tracker for ${key}`}
-                              onClick={() => tracker().setValue(key, value() - 1)}
-                            >
-                              –
-                            </button>
-                            <input
-                              type="range"
-                              min="0"
-                              max={tracker().max}
-                              value={value()}
-                              class="trackerRange"
-                              aria-label={`${props.title} tracker for ${key}`}
-                              onInput={(e) =>
-                                tracker().setValue(key, Number(e.currentTarget.value))
-                              }
-                            />
-                            <button
-                              type="button"
-                              class="trackerBtn"
-                              aria-label={`Increase ${props.title} tracker for ${key}`}
-                              onClick={() => tracker().setValue(key, value() + 1)}
-                            >
-                              +
-                            </button>
-                            <span class="mono trackerValue">{value()}</span>
-                          </div>
-                        </td>
-                      )
-                    }}
-                  </Show>
                 </tr>
               )}
             </For>
@@ -141,26 +80,19 @@ function CountTable(props: {
   )
 }
 
-export default function FinalGirlView(props: { plays: BggPlay[]; username: string }) {
+export default function FinalGirlView(props: {
+  plays: BggPlay[]
+  username: string
+  authToken?: string
+}) {
   const [flipAxes, setFlipAxes] = createSignal(false)
   const [hideCounts, setHideCounts] = createSignal(true)
   const [ownedVillainsOnly, setOwnedVillainsOnly] = createSignal(false)
   const [ownedLocationsOnly, setOwnedLocationsOnly] = createSignal(false)
 
-  const villainTrackStorageKey = 'game-tracker.finalGirl.villainTrack.v1'
-  const locationTrackStorageKey = 'game-tracker.finalGirl.locationTrack.v1'
-  const trackerMax = 10
-
-  const [villainTrack, setVillainTrack] = createSignal<Record<string, number>>(
-    readJsonRecordFromStorage(villainTrackStorageKey),
-  )
-  const [locationTrack, setLocationTrack] = createSignal<Record<string, number>>(
-    readJsonRecordFromStorage(locationTrackStorageKey),
-  )
-
   const [finalGirlThing] = createResource(
-    () => FINAL_GIRL_OBJECT_ID,
-    (id) => fetchThingSummary(id),
+    () => ({ id: FINAL_GIRL_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
+    ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
   )
 
   const entries = createMemo<FinalGirlEntry[]>(() => {
@@ -179,9 +111,17 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
       const color = player?.attributes.color || ''
       const parsed = parseBgStatsKeyValueSegments(color)
 
-      const villain = getBgStatsValue(parsed, ['V', 'Villain']) || 'Unknown villain'
-      const location = getBgStatsValue(parsed, ['L', 'Location']) || 'Unknown location'
-      const finalGirl = getBgStatsValue(parsed, ['FG', 'Final Girl', 'FinalGirl']) || 'Unknown'
+      const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
+      const resolved = resolveFinalGirlBgStatsTags(tags, ownedContent)
+
+      const villain =
+        getBgStatsValue(parsed, ['V', 'Villain']) || resolved.villain || 'Unknown villain'
+      const location =
+        getBgStatsValue(parsed, ['L', 'Location']) || resolved.location || 'Unknown location'
+      const finalGirl =
+        getBgStatsValue(parsed, ['FG', 'Final Girl', 'FinalGirl']) ||
+        resolved.finalGirl ||
+        'Unknown'
 
       result.push({ play, villain, location, finalGirl })
     }
@@ -241,25 +181,6 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
     return merged
   }
 
-  function getTrackedValue(map: Record<string, number>, name: string): number {
-    const normalized = normalizeFinalGirlName(name)
-    return clampInt(map[normalized] ?? 0, 0, trackerMax)
-  }
-
-  function setTrackedValue(
-    setMap: (
-      value:
-        | Record<string, number>
-        | ((prev: Record<string, number>) => Record<string, number>),
-    ) => Record<string, number>,
-    name: string,
-    value: number,
-  ) {
-    const normalized = normalizeFinalGirlName(name)
-    const nextValue = clampInt(value, 0, trackerMax)
-    setMap((prev) => ({ ...prev, [normalized]: nextValue }))
-  }
-
   const villainKeys = createMemo(() =>
     mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent)),
   )
@@ -272,16 +193,28 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
 
   const matrixRows = createMemo(() => {
     if (flipAxes()) {
-      return mergeOwnedKeys(sortKeysByCountDesc(locationCounts()), getOwnedFinalGirlLocations(ownedContent))
+      return mergeOwnedKeys(
+        sortKeysByCountDesc(locationCounts()),
+        getOwnedFinalGirlLocations(ownedContent),
+      )
     }
-    return mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent))
+    return mergeOwnedKeys(
+      sortKeysByCountDesc(villainCounts()),
+      getOwnedFinalGirlVillains(ownedContent),
+    )
   })
 
   const matrixCols = createMemo(() => {
     if (flipAxes()) {
-      return mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent))
+      return mergeOwnedKeys(
+        sortKeysByCountDesc(villainCounts()),
+        getOwnedFinalGirlVillains(ownedContent),
+      )
     }
-    return mergeOwnedKeys(sortKeysByCountDesc(locationCounts()), getOwnedFinalGirlLocations(ownedContent))
+    return mergeOwnedKeys(
+      sortKeysByCountDesc(locationCounts()),
+      getOwnedFinalGirlLocations(ownedContent),
+    )
   })
 
   const matrixMax = createMemo(() => {
@@ -299,8 +232,16 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
     return max
   })
 
-  createEffect(() => writeJsonRecordToStorage(villainTrackStorageKey, villainTrack()))
-  createEffect(() => writeJsonRecordToStorage(locationTrackStorageKey, locationTrack()))
+  function getOwnedContentWarningTitle(
+    kind: 'Villain' | 'Location',
+    name: string,
+    isOwned: boolean,
+    playCount: number,
+  ): string | undefined {
+    if (playCount <= 0) return undefined
+    if (isOwned) return undefined
+    return `${kind} "${name}" appears in plays but is not listed in owned content (content.txt) (or the spelling doesn't match).`
+  }
 
   return (
     <div class="finalGirl">
@@ -338,7 +279,7 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
           <div class="muted">
             No Final Girl plays found. For BG Stats tags, put values in the player{' '}
             <span class="mono">color</span> field like{' '}
-            <span class="mono">V: …／L: …／FG: …</span>.
+            <span class="mono">V: …／L: …／FG: …</span> or <span class="mono">BigBadWolf/Uki</span>.
           </div>
         }
       >
@@ -393,34 +334,68 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
             hideCounts={hideCounts()}
             rowHeader={flipAxes() ? 'Location' : 'Villain'}
             colHeader={flipAxes() ? 'Villain' : 'Location'}
+            getRowWarningTitle={(row) =>
+              flipAxes()
+                ? getOwnedContentWarningTitle(
+                    'Location',
+                    row,
+                    isOwnedFinalGirlLocation(ownedContent, row),
+                    locationCounts()[row] ?? 0,
+                  )
+                : getOwnedContentWarningTitle(
+                    'Villain',
+                    row,
+                    isOwnedFinalGirlVillain(ownedContent, row),
+                    villainCounts()[row] ?? 0,
+                  )
+            }
+            getColWarningTitle={(col) =>
+              flipAxes()
+                ? getOwnedContentWarningTitle(
+                    'Villain',
+                    col,
+                    isOwnedFinalGirlVillain(ownedContent, col),
+                    villainCounts()[col] ?? 0,
+                  )
+                : getOwnedContentWarningTitle(
+                    'Location',
+                    col,
+                    isOwnedFinalGirlLocation(ownedContent, col),
+                    locationCounts()[col] ?? 0,
+                  )
+            }
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
           />
-                    <CountTable
+          <CountTable
             title="Villains"
             counts={villainCounts()}
             keys={villainKeys()}
             isOwned={(villain) => isOwnedFinalGirlVillain(ownedContent, villain)}
-            tracker={{
-              max: trackerMax,
-              getValue: (villain) => getTrackedValue(villainTrack(), villain),
-              setValue: (villain, value) => setTrackedValue(setVillainTrack, villain, value),
-            }}
+            getWarningTitle={(villain) =>
+              getOwnedContentWarningTitle(
+                'Villain',
+                villain,
+                isOwnedFinalGirlVillain(ownedContent, villain),
+                villainCounts()[villain] ?? 0,
+              )
+            }
           />
           <CountTable
             title="Locations"
             counts={locationCounts()}
             keys={locationKeys()}
             isOwned={(location) => isOwnedFinalGirlLocation(ownedContent, location)}
-            tracker={{
-              max: trackerMax,
-              getValue: (location) => getTrackedValue(locationTrack(), location),
-              setValue: (location, value) =>
-                setTrackedValue(setLocationTrack, location, value),
-            }}
+            getWarningTitle={(location) =>
+              getOwnedContentWarningTitle(
+                'Location',
+                location,
+                isOwnedFinalGirlLocation(ownedContent, location),
+                locationCounts()[location] ?? 0,
+              )
+            }
           />
-
         </div>
       </Show>
     </div>

@@ -20,6 +20,8 @@ export default function HeatmapMatrix(props: {
   colHeader: string
   maxCount: number
   hideCounts?: boolean
+  getRowWarningTitle?: (row: string) => string | undefined
+  getColWarningTitle?: (col: string) => string | undefined
 }) {
   return (
     <div class="heatmapWrap">
@@ -30,53 +32,78 @@ export default function HeatmapMatrix(props: {
               {props.rowHeader} \ {props.colHeader}
             </th>
             <For each={props.cols}>
-              {(col) => (
-                <th class="heatmapColHead">
-                  <div class="heatmapColLabel" title={col}>
-                    {col}
-                  </div>
-                </th>
-              )}
+              {(col) => {
+                const warningTitle = () => props.getColWarningTitle?.(col)
+                return (
+                  <th class="heatmapColHead">
+                    <div class="heatmapColLabel" title={col}>
+                      <span class="heatmapLabelText">{col}</span>
+                      {warningTitle() ? (
+                        <span
+                          class="contentWarningIcon"
+                          title={warningTitle()}
+                          aria-label={warningTitle()}
+                        >
+                          ⚠
+                        </span>
+                      ) : null}
+                    </div>
+                  </th>
+                )
+              }}
             </For>
           </tr>
         </thead>
         <tbody>
           <For each={props.rows}>
-            {(row) => (
-              <tr>
-                <th class="heatmapRowHead" title={row}>
-                  {row}
-                </th>
-                <For each={props.cols}>
-                  {(col) => {
-                    const count = () => props.getCount(row, col)
-                    const intensity = () =>
-                      props.maxCount > 0 ? count() / props.maxCount : 0
-                    const label = () => `${row} × ${col}: ${count()}`
-                    return (
-                      <td>
-                        <div
-                          class="heatmapCell"
-                          classList={{ heatmapCellZero: count() === 0 }}
-                          style={{
-                            'background-color':
-                              count() === 0 ? 'transparent' : heatColor(intensity()),
-                          }}
-                          aria-label={label()}
-                          title={label()}
+            {(row) => {
+              const warningTitle = () => props.getRowWarningTitle?.(row)
+              return (
+                <tr>
+                  <th class="heatmapRowHead" title={row}>
+                    <div class="heatmapRowLabel">
+                      <span class="heatmapLabelText">{row}</span>
+                      {warningTitle() ? (
+                        <span
+                          class="contentWarningIcon"
+                          title={warningTitle()}
+                          aria-label={warningTitle()}
                         >
-                          {props.hideCounts ? '' : count() === 0 ? '—' : String(count())}
-                        </div>
-                      </td>
-                    )
-                  }}
-                </For>
-              </tr>
-            )}
+                          ⚠
+                        </span>
+                      ) : null}
+                    </div>
+                  </th>
+                  <For each={props.cols}>
+                    {(col) => {
+                      const count = () => props.getCount(row, col)
+                      const intensity = () =>
+                        props.maxCount > 0 ? count() / props.maxCount : 0
+                      const label = () => `${row} × ${col}: ${count()}`
+                      return (
+                        <td>
+                          <div
+                            class="heatmapCell"
+                            classList={{ heatmapCellZero: count() === 0 }}
+                            style={{
+                              'background-color':
+                                count() === 0 ? 'transparent' : heatColor(intensity()),
+                            }}
+                            aria-label={label()}
+                            title={label()}
+                          >
+                            {props.hideCounts ? '' : count() === 0 ? '—' : String(count())}
+                          </div>
+                        </td>
+                      )
+                    }}
+                  </For>
+                </tr>
+              )
+            }}
           </For>
         </tbody>
       </table>
     </div>
   )
 }
-

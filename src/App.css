@@ -24,6 +24,25 @@
   flex-wrap: wrap;
 }
 
+.tokenRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tokenInput {
+  width: 220px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tokenInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
 .main {
   display: grid;
   grid-template-columns: 420px 1fr;
@@ -223,42 +242,6 @@
   font-size: 12px;
 }
 
-.trackerHead,
-.trackerCell {
-  width: 220px;
-}
-
-.trackerRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.trackerBtn {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.9);
-  cursor: pointer;
-  line-height: 1;
-}
-
-.trackerBtn:hover {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.trackerRange {
-  width: 120px;
-}
-
-.trackerValue {
-  width: 2.5ch;
-  text-align: right;
-  color: var(--muted);
-}
-
 .control {
   display: inline-flex;
   gap: 8px;
@@ -438,12 +421,42 @@
   bottom: 10px;
   transform: translateX(-50%) rotate(-90deg);
   transform-origin: center;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   white-space: nowrap;
   font-size: 11px;
   line-height: 1;
   color: var(--muted);
   padding: 0;
+}
+
+.heatmapRowLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.heatmapLabelText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contentWarningIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 201, 71, 0.95);
+  font-size: 12px;
+  line-height: 1;
+  cursor: help;
+  user-select: none;
 }
 
 .heatmapRowHead {
