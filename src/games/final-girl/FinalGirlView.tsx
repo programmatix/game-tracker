@@ -1,5 +1,6 @@
-import { For, Show, createMemo, createSignal } from 'solid-js'
+import { For, Show, createEffect, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
+import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments } from '../../bgstats'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
@@ -24,12 +25,49 @@ type FinalGirlEntry = {
 
 const ownedContent = parseOwnedFinalGirlContent(ownedContentText)
 
+function clampInt(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min
+  return Math.min(max, Math.max(min, Math.trunc(value)))
+}
+
+function readJsonRecordFromStorage(key: string): Record<string, number> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return {}
+    const result: Record<string, number> = {}
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof v === 'number' && Number.isFinite(v)) result[k] = v
+    }
+    return result
+  } catch {
+    return {}
+  }
+}
+
+function writeJsonRecordToStorage(key: string, value: Record<string, number>) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // ignore
+  }
+}
+
 function CountTable(props: {
   title: string
   counts: Record<string, number>
+  keys?: string[]
   isOwned?: (key: string) => boolean
+  tracker?: {
+    max: number
+    getValue: (key: string) => number
+    setValue: (key: string, value: number) => void
+  }
 }) {
-  const keys = createMemo(() => sortKeysByCountDesc(props.counts))
+  const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.counts))
   return (
     <div class="statsBlock">
       <h3 class="statsTitle">{props.title}</h3>
@@ -39,6 +77,9 @@ function CountTable(props: {
             <tr>
               <th>Name</th>
               <th class="mono">Plays</th>
+              <Show when={props.tracker}>
+                <th class="mono trackerHead">Track</th>
+              </Show>
             </tr>
           </thead>
           <tbody>
@@ -51,6 +92,45 @@ function CountTable(props: {
                 >
                   <td>{key}</td>
                   <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
+                  <Show when={props.tracker}>
+                    {(tracker) => {
+                      const value = () => tracker().getValue(key)
+                      return (
+                        <td class="trackerCell">
+                          <div class="trackerRow">
+                            <button
+                              type="button"
+                              class="trackerBtn"
+                              aria-label={`Decrease ${props.title} tracker for ${key}`}
+                              onClick={() => tracker().setValue(key, value() - 1)}
+                            >
+                              –
+                            </button>
+                            <input
+                              type="range"
+                              min="0"
+                              max={tracker().max}
+                              value={value()}
+                              class="trackerRange"
+                              aria-label={`${props.title} tracker for ${key}`}
+                              onInput={(e) =>
+                                tracker().setValue(key, Number(e.currentTarget.value))
+                              }
+                            />
+                            <button
+                              type="button"
+                              class="trackerBtn"
+                              aria-label={`Increase ${props.title} tracker for ${key}`}
+                              onClick={() => tracker().setValue(key, value() + 1)}
+                            >
+                              +
+                            </button>
+                            <span class="mono trackerValue">{value()}</span>
+                          </div>
+                        </td>
+                      )
+                    }}
+                  </Show>
                 </tr>
               )}
             </For>
@@ -66,6 +146,22 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
   const [hideCounts, setHideCounts] = createSignal(true)
   const [ownedVillainsOnly, setOwnedVillainsOnly] = createSignal(false)
   const [ownedLocationsOnly, setOwnedLocationsOnly] = createSignal(false)
+
+  const villainTrackStorageKey = 'game-tracker.finalGirl.villainTrack.v1'
+  const locationTrackStorageKey = 'game-tracker.finalGirl.locationTrack.v1'
+  const trackerMax = 10
+
+  const [villainTrack, setVillainTrack] = createSignal<Record<string, number>>(
+    readJsonRecordFromStorage(villainTrackStorageKey),
+  )
+  const [locationTrack, setLocationTrack] = createSignal<Record<string, number>>(
+    readJsonRecordFromStorage(locationTrackStorageKey),
+  )
+
+  const [finalGirlThing] = createResource(
+    () => FINAL_GIRL_OBJECT_ID,
+    (id) => fetchThingSummary(id),
+  )
 
   const entries = createMemo<FinalGirlEntry[]>(() => {
     const result: FinalGirlEntry[] = []
@@ -145,6 +241,35 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
     return merged
   }
 
+  function getTrackedValue(map: Record<string, number>, name: string): number {
+    const normalized = normalizeFinalGirlName(name)
+    return clampInt(map[normalized] ?? 0, 0, trackerMax)
+  }
+
+  function setTrackedValue(
+    setMap: (
+      value:
+        | Record<string, number>
+        | ((prev: Record<string, number>) => Record<string, number>),
+    ) => Record<string, number>,
+    name: string,
+    value: number,
+  ) {
+    const normalized = normalizeFinalGirlName(name)
+    const nextValue = clampInt(value, 0, trackerMax)
+    setMap((prev) => ({ ...prev, [normalized]: nextValue }))
+  }
+
+  const villainKeys = createMemo(() =>
+    mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent)),
+  )
+  const locationKeys = createMemo(() =>
+    mergeOwnedKeys(
+      sortKeysByCountDesc(locationCounts()),
+      getOwnedFinalGirlLocations(ownedContent),
+    ),
+  )
+
   const matrixRows = createMemo(() => {
     if (flipAxes()) {
       return mergeOwnedKeys(sortKeysByCountDesc(locationCounts()), getOwnedFinalGirlLocations(ownedContent))
@@ -174,13 +299,37 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
     return max
   })
 
+  createEffect(() => writeJsonRecordToStorage(villainTrackStorageKey, villainTrack()))
+  createEffect(() => writeJsonRecordToStorage(locationTrackStorageKey, locationTrack()))
+
   return (
     <div class="finalGirl">
-      <div class="meta">
-        Final Girl plays in dataset: <span class="mono">{entries().length.toLocaleString()}</span>
-        {' • '}Showing: <span class="mono">{displayEntries().length.toLocaleString()}</span>
-        {' • '}Owned villains: <span class="mono">{ownedContent.ownedVillains.size}</span>
-        {' • '}Owned locations: <span class="mono">{ownedContent.ownedLocations.size}</span>
+      <div class="finalGirlMetaRow">
+        <Show when={finalGirlThing()?.thumbnail}>
+          {(thumbnail) => (
+            <a
+              class="finalGirlThumbLink"
+              href={`https://boardgamegeek.com/boardgame/${FINAL_GIRL_OBJECT_ID}`}
+              target="_blank"
+              rel="noreferrer"
+              title="View on BoardGameGeek"
+            >
+              <img
+                class="finalGirlThumb"
+                src={thumbnail()}
+                alt="Final Girl thumbnail"
+                loading="lazy"
+              />
+            </a>
+          )}
+        </Show>
+        <div class="meta">
+          Final Girl plays in dataset:{' '}
+          <span class="mono">{entries().length.toLocaleString()}</span>
+          {' • '}Showing: <span class="mono">{displayEntries().length.toLocaleString()}</span>
+          {' • '}Owned villains: <span class="mono">{ownedContent.ownedVillains.size}</span>
+          {' • '}Owned locations: <span class="mono">{ownedContent.ownedLocations.size}</span>
+        </div>
       </div>
 
       <Show
@@ -194,16 +343,6 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
         }
       >
         <div class="statsGrid">
-          <CountTable
-            title="Villains"
-            counts={villainCounts()}
-            isOwned={(villain) => isOwnedFinalGirlVillain(ownedContent, villain)}
-          />
-          <CountTable
-            title="Locations"
-            counts={locationCounts()}
-            isOwned={(location) => isOwnedFinalGirlLocation(ownedContent, location)}
-          />
           <CountTable title="Final Girls" counts={finalGirlCounts()} />
         </div>
 
@@ -258,6 +397,30 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
           />
+                    <CountTable
+            title="Villains"
+            counts={villainCounts()}
+            keys={villainKeys()}
+            isOwned={(villain) => isOwnedFinalGirlVillain(ownedContent, villain)}
+            tracker={{
+              max: trackerMax,
+              getValue: (villain) => getTrackedValue(villainTrack(), villain),
+              setValue: (villain, value) => setTrackedValue(setVillainTrack, villain, value),
+            }}
+          />
+          <CountTable
+            title="Locations"
+            counts={locationCounts()}
+            keys={locationKeys()}
+            isOwned={(location) => isOwnedFinalGirlLocation(ownedContent, location)}
+            tracker={{
+              max: trackerMax,
+              getValue: (location) => getTrackedValue(locationTrack(), location),
+              setValue: (location, value) =>
+                setTrackedValue(setLocationTrack, location, value),
+            }}
+          />
+
         </div>
       </Show>
     </div>

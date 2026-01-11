@@ -138,9 +138,53 @@
   text-decoration: underline;
 }
 
+.gameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gameThumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  flex: 0 0 auto;
+  display: block;
+}
+
+.gameInfo {
+  min-width: 0;
+}
+
 .finalGirl {
   display: grid;
   gap: 14px;
+}
+
+.finalGirlMetaRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.finalGirlMetaRow .meta {
+  margin-bottom: 0;
+}
+
+.finalGirlThumbLink {
+  flex: 0 0 auto;
+  border-radius: 14px;
+}
+
+.finalGirlThumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  display: block;
 }
 
 .statsGrid {
@@ -177,6 +221,42 @@
   align-items: center;
   color: var(--muted);
   font-size: 12px;
+}
+
+.trackerHead,
+.trackerCell {
+  width: 220px;
+}
+
+.trackerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trackerBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.trackerBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.trackerRange {
+  width: 120px;
+}
+
+.trackerValue {
+  width: 2.5ch;
+  text-align: right;
+  color: var(--muted);
 }
 
 .control {
@@ -344,18 +424,26 @@
   z-index: 3;
   height: 130px;
   width: 24px;
+  padding: 0;
+  overflow: visible;
+  vertical-align: bottom;
   background: rgba(18, 20, 32, 0.98);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .heatmapColLabel {
-  transform: rotate(-60deg);
-  transform-origin: bottom left;
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%) rotate(-90deg);
+  transform-origin: center;
+  display: inline-block;
   white-space: nowrap;
   font-size: 11px;
+  line-height: 1;
   color: var(--muted);
-  padding: 0 0 10px 10px;
+  padding: 0;
 }
 
 .heatmapRowHead {

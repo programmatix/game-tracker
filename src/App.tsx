@@ -6,7 +6,7 @@ import {
   createSignal,
 } from 'solid-js'
 import localPlaysXml from '../data.xml?raw'
-import { parsePlaysXmlText } from './bgg'
+import { fetchThingSummary, parsePlaysXmlText } from './bgg'
 import FinalGirlView from './games/final-girl/FinalGirlView'
 import './App.css'
 
@@ -49,6 +49,15 @@ function App() {
   const [mainTab, setMainTab] = createSignal<MainTab>('finalGirl')
   const [playsView, setPlaysView] = createSignal<PlaysView>('plays')
   const [selectedGameKey, setSelectedGameKey] = createSignal<string | null>(null)
+
+  const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
+    new Map<string, string>(),
+  )
+  const objectIdsInFlight = new Set<string>()
+  const objectIdsFailed = new Set<string>()
+  const queuedObjectIds = new Set<string>()
+  let isThumbnailPumpRunning = false
+  let thumbnailsEnabled = true
 
   createEffect(() => setPageDraft(String(page())))
 
@@ -157,6 +166,77 @@ function App() {
   const selectedGamePagedPlays = createMemo(() => {
     const start = (page() - 1) * PLAYS_PER_PAGE
     return selectedGamePlays().slice(start, start + PLAYS_PER_PAGE)
+  })
+
+  function noteThumbnail(objectid: string, url?: string) {
+    if (!url) return
+    if (thumbnailsByObjectId().get(objectid) === url) return
+    setThumbnailsByObjectId((prev) => {
+      const next = new Map(prev)
+      next.set(objectid, url)
+      return next
+    })
+  }
+
+  async function pumpThumbnailsQueue() {
+    if (isThumbnailPumpRunning) return
+    isThumbnailPumpRunning = true
+
+    const MAX_CONCURRENT = 4
+    try {
+      while (queuedObjectIds.size > 0) {
+        if (!thumbnailsEnabled) break
+
+        const batch: string[] = []
+        for (const objectid of queuedObjectIds) {
+          queuedObjectIds.delete(objectid)
+          if (thumbnailsByObjectId().has(objectid)) continue
+          if (objectIdsInFlight.has(objectid)) continue
+          if (objectIdsFailed.has(objectid)) continue
+          batch.push(objectid)
+          if (batch.length >= MAX_CONCURRENT) break
+        }
+
+        if (batch.length === 0) break
+
+        await Promise.allSettled(
+          batch.map(async (objectid) => {
+            objectIdsInFlight.add(objectid)
+            try {
+              const thing = await fetchThingSummary(objectid)
+              noteThumbnail(objectid, thing.thumbnail)
+            } catch {
+              objectIdsFailed.add(objectid)
+            } finally {
+              objectIdsInFlight.delete(objectid)
+            }
+          }),
+        )
+      }
+    } finally {
+      isThumbnailPumpRunning = false
+    }
+  }
+
+  function enqueueThumbnails(objectids: string[]) {
+    for (const objectid of objectids) {
+      if (!objectid) continue
+      if (thumbnailsByObjectId().has(objectid)) continue
+      if (objectIdsFailed.has(objectid)) continue
+      queuedObjectIds.add(objectid)
+    }
+    void pumpThumbnailsQueue()
+  }
+
+  createEffect(() => {
+    thumbnailsEnabled = playsView() === 'byGame'
+    if (!thumbnailsEnabled) return
+
+    const ids = playsByGame()
+      .map((row) => row.objectid)
+      .filter((id): id is string => Boolean(id))
+
+    enqueueThumbnails(ids)
   })
 
   const currentTotalPages = createMemo(() =>
@@ -474,25 +554,46 @@ function App() {
                       {(row) => (
                         <tr>
                           <td>
-                            <button
-                              class="gameButton"
-                              type="button"
-                              onClick={() => {
-                                setSelectedGameKey(row.key)
-                                setPlaysView('gameDetail')
-                                resetPage()
-                              }}
-                            >
-                              {row.name}
-                            </button>
-                            <Show
-                              when={row.objectid}
-                              fallback={<span class="muted mono">—</span>}
-                            >
-                              <div class="muted mono">
-                                {row.objecttype || 'thing'} #{row.objectid}
+                            <div class="gameRow">
+                              <Show
+                                when={
+                                  row.objectid
+                                    ? thumbnailsByObjectId().get(row.objectid)
+                                    : undefined
+                                }
+                              >
+                                {(thumbnail) => (
+                                  <img
+                                    class="gameThumb"
+                                    src={thumbnail()}
+                                    alt=""
+                                    loading="lazy"
+                                  />
+                                )}
+                              </Show>
+
+                              <div class="gameInfo">
+                                <button
+                                  class="gameButton"
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedGameKey(row.key)
+                                    setPlaysView('gameDetail')
+                                    resetPage()
+                                  }}
+                                >
+                                  {row.name}
+                                </button>
+                                <Show
+                                  when={row.objectid}
+                                  fallback={<span class="muted mono">—</span>}
+                                >
+                                  <div class="muted mono">
+                                    {row.objecttype || 'thing'} #{row.objectid}
+                                  </div>
+                                </Show>
                               </div>
-                            </Show>
+                            </div>
                           </td>
                           <td class="mono">{row.plays.toLocaleString()}</td>
                           <td class="mono">{row.mostRecentDate || '—'}</td>
