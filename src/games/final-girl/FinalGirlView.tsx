@@ -5,8 +5,11 @@ import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import ownedContentText from './content.txt?raw'
 import {
+  getOwnedFinalGirlLocations,
+  getOwnedFinalGirlVillains,
   isOwnedFinalGirlLocation,
   isOwnedFinalGirlVillain,
+  normalizeFinalGirlName,
   parseOwnedFinalGirlContent,
 } from './ownedContent'
 
@@ -129,12 +132,32 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
     return counts
   })
 
-  const matrixRows = createMemo(() =>
-    flipAxes() ? sortKeysByCountDesc(locationCounts()) : sortKeysByCountDesc(villainCounts()),
-  )
-  const matrixCols = createMemo(() =>
-    flipAxes() ? sortKeysByCountDesc(villainCounts()) : sortKeysByCountDesc(locationCounts()),
-  )
+  function mergeOwnedKeys(played: string[], owned: string[]): string[] {
+    const seen = new Set(played.map(normalizeFinalGirlName))
+    const merged = [...played]
+    for (const name of owned) {
+      const normalized = normalizeFinalGirlName(name)
+      if (!seen.has(normalized)) {
+        seen.add(normalized)
+        merged.push(name)
+      }
+    }
+    return merged
+  }
+
+  const matrixRows = createMemo(() => {
+    if (flipAxes()) {
+      return mergeOwnedKeys(sortKeysByCountDesc(locationCounts()), getOwnedFinalGirlLocations(ownedContent))
+    }
+    return mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent))
+  })
+
+  const matrixCols = createMemo(() => {
+    if (flipAxes()) {
+      return mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent))
+    }
+    return mergeOwnedKeys(sortKeysByCountDesc(locationCounts()), getOwnedFinalGirlLocations(ownedContent))
+  })
 
   const matrixMax = createMemo(() => {
     let max = 0

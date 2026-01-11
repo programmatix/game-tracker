@@ -28,6 +28,15 @@ export type BggPlay = {
   raw: unknown
 }
 
+export type BggThingSummary = {
+  id: string
+  type?: string
+  primaryName?: string
+  thumbnail?: string
+  image?: string
+  raw: unknown
+}
+
 const BGG_BASE = '/bgg/xmlapi2'
 
 function sleep(ms: number) {
@@ -239,4 +248,34 @@ export async function fetchUserPlays(
   }
 
   return { username, userid, total, page: parsedPage, raw, plays }
+}
+
+export async function fetchThingSummary(
+  id: string,
+  options?: { signal?: AbortSignal; authToken?: string },
+): Promise<BggThingSummary> {
+  const query = new URLSearchParams({ id })
+  const doc = await fetchXml(`/thing?${query.toString()}`, options)
+
+  const itemElement = doc.querySelector('items > item') || doc.querySelector('item')
+  if (!itemElement) throw new Error('BGG thing XML missing <item>')
+
+  const type = itemElement.getAttribute('type') || undefined
+  const thumbnail = itemElement.getElementsByTagName('thumbnail')[0]?.textContent?.trim()
+  const image = itemElement.getElementsByTagName('image')[0]?.textContent?.trim()
+
+  const primaryName =
+    itemElement
+      .querySelector('name[type="primary"]')
+      ?.getAttribute('value')
+      ?.trim() || undefined
+
+  return {
+    id: itemElement.getAttribute('id') || id,
+    type,
+    primaryName,
+    thumbnail: thumbnail || undefined,
+    image: image || undefined,
+    raw: elementToObject(itemElement),
+  }
 }
