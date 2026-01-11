@@ -47,6 +47,13 @@
   margin-bottom: 10px;
 }
 
+.panelHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .panelHeader h2 {
   margin: 0;
   font-size: 15px;
@@ -56,6 +63,59 @@
 
 .playsHeader {
   flex-wrap: wrap;
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tabButton {
+  border: 0;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.tabButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.tabButtonActive {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.finalGirl {
+  display: grid;
+  gap: 14px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.statsBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.statsTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--muted);
 }
 
 .muted {
@@ -168,10 +228,52 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.tableWrap.compact {
+  border-radius: 10px;
+}
+
+.matrixWrap {
+  max-height: 520px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
   min-width: 1200px;
+}
+
+.table.compactTable {
+  min-width: 0;
+}
+
+.matrixTable {
+  min-width: 720px;
+}
+
+.matrixHead {
+  width: 120px;
+}
+
+.matrixLabel {
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matrixRowLabel {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matrixCell {
+  text-align: center;
+}
+
+.tableCompact {
+  min-width: 520px;
 }
 
 .table th,
@@ -221,6 +323,9 @@
     grid-template-columns: 1fr;
   }
   .kvRow {
+    grid-template-columns: 1fr;
+  }
+  .statsGrid {
     grid-template-columns: 1fr;
   }
 }

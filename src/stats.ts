@@ -1,0 +1,16 @@
+export function incrementCount(
+  record: Record<string, number>,
+  key: string,
+  amount = 1,
+): void {
+  record[key] = (record[key] ?? 0) + amount
+}
+
+export function sortKeysByCountDesc(counts: Record<string, number>): string[] {
+  return Object.keys(counts).sort((a, b) => {
+    const delta = (counts[b] ?? 0) - (counts[a] ?? 0)
+    if (delta !== 0) return delta
+    return a.localeCompare(b)
+  })
+}
+
