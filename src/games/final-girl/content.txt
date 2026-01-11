@@ -1,0 +1,27 @@
+V: The Organism
+L: Station 2891
+FG: Uki
+
+L: Wingard Cottage
+V: The Intruders
+
+L: Creech Manor
+V: The Poltergeist
+
+L: Storybook Woods
+V: Big Bad Wolf
+
+L: Wolfe Asylum
+V: The Ratchet Lady
+
+L: Falconwood
+V: Slayer
+
+L: Marrek Warehouse
+V: Tormento
+
+L: Maple Lane
+V: Dr. Fright
+
+L: USCSS Konrad
+V: The Evomorph

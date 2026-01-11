@@ -94,6 +94,50 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+.gameDetailHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.linkButton {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 8px;
+}
+
+.linkButton:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.gameButton,
+.gameButtonInline {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+}
+
+.gameButton {
+  font-weight: 650;
+}
+
+.gameButton:hover,
+.gameButtonInline:hover {
+  text-decoration: underline;
+}
+
 .finalGirl {
   display: grid;
   gap: 14px;
@@ -115,6 +159,39 @@
   font-size: 13px;
   font-weight: 650;
   letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+.statsTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.finalGirlControls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.control {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.control input {
+  width: 16px;
+  height: 16px;
+}
+
+.dimRow td {
   color: var(--muted);
 }
 
@@ -230,6 +307,90 @@
 
 .tableWrap.compact {
   border-radius: 10px;
+}
+
+.heatmapWrap {
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-height: 560px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.heatmapTable {
+  border-collapse: separate;
+  border-spacing: 5px;
+  padding: 10px;
+}
+
+.heatmapCorner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  background: rgba(18, 20, 32, 0.98);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.heatmapColHead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 130px;
+  width: 24px;
+  background: rgba(18, 20, 32, 0.98);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.heatmapColLabel {
+  transform: rotate(-60deg);
+  transform-origin: bottom left;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 0 10px 10px;
+}
+
+.heatmapRowHead {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: rgba(18, 20, 32, 0.98);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heatmapCell {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  user-select: none;
+}
+
+.heatmapCellZero {
+  color: rgba(255, 255, 255, 0.38);
+  border-style: dashed;
 }
 
 .matrixWrap {

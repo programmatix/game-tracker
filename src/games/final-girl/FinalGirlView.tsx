@@ -1,7 +1,14 @@
-import { For, Show, createMemo } from 'solid-js'
+import { For, Show, createMemo, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments } from '../../bgstats'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
+import HeatmapMatrix from '../../components/HeatmapMatrix'
+import ownedContentText from './content.txt?raw'
+import {
+  isOwnedFinalGirlLocation,
+  isOwnedFinalGirlVillain,
+  parseOwnedFinalGirlContent,
+} from './ownedContent'
 
 const FINAL_GIRL_OBJECT_ID = '277659'
 
@@ -12,7 +19,13 @@ type FinalGirlEntry = {
   finalGirl: string
 }
 
-function CountTable(props: { title: string; counts: Record<string, number> }) {
+const ownedContent = parseOwnedFinalGirlContent(ownedContentText)
+
+function CountTable(props: {
+  title: string
+  counts: Record<string, number>
+  isOwned?: (key: string) => boolean
+}) {
   const keys = createMemo(() => sortKeysByCountDesc(props.counts))
   return (
     <div class="statsBlock">
@@ -28,7 +41,11 @@ function CountTable(props: { title: string; counts: Record<string, number> }) {
           <tbody>
             <For each={keys()}>
               {(key) => (
-                <tr>
+                <tr
+                  classList={{
+                    dimRow: props.isOwned ? !(props.isOwned(key) ?? true) : false,
+                  }}
+                >
                   <td>{key}</td>
                   <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
                 </tr>
@@ -42,6 +59,11 @@ function CountTable(props: { title: string; counts: Record<string, number> }) {
 }
 
 export default function FinalGirlView(props: { plays: BggPlay[]; username: string }) {
+  const [flipAxes, setFlipAxes] = createSignal(false)
+  const [hideCounts, setHideCounts] = createSignal(true)
+  const [ownedVillainsOnly, setOwnedVillainsOnly] = createSignal(false)
+  const [ownedLocationsOnly, setOwnedLocationsOnly] = createSignal(false)
+
   const entries = createMemo<FinalGirlEntry[]>(() => {
     const result: FinalGirlEntry[] = []
     const user = props.username.toLowerCase()
@@ -67,41 +89,75 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
     return result
   })
 
+  const displayEntries = createMemo(() => {
+    const filterVillains = ownedVillainsOnly() && ownedContent.ownedVillains.size > 0
+    const filterLocations = ownedLocationsOnly() && ownedContent.ownedLocations.size > 0
+
+    if (!filterVillains && !filterLocations) return entries()
+
+    return entries().filter((entry) => {
+      if (filterVillains && !isOwnedFinalGirlVillain(ownedContent, entry.villain)) return false
+      if (filterLocations && !isOwnedFinalGirlLocation(ownedContent, entry.location)) return false
+      return true
+    })
+  })
+
   const villainCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.villain)
+    for (const entry of displayEntries()) incrementCount(counts, entry.villain)
     return counts
   })
 
   const locationCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.location)
+    for (const entry of displayEntries()) incrementCount(counts, entry.location)
     return counts
   })
 
   const finalGirlCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.finalGirl)
+    for (const entry of displayEntries()) incrementCount(counts, entry.finalGirl)
     return counts
   })
 
   const matrix = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
+    for (const entry of displayEntries()) {
       counts[entry.villain] ||= {}
       incrementCount(counts[entry.villain]!, entry.location)
     }
     return counts
   })
 
-  const matrixRows = createMemo(() => sortKeysByCountDesc(villainCounts()))
-  const matrixCols = createMemo(() => sortKeysByCountDesc(locationCounts()))
+  const matrixRows = createMemo(() =>
+    flipAxes() ? sortKeysByCountDesc(locationCounts()) : sortKeysByCountDesc(villainCounts()),
+  )
+  const matrixCols = createMemo(() =>
+    flipAxes() ? sortKeysByCountDesc(villainCounts()) : sortKeysByCountDesc(locationCounts()),
+  )
+
+  const matrixMax = createMemo(() => {
+    let max = 0
+    const rows = matrixRows()
+    const cols = matrixCols()
+    for (const row of rows) {
+      for (const col of cols) {
+        const value = flipAxes()
+          ? (matrix()[col]?.[row] ?? 0)
+          : (matrix()[row]?.[col] ?? 0)
+        if (value > max) max = value
+      }
+    }
+    return max
+  })
 
   return (
     <div class="finalGirl">
       <div class="meta">
-        Final Girl plays in dataset:{' '}
-        <span class="mono">{entries().length.toLocaleString()}</span>
+        Final Girl plays in dataset: <span class="mono">{entries().length.toLocaleString()}</span>
+        {' • '}Showing: <span class="mono">{displayEntries().length.toLocaleString()}</span>
+        {' • '}Owned villains: <span class="mono">{ownedContent.ownedVillains.size}</span>
+        {' • '}Owned locations: <span class="mono">{ownedContent.ownedLocations.size}</span>
       </div>
 
       <Show
@@ -115,48 +171,72 @@ export default function FinalGirlView(props: { plays: BggPlay[]; username: strin
         }
       >
         <div class="statsGrid">
-          <CountTable title="Villains" counts={villainCounts()} />
-          <CountTable title="Locations" counts={locationCounts()} />
+          <CountTable
+            title="Villains"
+            counts={villainCounts()}
+            isOwned={(villain) => isOwnedFinalGirlVillain(ownedContent, villain)}
+          />
+          <CountTable
+            title="Locations"
+            counts={locationCounts()}
+            isOwned={(location) => isOwnedFinalGirlLocation(ownedContent, location)}
+          />
           <CountTable title="Final Girls" counts={finalGirlCounts()} />
         </div>
 
         <div class="statsBlock">
-          <h3 class="statsTitle">Villain × Location</h3>
-          <div class="tableWrap matrixWrap">
-            <table class="table matrixTable">
-              <thead>
-                <tr>
-                  <th>Villain</th>
-                  <For each={matrixCols()}>
-                    {(col) => (
-                      <th class="matrixHead">
-                        <div class="matrixLabel">{col}</div>
-                      </th>
-                    )}
-                  </For>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={matrixRows()}>
-                  {(row) => (
-                    <tr>
-                      <td class="matrixRowLabel">{row}</td>
-                      <For each={matrixCols()}>
-                        {(col) => (
-                          <td class="mono matrixCell">
-                            {(matrix()[row]?.[col] ?? 0) || '—'}
-                          </td>
-                        )}
-                      </For>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
+          <div class="statsTitleRow">
+            <h3 class="statsTitle">Villain × Location</h3>
+            <div class="finalGirlControls">
+              <label class="control">
+                <input
+                  type="checkbox"
+                  checked={ownedVillainsOnly()}
+                  disabled={ownedContent.ownedVillains.size === 0}
+                  onInput={(e) => setOwnedVillainsOnly(e.currentTarget.checked)}
+                />
+                Owned villains only
+              </label>
+              <label class="control">
+                <input
+                  type="checkbox"
+                  checked={ownedLocationsOnly()}
+                  disabled={ownedContent.ownedLocations.size === 0}
+                  onInput={(e) => setOwnedLocationsOnly(e.currentTarget.checked)}
+                />
+                Owned locations only
+              </label>
+              <label class="control">
+                <input
+                  type="checkbox"
+                  checked={flipAxes()}
+                  onInput={(e) => setFlipAxes(e.currentTarget.checked)}
+                />
+                Flip axes
+              </label>
+              <label class="control">
+                <input
+                  type="checkbox"
+                  checked={hideCounts()}
+                  onInput={(e) => setHideCounts(e.currentTarget.checked)}
+                />
+                Hide count
+              </label>
+            </div>
           </div>
+          <HeatmapMatrix
+            rows={matrixRows()}
+            cols={matrixCols()}
+            maxCount={matrixMax()}
+            hideCounts={hideCounts()}
+            rowHeader={flipAxes() ? 'Location' : 'Villain'}
+            colHeader={flipAxes() ? 'Villain' : 'Location'}
+            getCount={(row, col) =>
+              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
+            }
+          />
         </div>
       </Show>
     </div>
   )
 }
-
