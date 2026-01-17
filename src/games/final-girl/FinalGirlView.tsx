@@ -1,8 +1,9 @@
-import { For, Show, createMemo, createResource, createSignal } from 'solid-js'
+import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
+import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import ProgressBar from '../../components/ProgressBar'
 import ownedContentText from './content.txt?raw'
@@ -34,75 +35,6 @@ function playQuantity(play: BggPlay): number {
   const parsed = Number(play.attributes.quantity || '1')
   if (!Number.isFinite(parsed) || parsed <= 0) return 1
   return parsed
-}
-
-function CountTable(props: {
-  title: string
-  counts: Record<string, number>
-  keys?: string[]
-  targetPlays?: number
-  isOwned?: (key: string) => boolean
-  getWarningTitle?: (key: string) => string | undefined
-}) {
-  const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.counts))
-  return (
-    <div class="statsBlock">
-      <h3 class="statsTitle">{props.title}</h3>
-      <div class="tableWrap compact">
-        <table class="table compactTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th class="mono">Plays</th>
-              <Show when={props.targetPlays}>
-                <th class="mono">Target</th>
-              </Show>
-            </tr>
-          </thead>
-          <tbody>
-            <For each={keys()}>
-              {(key) => (
-                <tr
-                  classList={{
-                    dimRow: props.isOwned ? !(props.isOwned(key) ?? true) : false,
-                  }}
-                >
-                  <td>
-                    <span class="heatmapRowLabel">
-                      <span class="heatmapLabelText">{key}</span>
-                      <Show when={props.getWarningTitle?.(key)}>
-                        {(warningTitle) => (
-                          <span
-                            class="contentWarningIcon"
-                            title={warningTitle()}
-                            aria-label={warningTitle()}
-                          >
-                            ⚠
-                          </span>
-                        )}
-                      </Show>
-                    </span>
-                  </td>
-                  <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
-                  <Show when={props.targetPlays}>
-                    {(targetPlays) => (
-                      <td>
-                        <ProgressBar
-                          value={props.counts[key] ?? 0}
-                          target={targetPlays()}
-                          widthPx={160}
-                        />
-                      </td>
-                    )}
-                  </Show>
-                </tr>
-              )}
-            </For>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
 }
 
 export default function FinalGirlView(props: {

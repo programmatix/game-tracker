@@ -1,7 +1,8 @@
-import { For, Show, createMemo, createResource, createSignal } from 'solid-js'
+import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
+import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 
@@ -58,39 +59,6 @@ function resolveHero(color: string, tags: string[]): string {
   }
 
   return 'Unknown hero'
-}
-
-function CountTable(props: { title: string; counts: Record<string, number>; keys?: string[] }) {
-  const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.counts))
-  return (
-    <div class="statsBlock">
-      <h3 class="statsTitle">{props.title}</h3>
-      <div class="tableWrap compact">
-        <table class="table compactTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th class="mono">Plays</th>
-            </tr>
-          </thead>
-          <tbody>
-            <For each={keys()}>
-              {(key) => (
-                <tr>
-                  <td>
-                    <span class="heatmapRowLabel">
-                      <span class="heatmapLabelText">{key}</span>
-                    </span>
-                  </td>
-                  <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
-                </tr>
-              )}
-            </For>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
 }
 
 export default function MistfallView(props: {
@@ -254,4 +222,3 @@ export default function MistfallView(props: {
     </div>
   )
 }
-
