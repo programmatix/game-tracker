@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "game-tracker-f1889",
+    "game-tracker": "game-tracker-f1889"
+  },
+  "targets": {},
+  "etags": {}
+}
