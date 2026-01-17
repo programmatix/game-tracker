@@ -12,6 +12,8 @@ export default function CountTable(props: {
   getWarningTitle?: (key: string) => string | undefined
 }) {
   const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.counts))
+  const targetPlays = createMemo(() => (props.targetPlays === undefined ? 5 : props.targetPlays))
+  const shouldShowTarget = createMemo(() => targetPlays() > 0)
   return (
     <div class="statsBlock">
       <h3 class="statsTitle">{props.title}</h3>
@@ -21,7 +23,7 @@ export default function CountTable(props: {
             <tr>
               <th>Name</th>
               <th class="mono">Plays</th>
-              <Show when={props.targetPlays}>
+              <Show when={shouldShowTarget()}>
                 <th class="mono">Target</th>
               </Show>
             </tr>
@@ -51,16 +53,14 @@ export default function CountTable(props: {
                     </span>
                   </td>
                   <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
-                  <Show when={props.targetPlays}>
-                    {(targetPlays) => (
-                      <td>
-                        <ProgressBar
-                          value={props.counts[key] ?? 0}
-                          target={targetPlays()}
-                          widthPx={props.progressWidthPx ?? 160}
-                        />
-                      </td>
-                    )}
+                  <Show when={shouldShowTarget()}>
+                    <td>
+                      <ProgressBar
+                        value={props.counts[key] ?? 0}
+                        target={targetPlays()}
+                        widthPx={props.progressWidthPx ?? 160}
+                      />
+                    </td>
                   </Show>
                 </tr>
               )}
@@ -71,4 +71,3 @@ export default function CountTable(props: {
     </div>
   )
 }
-
