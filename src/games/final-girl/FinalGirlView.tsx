@@ -327,10 +327,6 @@ export default function FinalGirlView(props: {
           </div>
         }
       >
-        <div class="statsGrid">
-          <CountTable title="Final Girls" counts={finalGirlCounts()} />
-        </div>
-
         <div class="statsBlock">
           <div class="statsTitleRow">
             <h3 class="statsTitle">Villain × Location</h3>
@@ -442,6 +438,10 @@ export default function FinalGirlView(props: {
               )
             }
           />
+        </div>
+
+        <div class="statsGrid">
+          <CountTable title="Final Girls" counts={finalGirlCounts()} />
         </div>
       </Show>
     </div>

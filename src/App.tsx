@@ -8,13 +8,15 @@ import {
 import localPlaysXml from '../data.xml?raw'
 import { fetchThingSummary, parsePlaysXmlText } from './bgg'
 import FinalGirlView from './games/final-girl/FinalGirlView'
+import DeathMayDieView from './games/death-may-die/DeathMayDieView'
+import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import './App.css'
 
 const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
 const BGG_AUTH_TOKEN_STORAGE_KEY = 'bggAuthToken'
-type MainTab = 'finalGirl' | 'spiritIsland' | 'plays'
+type MainTab = 'finalGirl' | 'spiritIsland' | 'deathMayDie' | 'mistfall' | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail'
 
 function playQuantity(play: { attributes: Record<string, string> }): number {
@@ -360,6 +362,26 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'mistfall' }}
+                  onClick={() => setMainTab('mistfall')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'mistfall'}
+                >
+                  Mistfall
+                </button>
+                <button
+                  class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'deathMayDie' }}
+                  onClick={() => setMainTab('deathMayDie')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'deathMayDie'}
+                >
+                  Death May Die
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'plays' }}
                   onClick={() => setMainTab('plays')}
                   type="button"
@@ -463,6 +485,18 @@ function App() {
 
           <Show when={mainTab() === 'spiritIsland'}>
             <SpiritIslandView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'mistfall'}>
+            <MistfallView plays={allPlays().plays} username={USERNAME} authToken={bggAuthToken()} />
+          </Show>
+
+          <Show when={mainTab() === 'deathMayDie'}>
+            <DeathMayDieView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
