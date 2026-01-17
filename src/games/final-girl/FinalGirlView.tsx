@@ -4,6 +4,7 @@ import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import ProgressBar from '../../components/ProgressBar'
 import ownedContentText from './content.txt?raw'
 import {
   getOwnedFinalGirlLocations,
@@ -16,6 +17,9 @@ import {
 } from './ownedContent'
 
 const FINAL_GIRL_OBJECT_ID = '277659'
+const TARGET_PLAYS_PER_VILLAIN = 5
+const TARGET_PLAYS_PER_LOCATION = 5
+const TARGET_FINAL_GIRL_PLAYS_TOTAL = 20
 
 type FinalGirlEntry = {
   play: BggPlay
@@ -26,10 +30,17 @@ type FinalGirlEntry = {
 
 const ownedContent = parseOwnedFinalGirlContent(ownedContentText)
 
+function playQuantity(play: BggPlay): number {
+  const parsed = Number(play.attributes.quantity || '1')
+  if (!Number.isFinite(parsed) || parsed <= 0) return 1
+  return parsed
+}
+
 function CountTable(props: {
   title: string
   counts: Record<string, number>
   keys?: string[]
+  targetPlays?: number
   isOwned?: (key: string) => boolean
   getWarningTitle?: (key: string) => string | undefined
 }) {
@@ -43,6 +54,9 @@ function CountTable(props: {
             <tr>
               <th>Name</th>
               <th class="mono">Plays</th>
+              <Show when={props.targetPlays}>
+                <th class="mono">Target</th>
+              </Show>
             </tr>
           </thead>
           <tbody>
@@ -70,6 +84,17 @@ function CountTable(props: {
                     </span>
                   </td>
                   <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
+                  <Show when={props.targetPlays}>
+                    {(targetPlays) => (
+                      <td>
+                        <ProgressBar
+                          value={props.counts[key] ?? 0}
+                          target={targetPlays()}
+                          widthPx={160}
+                        />
+                      </td>
+                    )}
+                  </Show>
                 </tr>
               )}
             </For>
@@ -128,6 +153,10 @@ export default function FinalGirlView(props: {
     return result
   })
 
+  const totalFinalGirlPlays = createMemo(() =>
+    entries().reduce((sum, entry) => sum + playQuantity(entry.play), 0),
+  )
+
   const displayEntries = createMemo(() => {
     const filterVillains = ownedVillainsOnly() && ownedContent.ownedVillains.size > 0
     const filterLocations = ownedLocationsOnly() && ownedContent.ownedLocations.size > 0
@@ -141,21 +170,28 @@ export default function FinalGirlView(props: {
     })
   })
 
+  const displayFinalGirlPlays = createMemo(() =>
+    displayEntries().reduce((sum, entry) => sum + playQuantity(entry.play), 0),
+  )
+
   const villainCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of displayEntries()) incrementCount(counts, entry.villain)
+    for (const entry of displayEntries())
+      incrementCount(counts, entry.villain, playQuantity(entry.play))
     return counts
   })
 
   const locationCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of displayEntries()) incrementCount(counts, entry.location)
+    for (const entry of displayEntries())
+      incrementCount(counts, entry.location, playQuantity(entry.play))
     return counts
   })
 
   const finalGirlCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of displayEntries()) incrementCount(counts, entry.finalGirl)
+    for (const entry of displayEntries())
+      incrementCount(counts, entry.finalGirl, playQuantity(entry.play))
     return counts
   })
 
@@ -163,7 +199,7 @@ export default function FinalGirlView(props: {
     const counts: Record<string, Record<string, number>> = {}
     for (const entry of displayEntries()) {
       counts[entry.villain] ||= {}
-      incrementCount(counts[entry.villain]!, entry.location)
+      incrementCount(counts[entry.villain]!, entry.location, playQuantity(entry.play))
     }
     return counts
   })
@@ -266,10 +302,18 @@ export default function FinalGirlView(props: {
         </Show>
         <div class="meta">
           Final Girl plays in dataset:{' '}
-          <span class="mono">{entries().length.toLocaleString()}</span>
-          {' • '}Showing: <span class="mono">{displayEntries().length.toLocaleString()}</span>
+          <span class="mono">{totalFinalGirlPlays().toLocaleString()}</span>
+          {' • '}Showing: <span class="mono">{displayFinalGirlPlays().toLocaleString()}</span>
           {' • '}Owned villains: <span class="mono">{ownedContent.ownedVillains.size}</span>
           {' • '}Owned locations: <span class="mono">{ownedContent.ownedLocations.size}</span>
+          <div style={{ 'margin-top': '8px' }}>
+            <ProgressBar
+              value={totalFinalGirlPlays()}
+              target={TARGET_FINAL_GIRL_PLAYS_TOTAL}
+              widthPx={260}
+              label={`Total: ${totalFinalGirlPlays().toLocaleString()}/${TARGET_FINAL_GIRL_PLAYS_TOTAL}`}
+            />
+          </div>
         </div>
       </div>
 
@@ -372,6 +416,7 @@ export default function FinalGirlView(props: {
             title="Villains"
             counts={villainCounts()}
             keys={villainKeys()}
+            targetPlays={TARGET_PLAYS_PER_VILLAIN}
             isOwned={(villain) => isOwnedFinalGirlVillain(ownedContent, villain)}
             getWarningTitle={(villain) =>
               getOwnedContentWarningTitle(
@@ -386,6 +431,7 @@ export default function FinalGirlView(props: {
             title="Locations"
             counts={locationCounts()}
             keys={locationKeys()}
+            targetPlays={TARGET_PLAYS_PER_LOCATION}
             isOwned={(location) => isOwnedFinalGirlLocation(ownedContent, location)}
             getWarningTitle={(location) =>
               getOwnedContentWarningTitle(

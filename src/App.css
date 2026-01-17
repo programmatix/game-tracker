@@ -546,6 +546,40 @@
   vertical-align: top;
 }
 
+.progressInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progressBar {
+  width: var(--progress-width, 140px);
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.95), rgba(167, 139, 250, 0.95));
+}
+
+.progressBarComplete .progressFill {
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.95), rgba(16, 185, 129, 0.95));
+}
+
+.progressLabel {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .table th {
   position: sticky;
   top: 0;
