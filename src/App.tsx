@@ -8,12 +8,13 @@ import {
 import localPlaysXml from '../data.xml?raw'
 import { fetchThingSummary, parsePlaysXmlText } from './bgg'
 import FinalGirlView from './games/final-girl/FinalGirlView'
+import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import './App.css'
 
 const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
 const BGG_AUTH_TOKEN_STORAGE_KEY = 'bggAuthToken'
-type MainTab = 'finalGirl' | 'plays'
+type MainTab = 'finalGirl' | 'spiritIsland' | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail'
 
 function playQuantity(play: { attributes: Record<string, string> }): number {
@@ -349,6 +350,16 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
+                  onClick={() => setMainTab('spiritIsland')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'spiritIsland'}
+                >
+                  Spirit Island
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'plays' }}
                   onClick={() => setMainTab('plays')}
                   type="button"
@@ -448,6 +459,14 @@ function App() {
 
           <Show when={mainTab() === 'finalGirl'}>
             <FinalGirlView plays={allPlays().plays} username={USERNAME} authToken={bggAuthToken()} />
+          </Show>
+
+          <Show when={mainTab() === 'spiritIsland'}>
+            <SpiritIslandView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+            />
           </Show>
 
           <Show when={mainTab() === 'plays'}>

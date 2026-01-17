@@ -1,0 +1,26 @@
+# Spirit Island mappings
+#
+# This file maps short BG Stats tags (stored in the player's `color` field)
+# to nice display names.
+#
+# Format:
+# - Spirits:    S: <Display Name> [<Id>]
+# - Adversary:  A: <Display Name> [<Id>]
+# - Adv+Level:  AL: <Display Name> [<Id>]
+#
+# Example BG Stats color:
+#   RisingHeat／PrussiaL3
+#
+
+S: Rising Heat of Stone and Sand [RisingHeat]
+
+A: Brandenburg-Prussia [Prussia]
+A: England [England]
+A: Sweden [Sweden]
+A: France [France]
+A: Scotland [Scotland]
+A: Russia [Russia]
+A: Habsburg Monarchy [Habsburg]
+A: Habsburg Mining Expedition [HabsburgMining]
+
+AL: Brandenburg-Prussia L3 [PrussiaL3]
