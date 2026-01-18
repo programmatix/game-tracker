@@ -44,6 +44,10 @@ exports.bggProxy = functions.https.onRequest(async (req, res) => {
     const parsed = new URL(originalUrl, 'http://localhost');
     const path = parsed.pathname;
     const upstreamPath = path.startsWith('/bgg/') ? path.replace(/^\/bgg/, '') : path;
+    if (!upstreamPath.startsWith('/xmlapi2/')) {
+        res.status(404).send('Not Found');
+        return;
+    }
     const upstreamUrl = new URL(`https://boardgamegeek.com${upstreamPath}${parsed.search}`);
     const headers = {
         accept: req.get('accept') || 'application/xml,text/xml;q=0.9,*/*;q=0.8',

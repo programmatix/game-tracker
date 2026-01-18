@@ -9,7 +9,6 @@
     "rewrites": [
       { "source": "/bgg/**", "function": "bggProxy" },
       { "source": "**", "destination": "/index.html" }
-    ],
-    "predeploy": ["pnpm build"]
+    ]
   }
 }
