@@ -2,6 +2,7 @@ export type OwnedFinalGirlContent = {
   ownedVillains: Map<string, string>
   ownedLocations: Map<string, string>
   ownedFinalGirls: Map<string, string>
+  finalGirlLocationsByName: Map<string, string>
   villainsById: Map<string, { display: string; location?: string }>
   locationsById: Map<string, string>
   finalGirlsById: Map<string, string>
@@ -26,6 +27,7 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
   const ownedVillains = new Map<string, string>()
   const ownedLocations = new Map<string, string>()
   const ownedFinalGirls = new Map<string, string>()
+  const finalGirlLocationsByName = new Map<string, string>()
   const villainsById = new Map<string, { display: string; location?: string }>()
   const locationsById = new Map<string, string>()
   const finalGirlsById = new Map<string, string>()
@@ -62,6 +64,7 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
 
     if (key === 'fg' || key === 'final girl' || key === 'finalgirl') {
       ownedFinalGirls.set(normalized, display)
+      if (lastLocationDisplay) finalGirlLocationsByName.set(normalized, lastLocationDisplay)
       const normalizedId = normalizeFinalGirlId(id ?? display)
       finalGirlsById.set(normalizedId, display)
     }
@@ -71,6 +74,7 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
     ownedVillains,
     ownedLocations,
     ownedFinalGirls,
+    finalGirlLocationsByName,
     villainsById,
     locationsById,
     finalGirlsById,

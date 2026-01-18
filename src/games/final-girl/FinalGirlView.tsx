@@ -6,7 +6,6 @@ import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import CountTable from '../../components/CountTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
-import ProgressBar from '../../components/ProgressBar'
 import { computeGameAchievements } from '../../achievements/games'
 import ownedContentText from './content.txt?raw'
 import {
@@ -22,7 +21,6 @@ import {
 const FINAL_GIRL_OBJECT_ID = '277659'
 const TARGET_PLAYS_PER_VILLAIN = 5
 const TARGET_PLAYS_PER_LOCATION = 5
-const TARGET_FINAL_GIRL_PLAYS_TOTAL = 20
 
 type FinalGirlEntry = {
   play: BggPlay
@@ -244,14 +242,6 @@ export default function FinalGirlView(props: {
           {' • '}Showing: <span class="mono">{displayFinalGirlPlays().toLocaleString()}</span>
           {' • '}Owned villains: <span class="mono">{ownedContent.ownedVillains.size}</span>
           {' • '}Owned locations: <span class="mono">{ownedContent.ownedLocations.size}</span>
-          <div style={{ 'margin-top': '8px' }}>
-            <ProgressBar
-              value={totalFinalGirlPlays()}
-              target={TARGET_FINAL_GIRL_PLAYS_TOTAL}
-              widthPx={260}
-              label={`Total: ${totalFinalGirlPlays().toLocaleString()}/${TARGET_FINAL_GIRL_PLAYS_TOTAL}`}
-            />
-          </div>
         </div>
       </div>
 

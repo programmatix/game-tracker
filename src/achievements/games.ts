@@ -103,9 +103,11 @@ function buildIndividualItemTracks(input: {
   items: string[]
   countsByItem: Record<string, number>
   unitSingular: string
+  formatItem?: (item: string) => string
   levels?: number[]
 }): AchievementTrack[] {
   const tracks: AchievementTrack[] = []
+  const formatItem = input.formatItem ?? ((value: string) => value)
   for (const item of input.items) {
     const current = input.countsByItem[item] ?? 0
     tracks.push(
@@ -114,7 +116,7 @@ function buildIndividualItemTracks(input: {
         current,
         unitSingular: input.unitSingular,
         titleForLevel: (level) =>
-          `${input.verb} ${item} ${level} ${pluralize(level, input.unitSingular)}`,
+          `${input.verb} ${formatItem(item)} ${level} ${pluralize(level, input.unitSingular)}`,
         levels: input.levels,
       }),
     )
@@ -184,6 +186,22 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
     observed: entries.map((e) => ({ item: e.finalGirl, amount: e.quantity })),
   })
 
+  const finalGirlBoxByNormalized = new Map<string, string>()
+  for (const [normalized, location] of ownedFinalGirlContent.finalGirlLocationsByName) {
+    const canonicalLocation = normalizeAchievementItemLabel(location)
+    if (!isMeaningfulAchievementItem(canonicalLocation)) continue
+    finalGirlBoxByNormalized.set(normalized, canonicalLocation)
+  }
+  for (const entry of entries) {
+    const finalGirl = normalizeAchievementItemLabel(entry.finalGirl)
+    const location = normalizeAchievementItemLabel(entry.location)
+    if (!isMeaningfulAchievementItem(finalGirl)) continue
+    if (!isMeaningfulAchievementItem(location)) continue
+    const normalized = finalGirl.toLowerCase()
+    if (finalGirlBoxByNormalized.has(normalized)) continue
+    finalGirlBoxByNormalized.set(normalized, location)
+  }
+
   const tracks: AchievementTrack[] = [
     buildPlayCountTrack({ trackId: 'plays', currentPlays: totalPlays }),
   ]
@@ -244,6 +262,11 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
         unitSingular: 'time',
         items: finalGirls.items,
         countsByItem: finalGirls.countsByItem,
+        formatItem: (finalGirl) => {
+          const normalized = normalizeAchievementItemLabel(finalGirl).toLowerCase()
+          const box = finalGirlBoxByNormalized.get(normalized)
+          return box ? `${finalGirl} [${box}]` : finalGirl
+        },
       }),
     )
   }
