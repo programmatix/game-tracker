@@ -12,15 +12,54 @@
 #   RisingHeat／PrussiaL3
 #
 
+#
+# Spirits (all expansions up to, but not including, Nature Incarnate)
+#
+
+S: River Surges in Sunlight [River]
+S: Lightning's Swift Strike [Lightning]
+S: Vital Strength of the Earth [VitalEarth]
+S: Shadows Flicker Like Flame [Shadows]
+S: Thunderspeaker [Thunder]
+S: Bringer of Dreams and Nightmares [Bringer]
+S: Ocean's Hungry Grasp [Ocean]
+S: A Spread of Rampant Green [RampGreen]
+
+S: Sharp Fangs Behind the Leaves [Fangs]
+S: Keeper of the Forbidden Wilds [Keeper]
+
+S: Heart of the Wildfire [Wildfire]
+S: Serpent Slumbering Beneath the Island [Serpent]
+
+S: Many Minds Move as One [ManyMinds]
+S: Shifting Memory of Ages [ShiftMem]
+S: Stone's Unyielding Defiance [Stone]
+S: Grinning Trickster Stirs Up Trouble [Trickster]
+S: Lure of the Deep Wilderness [Lure]
+S: Volcano Looming High [Volcano]
+S: Vengeance as a Burning Plague [Vengeance]
+S: Starlight Seeks Its Form [Starlight]
+S: Fractured Days Split the Sky [Fractured]
+S: Shroud of Silent Mist [Shroud]
+
+S: Finder of Paths Unseen [Finder]
+S: Downpour Drenches the World [Downpour]
+
 S: Rising Heat of Stone and Sand [RisingHeat]
+S: Sun-Bright Whirlwind [Whirlwind]
+S: Devouring Teeth Lurk Underfoot [DevTeeth]
+S: Eyes Watch from the Trees [Eyes]
+S: Fathomless Mud of the Swamp [MudSwamp]
+
+#
+# Adversaries (all expansions up to, but not including, Nature Incarnate)
+#
 
 A: Brandenburg-Prussia [Prussia]
 A: England [England]
 A: Sweden [Sweden]
 A: France [France]
-A: Scotland [Scotland]
 A: Russia [Russia]
 A: Habsburg Monarchy [Habsburg]
-A: Habsburg Mining Expedition [HabsburgMining]
 
 AL: Brandenburg-Prussia L3 [PrussiaL3]
