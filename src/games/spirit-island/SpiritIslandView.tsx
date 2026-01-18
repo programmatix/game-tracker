@@ -1,82 +1,15 @@
 import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
-import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import CountTable from '../../components/CountTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
-import { incrementCount, sortKeysByCountDesc } from '../../stats'
+import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { computeGameAchievements } from '../../achievements/games'
-import mappingsText from './mappings.txt?raw'
-import {
-  formatSpiritIslandAdversaryLabel,
-  parseSpiritIslandMappings,
-  resolveSpiritIslandAdversary,
-  resolveSpiritIslandSpirit,
-} from './mappings'
+import { getSpiritIslandEntries, SPIRIT_ISLAND_OBJECT_ID, spiritIslandMappings } from './spiritIslandEntries'
 
-const SPIRIT_ISLAND_OBJECT_ID = '162886'
-const mappings = parseSpiritIslandMappings(mappingsText)
-
-type SpiritIslandEntry = {
-  play: BggPlay
-  spirit: string
-  adversary: string
-}
-
-function playQuantity(play: { attributes: Record<string, string> }): number {
-  const parsed = Number(play.attributes.quantity || '1')
-  if (!Number.isFinite(parsed) || parsed <= 0) return 1
-  return parsed
-}
-
-function resolveSpirit(color: string, tags: string[]): string {
-  const parsed = parseBgStatsKeyValueSegments(color)
-  const fromKey =
-    getBgStatsValue(parsed, ['S', 'Spirit']) ||
-    getBgStatsValue(parsed, ['Sp', 'SpiritIslandSpirit'])
-
-  if (fromKey) return resolveSpiritIslandSpirit(fromKey, mappings) || fromKey.trim()
-
-  for (const tag of tags) {
-    const resolved = resolveSpiritIslandSpirit(tag, mappings)
-    if (resolved) return resolved
-  }
-
-  const fallback = tags[0]?.trim()
-  return fallback || 'Unknown spirit'
-}
-
-function resolveAdversary(color: string, tags: string[]): string {
-  const parsed = parseBgStatsKeyValueSegments(color)
-  const fromKey =
-    getBgStatsValue(parsed, ['A', 'Adv', 'Adversary']) ||
-    getBgStatsValue(parsed, ['AL', 'AdversaryLevel'])
-  const level = getBgStatsValue(parsed, ['L', 'Level'])
-
-  if (fromKey) {
-    const resolved = resolveSpiritIslandAdversary(fromKey, mappings)
-    if (resolved) return formatSpiritIslandAdversaryLabel(resolved)
-    if (level) return `${fromKey.trim()} L${level.trim()}`
-    return fromKey.trim()
-  }
-
-  if (level) {
-    const baseToken = tags.find((tag) => resolveSpiritIslandAdversary(tag, mappings))
-    if (baseToken) {
-      const resolved = resolveSpiritIslandAdversary(baseToken, mappings)
-      if (resolved) return formatSpiritIslandAdversaryLabel({ ...resolved, level })
-      return `${baseToken.trim()} L${level.trim()}`
-    }
-  }
-
-  for (const tag of tags) {
-    const resolved = resolveSpiritIslandAdversary(tag, mappings)
-    if (resolved) return formatSpiritIslandAdversaryLabel(resolved)
-  }
-
-  const fallback = tags[1]?.trim()
-  return fallback || 'No adversary'
+function stripTrailingLevelLabel(value: string): string {
+  return value.replace(/\s+L\d+\s*$/i, '').trim()
 }
 
 export default function SpiritIslandView(props: {
@@ -92,63 +25,56 @@ export default function SpiritIslandView(props: {
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
   )
 
-  const entries = createMemo<SpiritIslandEntry[]>(() => {
-    const result: SpiritIslandEntry[] = []
-    const user = props.username.toLowerCase()
-
-    for (const play of props.plays) {
-      const objectid = play.item?.attributes.objectid || ''
-      const name = play.item?.attributes.name || ''
-      const isSpiritIsland = objectid === SPIRIT_ISLAND_OBJECT_ID || name === 'Spirit Island'
-      if (!isSpiritIsland) continue
-
-      const player = play.players.find(
-        (p) => (p.attributes.username || '').toLowerCase() === user,
-      )
-      const color = player?.attributes.color || ''
-      const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
-
-      const spirit = resolveSpirit(color, tags)
-      const adversary = resolveAdversary(color, tags)
-
-      const qty = playQuantity(play)
-      for (let i = 0; i < qty; i += 1) result.push({ play, spirit, adversary })
-    }
-
-    return result
-  })
+  const entries = createMemo(() => getSpiritIslandEntries(props.plays, props.username))
 
   const achievements = createMemo(() =>
     computeGameAchievements('spiritIsland', props.plays, props.username),
   )
 
+  const totalSpiritIslandPlays = createMemo(() =>
+    entries().reduce((sum, entry) => sum + entry.quantity, 0),
+  )
+
   const spiritCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.spirit)
+    for (const entry of entries()) incrementCount(counts, entry.spirit, entry.quantity)
     return counts
   })
 
   const adversaryCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.adversary)
+    for (const entry of entries())
+      incrementCount(counts, stripTrailingLevelLabel(entry.adversary), entry.quantity)
     return counts
   })
 
   const matrix = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
     for (const entry of entries()) {
-      counts[entry.spirit] ||= {}
-      incrementCount(counts[entry.spirit]!, entry.adversary)
+      const spirit = entry.spirit
+      const adversary = stripTrailingLevelLabel(entry.adversary)
+      counts[spirit] ||= {}
+      incrementCount(counts[spirit]!, adversary, entry.quantity)
     }
     return counts
   })
 
-  const matrixRows = createMemo(() =>
-    flipAxes() ? sortKeysByCountDesc(adversaryCounts()) : sortKeysByCountDesc(spiritCounts()),
+  const spiritKeys = createMemo(() =>
+    mergeCanonicalKeys(
+      sortKeysByCountDesc(spiritCounts()),
+      [...spiritIslandMappings.spiritsById.values()],
+    ),
   )
-  const matrixCols = createMemo(() =>
-    flipAxes() ? sortKeysByCountDesc(spiritCounts()) : sortKeysByCountDesc(adversaryCounts()),
+
+  const adversaryKeys = createMemo(() =>
+    mergeCanonicalKeys(
+      sortKeysByCountDesc(adversaryCounts()),
+      [...spiritIslandMappings.adversariesById.values(), 'No adversary'],
+    ),
   )
+
+  const matrixRows = createMemo(() => (flipAxes() ? adversaryKeys() : spiritKeys()))
+  const matrixCols = createMemo(() => (flipAxes() ? spiritKeys() : adversaryKeys()))
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -188,7 +114,7 @@ export default function SpiritIslandView(props: {
         </Show>
         <div class="meta">
           Spirit Island plays in dataset:{' '}
-          <span class="mono">{entries().length.toLocaleString()}</span>
+          <span class="mono">{totalSpiritIslandPlays().toLocaleString()}</span>
         </div>
       </div>
 
@@ -206,8 +132,8 @@ export default function SpiritIslandView(props: {
         }
       >
         <div class="statsGrid">
-          <CountTable title="Spirits" counts={spiritCounts()} />
-          <CountTable title="Adversaries" counts={adversaryCounts()} />
+          <CountTable title="Spirits" counts={spiritCounts()} keys={spiritKeys()} />
+          <CountTable title="Adversaries" counts={adversaryCounts()} keys={adversaryKeys()} />
         </div>
 
         <div class="statsBlock">

@@ -8,6 +8,7 @@ import { getOwnedFinalGirlFinalGirls, getOwnedFinalGirlLocations, getOwnedFinalG
 import { getSpiritIslandEntries, spiritIslandMappings } from '../games/spirit-island/spiritIslandEntries'
 import { getMistfallEntries, mistfallMappings } from '../games/mistfall/mistfallEntries'
 import { getDeathMayDieEntries } from '../games/death-may-die/deathMayDieEntries'
+import { deathMayDieContent } from '../games/death-may-die/content'
 
 export type GameId = 'finalGirl' | 'spiritIsland' | 'mistfall' | 'deathMayDie'
 
@@ -431,17 +432,17 @@ function computeDeathMayDieAchievements(plays: BggPlay[], username: string) {
   const totalPlays = sumQuantities(entries)
 
   const elderOnes = buildCanonicalCounts({
-    preferredItems: [],
+    preferredItems: deathMayDieContent.elderOnes,
     observed: entries.map((e) => ({ item: e.elderOne, amount: e.isWin ? e.quantity : 0 })),
   })
 
   const scenarios = buildCanonicalCounts({
-    preferredItems: [],
+    preferredItems: deathMayDieContent.scenarios,
     observed: entries.map((e) => ({ item: e.scenario, amount: e.quantity })),
   })
 
   const myInvestigators = buildCanonicalCounts({
-    preferredItems: [],
+    preferredItems: deathMayDieContent.investigators,
     observed: entries
       .filter((e) => Boolean(e.myInvestigator))
       .map((e) => ({ item: e.myInvestigator!, amount: e.quantity })),

@@ -9,6 +9,7 @@ import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { computeGameAchievements } from '../../achievements/games'
 import ownedContentText from './content.txt?raw'
 import {
+  getOwnedFinalGirlFinalGirls,
   getOwnedFinalGirlLocations,
   getOwnedFinalGirlVillains,
   isOwnedFinalGirlLocation,
@@ -160,6 +161,12 @@ export default function FinalGirlView(props: {
     mergeOwnedKeys(
       sortKeysByCountDesc(locationCounts()),
       getOwnedFinalGirlLocations(ownedContent),
+    ),
+  )
+  const finalGirlKeys = createMemo(() =>
+    mergeOwnedKeys(
+      sortKeysByCountDesc(finalGirlCounts()),
+      getOwnedFinalGirlFinalGirls(ownedContent),
     ),
   )
 
@@ -371,7 +378,7 @@ export default function FinalGirlView(props: {
         </div>
 
         <div class="statsGrid">
-          <CountTable title="Final Girls" counts={finalGirlCounts()} />
+          <CountTable title="Final Girls" counts={finalGirlCounts()} keys={finalGirlKeys()} />
         </div>
       </Show>
     </div>

@@ -1,7 +1,9 @@
 import type { BggPlay } from '../../bgg'
 import {
   normalizeDeathMayDieElderOne,
+  normalizeDeathMayDieInvestigator,
   normalizeDeathMayDieScenario,
+  isDeathMayDieInvestigatorToken,
   parseDeathMayDiePlayerColor,
 } from './deathMayDie'
 
@@ -55,15 +57,24 @@ export function getDeathMayDieEntries(plays: BggPlay[], username: string): Death
           investigator: parsed.investigator,
           elderOne: parsed.elderOne,
           scenario: parsed.scenario,
+          extraTags: parsed.extraTags,
         }
       })
       .filter((player) => Boolean(player.investigator || player.elderOne || player.scenario))
 
-    const investigators = parsedPlayers
-      .map((p) => p.investigator)
-      .filter(Boolean)
-      .map((token) => token!.trim())
-      .filter(Boolean)
+    const investigatorsSet = new Map<string, string>()
+    for (const player of parsedPlayers) {
+      const inv = player.investigator?.trim()
+      if (inv) investigatorsSet.set(inv.toLowerCase(), inv)
+
+      for (const tag of player.extraTags) {
+        if (!isDeathMayDieInvestigatorToken(tag)) continue
+        const normalized = normalizeDeathMayDieInvestigator(tag)
+        if (!normalized) continue
+        investigatorsSet.set(normalized.toLowerCase(), normalized)
+      }
+    }
+    const investigators = [...investigatorsSet.values()]
 
     const myPlayer = parsedPlayers.find((p) => p.username === user)
     const myInvestigator = myPlayer?.investigator
@@ -95,7 +106,6 @@ export function getDeathMayDieEntries(plays: BggPlay[], username: string): Death
 
   return result
 }
-
 
 
 

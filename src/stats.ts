@@ -14,3 +14,27 @@ export function sortKeysByCountDesc(counts: Record<string, number>): string[] {
   })
 }
 
+export function mergeCanonicalKeys(
+  observedKeys: string[],
+  canonicalKeys: string[],
+  normalize: (value: string) => string = (value) => value.trim().toLowerCase(),
+): string[] {
+  const merged: string[] = []
+  const seen = new Set<string>()
+
+  for (const key of observedKeys) {
+    const normalized = normalize(key)
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    merged.push(key)
+  }
+
+  for (const key of canonicalKeys) {
+    const normalized = normalize(key)
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    merged.push(key)
+  }
+
+  return merged
+}

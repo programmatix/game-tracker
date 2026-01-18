@@ -1,0 +1,29 @@
+# Cthulhu: Death May Die (core only)
+#
+# This list drives the UI and achievements "available" counts (including 0-play rows).
+# Values here should match the display names produced by the tag parsers.
+
+# Elder Ones (core)
+EO: Cthulhu
+EO: Hastur
+
+# Scenarios / Episodes (core)
+S: 1
+S: 2
+S: 3
+S: 4
+S: 5
+S: 6
+
+# Investigators (core / Season 1)
+I: Ahmed Yasin
+I: Borden
+I: Elizabeth Ives
+I: Fatima Safar
+I: John Morgan
+I: Lord Adam Benchley
+I: Rasputin
+I: Sergeant Ian Welles
+I: Sister Beth
+I: The Kid
+
