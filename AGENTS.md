@@ -39,6 +39,7 @@ And core requirements are usually going to be:
 
 - Track how many times I've played each of the axes, in isolation.
 - A 2d-matrix of the two primary axes.
+- Show all content, whether I've played it yet or not.  E.g. Spirit Island should show all spirits and adversaries, not just the ones I've played.
 
 # Rules
 
