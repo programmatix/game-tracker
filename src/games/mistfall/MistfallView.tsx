@@ -5,8 +5,17 @@ import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } f
 import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
+import mappingsText from './mappings.txt?raw'
+import {
+  normalizeMistfallName,
+  parseMistfallMappings,
+  resolveMistfallHero,
+  resolveMistfallQuest,
+} from './mappings'
 
-const MISTFALL_OBJECT_ID = '193953'
+const MISTFALL_BASE_OBJECT_ID = '168274'
+const HEART_OF_THE_MISTS_OBJECT_ID = '193953'
+const mappings = parseMistfallMappings(mappingsText)
 
 type MistfallEntry = {
   play: BggPlay
@@ -20,7 +29,7 @@ function playQuantity(play: { attributes: Record<string, string> }): number {
   return parsed
 }
 
-function normalizeMistfallQuestLabel(input: string): string | undefined {
+function normalizeMistfallQuestNumber(input: string): string | undefined {
   const trimmed = input.trim()
   if (!trimmed) return undefined
 
@@ -31,17 +40,44 @@ function normalizeMistfallQuestLabel(input: string): string | undefined {
 
   const num = Number(match[1])
   if (!Number.isFinite(num) || num <= 0) return undefined
-  return `Quest ${num}`
+  return String(num)
 }
 
-function resolveQuest(color: string, tags: string[]): string {
+function normalizeMistfallQuestToken(
+  input: string,
+  kind: 'mistfall' | 'hotm',
+): string | undefined {
+  const trimmed = input.trim()
+  if (!trimmed) return undefined
+
+  const normalizedId = trimmed.replace(/\s+/g, '')
+  const directMatch = /^(?:M|MF|Mistfall)\s*([0-9]+)$/i.exec(normalizedId)
+  if (directMatch) return `M${directMatch[1]}`
+
+  const hotmMatch =
+    /^(?:H|HOM|HOTM|Heart(?:ofthe)?mists?)\s*([0-9]+)$/i.exec(normalizedId)
+  if (hotmMatch) return `H${hotmMatch[1]}`
+
+  const questNumber = normalizeMistfallQuestNumber(trimmed)
+  if (!questNumber) return undefined
+  return kind === 'mistfall' ? `M${questNumber}` : `H${questNumber}`
+}
+
+function resolveQuest(color: string, tags: string[], kind: 'mistfall' | 'hotm'): string {
   const parsed = parseBgStatsKeyValueSegments(color)
   const fromKey = getBgStatsValue(parsed, ['Q', 'Quest', 'Scenario'])
-  if (fromKey) return normalizeMistfallQuestLabel(fromKey) || fromKey.trim()
+  if (fromKey) {
+    const token = normalizeMistfallQuestToken(fromKey, kind)
+    if (token) return resolveMistfallQuest(token, mappings) || `Quest ${token.slice(1)}`
+    return resolveMistfallQuest(fromKey, mappings) || fromKey.trim()
+  }
 
   for (const tag of tags) {
-    const normalized = normalizeMistfallQuestLabel(tag)
-    if (normalized) return normalized
+    const token = normalizeMistfallQuestToken(tag, kind)
+    if (token) return resolveMistfallQuest(token, mappings) || `Quest ${token.slice(1)}`
+
+    const resolved = resolveMistfallQuest(tag, mappings)
+    if (resolved) return resolved
   }
 
   return 'Unknown quest'
@@ -50,10 +86,13 @@ function resolveQuest(color: string, tags: string[]): string {
 function resolveHero(color: string, tags: string[]): string {
   const parsed = parseBgStatsKeyValueSegments(color)
   const fromKey = getBgStatsValue(parsed, ['H', 'Hero', 'Character'])
-  if (fromKey) return fromKey.trim()
+  if (fromKey) return resolveMistfallHero(fromKey, mappings) || fromKey.trim()
 
   for (const tag of tags) {
-    if (normalizeMistfallQuestLabel(tag)) continue
+    if (normalizeMistfallQuestToken(tag, 'mistfall') || normalizeMistfallQuestToken(tag, 'hotm'))
+      continue
+    const resolved = resolveMistfallHero(tag, mappings)
+    if (resolved) return resolved
     const trimmed = tag.trim()
     if (trimmed) return trimmed
   }
@@ -70,7 +109,7 @@ export default function MistfallView(props: {
   const [hideCounts, setHideCounts] = createSignal(true)
 
   const [mistfallThing] = createResource(
-    () => ({ id: MISTFALL_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
+    () => ({ id: MISTFALL_BASE_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
   )
 
@@ -81,8 +120,11 @@ export default function MistfallView(props: {
     for (const play of props.plays) {
       const objectid = play.item?.attributes.objectid || ''
       const name = play.item?.attributes.name || ''
-      const isMistfall = objectid === MISTFALL_OBJECT_ID || name === 'Mistfall: Heart of the Mists'
-      if (!isMistfall) continue
+      const isMistfall = objectid === MISTFALL_BASE_OBJECT_ID || name === 'Mistfall'
+      const isHeartOfTheMists =
+        objectid === HEART_OF_THE_MISTS_OBJECT_ID || name === 'Mistfall: Heart of the Mists'
+      if (!isMistfall && !isHeartOfTheMists) continue
+      const kind: 'mistfall' | 'hotm' = isHeartOfTheMists ? 'hotm' : 'mistfall'
 
       const player = play.players.find(
         (p) => (p.attributes.username || '').toLowerCase() === user,
@@ -91,7 +133,7 @@ export default function MistfallView(props: {
       const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
 
       const hero = resolveHero(color, tags)
-      const quest = resolveQuest(color, tags)
+      const quest = resolveQuest(color, tags, kind)
 
       const qty = playQuantity(play)
       for (let i = 0; i < qty; i += 1) result.push({ play, hero, quest })
@@ -99,6 +141,19 @@ export default function MistfallView(props: {
 
     return result
   })
+
+  function mergeKnownKeys(played: string[], known: string[]): string[] {
+    const seen = new Set(played.map(normalizeMistfallName))
+    const merged = [...played]
+    for (const value of known) {
+      const normalized = normalizeMistfallName(value)
+      if (!seen.has(normalized)) {
+        seen.add(normalized)
+        merged.push(value)
+      }
+    }
+    return merged
+  }
 
   const heroCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -122,10 +177,14 @@ export default function MistfallView(props: {
   })
 
   const matrixRows = createMemo(() =>
-    flipAxes() ? sortKeysByCountDesc(questCounts()) : sortKeysByCountDesc(heroCounts()),
+    flipAxes()
+      ? mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests)
+      : mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes),
   )
   const matrixCols = createMemo(() =>
-    flipAxes() ? sortKeysByCountDesc(heroCounts()) : sortKeysByCountDesc(questCounts()),
+    flipAxes()
+      ? mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes)
+      : mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests),
   )
 
   const matrixMax = createMemo(() => {
@@ -150,7 +209,7 @@ export default function MistfallView(props: {
           {(thumbnail) => (
             <a
               class="finalGirlThumbLink"
-              href={`https://boardgamegeek.com/boardgame/${MISTFALL_OBJECT_ID}`}
+              href={`https://boardgamegeek.com/boardgame/${MISTFALL_BASE_OBJECT_ID}`}
               target="_blank"
               rel="noreferrer"
               title="View on BoardGameGeek"
@@ -174,14 +233,23 @@ export default function MistfallView(props: {
         fallback={
           <div class="muted">
             No Mistfall plays found. For BG Stats tags, put values in the player{' '}
-            <span class="mono">color</span> field like <span class="mono">Fengray／Quest 2</span>{' '}
-            or <span class="mono">Quest 1／Elatha</span>.
+            <span class="mono">color</span> field like{' '}
+            <span class="mono">Fengray／Quest 2</span>, <span class="mono">H: Elatha／Q: H1</span>, or{' '}
+            <span class="mono">Hareag／M4</span>.
           </div>
         }
       >
         <div class="statsGrid">
-          <CountTable title="Heroes" counts={heroCounts()} />
-          <CountTable title="Quests" counts={questCounts()} />
+          <CountTable
+            title="Heroes"
+            counts={heroCounts()}
+            keys={mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes)}
+          />
+          <CountTable
+            title="Quests"
+            counts={questCounts()}
+            keys={mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests)}
+          />
         </div>
 
         <div class="statsBlock">
