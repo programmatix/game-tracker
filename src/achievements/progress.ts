@@ -23,6 +23,7 @@ export function computeCounterProgress(input: {
 }): {
   isComplete: boolean
   remainingPlays: number
+  playsSoFar: number
   progressValue: number
   progressTarget: number
   progressLabel: string
@@ -35,6 +36,7 @@ export function computeCounterProgress(input: {
   return {
     isComplete: current >= target,
     remainingPlays,
+    playsSoFar: current,
     progressValue,
     progressTarget: target,
     progressLabel: `${progressValue}/${target} ${unit}`,
@@ -49,6 +51,7 @@ export function computePerItemProgress(input: {
 }): {
   isComplete: boolean
   remainingPlays: number
+  playsSoFar: number
   progressValue: number
   progressTarget: number
   progressLabel: string
@@ -60,6 +63,7 @@ export function computePerItemProgress(input: {
     return {
       isComplete: false,
       remainingPlays: 0,
+      playsSoFar: 0,
       progressValue: 0,
       progressTarget: 0,
       progressLabel: '0/0',
@@ -68,19 +72,21 @@ export function computePerItemProgress(input: {
 
   let met = 0
   let remainingPlays = 0
+  let playsSoFar = 0
   for (const item of items) {
     const count = input.countsByItem[item] ?? 0
     if (count >= target) met += 1
     remainingPlays += Math.max(0, target - count)
+    playsSoFar += Math.min(count, target)
   }
 
   const unit = pluralize(target, input.unitSingular)
   return {
     isComplete: met === total,
     remainingPlays,
+    playsSoFar,
     progressValue: met,
     progressTarget: total,
     progressLabel: `${met}/${total} at ${target} ${unit} each`,
   }
 }
-

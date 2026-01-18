@@ -70,6 +70,58 @@ function buildPlayCountTrack(input: {
   }
 }
 
+function slugifyTrackId(value: string): string {
+  const slug = normalizeAchievementItemLabel(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '')
+  return slug || 'unknown'
+}
+
+function buildNamedCountTrack(input: {
+  trackId: string
+  current: number
+  unitSingular: string
+  titleForLevel: (level: number) => string
+  levels?: number[]
+}): AchievementTrack {
+  const levels = input.levels ?? defaultAchievementLevels()
+  return {
+    trackId: input.trackId,
+    kind: 'counter',
+    levels,
+    titleForLevel: input.titleForLevel,
+    progressForLevel: (level) =>
+      computeCounterProgress({ current: input.current, target: level, unitSingular: input.unitSingular }),
+  }
+}
+
+function buildIndividualItemTracks(input: {
+  trackIdPrefix: string
+  verb: 'Play' | 'Defeat'
+  items: string[]
+  countsByItem: Record<string, number>
+  unitSingular: string
+  levels?: number[]
+}): AchievementTrack[] {
+  const tracks: AchievementTrack[] = []
+  for (const item of input.items) {
+    const current = input.countsByItem[item] ?? 0
+    tracks.push(
+      buildNamedCountTrack({
+        trackId: `${input.trackIdPrefix}:${slugifyTrackId(item)}`,
+        current,
+        unitSingular: input.unitSingular,
+        titleForLevel: (level) =>
+          `${input.verb} ${item} ${level} ${pluralize(level, input.unitSingular)}`,
+        levels: input.levels,
+      }),
+    )
+  }
+  return tracks
+}
+
 function buildPerItemTrack(input: {
   trackId: string
   verb: 'Play' | 'Defeat'
@@ -146,6 +198,13 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
         items: villains.items,
         countsByItem: villains.countsByItem,
       }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'villainWins',
+        verb: 'Defeat',
+        unitSingular: 'win',
+        items: villains.items,
+        countsByItem: villains.countsByItem,
+      }),
     )
   }
 
@@ -159,6 +218,13 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
         items: locations.items,
         countsByItem: locations.countsByItem,
       }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'locationPlays',
+        verb: 'Play',
+        unitSingular: 'time',
+        items: locations.items,
+        countsByItem: locations.countsByItem,
+      }),
     )
   }
 
@@ -168,6 +234,13 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
         trackId: 'finalGirlPlays',
         verb: 'Play',
         itemNoun: 'final girl',
+        unitSingular: 'time',
+        items: finalGirls.items,
+        countsByItem: finalGirls.countsByItem,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'finalGirlPlays',
+        verb: 'Play',
         unitSingular: 'time',
         items: finalGirls.items,
         countsByItem: finalGirls.countsByItem,
@@ -209,6 +282,13 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
         items: adversariesBase.items,
         countsByItem: adversariesBase.countsByItem,
       }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'adversaryWins',
+        verb: 'Defeat',
+        unitSingular: 'win',
+        items: adversariesBase.items,
+        countsByItem: adversariesBase.countsByItem,
+      }),
     )
   }
 
@@ -218,6 +298,13 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
         trackId: 'spiritPlays',
         verb: 'Play',
         itemNoun: 'spirit',
+        unitSingular: 'time',
+        items: spirits.items,
+        countsByItem: spirits.countsByItem,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'spiritPlays',
+        verb: 'Play',
         unitSingular: 'time',
         items: spirits.items,
         countsByItem: spirits.countsByItem,
@@ -263,6 +350,13 @@ function computeMistfallAchievements(plays: BggPlay[], username: string) {
         items: questWins.items,
         countsByItem: questWins.countsByItem,
       }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'questWins',
+        verb: 'Defeat',
+        unitSingular: 'win',
+        items: questWins.items,
+        countsByItem: questWins.countsByItem,
+      }),
     )
   }
 
@@ -276,6 +370,13 @@ function computeMistfallAchievements(plays: BggPlay[], username: string) {
         items: quests.items,
         countsByItem: quests.countsByItem,
       }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'questPlays',
+        verb: 'Play',
+        unitSingular: 'time',
+        items: quests.items,
+        countsByItem: quests.countsByItem,
+      }),
     )
   }
 
@@ -285,6 +386,13 @@ function computeMistfallAchievements(plays: BggPlay[], username: string) {
         trackId: 'heroPlays',
         verb: 'Play',
         itemNoun: 'hero',
+        unitSingular: 'time',
+        items: heroes.items,
+        countsByItem: heroes.countsByItem,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'heroPlays',
+        verb: 'Play',
         unitSingular: 'time',
         items: heroes.items,
         countsByItem: heroes.countsByItem,
@@ -330,6 +438,13 @@ function computeDeathMayDieAchievements(plays: BggPlay[], username: string) {
         items: elderOnes.items,
         countsByItem: elderOnes.countsByItem,
       }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'elderOneWins',
+        verb: 'Defeat',
+        unitSingular: 'win',
+        items: elderOnes.items,
+        countsByItem: elderOnes.countsByItem,
+      }),
     )
   }
 
@@ -343,6 +458,13 @@ function computeDeathMayDieAchievements(plays: BggPlay[], username: string) {
         items: scenarios.items,
         countsByItem: scenarios.countsByItem,
       }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'scenarioPlays',
+        verb: 'Play',
+        unitSingular: 'time',
+        items: scenarios.items,
+        countsByItem: scenarios.countsByItem,
+      }),
     )
   }
 
@@ -352,6 +474,13 @@ function computeDeathMayDieAchievements(plays: BggPlay[], username: string) {
         trackId: 'investigatorPlays',
         verb: 'Play',
         itemNoun: 'investigator',
+        unitSingular: 'time',
+        items: myInvestigators.items,
+        countsByItem: myInvestigators.countsByItem,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'investigatorPlays',
+        verb: 'Play',
         unitSingular: 'time',
         items: myInvestigators.items,
         countsByItem: myInvestigators.countsByItem,

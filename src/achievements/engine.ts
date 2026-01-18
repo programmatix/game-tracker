@@ -24,6 +24,7 @@ export function buildUnlockedAchievementsForTrack(input: {
       title: input.track.titleForLevel(level),
       level,
       remainingPlays: progress.remainingPlays,
+      playsSoFar: progress.playsSoFar,
       progressValue: progress.progressValue,
       progressTarget: progress.progressTarget,
       progressLabel: progress.progressLabel,
@@ -56,7 +57,8 @@ export function sortUnlockedAchievements(
     .filter((achievement) => achievement.status === 'available')
     .slice()
     .sort((a, b) => {
-      if (b.remainingPlays !== a.remainingPlays) return b.remainingPlays - a.remainingPlays
+      if (a.remainingPlays !== b.remainingPlays) return a.remainingPlays - b.remainingPlays
+      if (a.playsSoFar !== b.playsSoFar) return b.playsSoFar - a.playsSoFar
       return a.title.localeCompare(b.title)
     })
 
@@ -70,4 +72,3 @@ export function sortUnlockedAchievements(
 
   return { available, completed }
 }
-
