@@ -8,43 +8,67 @@ export default function AchievementsPanel(props: {
   achievements: Achievement[]
   nextLimit: number
   showGameName?: boolean
+  pinnedAchievementIds: ReadonlySet<string>
+  onTogglePin: (achievementId: string) => void
 }) {
-  const sorted = createMemo(() => sortUnlockedAchievements(props.achievements))
-  const nextAvailable = createMemo(() => sorted().available.slice(0, Math.max(0, props.nextLimit)))
+  const sorted = createMemo(() =>
+    sortUnlockedAchievements(props.achievements, {
+      pinnedAchievementIds: props.pinnedAchievementIds,
+    }),
+  )
+  const nextLocked = createMemo(() => sorted().available.slice(0, Math.max(0, props.nextLimit)))
+  const isPinned = (achievementId: string) => props.pinnedAchievementIds.has(achievementId)
 
   return (
     <div class="statsBlock">
       <div class="statsTitleRow">
         <h3 class="statsTitle">{props.title ?? 'Achievements'}</h3>
         <div class="muted mono">
-          <span>Available:</span> {sorted().available.length.toLocaleString()}
+          <span>Locked:</span> {sorted().available.length.toLocaleString()}
           {' • '}
           <span>Completed:</span> {sorted().completed.length.toLocaleString()}
         </div>
       </div>
 
       <Show
-        when={nextAvailable().length > 0}
-        fallback={<div class="muted">No available achievements.</div>}
+        when={nextLocked().length > 0}
+        fallback={<div class="muted">No locked achievements.</div>}
       >
         <div class="tableWrap compact">
           <table class="table compactTable">
             <thead>
               <tr>
+                <th class="pinCell" aria-label="Pinned"></th>
                 <th>Next</th>
                 <th class="mono">Remaining</th>
                 <th>Progress</th>
               </tr>
             </thead>
             <tbody>
-              <For each={nextAvailable()}>
+              <For each={nextLocked()}>
                 {(achievement) => (
                   <tr>
+                    <td class="pinCell">
+                      <button
+                        class="pinButton"
+                        classList={{ pinButtonActive: isPinned(achievement.id) }}
+                        type="button"
+                        onClick={() => props.onTogglePin(achievement.id)}
+                        aria-label={
+                          isPinned(achievement.id) ? 'Unpin achievement' : 'Pin achievement'
+                        }
+                      >
+                        {isPinned(achievement.id) ? '★' : '☆'}
+                      </button>
+                    </td>
                     <td>
                       <Show when={props.showGameName}>
                         <span class="muted">{achievement.gameName} — </span>
                       </Show>
                       <span>{achievement.title}</span>
+                      <Show when={isPinned(achievement.id) && achievement.status === 'completed'}>
+                        <span class="achievementTag">Unlocked</span>
+                      </Show>
                     </td>
                     <td class="mono">{achievement.remainingPlays.toLocaleString()}</td>
                     <td>
@@ -64,17 +88,18 @@ export default function AchievementsPanel(props: {
       </Show>
 
       <details class="details">
-        <summary>View all unlocked achievements</summary>
+        <summary>View all achievements</summary>
         <div class="achievementsList">
           <Show
             when={sorted().available.length > 0}
-            fallback={<div class="muted">No available achievements.</div>}
+            fallback={<div class="muted">No locked achievements.</div>}
           >
-            <h4 class="achievementsSectionTitle">Available</h4>
+            <h4 class="achievementsSectionTitle">Locked</h4>
             <div class="tableWrap compact">
               <table class="table compactTable">
                 <thead>
                   <tr>
+                    <th class="pinCell" aria-label="Pinned"></th>
                     <th>Achievement</th>
                     <th class="mono">Remaining</th>
                     <th>Progress</th>
@@ -84,11 +109,27 @@ export default function AchievementsPanel(props: {
                   <For each={sorted().available}>
                     {(achievement) => (
                       <tr>
+                        <td class="pinCell">
+                          <button
+                            class="pinButton"
+                            classList={{ pinButtonActive: isPinned(achievement.id) }}
+                            type="button"
+                            onClick={() => props.onTogglePin(achievement.id)}
+                            aria-label={
+                              isPinned(achievement.id) ? 'Unpin achievement' : 'Pin achievement'
+                            }
+                          >
+                            {isPinned(achievement.id) ? '★' : '☆'}
+                          </button>
+                        </td>
                         <td>
                           <Show when={props.showGameName}>
                             <span class="muted">{achievement.gameName} — </span>
                           </Show>
                           <span>{achievement.title}</span>
+                          <Show when={isPinned(achievement.id) && achievement.status === 'completed'}>
+                            <span class="achievementTag">Unlocked</span>
+                          </Show>
                         </td>
                         <td class="mono">{achievement.remainingPlays.toLocaleString()}</td>
                         <td>
@@ -113,6 +154,7 @@ export default function AchievementsPanel(props: {
               <table class="table compactTable">
                 <thead>
                   <tr>
+                    <th class="pinCell" aria-label="Pinned"></th>
                     <th>Achievement</th>
                     <th>Progress</th>
                   </tr>
@@ -121,6 +163,19 @@ export default function AchievementsPanel(props: {
                   <For each={sorted().completed}>
                     {(achievement) => (
                       <tr>
+                        <td class="pinCell">
+                          <button
+                            class="pinButton"
+                            classList={{ pinButtonActive: isPinned(achievement.id) }}
+                            type="button"
+                            onClick={() => props.onTogglePin(achievement.id)}
+                            aria-label={
+                              isPinned(achievement.id) ? 'Unpin achievement' : 'Pin achievement'
+                            }
+                          >
+                            {isPinned(achievement.id) ? '★' : '☆'}
+                          </button>
+                        </td>
                         <td>
                           <Show when={props.showGameName}>
                             <span class="muted">{achievement.gameName} — </span>
@@ -147,4 +202,3 @@ export default function AchievementsPanel(props: {
     </div>
   )
 }
-

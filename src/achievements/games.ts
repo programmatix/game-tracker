@@ -18,42 +18,44 @@ export type GameAchievementSummary = {
   achievements: ReturnType<typeof buildUnlockedAchievementsForGame>
 }
 
+type AchievementItem = { id: string; label: string }
+
 function sumQuantities(entries: Array<{ quantity: number }>): number {
   return entries.reduce((sum, entry) => sum + (entry.quantity || 0), 0)
 }
 
 function buildCanonicalCounts(input: {
-  preferredItems: string[]
-  observed: Array<{ item: string; amount: number }>
-}): { items: string[]; countsByItem: Record<string, number> } {
-  const canonicalByNormalized = new Map<string, string>()
-  const countsByItem: Record<string, number> = {}
+  preferredItems: AchievementItem[]
+  observed: Array<{ item: AchievementItem; amount: number }>
+}): { items: AchievementItem[]; countsByItemId: Record<string, number> } {
+  const canonicalByNormalized = new Map<string, AchievementItem>()
+  const countsByItemId: Record<string, number> = {}
 
   for (const rawItem of input.preferredItems) {
-    const item = normalizeAchievementItemLabel(rawItem)
-    if (!isMeaningfulAchievementItem(item)) continue
-    const normalized = item.toLowerCase()
+    const label = normalizeAchievementItemLabel(rawItem.label)
+    if (!isMeaningfulAchievementItem(label)) continue
+    const normalized = label.toLowerCase()
     if (canonicalByNormalized.has(normalized)) continue
-    canonicalByNormalized.set(normalized, item)
+    canonicalByNormalized.set(normalized, { id: rawItem.id, label })
   }
 
   for (const row of input.observed) {
-    const item = normalizeAchievementItemLabel(row.item)
-    if (!isMeaningfulAchievementItem(item)) continue
-    const normalized = item.toLowerCase()
+    const label = normalizeAchievementItemLabel(row.item.label)
+    if (!isMeaningfulAchievementItem(label)) continue
+    const normalized = label.toLowerCase()
 
     let canonical = canonicalByNormalized.get(normalized)
     if (!canonical) {
-      canonical = item
+      canonical = { id: row.item.id, label }
       canonicalByNormalized.set(normalized, canonical)
     }
 
-    countsByItem[canonical] = (countsByItem[canonical] ?? 0) + (row.amount || 0)
+    countsByItemId[canonical.id] = (countsByItemId[canonical.id] ?? 0) + (row.amount || 0)
   }
 
   const items = [...canonicalByNormalized.values()]
-  for (const item of items) countsByItem[item] ??= 0
-  return { items, countsByItem }
+  for (const item of items) countsByItemId[item.id] ??= 0
+  return { items, countsByItemId }
 }
 
 function buildCanonicalMaxValues(input: {
@@ -93,12 +95,14 @@ function buildCanonicalMaxValues(input: {
 
 function buildPlayCountTrack(input: {
   trackId: string
+  achievementBaseId: string
   currentPlays: number
   levels?: number[]
 }): AchievementTrack {
   const levels = input.levels ?? defaultAchievementLevels()
   return {
     trackId: input.trackId,
+    achievementBaseId: input.achievementBaseId,
     kind: 'counter',
     levels,
     titleForLevel: (level) => `Play ${level} ${pluralize(level, 'time')}`,
@@ -115,8 +119,39 @@ function slugifyTrackId(value: string): string {
   return slug || 'unknown'
 }
 
+function buildItemIdLookup(map: Map<string, string>): Map<string, string> {
+  const lookup = new Map<string, string>()
+  for (const [id, label] of map.entries()) {
+    const normalized = normalizeAchievementItemLabel(label).toLowerCase()
+    if (!normalized) continue
+    if (!lookup.has(normalized)) lookup.set(normalized, id)
+  }
+  return lookup
+}
+
+function buildAchievementItem(label: string, labelToId?: Map<string, string>): AchievementItem {
+  const normalizedLabel = normalizeAchievementItemLabel(label)
+  const normalizedKey = normalizedLabel.toLowerCase()
+  const id = labelToId?.get(normalizedKey) ?? slugifyTrackId(normalizedLabel)
+  return { id, label: normalizedLabel || label }
+}
+
+function itemsFromMap(map: Map<string, string>): AchievementItem[] {
+  return [...map.entries()].map(([id, label]) => ({
+    id,
+    label: normalizeAchievementItemLabel(label),
+  }))
+}
+
+function buildPerItemAchievementBaseId(verb: 'Play' | 'Defeat', itemNoun: string): string {
+  const verbKey = verb === 'Play' ? 'play' : 'defeat'
+  const nounKey = slugifyTrackId(itemNoun)
+  return `${verbKey}-each-${nounKey}`
+}
+
 function buildNamedCountTrack(input: {
   trackId: string
+  achievementBaseId: string
   current: number
   unitSingular: string
   titleForLevel: (level: number) => string
@@ -125,6 +160,7 @@ function buildNamedCountTrack(input: {
   const levels = input.levels ?? defaultAchievementLevels()
   return {
     trackId: input.trackId,
+    achievementBaseId: input.achievementBaseId,
     kind: 'counter',
     levels,
     titleForLevel: input.titleForLevel,
@@ -136,23 +172,27 @@ function buildNamedCountTrack(input: {
 function buildIndividualItemTracks(input: {
   trackIdPrefix: string
   verb: 'Play' | 'Defeat'
-  items: string[]
-  countsByItem: Record<string, number>
+  itemNoun: string
+  items: AchievementItem[]
+  countsByItemId: Record<string, number>
   unitSingular: string
   formatItem?: (item: string) => string
   levels?: number[]
 }): AchievementTrack[] {
   const tracks: AchievementTrack[] = []
   const formatItem = input.formatItem ?? ((value: string) => value)
+  const verbKey = input.verb === 'Play' ? 'play' : 'defeat'
+  const nounKey = slugifyTrackId(input.itemNoun)
   for (const item of input.items) {
-    const current = input.countsByItem[item] ?? 0
+    const current = input.countsByItemId[item.id] ?? 0
     tracks.push(
       buildNamedCountTrack({
-        trackId: `${input.trackIdPrefix}:${slugifyTrackId(item)}`,
+        trackId: `${input.trackIdPrefix}:${item.id}`,
+        achievementBaseId: `${verbKey}-${nounKey}-${item.id}`,
         current,
         unitSingular: input.unitSingular,
         titleForLevel: (level) =>
-          `${input.verb} ${formatItem(item)} ${level} ${pluralize(level, input.unitSingular)}`,
+          `${input.verb} ${formatItem(item.label)} ${level} ${pluralize(level, input.unitSingular)}`,
         levels: input.levels,
       }),
     )
@@ -162,11 +202,12 @@ function buildIndividualItemTracks(input: {
 
 function buildPerItemTrack(input: {
   trackId: string
+  achievementBaseId: string
   verb: 'Play' | 'Defeat'
   itemNoun: string
   unitSingular: string
-  items: string[]
-  countsByItem: Record<string, number>
+  items: AchievementItem[]
+  countsByItemId: Record<string, number>
   levels?: number[]
 }): AchievementTrack {
   const levels = input.levels ?? defaultAchievementLevels()
@@ -174,14 +215,15 @@ function buildPerItemTrack(input: {
 
   return {
     trackId: input.trackId,
+    achievementBaseId: input.achievementBaseId,
     kind: 'perItem',
     levels,
     titleForLevel: (level) =>
       `${input.verb} each ${noun} ${level} ${pluralize(level, input.unitSingular)}`,
     progressForLevel: (level) =>
       computePerItemProgress({
-        items: input.items,
-        countsByItem: input.countsByItem,
+        items: input.items.map((item) => item.id),
+        countsByItem: input.countsByItemId,
         targetPerItem: level,
         unitSingular: input.unitSingular,
       }),
@@ -226,26 +268,50 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
   const ownedLocations = getOwnedFinalGirlLocations(ownedFinalGirlContent)
   const ownedFinalGirls = getOwnedFinalGirlFinalGirls(ownedFinalGirlContent)
 
+  const villainLabelToId = buildItemIdLookup(
+    new Map(
+      [...ownedFinalGirlContent.villainsById.entries()].map(([id, info]) => [
+        id,
+        info.display,
+      ]),
+    ),
+  )
+  const locationLabelToId = buildItemIdLookup(ownedFinalGirlContent.locationsById)
+  const finalGirlLabelToId = buildItemIdLookup(ownedFinalGirlContent.finalGirlsById)
+
   const villainPreferred =
-    ownedFinalGirlContent.ownedVillains.size > 0 ? ownedVillains : entries.map((e) => e.villain)
+    ownedFinalGirlContent.ownedVillains.size > 0
+      ? ownedVillains.map((villain) => buildAchievementItem(villain, villainLabelToId))
+      : entries.map((e) => buildAchievementItem(e.villain, villainLabelToId))
   const locationPreferred =
-    ownedFinalGirlContent.ownedLocations.size > 0 ? ownedLocations : entries.map((e) => e.location)
+    ownedFinalGirlContent.ownedLocations.size > 0
+      ? ownedLocations.map((location) => buildAchievementItem(location, locationLabelToId))
+      : entries.map((e) => buildAchievementItem(e.location, locationLabelToId))
   const finalGirlPreferred =
     ownedFinalGirlContent.ownedFinalGirls.size > 0
-      ? ownedFinalGirls
-      : entries.map((e) => e.finalGirl)
+      ? ownedFinalGirls.map((finalGirl) => buildAchievementItem(finalGirl, finalGirlLabelToId))
+      : entries.map((e) => buildAchievementItem(e.finalGirl, finalGirlLabelToId))
 
   const villains = buildCanonicalCounts({
     preferredItems: villainPreferred,
-    observed: entries.map((e) => ({ item: e.villain, amount: e.isWin ? e.quantity : 0 })),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.villain, villainLabelToId),
+      amount: e.isWin ? e.quantity : 0,
+    })),
   })
   const locations = buildCanonicalCounts({
     preferredItems: locationPreferred,
-    observed: entries.map((e) => ({ item: e.location, amount: e.quantity })),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.location, locationLabelToId),
+      amount: e.quantity,
+    })),
   })
   const finalGirls = buildCanonicalCounts({
     preferredItems: finalGirlPreferred,
-    observed: entries.map((e) => ({ item: e.finalGirl, amount: e.quantity })),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.finalGirl, finalGirlLabelToId),
+      amount: e.quantity,
+    })),
   })
 
   const finalGirlBoxByNormalized = new Map<string, string>()
@@ -265,25 +331,27 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
   }
 
   const tracks: AchievementTrack[] = [
-    buildPlayCountTrack({ trackId: 'plays', currentPlays: totalPlays }),
+    buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
   ]
 
   if (villains.items.length > 0) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'villainWins',
+        achievementBaseId: buildPerItemAchievementBaseId('Defeat', 'villain'),
         verb: 'Defeat',
         itemNoun: 'villain',
         unitSingular: 'win',
         items: villains.items,
-        countsByItem: villains.countsByItem,
+        countsByItemId: villains.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'villainWins',
         verb: 'Defeat',
+        itemNoun: 'villain',
         unitSingular: 'win',
         items: villains.items,
-        countsByItem: villains.countsByItem,
+        countsByItemId: villains.countsByItemId,
       }),
     )
   }
@@ -292,18 +360,20 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'locationPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'location'),
         verb: 'Play',
         itemNoun: 'location',
         unitSingular: 'time',
         items: locations.items,
-        countsByItem: locations.countsByItem,
+        countsByItemId: locations.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'locationPlays',
         verb: 'Play',
+        itemNoun: 'location',
         unitSingular: 'time',
         items: locations.items,
-        countsByItem: locations.countsByItem,
+        countsByItemId: locations.countsByItemId,
       }),
     )
   }
@@ -312,18 +382,20 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'finalGirlPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'final girl'),
         verb: 'Play',
         itemNoun: 'final girl',
         unitSingular: 'time',
         items: finalGirls.items,
-        countsByItem: finalGirls.countsByItem,
+        countsByItemId: finalGirls.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'finalGirlPlays',
         verb: 'Play',
+        itemNoun: 'final girl',
         unitSingular: 'time',
         items: finalGirls.items,
-        countsByItem: finalGirls.countsByItem,
+        countsByItemId: finalGirls.countsByItemId,
         formatItem: (finalGirl) => {
           const normalized = normalizeAchievementItemLabel(finalGirl).toLowerCase()
           const box = finalGirlBoxByNormalized.get(normalized)
@@ -340,6 +412,9 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
   const entries = getSpiritIslandEntries(plays, username)
   const totalPlays = sumQuantities(entries)
 
+  const spiritLabelToId = buildItemIdLookup(spiritIslandMappings.spiritsById)
+  const adversaryLabelToId = buildItemIdLookup(spiritIslandMappings.adversariesById)
+
   const adversaryLevelWinsByLabel = new Map<string, number>()
   const adversaryLevelBases = new Set<string>(spiritIslandMappings.adversariesById.values())
   for (const entry of entries) {
@@ -353,14 +428,17 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
   }
 
   const spirits = buildCanonicalCounts({
-    preferredItems: [...spiritIslandMappings.spiritsById.values()],
-    observed: entries.map((e) => ({ item: e.spirit, amount: e.quantity })),
+    preferredItems: itemsFromMap(spiritIslandMappings.spiritsById),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.spirit, spiritLabelToId),
+      amount: e.quantity,
+    })),
   })
 
   const adversariesBase = buildCanonicalCounts({
-    preferredItems: [...spiritIslandMappings.adversariesById.values()],
+    preferredItems: itemsFromMap(spiritIslandMappings.adversariesById),
     observed: entries.map((e) => ({
-      item: stripTrailingLevelLabel(e.adversary),
+      item: buildAchievementItem(stripTrailingLevelLabel(e.adversary), adversaryLabelToId),
       amount: e.isWin ? e.quantity : 0,
     })),
   })
@@ -389,7 +467,7 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
   })
 
   const tracks: AchievementTrack[] = [
-    buildPlayCountTrack({ trackId: 'plays', currentPlays: totalPlays }),
+    buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
   ]
 
   if (adversariesBase.items.length > 0) {
@@ -397,15 +475,16 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
     for (const adversary of adversaryLevelBases) {
       const canonical = normalizeAchievementItemLabel(adversary)
       if (!isMeaningfulAchievementItem(canonical)) continue
-      for (const level of SPIRIT_ISLAND_LEVELS) {
-        const label = `${adversary} L${level}`
+      for (const difficulty of SPIRIT_ISLAND_LEVELS) {
+        const label = `${adversary} L${difficulty}`
         adversaryLevelTracks.push(
           buildNamedCountTrack({
-            trackId: `adversaryLevelWin:${slugifyTrackId(adversary)}-l${level}`,
+            trackId: `adversaryLevelWin:${slugifyTrackId(adversary)}-l${difficulty}`,
+            achievementBaseId: `spirit-island-adversary-level-win-${slugifyTrackId(adversary)}-l${difficulty}`,
             current: adversaryLevelWinsByLabel.get(label) ?? 0,
             unitSingular: 'win',
             levels: [1],
-            titleForLevel: () => `Defeat ${adversary} on Level ${level}`,
+            titleForLevel: (_winsTarget) => `Defeat ${adversary} on Level ${difficulty}`,
           }),
         )
       }
@@ -414,19 +493,21 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'adversaryWins',
+        achievementBaseId: buildPerItemAchievementBaseId('Defeat', 'adversary'),
         verb: 'Defeat',
         itemNoun: 'adversary',
         unitSingular: 'win',
         items: adversariesBase.items,
-        countsByItem: adversariesBase.countsByItem,
+        countsByItemId: adversariesBase.countsByItemId,
       }),
       ...adversaryLevelTracks,
       ...buildIndividualItemTracks({
         trackIdPrefix: 'adversaryWins',
         verb: 'Defeat',
+        itemNoun: 'adversary',
         unitSingular: 'win',
         items: adversariesBase.items,
-        countsByItem: adversariesBase.countsByItem,
+        countsByItemId: adversariesBase.countsByItemId,
       }),
     )
   }
@@ -435,18 +516,20 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'spiritPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'spirit'),
         verb: 'Play',
         itemNoun: 'spirit',
         unitSingular: 'time',
         items: spirits.items,
-        countsByItem: spirits.countsByItem,
+        countsByItemId: spirits.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'spiritPlays',
         verb: 'Play',
+        itemNoun: 'spirit',
         unitSingular: 'time',
         items: spirits.items,
-        countsByItem: spirits.countsByItem,
+        countsByItemId: spirits.countsByItemId,
       }),
     )
   }
@@ -456,6 +539,7 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
       ...adversarySpiritLevels.items.map((pair) =>
         buildNamedCountTrack({
           trackId: `spiritAdversaryLevels:${slugifyTrackId(pair)}`,
+          achievementBaseId: `spirit-island-spirit-adversary-levels-${slugifyTrackId(pair)}`,
           current: adversarySpiritLevels.countsByItem[pair] ?? 0,
           unitSingular: 'level',
           titleForLevel: (level) => `Defeat ${pair} at level ${level}`,
@@ -476,39 +560,53 @@ function computeMistfallAchievements(plays: BggPlay[], username: string) {
   const entries = getMistfallEntries(plays, username)
   const totalPlays = sumQuantities(entries)
 
+  const heroLabelToId = buildItemIdLookup(mistfallMappings.heroesById)
+  const questLabelToId = buildItemIdLookup(mistfallMappings.questsById)
+
   const heroes = buildCanonicalCounts({
-    preferredItems: mistfallMappings.allHeroes,
-    observed: entries.map((e) => ({ item: e.hero, amount: e.quantity })),
+    preferredItems: itemsFromMap(mistfallMappings.heroesById),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.hero, heroLabelToId),
+      amount: e.quantity,
+    })),
   })
   const quests = buildCanonicalCounts({
-    preferredItems: mistfallMappings.allQuests,
-    observed: entries.map((e) => ({ item: e.quest, amount: e.quantity })),
+    preferredItems: itemsFromMap(mistfallMappings.questsById),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.quest, questLabelToId),
+      amount: e.quantity,
+    })),
   })
   const questWins = buildCanonicalCounts({
-    preferredItems: mistfallMappings.allQuests,
-    observed: entries.map((e) => ({ item: e.quest, amount: e.isWin ? e.quantity : 0 })),
+    preferredItems: itemsFromMap(mistfallMappings.questsById),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.quest, questLabelToId),
+      amount: e.isWin ? e.quantity : 0,
+    })),
   })
 
   const tracks: AchievementTrack[] = [
-    buildPlayCountTrack({ trackId: 'plays', currentPlays: totalPlays }),
+    buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
   ]
 
   if (questWins.items.length > 0) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'questWins',
+        achievementBaseId: buildPerItemAchievementBaseId('Defeat', 'quest'),
         verb: 'Defeat',
         itemNoun: 'quest',
         unitSingular: 'win',
         items: questWins.items,
-        countsByItem: questWins.countsByItem,
+        countsByItemId: questWins.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'questWins',
         verb: 'Defeat',
+        itemNoun: 'quest',
         unitSingular: 'win',
         items: questWins.items,
-        countsByItem: questWins.countsByItem,
+        countsByItemId: questWins.countsByItemId,
       }),
     )
   }
@@ -517,18 +615,20 @@ function computeMistfallAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'questPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'quest'),
         verb: 'Play',
         itemNoun: 'quest',
         unitSingular: 'time',
         items: quests.items,
-        countsByItem: quests.countsByItem,
+        countsByItemId: quests.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'questPlays',
         verb: 'Play',
+        itemNoun: 'quest',
         unitSingular: 'time',
         items: quests.items,
-        countsByItem: quests.countsByItem,
+        countsByItemId: quests.countsByItemId,
       }),
     )
   }
@@ -537,18 +637,20 @@ function computeMistfallAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'heroPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'hero'),
         verb: 'Play',
         itemNoun: 'hero',
         unitSingular: 'time',
         items: heroes.items,
-        countsByItem: heroes.countsByItem,
+        countsByItemId: heroes.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'heroPlays',
         verb: 'Play',
+        itemNoun: 'hero',
         unitSingular: 'time',
         items: heroes.items,
-        countsByItem: heroes.countsByItem,
+        countsByItemId: heroes.countsByItemId,
       }),
     )
   }
@@ -561,42 +663,56 @@ function computeDeathMayDieAchievements(plays: BggPlay[], username: string) {
   const totalPlays = sumQuantities(entries)
 
   const elderOnes = buildCanonicalCounts({
-    preferredItems: deathMayDieContent.elderOnes,
-    observed: entries.map((e) => ({ item: e.elderOne, amount: e.isWin ? e.quantity : 0 })),
+    preferredItems: deathMayDieContent.elderOnes.map((elderOne) =>
+      buildAchievementItem(elderOne),
+    ),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.elderOne),
+      amount: e.isWin ? e.quantity : 0,
+    })),
   })
 
   const scenarios = buildCanonicalCounts({
-    preferredItems: deathMayDieContent.scenarios,
-    observed: entries.map((e) => ({ item: e.scenario, amount: e.quantity })),
+    preferredItems: deathMayDieContent.scenarios.map((scenario) =>
+      buildAchievementItem(scenario),
+    ),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.scenario),
+      amount: e.quantity,
+    })),
   })
 
   const myInvestigators = buildCanonicalCounts({
-    preferredItems: deathMayDieContent.investigators,
+    preferredItems: deathMayDieContent.investigators.map((investigator) =>
+      buildAchievementItem(investigator),
+    ),
     observed: entries
       .filter((e) => Boolean(e.myInvestigator))
-      .map((e) => ({ item: e.myInvestigator!, amount: e.quantity })),
+      .map((e) => ({ item: buildAchievementItem(e.myInvestigator!), amount: e.quantity })),
   })
 
   const tracks: AchievementTrack[] = [
-    buildPlayCountTrack({ trackId: 'plays', currentPlays: totalPlays }),
+    buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
   ]
 
   if (elderOnes.items.length > 0) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'elderOneWins',
+        achievementBaseId: buildPerItemAchievementBaseId('Defeat', 'elder one'),
         verb: 'Defeat',
         itemNoun: 'elder one',
         unitSingular: 'win',
         items: elderOnes.items,
-        countsByItem: elderOnes.countsByItem,
+        countsByItemId: elderOnes.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'elderOneWins',
         verb: 'Defeat',
+        itemNoun: 'elder one',
         unitSingular: 'win',
         items: elderOnes.items,
-        countsByItem: elderOnes.countsByItem,
+        countsByItemId: elderOnes.countsByItemId,
       }),
     )
   }
@@ -605,18 +721,20 @@ function computeDeathMayDieAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'scenarioPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'scenario'),
         verb: 'Play',
         itemNoun: 'scenario',
         unitSingular: 'time',
         items: scenarios.items,
-        countsByItem: scenarios.countsByItem,
+        countsByItemId: scenarios.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioPlays',
         verb: 'Play',
+        itemNoun: 'scenario',
         unitSingular: 'time',
         items: scenarios.items,
-        countsByItem: scenarios.countsByItem,
+        countsByItemId: scenarios.countsByItemId,
       }),
     )
   }
@@ -625,18 +743,20 @@ function computeDeathMayDieAchievements(plays: BggPlay[], username: string) {
     tracks.push(
       buildPerItemTrack({
         trackId: 'investigatorPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'investigator'),
         verb: 'Play',
         itemNoun: 'investigator',
         unitSingular: 'time',
         items: myInvestigators.items,
-        countsByItem: myInvestigators.countsByItem,
+        countsByItemId: myInvestigators.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'investigatorPlays',
         verb: 'Play',
+        itemNoun: 'investigator',
         unitSingular: 'time',
         items: myInvestigators.items,
-        countsByItem: myInvestigators.countsByItem,
+        countsByItemId: myInvestigators.countsByItemId,
       }),
     )
   }

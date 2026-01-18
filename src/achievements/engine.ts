@@ -15,7 +15,7 @@ export function buildUnlockedAchievementsForTrack(input: {
     const status = progress.isComplete ? 'completed' : 'available'
 
     achievements.push({
-      id: `${input.gameId}:${input.track.trackId}:${level}`,
+      id: `${input.gameId}-${input.track.achievementBaseId}-${level}`,
       gameId: input.gameId,
       gameName: input.gameName,
       trackId: input.track.trackId,
@@ -52,23 +52,34 @@ export function buildUnlockedAchievementsForGame(input: {
 
 export function sortUnlockedAchievements(
   achievements: Achievement[],
+  options?: { pinnedAchievementIds?: ReadonlySet<string> },
 ): { available: Achievement[]; completed: Achievement[] } {
-  const available = achievements
-    .filter((achievement) => achievement.status === 'available')
+  const pinnedAchievementIds = options?.pinnedAchievementIds ?? new Set<string>()
+  const locked = achievements
+    .filter(
+      (achievement) =>
+        achievement.status === 'available' || pinnedAchievementIds.has(achievement.id),
+    )
     .slice()
     .sort((a, b) => {
+      const aPinned = pinnedAchievementIds.has(a.id)
+      const bPinned = pinnedAchievementIds.has(b.id)
+      if (aPinned !== bPinned) return aPinned ? -1 : 1
       if (a.remainingPlays !== b.remainingPlays) return a.remainingPlays - b.remainingPlays
       if (a.playsSoFar !== b.playsSoFar) return b.playsSoFar - a.playsSoFar
       return a.title.localeCompare(b.title)
     })
 
   const completed = achievements
-    .filter((achievement) => achievement.status === 'completed')
+    .filter(
+      (achievement) =>
+        achievement.status === 'completed' && !pinnedAchievementIds.has(achievement.id),
+    )
     .slice()
     .sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level
       return a.title.localeCompare(b.title)
     })
 
-  return { available, completed }
+  return { available: locked, completed }
 }

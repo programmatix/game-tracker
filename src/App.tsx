@@ -13,6 +13,7 @@ import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import AchievementsView from './AchievementsView'
 import { authUser, signOutUser } from './auth/auth'
+import { readPinnedAchievementIds, writePinnedAchievementIds } from './achievements/pins'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -112,6 +113,9 @@ function App() {
   const [playsCache, setPlaysCache] = createSignal<PlaysCacheV1 | null>(readPlaysCache())
   const [playsError, setPlaysError] = createSignal<string | null>(null)
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
+  const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(
+    readPinnedAchievementIds(USERNAME),
+  )
 
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
     new Map<string, string>(),
@@ -203,6 +207,17 @@ function App() {
   const totalPages = createMemo(() =>
     Math.max(1, Math.ceil(allPlays().plays.length / PLAYS_PER_PAGE)),
   )
+
+  function toggleAchievementPin(achievementId: string) {
+    const next = new Set(pinnedAchievementIds())
+    if (next.has(achievementId)) {
+      next.delete(achievementId)
+    } else {
+      next.add(achievementId)
+    }
+    setPinnedAchievementIds(next)
+    writePinnedAchievementIds(USERNAME, next)
+  }
 
   const pagedPlays = createMemo(() => {
     const start = (page() - 1) * PLAYS_PER_PAGE
@@ -618,7 +633,13 @@ function App() {
           </div>
 
           <Show when={mainTab() === 'finalGirl'}>
-            <FinalGirlView plays={allPlays().plays} username={USERNAME} authToken={bggAuthToken()} />
+            <FinalGirlView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              onTogglePin={toggleAchievementPin}
+            />
           </Show>
 
           <Show when={mainTab() === 'spiritIsland'}>
@@ -626,11 +647,19 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              onTogglePin={toggleAchievementPin}
             />
           </Show>
 
           <Show when={mainTab() === 'mistfall'}>
-            <MistfallView plays={allPlays().plays} username={USERNAME} authToken={bggAuthToken()} />
+            <MistfallView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              onTogglePin={toggleAchievementPin}
+            />
           </Show>
 
           <Show when={mainTab() === 'deathMayDie'}>
@@ -638,11 +667,18 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              onTogglePin={toggleAchievementPin}
             />
           </Show>
 
           <Show when={mainTab() === 'achievements'}>
-            <AchievementsView plays={allPlays().plays} username={USERNAME} />
+            <AchievementsView
+              plays={allPlays().plays}
+              username={USERNAME}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              onTogglePin={toggleAchievementPin}
+            />
           </Show>
 
           <Show when={mainTab() === 'plays'}>

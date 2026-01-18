@@ -20,6 +20,7 @@ export type Achievement = {
 
 export type AchievementTrack = {
   trackId: string
+  achievementBaseId: string
   kind: AchievementKind
   titleForLevel: (level: number) => string
   progressForLevel: (level: number) => {

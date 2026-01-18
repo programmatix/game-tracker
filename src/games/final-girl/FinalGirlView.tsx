@@ -42,6 +42,8 @@ export default function FinalGirlView(props: {
   plays: BggPlay[]
   username: string
   authToken?: string
+  pinnedAchievementIds: ReadonlySet<string>
+  onTogglePin: (achievementId: string) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
   const [hideCounts, setHideCounts] = createSignal(true)
@@ -252,7 +254,12 @@ export default function FinalGirlView(props: {
         </div>
       </div>
 
-      <AchievementsPanel achievements={achievements()} nextLimit={5} />
+      <AchievementsPanel
+        achievements={achievements()}
+        nextLimit={5}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+      />
 
       <Show
         when={entries().length > 0}
