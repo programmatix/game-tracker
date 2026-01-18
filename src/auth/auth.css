@@ -1,0 +1,70 @@
+.authPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.authPanel {
+  width: min(520px, 100%);
+}
+
+.authBody {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.authField {
+  display: grid;
+  gap: 6px;
+}
+
+.authActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font: inherit;
+}
+
+.button:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.authError {
+  border: 1px solid rgba(255, 85, 85, 0.35);
+  background: rgba(255, 85, 85, 0.08);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.authSuccess {
+  border: 1px solid rgba(85, 255, 130, 0.25);
+  background: rgba(85, 255, 130, 0.06);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.authList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}

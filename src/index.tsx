@@ -2,6 +2,7 @@
 import { render } from 'solid-js/web'
 import './index.css'
 import App from './App.tsx'
+import AuthGate from './auth/AuthGate.tsx'
 
 if (import.meta.env.DEV) {
   void import('solid-devtools')
@@ -9,4 +10,11 @@ if (import.meta.env.DEV) {
 
 const root = document.getElementById('root')
 
-render(() => <App />, root!)
+render(
+  () => (
+    <AuthGate>
+      <App />
+    </AuthGate>
+  ),
+  root!,
+)

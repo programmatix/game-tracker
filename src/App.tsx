@@ -11,6 +11,7 @@ import FinalGirlView from './games/final-girl/FinalGirlView'
 import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
+import { authUser, signOutUser } from './auth/auth'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -271,6 +272,18 @@ function App() {
           </p>
         </div>
         <div class="headerActions">
+          <div class="tokenRow">
+            <span class="muted">Signed in</span>
+            <span class="mono">{authUser()?.email || '—'}</span>
+            <button
+              class="linkButton"
+              type="button"
+              onClick={() => void signOutUser()}
+              title="Sign out"
+            >
+              Sign out
+            </button>
+          </div>
           <div class="muted">Using local XML: <span class="mono">data.xml</span></div>
           <label class="tokenRow">
             <span class="muted">BGG token</span>

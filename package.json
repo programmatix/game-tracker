@@ -12,6 +12,7 @@
     "firebase:deploy:hosting": "firebase deploy --only hosting"
   },
   "dependencies": {
+    "firebase": "^12.8.0",
     "solid-js": "^1.9.10"
   },
   "devDependencies": {

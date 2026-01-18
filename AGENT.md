@@ -39,3 +39,8 @@ And core requirements are usually going to be:
 
 - Track how many times I've played each of the axes, in isolation.
 - A 2d-matrix of the two primary axes.
+
+# Rules
+
+- Do not make any changes to git.
+- Don't delete or touch any files that have changed unexpectedly, or aren't compiling, or similar.  I have other agents working concurrently.
