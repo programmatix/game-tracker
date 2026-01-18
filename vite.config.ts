@@ -1,8 +1,10 @@
-import { defineConfig, type PluginOption } from 'vite'
+import { defineConfig, loadEnv, type PluginOption } from 'vite'
 import solid from 'vite-plugin-solid'
 import devtools from 'solid-devtools/vite'
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const bggToken = env.BGG_TOKEN || env.VITE_BGG_TOKEN || ''
   const plugins: PluginOption[] = [solid()]
 
   if (command === 'serve') {
@@ -19,6 +21,9 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins,
+    define: {
+      'import.meta.env.BGG_TOKEN': JSON.stringify(bggToken),
+    },
     server: {
       proxy: {
         '/bgg': {

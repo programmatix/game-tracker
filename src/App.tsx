@@ -4,9 +4,9 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
 } from 'solid-js'
-import localPlaysXml from '../data.xml?raw'
-import { fetchThingSummary, parsePlaysXmlText } from './bgg'
+import { fetchAllUserPlays, fetchThingSummary, type BggPlaysResponse } from './bgg'
 import FinalGirlView from './games/final-girl/FinalGirlView'
 import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
@@ -17,7 +17,6 @@ import './App.css'
 
 const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
-const BGG_AUTH_TOKEN_STORAGE_KEY = 'bggAuthToken'
 type MainTab =
   | 'finalGirl'
   | 'spiritIsland'
@@ -26,6 +25,51 @@ type MainTab =
   | 'achievements'
   | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail'
+
+type PlaysCacheV1 = {
+  version: 1
+  fetchedAtMs: number
+  data: Pick<BggPlaysResponse, 'username' | 'userid' | 'total' | 'plays' | 'raw'>
+}
+
+const PLAYS_CACHE_KEY = `bggPlaysCache:v1:${USERNAME}`
+const PLAYS_CACHE_TTL_MS = 30 * 60 * 1000
+
+function readPlaysCache(): PlaysCacheV1 | null {
+  try {
+    const raw = localStorage.getItem(PLAYS_CACHE_KEY)
+    if (!raw) return null
+    const parsed: unknown = JSON.parse(raw)
+    if (
+      typeof parsed === 'object' &&
+      parsed != null &&
+      'version' in parsed &&
+      (parsed as { version: unknown }).version === 1 &&
+      'fetchedAtMs' in parsed &&
+      typeof (parsed as { fetchedAtMs: unknown }).fetchedAtMs === 'number' &&
+      'data' in parsed &&
+      typeof (parsed as { data: unknown }).data === 'object'
+    ) {
+      return parsed as PlaysCacheV1
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+function writePlaysCache(cache: PlaysCacheV1) {
+  try {
+    localStorage.setItem(PLAYS_CACHE_KEY, JSON.stringify(cache))
+  } catch {
+    // ignore quota / storage failures
+  }
+}
+
+function isCacheFresh(cache: PlaysCacheV1 | null): boolean {
+  if (!cache) return false
+  return Date.now() - cache.fetchedAtMs <= PLAYS_CACHE_TTL_MS
+}
 
 function playQuantity(play: { attributes: Record<string, string> }): number {
   const parsed = Number(play.attributes.quantity || '1')
@@ -61,9 +105,13 @@ function App() {
   const [mainTab, setMainTab] = createSignal<MainTab>('finalGirl')
   const [playsView, setPlaysView] = createSignal<PlaysView>('plays')
   const [selectedGameKey, setSelectedGameKey] = createSignal<string | null>(null)
-  const [bggAuthToken, setBggAuthToken] = createSignal(
-    localStorage.getItem(BGG_AUTH_TOKEN_STORAGE_KEY) || '',
+  const bggAuthToken = createMemo(
+    () => (import.meta.env.BGG_TOKEN || import.meta.env.VITE_BGG_TOKEN || '').trim(),
   )
+
+  const [playsCache, setPlaysCache] = createSignal<PlaysCacheV1 | null>(readPlaysCache())
+  const [playsError, setPlaysError] = createSignal<string | null>(null)
+  const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
 
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
     new Map<string, string>(),
@@ -75,11 +123,59 @@ function App() {
   let thumbnailsEnabled = true
 
   createEffect(() => setPageDraft(String(page())))
-  createEffect(() => {
-    localStorage.setItem(BGG_AUTH_TOKEN_STORAGE_KEY, bggAuthToken())
+
+  const allPlays = createMemo<BggPlaysResponse>(() => {
+    const cached = playsCache()
+    if (!cached) {
+      return { username: USERNAME, total: 0, page: 1, raw: { cache: null }, plays: [] }
+    }
+    return {
+      username: cached.data.username || USERNAME,
+      userid: cached.data.userid,
+      total: cached.data.total,
+      page: 1,
+      raw: cached.data.raw,
+      plays: cached.data.plays,
+    }
   })
 
-  const allPlays = createMemo(() => parsePlaysXmlText(localPlaysXml))
+  async function refreshPlays(options?: { force?: boolean }) {
+    if (isFetchingPlays()) return
+
+    const cached = playsCache()
+    const shouldFetch = options?.force ? true : !isCacheFresh(cached)
+    if (!shouldFetch) return
+
+    setIsFetchingPlays(true)
+    setPlaysError(null)
+    try {
+      const response = await fetchAllUserPlays(USERNAME, { authToken: bggAuthToken() })
+      const nextCache: PlaysCacheV1 = {
+        version: 1,
+        fetchedAtMs: Date.now(),
+        data: {
+          username: response.username || USERNAME,
+          userid: response.userid,
+          total: response.total,
+          plays: response.plays,
+          raw: response.raw,
+        },
+      }
+      writePlaysCache(nextCache)
+      setPlaysCache(nextCache)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setPlaysError(message)
+    } finally {
+      setIsFetchingPlays(false)
+    }
+  }
+
+  void refreshPlays()
+  createEffect(() => {
+    const id = window.setInterval(() => void refreshPlays(), 60 * 1000)
+    onCleanup(() => window.clearInterval(id))
+  })
   const totalPlayCount = createMemo(() =>
     allPlays().plays.reduce((sum, play) => sum + playQuantity(play), 0),
   )
@@ -221,7 +317,7 @@ function App() {
           batch.map(async (objectid) => {
             objectIdsInFlight.add(objectid)
             try {
-              const authToken = bggAuthToken().trim()
+              const authToken = bggAuthToken()
               if (!authToken) return
               const thing = await fetchThingSummary(objectid, { authToken })
               noteThumbnail(objectid, thing.thumbnail)
@@ -249,7 +345,7 @@ function App() {
   }
 
   createEffect(() => {
-    thumbnailsEnabled = playsView() === 'byGame' && Boolean(bggAuthToken().trim())
+    thumbnailsEnabled = playsView() === 'byGame' && Boolean(bggAuthToken())
     if (!thumbnailsEnabled) return
 
     const ids = playsByGame()
@@ -291,27 +387,39 @@ function App() {
               Sign out
             </button>
           </div>
-          <div class="muted">Using local XML: <span class="mono">data.xml</span></div>
-          <label class="tokenRow">
-            <span class="muted">BGG token</span>
-            <input
-              class="tokenInput mono"
-              type="password"
-              placeholder="(optional)"
-              value={bggAuthToken()}
-              onInput={(e) => setBggAuthToken(e.currentTarget.value)}
-              autocomplete="off"
-            />
+          <div class="muted">
+            Plays source:{' '}
+            <span class="mono">
+              {playsCache() ? 'BGG (cached)' : isFetchingPlays() ? 'BGG (loading)' : 'BGG'}
+            </span>
+          </div>
+          <div class="tokenRow">
             <button
               class="linkButton"
               type="button"
-              onClick={() => setBggAuthToken('')}
-              disabled={!bggAuthToken()}
-              title="Clear token"
+              onClick={() => void refreshPlays({ force: true })}
+              disabled={isFetchingPlays()}
+              title="Reload plays from BoardGameGeek"
             >
-              Clear
+              {isFetchingPlays() ? 'Reloading…' : 'Reload'}
             </button>
-          </label>
+            <Show when={playsCache()} fallback={<span class="muted">Last fetch: —</span>}>
+              {(cached) => (
+                <span class="muted">
+                  Last fetch:{' '}
+                  <span class="mono">{new Date(cached().fetchedAtMs).toLocaleString()}</span>
+                </span>
+              )}
+            </Show>
+          </div>
+          <Show when={!bggAuthToken()}>
+            <div class="muted">
+              BGG token missing in <span class="mono">.env</span>
+            </div>
+          </Show>
+          <Show when={playsError()}>
+            {(message) => <div class="muted">Fetch error: {message()}</div>}
+          </Show>
         </div>
       </header>
 
@@ -654,9 +762,12 @@ function App() {
                 Games: <span class="mono">{playsByGame().length.toLocaleString()}</span>
                 {' • '}
                 Total plays: <span class="mono">{totalPlayCount().toLocaleString()}</span>
-                <Show when={!bggAuthToken().trim()}>
+                <Show when={!bggAuthToken()}>
                   {' • '}
-                  <span class="muted">Add BGG token to load thumbnails</span>
+                  <span class="muted">
+                    Set <span class="mono">BGG_TOKEN</span> in <span class="mono">.env</span>{' '}
+                    to load thumbnails
+                  </span>
                 </Show>
               </div>
 

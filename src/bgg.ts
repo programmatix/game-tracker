@@ -250,6 +250,48 @@ export async function fetchUserPlays(
   return { username, userid, total, page: parsedPage, raw, plays }
 }
 
+export async function fetchAllUserPlays(
+  username: string,
+  options?: { signal?: AbortSignal; authToken?: string },
+): Promise<BggPlaysResponse> {
+  const pages: BggPlaysResponse[] = []
+
+  let page = 1
+  let expectedTotal = 0
+
+  while (true) {
+    const response = await fetchUserPlays(username, page, options)
+    pages.push(response)
+
+    if (page === 1) expectedTotal = response.total
+
+    const playsSoFar = pages.reduce((sum, p) => sum + p.plays.length, 0)
+    if (expectedTotal > 0 && playsSoFar >= expectedTotal) break
+    if (response.plays.length === 0) break
+
+    page += 1
+  }
+
+  const first = pages[0]
+  if (!first) {
+    return { username, total: 0, page: 1, raw: { pages: [] }, plays: [] }
+  }
+
+  const playsById = new Map<number, BggPlay>()
+  for (const response of pages) {
+    for (const play of response.plays) playsById.set(play.id, play)
+  }
+
+  return {
+    username: first.username || username,
+    userid: first.userid,
+    total: expectedTotal || playsById.size,
+    page: 1,
+    raw: { pages: pages.map((p) => p.raw) },
+    plays: Array.from(playsById.values()),
+  }
+}
+
 export async function fetchThingSummary(
   id: string,
   options?: { signal?: AbortSignal; authToken?: string },

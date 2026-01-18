@@ -28,4 +28,4 @@ pnpm firebase:deploy:hosting
 ## Notes
 
 - The username is currently hardcoded in `src/App.tsx`.
-- The app fetches plays from the BGG XML API and caches them in `localStorage` (set `VITE_BGG_TOKEN` in `.env` if needed).
+- The app fetches plays from the BGG XML API and caches them in `localStorage` (set `BGG_TOKEN` in `.env` if needed).
