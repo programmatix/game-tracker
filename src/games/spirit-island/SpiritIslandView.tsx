@@ -3,8 +3,10 @@ import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import CountTable from '../../components/CountTable'
+import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
+import { computeGameAchievements } from '../../achievements/games'
 import mappingsText from './mappings.txt?raw'
 import {
   formatSpiritIslandAdversaryLabel,
@@ -116,6 +118,10 @@ export default function SpiritIslandView(props: {
     return result
   })
 
+  const achievements = createMemo(() =>
+    computeGameAchievements('spiritIsland', props.plays, props.username),
+  )
+
   const spiritCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.spirit)
@@ -185,6 +191,8 @@ export default function SpiritIslandView(props: {
           <span class="mono">{entries().length.toLocaleString()}</span>
         </div>
       </div>
+
+      <AchievementsPanel achievements={achievements()} nextLimit={5} />
 
       <Show
         when={entries().length > 0}

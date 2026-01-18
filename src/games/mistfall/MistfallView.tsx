@@ -3,8 +3,10 @@ import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import CountTable from '../../components/CountTable'
+import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
+import { computeGameAchievements } from '../../achievements/games'
 import mappingsText from './mappings.txt?raw'
 import {
   normalizeMistfallName,
@@ -142,6 +144,10 @@ export default function MistfallView(props: {
     return result
   })
 
+  const achievements = createMemo(() =>
+    computeGameAchievements('mistfall', props.plays, props.username),
+  )
+
   function mergeKnownKeys(played: string[], known: string[]): string[] {
     const seen = new Set(played.map(normalizeMistfallName))
     const merged = [...played]
@@ -227,6 +233,8 @@ export default function MistfallView(props: {
           Mistfall plays in dataset: <span class="mono">{entries().length.toLocaleString()}</span>
         </div>
       </div>
+
+      <AchievementsPanel achievements={achievements()} nextLimit={5} />
 
       <Show
         when={entries().length > 0}

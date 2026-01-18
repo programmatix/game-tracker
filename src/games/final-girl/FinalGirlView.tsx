@@ -4,8 +4,10 @@ import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import CountTable from '../../components/CountTable'
+import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import ProgressBar from '../../components/ProgressBar'
+import { computeGameAchievements } from '../../achievements/games'
 import ownedContentText from './content.txt?raw'
 import {
   getOwnedFinalGirlLocations,
@@ -84,6 +86,10 @@ export default function FinalGirlView(props: {
     }
     return result
   })
+
+  const achievements = createMemo(() =>
+    computeGameAchievements('finalGirl', props.plays, props.username),
+  )
 
   const totalFinalGirlPlays = createMemo(() =>
     entries().reduce((sum, entry) => sum + playQuantity(entry.play), 0),
@@ -248,6 +254,8 @@ export default function FinalGirlView(props: {
           </div>
         </div>
       </div>
+
+      <AchievementsPanel achievements={achievements()} nextLimit={5} />
 
       <Show
         when={entries().length > 0}

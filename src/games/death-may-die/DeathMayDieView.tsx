@@ -2,8 +2,10 @@ import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
+import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
+import { computeGameAchievements } from '../../achievements/games'
 import {
   normalizeDeathMayDieElderOne,
   normalizeDeathMayDieScenario,
@@ -104,6 +106,10 @@ export default function DeathMayDieView(props: {
     return result
   })
 
+  const achievements = createMemo(() =>
+    computeGameAchievements('deathMayDie', props.plays, props.username),
+  )
+
   const elderOneCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.elderOne)
@@ -190,6 +196,8 @@ export default function DeathMayDieView(props: {
           <span class="mono">{entries().length.toLocaleString()}</span>
         </div>
       </div>
+
+      <AchievementsPanel achievements={achievements()} nextLimit={5} />
 
       <Show
         when={entries().length > 0}

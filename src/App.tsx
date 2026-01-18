@@ -11,13 +11,20 @@ import FinalGirlView from './games/final-girl/FinalGirlView'
 import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
+import AchievementsView from './AchievementsView'
 import { authUser, signOutUser } from './auth/auth'
 import './App.css'
 
 const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
 const BGG_AUTH_TOKEN_STORAGE_KEY = 'bggAuthToken'
-type MainTab = 'finalGirl' | 'spiritIsland' | 'deathMayDie' | 'mistfall' | 'plays'
+type MainTab =
+  | 'finalGirl'
+  | 'spiritIsland'
+  | 'mistfall'
+  | 'deathMayDie'
+  | 'achievements'
+  | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail'
 
 function playQuantity(play: { attributes: Record<string, string> }): number {
@@ -395,6 +402,16 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'achievements' }}
+                  onClick={() => setMainTab('achievements')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'achievements'}
+                >
+                  Achievements
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'plays' }}
                   onClick={() => setMainTab('plays')}
                   type="button"
@@ -514,6 +531,10 @@ function App() {
               username={USERNAME}
               authToken={bggAuthToken()}
             />
+          </Show>
+
+          <Show when={mainTab() === 'achievements'}>
+            <AchievementsView plays={allPlays().plays} username={USERNAME} />
           </Show>
 
           <Show when={mainTab() === 'plays'}>

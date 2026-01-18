@@ -98,6 +98,10 @@ export function getOwnedFinalGirlLocations(content: OwnedFinalGirlContent): stri
   return [...content.ownedLocations.values()]
 }
 
+export function getOwnedFinalGirlFinalGirls(content: OwnedFinalGirlContent): string[] {
+  return [...content.ownedFinalGirls.values()]
+}
+
 export function resolveFinalGirlBgStatsTags(
   tags: string[],
   content: OwnedFinalGirlContent,
