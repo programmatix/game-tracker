@@ -33,8 +33,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bggProxy = void 0;
+exports.setPinnedAchievementIds = exports.getPinnedAchievementIds = exports.bggProxy = void 0;
 const functions = __importStar(require("firebase-functions"));
+const admin = __importStar(require("firebase-admin"));
+admin.initializeApp();
+const firestore = admin.firestore();
 exports.bggProxy = functions.https.onRequest(async (req, res) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
         res.status(405).set('allow', 'GET, HEAD').send('Method Not Allowed');
@@ -76,4 +79,40 @@ exports.bggProxy = functions.https.onRequest(async (req, res) => {
         const message = error instanceof Error ? error.message : 'Unknown error';
         res.status(502).send(`Upstream BGG request failed: ${message}`);
     }
+});
+function normalizePinnedAchievementIds(value) {
+    if (!Array.isArray(value))
+        return [];
+    return value.filter((id) => typeof id === 'string' && id.trim()).map((id) => id.trim());
+}
+exports.getPinnedAchievementIds = functions.https.onCall(async (_data, context) => {
+    const uid = context.auth?.uid;
+    if (!uid) {
+        throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+    }
+    const doc = await firestore.collection('userPreferences').doc(uid).get();
+    if (!doc.exists)
+        return { ids: [] };
+    const data = doc.data();
+    return { ids: normalizePinnedAchievementIds(data?.pinnedAchievementIds) };
+});
+exports.setPinnedAchievementIds = functions.https.onCall(async (data, context) => {
+    const uid = context.auth?.uid;
+    if (!uid) {
+        throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+    }
+    const ids = normalizePinnedAchievementIds(typeof data === 'object' && data != null && 'ids' in data
+        ? data.ids
+        : undefined);
+    if (ids.length > 5000) {
+        throw new functions.https.HttpsError('invalid-argument', 'Too many pinned achievements');
+    }
+    await firestore
+        .collection('userPreferences')
+        .doc(uid)
+        .set({
+        pinnedAchievementIds: ids,
+        pinnedAchievementIdsUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { ok: true };
 });

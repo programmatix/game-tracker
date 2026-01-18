@@ -1,5 +1,6 @@
 import { type FirebaseApp, getApps, initializeApp } from 'firebase/app'
 import { type Auth, getAuth } from 'firebase/auth'
+import { type Functions, getFunctions } from 'firebase/functions'
 
 type FirebaseEnv = {
   VITE_FIREBASE_API_KEY?: string
@@ -40,6 +41,7 @@ export function isFirebaseConfigured(): boolean {
 
 let firebaseApp: FirebaseApp | undefined
 let firebaseAuth: Auth | undefined
+let firebaseFunctions: Functions | undefined
 
 export function getFirebaseApp(): FirebaseApp {
   if (!isFirebaseConfigured()) {
@@ -75,4 +77,10 @@ export function getFirebaseAuth(): Auth {
   if (firebaseAuth) return firebaseAuth
   firebaseAuth = getAuth(getFirebaseApp())
   return firebaseAuth
+}
+
+export function getFirebaseFunctions(): Functions {
+  if (firebaseFunctions) return firebaseFunctions
+  firebaseFunctions = getFunctions(getFirebaseApp())
+  return firebaseFunctions
 }

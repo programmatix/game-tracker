@@ -13,7 +13,10 @@ import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import AchievementsView from './AchievementsView'
 import { authUser, signOutUser } from './auth/auth'
-import { readPinnedAchievementIds, writePinnedAchievementIds } from './achievements/pins'
+import {
+  fetchPinnedAchievementIds,
+  savePinnedAchievementIds,
+} from './achievements/pinsFirebase'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -113,9 +116,7 @@ function App() {
   const [playsCache, setPlaysCache] = createSignal<PlaysCacheV1 | null>(readPlaysCache())
   const [playsError, setPlaysError] = createSignal<string | null>(null)
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
-  const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(
-    readPinnedAchievementIds(USERNAME),
-  )
+  const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(new Set<string>())
 
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
     new Map<string, string>(),
@@ -127,6 +128,20 @@ function App() {
   let thumbnailsEnabled = true
 
   createEffect(() => setPageDraft(String(page())))
+  createEffect(() => {
+    const user = authUser()
+    if (!user) return
+
+    let cancelled = false
+    void fetchPinnedAchievementIds(user).then((remoteIds) => {
+      if (cancelled) return
+      setPinnedAchievementIds(remoteIds)
+    })
+
+    onCleanup(() => {
+      cancelled = true
+    })
+  })
 
   const allPlays = createMemo<BggPlaysResponse>(() => {
     const cached = playsCache()
@@ -216,7 +231,12 @@ function App() {
       next.add(achievementId)
     }
     setPinnedAchievementIds(next)
-    writePinnedAchievementIds(USERNAME, next)
+    const user = authUser()
+    if (user) {
+      void savePinnedAchievementIds(user, next).catch(() => {
+        // ignore sync failures
+      })
+    }
   }
 
   const pagedPlays = createMemo(() => {
