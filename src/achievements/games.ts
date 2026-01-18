@@ -56,6 +56,41 @@ function buildCanonicalCounts(input: {
   return { items, countsByItem }
 }
 
+function buildCanonicalMaxValues(input: {
+  preferredItems: string[]
+  observed: Array<{ item: string; amount: number }>
+}): { items: string[]; countsByItem: Record<string, number> } {
+  const canonicalByNormalized = new Map<string, string>()
+  const countsByItem: Record<string, number> = {}
+
+  for (const rawItem of input.preferredItems) {
+    const item = normalizeAchievementItemLabel(rawItem)
+    if (!isMeaningfulAchievementItem(item)) continue
+    const normalized = item.toLowerCase()
+    if (canonicalByNormalized.has(normalized)) continue
+    canonicalByNormalized.set(normalized, item)
+  }
+
+  for (const row of input.observed) {
+    const item = normalizeAchievementItemLabel(row.item)
+    if (!isMeaningfulAchievementItem(item)) continue
+    const normalized = item.toLowerCase()
+
+    let canonical = canonicalByNormalized.get(normalized)
+    if (!canonical) {
+      canonical = item
+      canonicalByNormalized.set(normalized, canonical)
+    }
+
+    const amount = Math.max(0, row.amount || 0)
+    countsByItem[canonical] = Math.max(countsByItem[canonical] ?? 0, amount)
+  }
+
+  const items = [...canonicalByNormalized.values()]
+  for (const item of items) countsByItem[item] ??= 0
+  return { items, countsByItem }
+}
+
 function buildPlayCountTrack(input: {
   trackId: string
   currentPlays: number
@@ -167,6 +202,20 @@ function parseAdversaryLevelLabel(
   const level = Number(match.groups.level)
   if (!Number.isFinite(level)) return null
   return { adversary: match.groups.adversary.trim(), level }
+}
+
+function parseSpiritIslandAdversaryLevel(value: string): number | undefined {
+  const match = /\bL\s*(\d+)\b/i.exec(value)
+  if (!match?.[1]) return undefined
+  const level = Number(match[1])
+  if (!Number.isFinite(level) || level <= 0) return undefined
+  return level
+}
+
+function formatSpiritIslandPairLabel(spirit: string, adversary: string): string {
+  const spiritLabel = normalizeAchievementItemLabel(spirit)
+  const adversaryLabel = normalizeAchievementItemLabel(adversary)
+  return `${spiritLabel} × ${adversaryLabel}`
 }
 
 function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
@@ -316,6 +365,29 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
     })),
   })
 
+  const pairPreferred: string[] = []
+  for (const spirit of spiritIslandMappings.spiritsById.values()) {
+    for (const adversary of spiritIslandMappings.adversariesById.values()) {
+      pairPreferred.push(formatSpiritIslandPairLabel(spirit, adversary))
+    }
+  }
+
+  const adversarySpiritLevels = buildCanonicalMaxValues({
+    preferredItems: pairPreferred,
+    observed: entries
+      .filter((entry) => entry.isWin)
+      .map((entry) => {
+        const level = parseSpiritIslandAdversaryLevel(entry.adversary)
+        if (!level || !SPIRIT_ISLAND_LEVELS.includes(level)) return null
+        const adversary = stripTrailingLevelLabel(entry.adversary)
+        return {
+          item: formatSpiritIslandPairLabel(entry.spirit, adversary),
+          amount: level,
+        }
+      })
+      .filter((entry): entry is { item: string; amount: number } => Boolean(entry)),
+  })
+
   const tracks: AchievementTrack[] = [
     buildPlayCountTrack({ trackId: 'plays', currentPlays: totalPlays }),
   ]
@@ -376,6 +448,20 @@ function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
         items: spirits.items,
         countsByItem: spirits.countsByItem,
       }),
+    )
+  }
+
+  if (adversarySpiritLevels.items.length > 0) {
+    tracks.push(
+      ...adversarySpiritLevels.items.map((pair) =>
+        buildNamedCountTrack({
+          trackId: `spiritAdversaryLevels:${slugifyTrackId(pair)}`,
+          current: adversarySpiritLevels.countsByItem[pair] ?? 0,
+          unitSingular: 'level',
+          titleForLevel: (level) => `Defeat ${pair} at level ${level}`,
+          levels: SPIRIT_ISLAND_LEVELS,
+        }),
+      ),
     )
   }
 
