@@ -1,9 +1,15 @@
 {
+  "functions": {
+    "source": "functions",
+    "predeploy": ["pnpm --dir functions install --frozen-lockfile"]
+  },
   "hosting": {
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "rewrites": [
+      { "source": "/bgg/**", "function": "bggProxy" },
+      { "source": "**", "destination": "/index.html" }
+    ],
     "predeploy": ["pnpm build"]
   }
 }
-

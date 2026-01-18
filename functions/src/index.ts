@@ -1,6 +1,6 @@
-import { onRequest } from 'firebase-functions/v2/https'
+import * as functions from 'firebase-functions'
 
-export const bggProxy = onRequest(async (req, res) => {
+export const bggProxy = functions.https.onRequest(async (req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.status(405).set('allow', 'GET, HEAD').send('Method Not Allowed')
     return
