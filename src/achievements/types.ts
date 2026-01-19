@@ -2,6 +2,12 @@ export type AchievementStatus = 'available' | 'completed'
 
 export type AchievementKind = 'counter' | 'perItem'
 
+export type AchievementCompletion = {
+  detail: string
+  playId?: number
+  playDate?: string
+}
+
 export type Achievement = {
   id: string
   gameId: string
@@ -16,6 +22,16 @@ export type Achievement = {
   progressValue: number
   progressTarget: number
   progressLabel: string
+  completion?: AchievementCompletion
+}
+
+export type AchievementProgress = {
+  isComplete: boolean
+  remainingPlays: number
+  playsSoFar: number
+  progressValue: number
+  progressTarget: number
+  progressLabel: string
 }
 
 export type AchievementTrack = {
@@ -23,13 +39,7 @@ export type AchievementTrack = {
   achievementBaseId: string
   kind: AchievementKind
   titleForLevel: (level: number) => string
-  progressForLevel: (level: number) => {
-    isComplete: boolean
-    remainingPlays: number
-    playsSoFar: number
-    progressValue: number
-    progressTarget: number
-    progressLabel: string
-  }
+  progressForLevel: (level: number) => AchievementProgress
+  completionForLevel?: (level: number) => AchievementCompletion | undefined
   levels: number[]
 }

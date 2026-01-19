@@ -74,6 +74,48 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
     })),
   })
 
+  const boxPreferred = [
+    ...new Set(
+      [...ownedFinalGirlContent.locationBoxesByName.values()].map((box) => normalizeAchievementItemLabel(box)),
+    ),
+  ]
+  const villainBoxByName = new Map<string, string>()
+  for (const villainInfo of ownedFinalGirlContent.villainsById.values()) {
+    if (!villainInfo.location) continue
+    const box =
+      ownedFinalGirlContent.locationBoxesByName.get(normalizeFinalGirlName(villainInfo.location)) ??
+      normalizeAchievementItemLabel(villainInfo.location)
+    villainBoxByName.set(normalizeFinalGirlName(villainInfo.display), box)
+  }
+  const boxes = buildCanonicalCounts({
+    preferredItems: boxPreferred.map((box) => buildAchievementItem(box)),
+    observed: entries.flatMap((e) => {
+      const boxLabels: string[] = []
+
+      const location = normalizeAchievementItemLabel(e.location)
+      if (isMeaningfulAchievementItem(location)) {
+        const box =
+          ownedFinalGirlContent.locationBoxesByName.get(normalizeFinalGirlName(location)) ?? location
+        boxLabels.push(box)
+      }
+
+      const villain = normalizeAchievementItemLabel(e.villain)
+      if (isMeaningfulAchievementItem(villain)) {
+        const villainParts = villain
+          .split(/\s*\+\s*/g)
+          .map((part) => normalizeAchievementItemLabel(part))
+          .filter((part) => isMeaningfulAchievementItem(part))
+        for (const part of villainParts) {
+          const box = villainBoxByName.get(normalizeFinalGirlName(part))
+          if (box) boxLabels.push(box)
+        }
+      }
+
+      const uniqueBoxes = [...new Set(boxLabels.map((label) => normalizeAchievementItemLabel(label)).filter(Boolean))]
+      return uniqueBoxes.map((box) => ({ item: buildAchievementItem(box), amount: e.quantity }))
+    }),
+  })
+
   const finalGirlBoxByNormalized = new Map<string, string>()
   for (const [normalized, location] of ownedFinalGirlContent.finalGirlLocationsByName) {
     const canonicalLocation = normalizeAchievementItemLabel(location)
@@ -169,6 +211,27 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
     )
   }
 
+  if (boxes.items.length > 0) {
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'boxPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'box'),
+        verb: 'Play',
+        itemNoun: 'box',
+        unitSingular: 'time',
+        items: boxes.items,
+        countsByItemId: boxes.countsByItemId,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'boxPlays',
+        verb: 'Play',
+        itemNoun: 'box',
+        unitSingular: 'time',
+        items: boxes.items,
+        countsByItemId: boxes.countsByItemId,
+      }),
+    )
+  }
+
   return buildUnlockedAchievementsForGame({ gameId: 'finalGirl', gameName: 'Final Girl', tracks })
 }
-

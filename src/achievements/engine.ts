@@ -13,6 +13,8 @@ export function buildUnlockedAchievementsForTrack(input: {
 
     const progress = input.track.progressForLevel(level)
     const status = progress.isComplete ? 'completed' : 'available'
+    const completion =
+      status === 'completed' ? input.track.completionForLevel?.(level) : undefined
 
     achievements.push({
       id: `${input.gameId}-${input.track.achievementBaseId}-${level}`,
@@ -28,6 +30,7 @@ export function buildUnlockedAchievementsForTrack(input: {
       progressValue: progress.progressValue,
       progressTarget: progress.progressTarget,
       progressLabel: progress.progressLabel,
+      completion,
     })
 
     if (!progress.isComplete) isStillUnlocking = false

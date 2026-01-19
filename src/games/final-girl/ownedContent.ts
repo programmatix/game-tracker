@@ -34,55 +34,107 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
   const locationsById = new Map<string, string>()
   const finalGirlsById = new Map<string, string>()
 
-  let lastLocationDisplay: string | undefined
+  type PendingEntry = { display: string; id?: string }
 
-  for (const rawLine of text.split(/\r?\n/)) {
-    const line = rawLine.trim()
-    if (!line) continue
-    if (line.startsWith('#')) continue
+  const lines = text.split(/\r?\n/)
+  let block: string[] = []
 
-    const match =
-      /^(?<key>V|Villain|L|Location|FG|Final Girl|FinalGirl|B|Box|Game Box|GameBox)\s*:\s*(?<value>.+)$/i.exec(
-        line,
-      )
-    const key = match?.groups?.key?.toLowerCase()
-    const value = match?.groups?.value ?? ''
-    if (!key) continue
+  const flushBlock = () => {
+    if (block.length === 0) return
 
-    const { display, id } = parseDisplayAndId(value)
-    const normalized = normalizeFinalGirlName(display)
-    if (!normalized) continue
+    let currentLocationDisplay: string | undefined
+    let currentBoxDisplay: string | undefined
+    const pendingVillains: PendingEntry[] = []
+    const pendingFinalGirls: PendingEntry[] = []
 
-    if (key === 'v' || key === 'villain') {
-      ownedVillains.set(normalized, display)
-      const normalizedId = normalizeFinalGirlId(id ?? display)
-      villainsById.set(normalizedId, { display, location: lastLocationDisplay })
+    const commitVillain = (villain: PendingEntry, location?: string) => {
+      const normalizedId = normalizeFinalGirlId(villain.id ?? villain.display)
+      villainsById.set(normalizedId, { display: villain.display, location })
     }
 
-    if (key === 'l' || key === 'location') {
-      ownedLocations.set(normalized, display)
-      lastLocationDisplay = display
-      const normalizedId = normalizeFinalGirlId(id ?? display)
-      locationsById.set(normalizedId, display)
+    const commitFinalGirl = (finalGirl: PendingEntry, location?: string) => {
+      const normalizedId = normalizeFinalGirlId(finalGirl.id ?? finalGirl.display)
+      finalGirlsById.set(normalizedId, finalGirl.display)
+      if (location) finalGirlLocationsByName.set(normalizeFinalGirlName(finalGirl.display), location)
     }
 
-    if (
-      key === 'b' ||
-      key === 'box' ||
-      key === 'game box' ||
-      key === 'gamebox'
-    ) {
-      if (!lastLocationDisplay) continue
-      locationBoxesByName.set(normalizeFinalGirlName(lastLocationDisplay), display)
+    for (const rawLine of block) {
+      const line = rawLine.trim()
+      if (!line) continue
+      if (line.startsWith('#')) continue
+
+      const match =
+        /^(?<key>V|Villain|L|Location|FG|Final Girl|FinalGirl|B|Box|Game Box|GameBox)\s*:\s*(?<value>.+)$/i.exec(
+          line,
+        )
+      const key = match?.groups?.key?.toLowerCase()
+      const value = match?.groups?.value ?? ''
+      if (!key) continue
+
+      const { display, id } = parseDisplayAndId(value)
+      const normalized = normalizeFinalGirlName(display)
+      if (!normalized) continue
+
+      if (key === 'l' || key === 'location') {
+        ownedLocations.set(normalized, display)
+        currentLocationDisplay = display
+        const normalizedId = normalizeFinalGirlId(id ?? display)
+        locationsById.set(normalizedId, display)
+
+        if (currentBoxDisplay) {
+          locationBoxesByName.set(normalizeFinalGirlName(currentLocationDisplay), currentBoxDisplay)
+        }
+
+        for (const pending of pendingVillains.splice(0, pendingVillains.length)) {
+          commitVillain(pending, currentLocationDisplay)
+        }
+        for (const pending of pendingFinalGirls.splice(0, pendingFinalGirls.length)) {
+          commitFinalGirl(pending, currentLocationDisplay)
+        }
+      }
+
+      if (
+        key === 'b' ||
+        key === 'box' ||
+        key === 'game box' ||
+        key === 'gamebox'
+      ) {
+        currentBoxDisplay = display
+        if (currentLocationDisplay) {
+          locationBoxesByName.set(normalizeFinalGirlName(currentLocationDisplay), currentBoxDisplay)
+        }
+      }
+
+      if (key === 'v' || key === 'villain') {
+        ownedVillains.set(normalized, display)
+        const villain: PendingEntry = { display, id }
+        if (currentLocationDisplay) commitVillain(villain, currentLocationDisplay)
+        else pendingVillains.push(villain)
+      }
+
+      if (key === 'fg' || key === 'final girl' || key === 'finalgirl') {
+        ownedFinalGirls.set(normalized, display)
+        const finalGirl: PendingEntry = { display, id }
+        if (currentLocationDisplay) commitFinalGirl(finalGirl, currentLocationDisplay)
+        else pendingFinalGirls.push(finalGirl)
+      }
     }
 
-    if (key === 'fg' || key === 'final girl' || key === 'finalgirl') {
-      ownedFinalGirls.set(normalized, display)
-      if (lastLocationDisplay) finalGirlLocationsByName.set(normalized, lastLocationDisplay)
-      const normalizedId = normalizeFinalGirlId(id ?? display)
-      finalGirlsById.set(normalizedId, display)
-    }
+    for (const pending of pendingVillains) commitVillain(pending)
+    for (const pending of pendingFinalGirls) commitFinalGirl(pending)
+
+    block = []
   }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+    if (!line) {
+      flushBlock()
+      continue
+    }
+    block.push(rawLine)
+  }
+  flushBlock()
 
   return {
     ownedVillains,
