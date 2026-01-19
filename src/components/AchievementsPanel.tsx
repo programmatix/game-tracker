@@ -3,6 +3,20 @@ import type { Achievement } from '../achievements/types'
 import { sortUnlockedAchievements } from '../achievements/engine'
 import ProgressBar from './ProgressBar'
 
+function AchievementCompletionRow(props: { achievement: Achievement }) {
+  const completion = () => props.achievement.completion
+  return (
+    <Show when={props.achievement.status === 'completed' && completion()}>
+      <div class="achievementCompletion muted">
+        <span>{completion()!.detail}</span>
+        <Show when={completion()!.playDate}>
+          <span class="mono"> {'—'} {completion()!.playDate}</span>
+        </Show>
+      </div>
+    </Show>
+  )
+}
+
 export default function AchievementsPanel(props: {
   title?: string
   achievements: Achievement[]
@@ -90,6 +104,7 @@ export default function AchievementsPanel(props: {
                       <Show when={isPinned(achievement.id) && achievement.status === 'completed'}>
                         <span class="achievementTag">Unlocked</span>
                       </Show>
+                      <AchievementCompletionRow achievement={achievement} />
                     </td>
                     <td class="mono">{achievement.remainingPlays.toLocaleString()}</td>
                     <td>
@@ -151,6 +166,7 @@ export default function AchievementsPanel(props: {
                           <Show when={isPinned(achievement.id) && achievement.status === 'completed'}>
                             <span class="achievementTag">Unlocked</span>
                           </Show>
+                          <AchievementCompletionRow achievement={achievement} />
                         </td>
                         <td class="mono">{achievement.remainingPlays.toLocaleString()}</td>
                         <td>
@@ -202,6 +218,7 @@ export default function AchievementsPanel(props: {
                             <span class="muted">{achievement.gameName} — </span>
                           </Show>
                           <span>{achievement.title}</span>
+                          <AchievementCompletionRow achievement={achievement} />
                         </td>
                         <td>
                           <ProgressBar

@@ -1,6 +1,7 @@
 import type { BggPlay } from '../../bgg'
 import type { AchievementTrack } from '../../achievements/types'
 import { buildUnlockedAchievementsForGame } from '../../achievements/engine'
+import { buildCompletionFromPlay, findCompletionEntryForCounter } from '../../achievements/completion'
 import {
   buildAchievementItem,
   buildCanonicalCounts,
@@ -49,6 +50,7 @@ export function computeSpiritIslandAchievements(plays: BggPlay[], username: stri
 
   const spiritLabelToId = buildItemIdLookup(spiritIslandMappings.spiritsById)
   const adversaryLabelToId = buildItemIdLookup(spiritIslandMappings.adversariesById)
+  const normalizeKey = (value: string) => normalizeAchievementItemLabel(value).toLowerCase()
 
   const adversaryLevelWinsByLabel = new Map<string, number>()
   const adversaryLevelBases = new Set<string>(spiritIslandMappings.adversariesById.values())
@@ -102,7 +104,18 @@ export function computeSpiritIslandAchievements(plays: BggPlay[], username: stri
   })
 
   const tracks: AchievementTrack[] = [
-    buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
+    {
+      ...buildPlayCountTrack({
+        trackId: 'plays',
+        achievementBaseId: 'plays',
+        currentPlays: totalPlays,
+      }),
+      completionForLevel: (level) => {
+        const entry = findCompletionEntryForCounter({ entries, target: level })
+        if (!entry) return undefined
+        return buildCompletionFromPlay(entry.play, `With ${entry.spirit} vs ${entry.adversary}`)
+      },
+    },
   ]
 
   if (adversariesBase.items.length > 0) {
@@ -113,18 +126,36 @@ export function computeSpiritIslandAchievements(plays: BggPlay[], username: stri
       for (const difficulty of SPIRIT_ISLAND_LEVELS) {
         const label = `${adversary} L${difficulty}`
         adversaryLevelTracks.push(
-          buildNamedCountTrack({
+          {
+            ...buildNamedCountTrack({
             trackId: `adversaryLevelWin:${slugifyTrackId(adversary)}-l${difficulty}`,
             achievementBaseId: `spirit-island-adversary-level-win-${slugifyTrackId(adversary)}-l${difficulty}`,
             current: adversaryLevelWinsByLabel.get(label) ?? 0,
             unitSingular: 'win',
             levels: [1],
             titleForLevel: (_winsTarget) => `Defeat ${adversary} on Level ${difficulty}`,
-          }),
+            }),
+            completionForLevel: (_winsTarget) => {
+              const adversaryKey = normalizeKey(adversary)
+              const entry = findCompletionEntryForCounter({
+                entries,
+                target: 1,
+                predicate: (e) => {
+                  if (!e.isWin) return false
+                  const parsed = parseAdversaryLevelLabel(e.adversary)
+                  if (!parsed || parsed.level !== difficulty) return false
+                  return normalizeKey(parsed.adversary) === adversaryKey
+                },
+              })
+              if (!entry) return undefined
+              return buildCompletionFromPlay(entry.play, `With ${entry.spirit}`)
+            },
+          },
         )
       }
     }
 
+    const adversaryLabelById = new Map(adversariesBase.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'adversaryWins',
@@ -143,11 +174,29 @@ export function computeSpiritIslandAchievements(plays: BggPlay[], username: stri
         unitSingular: 'win',
         items: adversariesBase.items,
         countsByItemId: adversariesBase.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? adversaryLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (winsTarget: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: winsTarget,
+              predicate: (e) => e.isWin && normalizeKey(stripTrailingLevelLabel(e.adversary)) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `With ${entry.spirit}`)
+          },
+        }
       }),
     )
   }
 
   if (spirits.items.length > 0) {
+    const spiritLabelById = new Map(spirits.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'spiritPlays',
@@ -165,22 +214,61 @@ export function computeSpiritIslandAchievements(plays: BggPlay[], username: stri
         unitSingular: 'time',
         items: spirits.items,
         countsByItemId: spirits.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? spiritLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => normalizeKey(e.spirit) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `Vs ${entry.adversary}`)
+          },
+        }
       }),
     )
   }
 
   if (adversarySpiritLevels.items.length > 0) {
     tracks.push(
-      ...adversarySpiritLevels.items.map((pair) =>
-        buildNamedCountTrack({
+      ...adversarySpiritLevels.items.map((pair) => {
+        const [spirit, adversary] = pair.split('×').map((value) => normalizeAchievementItemLabel(value))
+        const spiritKey = normalizeKey(spirit || '')
+        const adversaryKey = normalizeKey(adversary || '')
+        return {
+          ...buildNamedCountTrack({
           trackId: `spiritAdversaryLevels:${slugifyTrackId(pair)}`,
           achievementBaseId: `spirit-island-spirit-adversary-levels-${slugifyTrackId(pair)}`,
           current: adversarySpiritLevels.countsByItem[pair] ?? 0,
           unitSingular: 'level',
           titleForLevel: (level) => `Defeat ${pair} at level ${level}`,
           levels: SPIRIT_ISLAND_LEVELS,
-        }),
-      ),
+          }),
+          completionForLevel: (targetLevel: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: 1,
+              predicate: (e) => {
+                if (!e.isWin) return false
+                if (normalizeKey(e.spirit) !== spiritKey) return false
+                if (normalizeKey(stripTrailingLevelLabel(e.adversary)) !== adversaryKey) return false
+                const wonLevel = parseSpiritIslandAdversaryLevel(e.adversary)
+                return Boolean(wonLevel && wonLevel >= targetLevel)
+              },
+            })
+            if (!entry) return undefined
+            const wonLevel = parseSpiritIslandAdversaryLevel(entry.adversary)
+            const suffix = wonLevel ? ` (won L${wonLevel})` : ''
+            return buildCompletionFromPlay(entry.play, `With ${entry.spirit}${suffix}`)
+          },
+        }
+      }),
     )
   }
 
@@ -190,4 +278,3 @@ export function computeSpiritIslandAchievements(plays: BggPlay[], username: stri
     tracks,
   })
 }
-

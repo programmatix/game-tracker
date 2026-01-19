@@ -1,6 +1,7 @@
 import type { BggPlay } from '../../bgg'
 import type { AchievementTrack } from '../../achievements/types'
 import { buildUnlockedAchievementsForGame } from '../../achievements/engine'
+import { buildCompletionFromPlay, findCompletionEntryForCounter } from '../../achievements/completion'
 import {
   buildAchievementItem,
   buildCanonicalCounts,
@@ -23,6 +24,7 @@ import {
 export function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
   const entries = getFinalGirlEntries(plays, username)
   const totalPlays = sumQuantities(entries)
+  const normalizeKey = (value: string) => normalizeAchievementItemLabel(value).toLowerCase()
 
   const ownedVillains = getOwnedFinalGirlVillains(ownedFinalGirlContent)
   const ownedLocations = getOwnedFinalGirlLocations(ownedFinalGirlContent)
@@ -136,11 +138,47 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
     finalGirlBoxByNormalized.set(normalized, box)
   }
 
+  const boxesForEntry = (entry: { villain: string; location: string }) => {
+    const boxLabels: string[] = []
+
+    const location = normalizeAchievementItemLabel(entry.location)
+    if (isMeaningfulAchievementItem(location)) {
+      const box =
+        ownedFinalGirlContent.locationBoxesByName.get(normalizeFinalGirlName(location)) ?? location
+      boxLabels.push(box)
+    }
+
+    const villain = normalizeAchievementItemLabel(entry.villain)
+    if (isMeaningfulAchievementItem(villain)) {
+      const villainParts = villain
+        .split(/\s*\+\s*/g)
+        .map((part) => normalizeAchievementItemLabel(part))
+        .filter((part) => isMeaningfulAchievementItem(part))
+      for (const part of villainParts) {
+        const box = villainBoxByName.get(normalizeFinalGirlName(part))
+        if (box) boxLabels.push(box)
+      }
+    }
+
+    return [...new Set(boxLabels.map((label) => normalizeAchievementItemLabel(label)).filter(Boolean))]
+  }
+
   const tracks: AchievementTrack[] = [
-    buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
+    {
+      ...buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
+      completionForLevel: (level) => {
+        const entry = findCompletionEntryForCounter({ entries, target: level })
+        if (!entry) return undefined
+        return buildCompletionFromPlay(
+          entry.play,
+          `${entry.finalGirl} at ${entry.location} vs ${entry.villain}`,
+        )
+      },
+    },
   ]
 
   if (villains.items.length > 0) {
+    const villainLabelById = new Map(villains.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'villainWins',
@@ -158,11 +196,29 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         unitSingular: 'win',
         items: villains.items,
         countsByItemId: villains.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? villainLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (winsTarget: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: winsTarget,
+              predicate: (e) => e.isWin && normalizeKey(e.villain) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `${entry.finalGirl} at ${entry.location}`)
+          },
+        }
       }),
     )
   }
 
   if (locations.items.length > 0) {
+    const locationLabelById = new Map(locations.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'locationPlays',
@@ -180,11 +236,29 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         unitSingular: 'time',
         items: locations.items,
         countsByItemId: locations.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? locationLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => normalizeKey(e.location) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `${entry.finalGirl} vs ${entry.villain}`)
+          },
+        }
       }),
     )
   }
 
   if (finalGirls.items.length > 0) {
+    const finalGirlLabelById = new Map(finalGirls.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'finalGirlPlays',
@@ -207,11 +281,29 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
           const box = finalGirlBoxByNormalized.get(normalized)
           return box ? `${finalGirl} [${box}]` : finalGirl
         },
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? finalGirlLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => normalizeKey(e.finalGirl) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `${entry.location} vs ${entry.villain}`)
+          },
+        }
       }),
     )
   }
 
   if (boxes.items.length > 0) {
+    const boxLabelById = new Map(boxes.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'boxPlays',
@@ -229,6 +321,23 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         unitSingular: 'time',
         items: boxes.items,
         countsByItemId: boxes.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? boxLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => boxesForEntry(e).some((box) => normalizeKey(box) === labelKey),
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `${entry.finalGirl} at ${entry.location} vs ${entry.villain}`)
+          },
+        }
       }),
     )
   }
