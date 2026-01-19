@@ -53,7 +53,7 @@ export default function CountTable(props: {
                   </td>
                   <td class="mono">
                     <Show
-                      when={props.onPlaysClick && (props.plays[key] ?? 0) > 0}
+                      when={Boolean(props.onPlaysClick) && (props.plays[key] ?? 0) > 0}
                       fallback={(props.plays[key] ?? 0).toLocaleString()}
                     >
                       <button
