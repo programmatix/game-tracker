@@ -12,12 +12,18 @@ export default function AchievementsPanel(props: {
   onTogglePin: (achievementId: string) => void
   suppressAvailableTrackIds?: ReadonlySet<string>
 }) {
+  const isPinned = (achievementId: string) => props.pinnedAchievementIds.has(achievementId)
+
   const filteredAchievements = createMemo(() => {
     const suppress = props.suppressAvailableTrackIds
     if (!suppress || suppress.size === 0) return props.achievements
     return props.achievements.filter(
       (achievement) =>
-        !(achievement.status === 'available' && suppress.has(achievement.trackId)),
+        !(
+          achievement.status === 'available' &&
+          suppress.has(achievement.trackId) &&
+          !isPinned(achievement.id)
+        ),
     )
   })
 
@@ -26,8 +32,13 @@ export default function AchievementsPanel(props: {
       pinnedAchievementIds: props.pinnedAchievementIds,
     }),
   )
-  const nextLocked = createMemo(() => sorted().available.slice(0, Math.max(0, props.nextLimit)))
-  const isPinned = (achievementId: string) => props.pinnedAchievementIds.has(achievementId)
+  const nextLocked = createMemo(() => {
+    const available = sorted().available
+    const pinned = available.filter((achievement) => isPinned(achievement.id))
+    const unpinned = available.filter((achievement) => !isPinned(achievement.id))
+    const remainingSlots = Math.max(0, props.nextLimit - pinned.length)
+    return [...pinned, ...unpinned.slice(0, remainingSlots)]
+  })
 
   return (
     <div class="statsBlock">
