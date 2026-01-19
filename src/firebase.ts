@@ -1,6 +1,9 @@
 import { type FirebaseApp, getApps, initializeApp } from 'firebase/app'
 import { type Auth, getAuth } from 'firebase/auth'
+import { type Firestore, getFirestore } from 'firebase/firestore'
 import { type Functions, getFunctions } from 'firebase/functions'
+
+const DEFAULT_FIRESTORE_DATABASE_ID = '(default)'
 
 type FirebaseEnv = {
   VITE_FIREBASE_API_KEY?: string
@@ -41,6 +44,7 @@ export function isFirebaseConfigured(): boolean {
 
 let firebaseApp: FirebaseApp | undefined
 let firebaseAuth: Auth | undefined
+let firebaseFirestore: Firestore | undefined
 let firebaseFunctions: Functions | undefined
 
 export function getFirebaseApp(): FirebaseApp {
@@ -77,6 +81,12 @@ export function getFirebaseAuth(): Auth {
   if (firebaseAuth) return firebaseAuth
   firebaseAuth = getAuth(getFirebaseApp())
   return firebaseAuth
+}
+
+export function getFirebaseFirestore(): Firestore {
+  if (firebaseFirestore) return firebaseFirestore
+  firebaseFirestore = getFirestore(getFirebaseApp(), DEFAULT_FIRESTORE_DATABASE_ID)
+  return firebaseFirestore
 }
 
 export function getFirebaseFunctions(): Functions {
