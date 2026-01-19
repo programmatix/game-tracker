@@ -4,7 +4,7 @@ import { defaultAchievementLevels } from './levels'
 import { computeCounterProgress, computePerItemProgress, isMeaningfulAchievementItem, normalizeAchievementItemLabel, pluralize } from './progress'
 import { buildUnlockedAchievementsForGame } from './engine'
 import { getFinalGirlEntries, ownedFinalGirlContent } from '../games/final-girl/finalGirlEntries'
-import { getOwnedFinalGirlFinalGirls, getOwnedFinalGirlLocations, getOwnedFinalGirlVillains } from '../games/final-girl/ownedContent'
+import { getOwnedFinalGirlFinalGirls, getOwnedFinalGirlLocations, getOwnedFinalGirlVillains, normalizeFinalGirlName } from '../games/final-girl/ownedContent'
 import { getSpiritIslandEntries, spiritIslandMappings } from '../games/spirit-island/spiritIslandEntries'
 import { getMistfallEntries, mistfallMappings } from '../games/mistfall/mistfallEntries'
 import { getDeathMayDieEntries } from '../games/death-may-die/deathMayDieEntries'
@@ -318,7 +318,13 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
   for (const [normalized, location] of ownedFinalGirlContent.finalGirlLocationsByName) {
     const canonicalLocation = normalizeAchievementItemLabel(location)
     if (!isMeaningfulAchievementItem(canonicalLocation)) continue
-    finalGirlBoxByNormalized.set(normalized, canonicalLocation)
+    const box =
+      ownedFinalGirlContent.locationBoxesByName.get(normalizeFinalGirlName(canonicalLocation)) ??
+      canonicalLocation
+    finalGirlBoxByNormalized.set(
+      normalized,
+      box,
+    )
   }
   for (const entry of entries) {
     const finalGirl = normalizeAchievementItemLabel(entry.finalGirl)
@@ -327,7 +333,11 @@ function computeFinalGirlAchievements(plays: BggPlay[], username: string) {
     if (!isMeaningfulAchievementItem(location)) continue
     const normalized = finalGirl.toLowerCase()
     if (finalGirlBoxByNormalized.has(normalized)) continue
-    finalGirlBoxByNormalized.set(normalized, location)
+    const box = ownedFinalGirlContent.locationBoxesByName.get(normalizeFinalGirlName(location)) ?? location
+    finalGirlBoxByNormalized.set(
+      normalized,
+      box,
+    )
   }
 
   const tracks: AchievementTrack[] = [

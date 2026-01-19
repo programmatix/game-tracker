@@ -1,27 +1,36 @@
 V: The Organism [Organism]
+Box: Panic at Station 2891
 L: Station 2891 [Station]
 FG: Uki
 
 L: Wingard Cottage [Wingard]
+Box: A Knock at the Door
 V: The Intruders [Intruders]
 
 L: Creech Manor [Creech]
+Box: The Haunting of Creech Manor
 V: The Poltergeist [Poltrgeist]
 
 L: Storybook Woods [Storybook]
+Box: Once Upon a Full Moon
 V: Big Bad Wolf [BigBadWolf]
 
 L: Wolfe Asylum [Wolfe]
+Box: Madness in the Dark
 V: The Ratchet Lady [Ratchet]
 
 L: Falconwood
+Box: The Falconwood Files
 V: Slayer
 
 L: Marrek Warehouse [Marrek]
+Box: The Marrek Murders
 V: Tormento
 
 L: Maple Lane
+Box: Frightmare on Maple Lane
 V: Dr. Fright
 
 L: USCSS Konrad [Konrad]
+Box: Into the Void
 V: The Evomorph [Evomorph]

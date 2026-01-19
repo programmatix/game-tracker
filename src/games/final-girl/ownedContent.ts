@@ -3,6 +3,7 @@ export type OwnedFinalGirlContent = {
   ownedLocations: Map<string, string>
   ownedFinalGirls: Map<string, string>
   finalGirlLocationsByName: Map<string, string>
+  locationBoxesByName: Map<string, string>
   villainsById: Map<string, { display: string; location?: string }>
   locationsById: Map<string, string>
   finalGirlsById: Map<string, string>
@@ -28,6 +29,7 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
   const ownedLocations = new Map<string, string>()
   const ownedFinalGirls = new Map<string, string>()
   const finalGirlLocationsByName = new Map<string, string>()
+  const locationBoxesByName = new Map<string, string>()
   const villainsById = new Map<string, { display: string; location?: string }>()
   const locationsById = new Map<string, string>()
   const finalGirlsById = new Map<string, string>()
@@ -40,7 +42,9 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
     if (line.startsWith('#')) continue
 
     const match =
-      /^(?<key>V|Villain|L|Location|FG|Final Girl|FinalGirl)\s*:\s*(?<value>.+)$/i.exec(line)
+      /^(?<key>V|Villain|L|Location|FG|Final Girl|FinalGirl|B|Box|Game Box|GameBox)\s*:\s*(?<value>.+)$/i.exec(
+        line,
+      )
     const key = match?.groups?.key?.toLowerCase()
     const value = match?.groups?.value ?? ''
     if (!key) continue
@@ -62,6 +66,16 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       locationsById.set(normalizedId, display)
     }
 
+    if (
+      key === 'b' ||
+      key === 'box' ||
+      key === 'game box' ||
+      key === 'gamebox'
+    ) {
+      if (!lastLocationDisplay) continue
+      locationBoxesByName.set(normalizeFinalGirlName(lastLocationDisplay), display)
+    }
+
     if (key === 'fg' || key === 'final girl' || key === 'finalgirl') {
       ownedFinalGirls.set(normalized, display)
       if (lastLocationDisplay) finalGirlLocationsByName.set(normalized, lastLocationDisplay)
@@ -75,6 +89,7 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
     ownedLocations,
     ownedFinalGirls,
     finalGirlLocationsByName,
+    locationBoxesByName,
     villainsById,
     locationsById,
     finalGirlsById,
