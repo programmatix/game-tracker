@@ -41,7 +41,10 @@ And core requirements are usually going to be:
 - A 2d-matrix of the two primary axes.
 - Show all content, whether I've played it yet or not.  E.g. Spirit Island should show all spirits and adversaries, not just the ones I've played.
 
+Basically, follow the convention of other games e.g. src/games/death-may-die
+
 # Rules
 
 - Do not make any changes to git.
 - Don't delete or touch any files that have changed unexpectedly, or aren't compiling, or similar.  I have other agents working concurrently.
+- Don't do `git reset`, `git restore`, or anything similar.  I cannot stress this enough.  There will be other agents modifying files in this source.  You may not be able to currently compile the project because of that.  That is ok!  Do not touch any of that code!
