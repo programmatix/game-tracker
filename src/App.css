@@ -407,6 +407,48 @@
   letter-spacing: 0.04em;
 }
 
+.newAchievementsBanner {
+  border: 1px solid rgba(138, 255, 196, 0.28);
+  background: rgba(138, 255, 196, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.newAchievementsBannerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.newAchievementsBannerTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.newAchievementsBannerNext {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.newAchievementsBannerNextLabel {
+  font-size: 12px;
+}
+
+.newAchievementsBannerNextRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .pager {
   display: flex;
   align-items: center;

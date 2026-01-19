@@ -5,6 +5,7 @@ import {
   createMemo,
   createSignal,
   onCleanup,
+  onMount,
 } from 'solid-js'
 import { fetchAllUserPlays, fetchThingSummary, type BggPlaysResponse } from './bgg'
 import FinalGirlView from './games/final-girl/FinalGirlView'
@@ -17,6 +18,19 @@ import {
   fetchPinnedAchievementIds,
   savePinnedAchievementIds,
 } from './achievements/pinsFirebase'
+import {
+  maybeWriteAchievementsSnapshot,
+  readSeenCompletedAchievementIds,
+  writeSeenCompletedAchievementIds,
+} from './achievements/localStore'
+import {
+  computeNewlyUnlockedAchievements,
+  computeTrackIdsForAchievements,
+  pickCompletedAchievementIds,
+} from './achievements/newlyUnlocked'
+import { pickBestAvailableAchievementForTrackIds } from './achievements/nextAchievement'
+import { computeAllGameAchievementSummaries } from './achievements/games'
+import NewAchievementsBanner from './components/NewAchievementsBanner'
 import type { PlaysDrilldownRequest } from './playsDrilldown'
 import './App.css'
 
@@ -135,6 +149,9 @@ function App() {
   const [playsError, setPlaysError] = createSignal<string | null>(null)
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
   const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(new Set<string>())
+  const [seenCompletedAchievementIds, setSeenCompletedAchievementIds] = createSignal(
+    readSeenCompletedAchievementIds(),
+  )
 
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
     new Map<string, string>(),
@@ -216,6 +233,39 @@ function App() {
   const totalPlayCount = createMemo(() =>
     allPlays().plays.reduce((sum, play) => sum + playQuantity(play), 0),
   )
+
+  const allAchievements = createMemo(() => {
+    const summaries = computeAllGameAchievementSummaries(allPlays().plays, USERNAME)
+    return summaries.flatMap((summary) => summary.achievements)
+  })
+
+  const newlyUnlockedAchievements = createMemo(() =>
+    computeNewlyUnlockedAchievements(allAchievements(), seenCompletedAchievementIds()),
+  )
+  const newlyUnlockedTrackIds = createMemo(() =>
+    computeTrackIdsForAchievements(newlyUnlockedAchievements()),
+  )
+  const suppressAvailableTrackIds = createMemo(
+    () => new Set<string>(newlyUnlockedTrackIds()),
+  )
+  const nextAchievementAfterDismiss = createMemo(() =>
+    pickBestAvailableAchievementForTrackIds(allAchievements(), newlyUnlockedTrackIds()),
+  )
+
+  function dismissNewlyUnlockedAchievements() {
+    const completedIds = pickCompletedAchievementIds(allAchievements())
+    const nextSeen = new Set(seenCompletedAchievementIds())
+    for (const id of completedIds) nextSeen.add(id)
+    setSeenCompletedAchievementIds(nextSeen)
+    writeSeenCompletedAchievementIds(nextSeen)
+  }
+
+  createEffect(() => {
+    // Persist a snapshot in the background while navigating (at most every ~10 minutes).
+    mainTab()
+    playsView()
+    maybeWriteAchievementsSnapshot(allAchievements())
+  })
 
   const mostRecentPlay = createMemo(() => {
     let best:
@@ -441,35 +491,115 @@ function App() {
     setPageDraft('1')
   }
 
-  function openPlaysDrilldown(request: PlaysDrilldownRequest) {
-    setPlaysDrilldownReturn({
+  type AppNavState = {
+    mainTab: MainTab
+    playsView: PlaysView
+    selectedGameKey: string | null
+  }
+
+  type AppHistoryState =
+    | { kind: 'app'; nav: AppNavState }
+    | { kind: 'drilldown'; navReturn: AppNavState; request: PlaysDrilldownRequest }
+
+  function currentNavState(): AppNavState {
+    return {
       mainTab: mainTab(),
       playsView: playsView(),
       selectedGameKey: selectedGameKey(),
+    }
+  }
+
+  function applyNavState(next: AppNavState) {
+    setMainTab(next.mainTab)
+    setPlaysView(next.playsView)
+    setSelectedGameKey(next.selectedGameKey)
+    resetPage()
+  }
+
+  function openPlaysDrilldown(request: PlaysDrilldownRequest, options?: { pushHistory?: boolean }) {
+    const returnState = currentNavState()
+    setPlaysDrilldownReturn({
+      mainTab: returnState.mainTab,
+      playsView: returnState.playsView,
+      selectedGameKey: returnState.selectedGameKey,
     })
     setPlaysDrilldown(request)
     setSelectedGameKey(null)
     setPlaysView('drilldown')
     setMainTab('plays')
     resetPage()
+
+    const shouldPush = options?.pushHistory !== false
+    if (!shouldPush) return
+
+    const url = new URL(window.location.href)
+    const previousUrl = url.toString()
+    const drilldownUrl = new URL(previousUrl)
+    drilldownUrl.hash = '#plays/drilldown'
+
+    const appState: AppHistoryState = { kind: 'app', nav: returnState }
+    window.history.replaceState(appState, '', previousUrl)
+    const drillState: AppHistoryState = { kind: 'drilldown', navReturn: returnState, request }
+    window.history.pushState(drillState, '', drilldownUrl.toString())
   }
 
-  function closePlaysDrilldown() {
+  function closePlaysDrilldown(options?: { viaHistoryBack?: boolean }) {
+    if (options?.viaHistoryBack) {
+      const state = window.history.state as AppHistoryState | null
+      if (state?.kind === 'drilldown') {
+        window.history.back()
+        return
+      }
+    }
+
     const back = playsDrilldownReturn()
     setPlaysDrilldown(null)
     setPlaysDrilldownReturn(null)
 
     if (back) {
-      setMainTab(back.mainTab)
-      setPlaysView(back.playsView)
-      setSelectedGameKey(back.selectedGameKey)
-      resetPage()
+      applyNavState(back)
       return
     }
 
     setPlaysView('plays')
     resetPage()
   }
+
+  onMount(() => {
+    const onPopState = (event: PopStateEvent) => {
+      const state = event.state as AppHistoryState | null
+
+      if (!state || (state.kind !== 'app' && state.kind !== 'drilldown')) {
+        if (playsView() === 'drilldown') {
+          setPlaysDrilldown(null)
+          setPlaysDrilldownReturn(null)
+          setPlaysView('plays')
+          resetPage()
+        }
+        return
+      }
+
+      if (state.kind === 'drilldown') {
+        setPlaysDrilldownReturn(state.navReturn)
+        openPlaysDrilldown(state.request, { pushHistory: false })
+        return
+      }
+
+      setPlaysDrilldown(null)
+      setPlaysDrilldownReturn(null)
+      applyNavState(state.nav)
+    }
+
+    window.addEventListener('popstate', onPopState)
+    onCleanup(() => window.removeEventListener('popstate', onPopState))
+  })
+
+  createEffect(() => {
+    if (playsView() === 'drilldown') return
+    const nav = currentNavState()
+    const state: AppHistoryState = { kind: 'app', nav }
+    window.history.replaceState(state, '', window.location.href)
+  })
 
   return (
     <div class="app">
@@ -528,6 +658,14 @@ function App() {
           </Show>
         </div>
       </header>
+
+      <Show when={newlyUnlockedAchievements().length > 0}>
+        <NewAchievementsBanner
+          unlocked={newlyUnlockedAchievements()}
+          nextAfterDismiss={nextAchievementAfterDismiss()}
+          onDismissAll={dismissNewlyUnlockedAchievements}
+        />
+      </Show>
 
       <main class="main">
         <section class="panel">
@@ -680,7 +818,7 @@ function App() {
                       type="button"
                       onClick={() => {
                         if (playsView() === 'drilldown') {
-                          closePlaysDrilldown()
+                          closePlaysDrilldown({ viaHistoryBack: true })
                         } else {
                           setPlaysView('byGame')
                           setSelectedGameKey(null)
@@ -739,6 +877,7 @@ function App() {
               username={USERNAME}
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
               onOpenPlays={openPlaysDrilldown}
             />
@@ -750,6 +889,7 @@ function App() {
               username={USERNAME}
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
               onOpenPlays={openPlaysDrilldown}
             />
@@ -761,6 +901,7 @@ function App() {
               username={USERNAME}
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
               onOpenPlays={openPlaysDrilldown}
             />
@@ -772,6 +913,7 @@ function App() {
               username={USERNAME}
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
               onOpenPlays={openPlaysDrilldown}
             />
@@ -782,6 +924,7 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
             />
           </Show>

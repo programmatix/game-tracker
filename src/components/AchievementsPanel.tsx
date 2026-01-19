@@ -10,9 +10,19 @@ export default function AchievementsPanel(props: {
   showGameName?: boolean
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  suppressAvailableTrackIds?: ReadonlySet<string>
 }) {
+  const filteredAchievements = createMemo(() => {
+    const suppress = props.suppressAvailableTrackIds
+    if (!suppress || suppress.size === 0) return props.achievements
+    return props.achievements.filter(
+      (achievement) =>
+        !(achievement.status === 'available' && suppress.has(achievement.trackId)),
+    )
+  })
+
   const sorted = createMemo(() =>
-    sortUnlockedAchievements(props.achievements, {
+    sortUnlockedAchievements(filteredAchievements(), {
       pinnedAchievementIds: props.pinnedAchievementIds,
     }),
   )

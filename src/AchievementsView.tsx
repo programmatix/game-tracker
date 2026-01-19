@@ -8,6 +8,7 @@ export default function AchievementsView(props: {
   username: string
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  suppressAvailableAchievementTrackIds?: ReadonlySet<string>
 }) {
   const achievements = createMemo(() => {
     const summaries = computeAllGameAchievementSummaries(props.plays, props.username)
@@ -23,6 +24,7 @@ export default function AchievementsView(props: {
         showGameName
         pinnedAchievementIds={props.pinnedAchievementIds}
         onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
       />
     </div>
   )

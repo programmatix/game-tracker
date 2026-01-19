@@ -116,6 +116,7 @@ export default function MistfallView(props: {
   username: string
   authToken?: string
   pinnedAchievementIds: ReadonlySet<string>
+  suppressAvailableAchievementTrackIds?: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
@@ -325,6 +326,7 @@ export default function MistfallView(props: {
         nextLimit={5}
         pinnedAchievementIds={props.pinnedAchievementIds}
         onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
       />
 
       <Show
