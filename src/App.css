@@ -157,6 +157,19 @@
   text-decoration: underline;
 }
 
+.countLink {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.countLink:hover {
+  text-decoration: underline;
+}
+
 .gameRow {
   display: flex;
   align-items: center;
@@ -526,21 +539,33 @@
 }
 
 .heatmapCell {
+  appearance: none;
   width: 22px;
   height: 22px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  padding: 0;
   display: grid;
   place-items: center;
   font-size: 11px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.92);
   user-select: none;
+  cursor: default;
 }
 
 .heatmapCellZero {
   color: rgba(255, 255, 255, 0.38);
   border-style: dashed;
+}
+
+.heatmapCellClickable {
+  cursor: pointer;
+}
+
+.heatmapCell:disabled {
+  opacity: 1;
 }
 
 .matrixWrap {

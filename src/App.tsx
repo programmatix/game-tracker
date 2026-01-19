@@ -17,6 +17,7 @@ import {
   fetchPinnedAchievementIds,
   savePinnedAchievementIds,
 } from './achievements/pinsFirebase'
+import type { PlaysDrilldownRequest } from './playsDrilldown'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -28,7 +29,13 @@ type MainTab =
   | 'deathMayDie'
   | 'achievements'
   | 'plays'
-type PlaysView = 'plays' | 'byGame' | 'gameDetail'
+type PlaysView = 'plays' | 'byGame' | 'gameDetail' | 'drilldown'
+
+type PlaysDrilldownReturn = {
+  mainTab: MainTab
+  playsView: PlaysView
+  selectedGameKey: string | null
+}
 
 type PlaysCacheV1 = {
   version: 1
@@ -103,12 +110,23 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
+function getPlayerColorForUser(play: {
+  players: Array<{ attributes: Record<string, string> }>
+}, username: string): string {
+  const user = username.toLowerCase()
+  const player = play.players.find((p) => (p.attributes.username || '').toLowerCase() === user)
+  return player?.attributes.color || ''
+}
+
 function App() {
   const [page, setPage] = createSignal(1)
   const [pageDraft, setPageDraft] = createSignal(String(page()))
   const [mainTab, setMainTab] = createSignal<MainTab>('finalGirl')
   const [playsView, setPlaysView] = createSignal<PlaysView>('plays')
   const [selectedGameKey, setSelectedGameKey] = createSignal<string | null>(null)
+  const [playsDrilldown, setPlaysDrilldown] = createSignal<PlaysDrilldownRequest | null>(null)
+  const [playsDrilldownReturn, setPlaysDrilldownReturn] =
+    createSignal<PlaysDrilldownReturn | null>(null)
   const bggAuthToken = createMemo(
     () => (import.meta.env.BGG_TOKEN || import.meta.env.VITE_BGG_TOKEN || '').trim(),
   )
@@ -317,6 +335,25 @@ function App() {
     return selectedGamePlays().slice(start, start + PLAYS_PER_PAGE)
   })
 
+  const drilldownPlays = createMemo(() => {
+    const drill = playsDrilldown()
+    if (!drill) return []
+    const ids = new Set(drill.playIds.filter((id) => Number.isFinite(id)))
+    return allPlays()
+      .plays.filter((play) => ids.has(play.id))
+      .slice()
+      .sort((a, b) => compareIsoDatesDesc(a.attributes.date, b.attributes.date))
+  })
+
+  const drilldownTotalPages = createMemo(() =>
+    Math.max(1, Math.ceil(drilldownPlays().length / PLAYS_PER_PAGE)),
+  )
+
+  const drilldownPagedPlays = createMemo(() => {
+    const start = (page() - 1) * PLAYS_PER_PAGE
+    return drilldownPlays().slice(start, start + PLAYS_PER_PAGE)
+  })
+
   function noteThumbnail(objectid: string, url?: string) {
     if (!url) return
     if (thumbnailsByObjectId().get(objectid) === url) return
@@ -391,13 +428,47 @@ function App() {
   })
 
   const currentTotalPages = createMemo(() =>
-    playsView() === 'gameDetail' ? selectedGameTotalPages() : totalPages(),
+    playsView() === 'gameDetail'
+      ? selectedGameTotalPages()
+      : playsView() === 'drilldown'
+        ? drilldownTotalPages()
+        : totalPages(),
   )
 
   const goToPage = (nextPage: number) => setPage(clamp(nextPage, 1, currentTotalPages()))
   const resetPage = () => {
     setPage(1)
     setPageDraft('1')
+  }
+
+  function openPlaysDrilldown(request: PlaysDrilldownRequest) {
+    setPlaysDrilldownReturn({
+      mainTab: mainTab(),
+      playsView: playsView(),
+      selectedGameKey: selectedGameKey(),
+    })
+    setPlaysDrilldown(request)
+    setSelectedGameKey(null)
+    setPlaysView('drilldown')
+    setMainTab('plays')
+    resetPage()
+  }
+
+  function closePlaysDrilldown() {
+    const back = playsDrilldownReturn()
+    setPlaysDrilldown(null)
+    setPlaysDrilldownReturn(null)
+
+    if (back) {
+      setMainTab(back.mainTab)
+      setPlaysView(back.playsView)
+      setSelectedGameKey(back.selectedGameKey)
+      resetPage()
+      return
+    }
+
+    setPlaysView('plays')
+    resetPage()
   }
 
   return (
@@ -567,7 +638,7 @@ function App() {
 
               <Show when={mainTab() === 'plays'}>
                 <Show
-                  when={playsView() === 'gameDetail'}
+                  when={playsView() === 'gameDetail' || playsView() === 'drilldown'}
                   fallback={
                     <div class="tabs" role="tablist" aria-label="Plays views">
                       <button
@@ -576,6 +647,7 @@ function App() {
                         onClick={() => {
                           setPlaysView('plays')
                           setSelectedGameKey(null)
+                          setPlaysDrilldown(null)
                           resetPage()
                         }}
                         type="button"
@@ -590,6 +662,7 @@ function App() {
                         onClick={() => {
                           setPlaysView('byGame')
                           setSelectedGameKey(null)
+                          setPlaysDrilldown(null)
                           resetPage()
                         }}
                         type="button"
@@ -606,14 +679,22 @@ function App() {
                       class="linkButton"
                       type="button"
                       onClick={() => {
-                        setPlaysView('byGame')
-                        setSelectedGameKey(null)
-                        resetPage()
+                        if (playsView() === 'drilldown') {
+                          closePlaysDrilldown()
+                        } else {
+                          setPlaysView('byGame')
+                          setSelectedGameKey(null)
+                          resetPage()
+                        }
                       }}
                     >
                       ← Back
                     </button>
-                    <div class="mono">{selectedGame()?.name || 'Game'}</div>
+                    <div class="mono">
+                      {playsView() === 'drilldown'
+                        ? (playsDrilldown()?.title || 'Plays')
+                        : (selectedGame()?.name || 'Game')}
+                    </div>
                   </div>
                 </Show>
               </Show>
@@ -659,6 +740,7 @@ function App() {
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
               onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
             />
           </Show>
 
@@ -669,6 +751,7 @@ function App() {
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
               onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
             />
           </Show>
 
@@ -679,6 +762,7 @@ function App() {
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
               onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
             />
           </Show>
 
@@ -689,6 +773,7 @@ function App() {
               authToken={bggAuthToken()}
               pinnedAchievementIds={pinnedAchievementIds()}
               onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
             />
           </Show>
 
@@ -884,6 +969,33 @@ function App() {
                           </td>
                           <td class="mono">{row.plays.toLocaleString()}</td>
                           <td class="mono">{row.mostRecentDate || '—'}</td>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
+            </Show>
+
+            <Show when={playsView() === 'drilldown'}>
+              <div class="meta">
+                Plays: <span class="mono">{drilldownPlays().length.toLocaleString()}</span>
+              </div>
+
+              <div class="tableWrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Color</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={drilldownPagedPlays()}>
+                      {(play) => (
+                        <tr>
+                          <td class="mono">{play.attributes.date || ''}</td>
+                          <td class="mono">{getPlayerColorForUser(play, USERNAME)}</td>
                         </tr>
                       )}
                     </For>

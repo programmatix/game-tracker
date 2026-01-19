@@ -10,6 +10,7 @@ export default function CountTable(props: {
   getNextAchievement?: (key: string) => Achievement | undefined
   isOwned?: (key: string) => boolean
   getWarningTitle?: (key: string) => string | undefined
+  onPlaysClick?: (key: string) => void
 }) {
   const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.plays))
   const wins = createMemo(() => props.wins ?? {})
@@ -50,7 +51,21 @@ export default function CountTable(props: {
                       </Show>
                     </span>
                   </td>
-                  <td class="mono">{(props.plays[key] ?? 0).toLocaleString()}</td>
+                  <td class="mono">
+                    <Show
+                      when={props.onPlaysClick && (props.plays[key] ?? 0) > 0}
+                      fallback={(props.plays[key] ?? 0).toLocaleString()}
+                    >
+                      <button
+                        type="button"
+                        class="countLink"
+                        onClick={() => props.onPlaysClick?.(key)}
+                        title="View plays"
+                      >
+                        {(props.plays[key] ?? 0).toLocaleString()}
+                      </button>
+                    </Show>
+                  </td>
                   <td class="mono">{(wins()[key] ?? 0).toLocaleString()}</td>
                   <td class="muted">
                     <Show

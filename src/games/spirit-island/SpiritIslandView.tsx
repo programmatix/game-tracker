@@ -13,6 +13,7 @@ import {
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import { getSpiritIslandEntries, SPIRIT_ISLAND_OBJECT_ID, spiritIslandMappings } from './spiritIslandEntries'
+import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 
 function stripTrailingLevelLabel(value: string): string {
   return value.replace(/\s+L\d+\s*$/i, '').trim()
@@ -26,6 +27,7 @@ export default function SpiritIslandView(props: {
   authToken?: string
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
   const [hideCounts, setHideCounts] = createSignal(true)
@@ -51,6 +53,14 @@ export default function SpiritIslandView(props: {
     return counts
   })
 
+  const playIdsBySpirit = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      ;(ids[entry.spirit] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
   const spiritWins = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
@@ -65,6 +75,15 @@ export default function SpiritIslandView(props: {
     for (const entry of entries())
       incrementCount(counts, stripTrailingLevelLabel(entry.adversary), entry.quantity)
     return counts
+  })
+
+  const playIdsByAdversary = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      const key = stripTrailingLevelLabel(entry.adversary)
+      ;(ids[key] ||= []).push(entry.play.id)
+    }
+    return ids
   })
 
   const adversaryWins = createMemo(() => {
@@ -85,6 +104,19 @@ export default function SpiritIslandView(props: {
       incrementCount(counts[spirit]!, adversary, entry.quantity)
     }
     return counts
+  })
+
+  const playIdsByPair = createMemo(() => {
+    const ids = new Map<string, number[]>()
+    for (const entry of entries()) {
+      const spirit = entry.spirit
+      const adversary = stripTrailingLevelLabel(entry.adversary)
+      const key = `${spirit}|||${adversary}`
+      const existing = ids.get(key)
+      if (existing) existing.push(entry.play.id)
+      else ids.set(key, [entry.play.id])
+    }
+    return ids
   })
 
   const spiritKeys = createMemo(() =>
@@ -199,6 +231,12 @@ export default function SpiritIslandView(props: {
             wins={spiritWins()}
             keys={spiritKeys()}
             getNextAchievement={getSpiritNextAchievement}
+            onPlaysClick={(spirit) =>
+              props.onOpenPlays({
+                title: `Spirit Island • Spirit: ${spirit}`,
+                playIds: playIdsBySpirit()[spirit] ?? [],
+              })
+            }
           />
           <CountTable
             title="Adversaries"
@@ -206,6 +244,12 @@ export default function SpiritIslandView(props: {
             wins={adversaryWins()}
             keys={adversaryKeys()}
             getNextAchievement={getAdversaryNextAchievement}
+            onPlaysClick={(adversary) =>
+              props.onOpenPlays({
+                title: `Spirit Island • Adversary: ${adversary}`,
+                playIds: playIdsByAdversary()[adversary] ?? [],
+              })
+            }
           />
         </div>
 
@@ -241,6 +285,15 @@ export default function SpiritIslandView(props: {
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
+            onCellClick={(row, col) => {
+              const spirit = flipAxes() ? col : row
+              const adversary = flipAxes() ? row : col
+              const key = `${spirit}|||${adversary}`
+              props.onOpenPlays({
+                title: `Spirit Island • ${spirit} × ${adversary}`,
+                playIds: playIdsByPair().get(key) ?? [],
+              })
+            }}
           />
         </div>
       </Show>

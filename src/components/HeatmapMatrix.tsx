@@ -22,6 +22,7 @@ export default function HeatmapMatrix(props: {
   hideCounts?: boolean
   getRowWarningTitle?: (row: string) => string | undefined
   getColWarningTitle?: (col: string) => string | undefined
+  onCellClick?: (row: string, col: string) => void
 }) {
   return (
     <div class="heatmapWrap">
@@ -80,20 +81,29 @@ export default function HeatmapMatrix(props: {
                       const intensity = () =>
                         props.maxCount > 0 ? count() / props.maxCount : 0
                       const label = () => `${row} × ${col}: ${count()}`
+                      const isClickable = () => Boolean(props.onCellClick) && count() > 0
                       return (
                         <td>
-                          <div
+                          <button
+                            type="button"
                             class="heatmapCell"
-                            classList={{ heatmapCellZero: count() === 0 }}
+                            classList={{
+                              heatmapCellZero: count() === 0,
+                              heatmapCellClickable: isClickable(),
+                            }}
                             style={{
                               'background-color':
                                 count() === 0 ? 'transparent' : heatColor(intensity()),
                             }}
-                            aria-label={label()}
-                            title={label()}
+                            aria-label={
+                              isClickable() ? `${label()}. Click to view plays.` : label()
+                            }
+                            title={isClickable() ? `${label()} (view plays)` : label()}
+                            disabled={!isClickable()}
+                            onClick={() => props.onCellClick?.(row, col)}
                           >
                             {props.hideCounts ? '' : count() === 0 ? '—' : String(count())}
-                          </div>
+                          </button>
                         </td>
                       )
                     }}
