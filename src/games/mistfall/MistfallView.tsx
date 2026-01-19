@@ -7,6 +7,12 @@ import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import { computeGameAchievements } from '../../achievements/games'
+import {
+  buildLabelToIdLookup,
+  pickBestAvailableAchievementForTrackIds,
+  slugifyAchievementItemId,
+} from '../../achievements/nextAchievement'
+import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import mappingsText from './mappings.txt?raw'
 import {
   normalizeMistfallName,
@@ -23,6 +29,8 @@ type MistfallEntry = {
   play: BggPlay
   hero: string
   quest: string
+  quantity: number
+  isWin: boolean
 }
 
 function playQuantity(play: { attributes: Record<string, string> }): number {
@@ -139,8 +147,13 @@ export default function MistfallView(props: {
       const hero = resolveHero(color, tags)
       const quest = resolveQuest(color, tags, kind)
 
-      const qty = playQuantity(play)
-      for (let i = 0; i < qty; i += 1) result.push({ play, hero, quest })
+      result.push({
+        play,
+        hero,
+        quest,
+        quantity: playQuantity(play),
+        isWin: player?.attributes.win === '1',
+      })
     }
 
     return result
@@ -149,6 +162,8 @@ export default function MistfallView(props: {
   const achievements = createMemo(() =>
     computeGameAchievements('mistfall', props.plays, props.username),
   )
+
+  const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
 
   function mergeKnownKeys(played: string[], known: string[]): string[] {
     const seen = new Set(played.map(normalizeMistfallName))
@@ -165,13 +180,31 @@ export default function MistfallView(props: {
 
   const heroCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.hero)
+    for (const entry of entries()) incrementCount(counts, entry.hero, entry.quantity)
+    return counts
+  })
+
+  const heroWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.hero, entry.quantity)
+    }
     return counts
   })
 
   const questCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.quest)
+    for (const entry of entries()) incrementCount(counts, entry.quest, entry.quantity)
+    return counts
+  })
+
+  const questWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.quest, entry.quantity)
+    }
     return counts
   })
 
@@ -179,10 +212,32 @@ export default function MistfallView(props: {
     const counts: Record<string, Record<string, number>> = {}
     for (const entry of entries()) {
       counts[entry.hero] ||= {}
-      incrementCount(counts[entry.hero]!, entry.quest)
+      incrementCount(counts[entry.hero]!, entry.quest, entry.quantity)
     }
     return counts
   })
+
+  const heroLabelToId = createMemo(() =>
+    buildLabelToIdLookup([...mappings.heroesById.entries()].map(([id, label]) => ({ id, label }))),
+  )
+  const questLabelToId = createMemo(() =>
+    buildLabelToIdLookup([...mappings.questsById.entries()].map(([id, label]) => ({ id, label }))),
+  )
+
+  function getHeroNextAchievement(hero: string) {
+    const normalized = normalizeAchievementItemLabel(hero).toLowerCase()
+    const id = heroLabelToId().get(normalized) ?? slugifyAchievementItemId(hero)
+    return pickBestAvailableAchievementForTrackIds(achievements(), [`heroPlays:${id}`])
+  }
+
+  function getQuestNextAchievement(quest: string) {
+    const normalized = normalizeAchievementItemLabel(quest).toLowerCase()
+    const id = questLabelToId().get(normalized) ?? slugifyAchievementItemId(quest)
+    return pickBestAvailableAchievementForTrackIds(achievements(), [
+      `questPlays:${id}`,
+      `questWins:${id}`,
+    ])
+  }
 
   const matrixRows = createMemo(() =>
     flipAxes()
@@ -232,7 +287,7 @@ export default function MistfallView(props: {
           )}
         </Show>
         <div class="meta">
-          Mistfall plays in dataset: <span class="mono">{entries().length.toLocaleString()}</span>
+          Mistfall plays in dataset: <span class="mono">{totalPlays().toLocaleString()}</span>
         </div>
       </div>
 
@@ -257,13 +312,17 @@ export default function MistfallView(props: {
         <div class="statsGrid">
           <CountTable
             title="Heroes"
-            counts={heroCounts()}
+            plays={heroCounts()}
+            wins={heroWins()}
             keys={mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes)}
+            getNextAchievement={getHeroNextAchievement}
           />
           <CountTable
             title="Quests"
-            counts={questCounts()}
+            plays={questCounts()}
+            wins={questWins()}
             keys={mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests)}
+            getNextAchievement={getQuestNextAchievement}
           />
         </div>
 

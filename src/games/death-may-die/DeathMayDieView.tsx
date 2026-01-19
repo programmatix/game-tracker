@@ -6,6 +6,10 @@ import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { computeGameAchievements } from '../../achievements/games'
+import {
+  pickBestAvailableAchievementForTrackIds,
+  slugifyAchievementItemId,
+} from '../../achievements/nextAchievement'
 import { deathMayDieContent } from './content'
 import { DEATH_MAY_DIE_OBJECT_ID, getDeathMayDieEntries } from './deathMayDieEntries'
 
@@ -40,9 +44,27 @@ export default function DeathMayDieView(props: {
     return counts
   })
 
+  const elderOneWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.elderOne, entry.quantity)
+    }
+    return counts
+  })
+
   const scenarioCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.scenario, entry.quantity)
+    return counts
+  })
+
+  const scenarioWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.scenario, entry.quantity)
+    }
     return counts
   })
 
@@ -55,10 +77,30 @@ export default function DeathMayDieView(props: {
     return counts
   })
 
+  const investigatorWinsAll = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      for (const investigator of entry.investigators)
+        incrementCount(counts, investigator, entry.quantity)
+    }
+    return counts
+  })
+
   const investigatorCountsMine = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
       if (!entry.myInvestigator) continue
+      incrementCount(counts, entry.myInvestigator, entry.quantity)
+    }
+    return counts
+  })
+
+  const investigatorWinsMine = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.myInvestigator) continue
+      if (!entry.isWin) continue
       incrementCount(counts, entry.myInvestigator, entry.quantity)
     }
     return counts
@@ -110,6 +152,11 @@ export default function DeathMayDieView(props: {
     return max
   })
 
+  function getNextAchievement(trackIdPrefix: string, label: string) {
+    const id = slugifyAchievementItemId(label)
+    return pickBestAvailableAchievementForTrackIds(achievements(), [`${trackIdPrefix}:${id}`])
+  }
+
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
@@ -157,17 +204,33 @@ export default function DeathMayDieView(props: {
         }
       >
         <div class="statsGrid">
-          <CountTable title="Elder Ones" counts={elderOneCounts()} keys={elderOneKeys()} />
-          <CountTable title="Scenarios" counts={scenarioCounts()} keys={scenarioKeys()} />
+          <CountTable
+            title="Elder Ones"
+            plays={elderOneCounts()}
+            wins={elderOneWins()}
+            keys={elderOneKeys()}
+            getNextAchievement={(elderOne) => getNextAchievement('elderOneWins', elderOne)}
+          />
+          <CountTable
+            title="Scenarios"
+            plays={scenarioCounts()}
+            wins={scenarioWins()}
+            keys={scenarioKeys()}
+            getNextAchievement={(scenario) => getNextAchievement('scenarioPlays', scenario)}
+          />
           <CountTable
             title="My Investigators"
-            counts={investigatorCountsMine()}
+            plays={investigatorCountsMine()}
+            wins={investigatorWinsMine()}
             keys={investigatorKeysMine()}
+            getNextAchievement={(investigator) => getNextAchievement('investigatorPlays', investigator)}
           />
           <CountTable
             title="All Investigators"
-            counts={investigatorCountsAll()}
+            plays={investigatorCountsAll()}
+            wins={investigatorWinsAll()}
             keys={investigatorKeysAll()}
+            getNextAchievement={(investigator) => getNextAchievement('investigatorPlays', investigator)}
           />
         </div>
 

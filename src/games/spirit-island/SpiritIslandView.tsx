@@ -6,11 +6,19 @@ import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { computeGameAchievements } from '../../achievements/games'
+import {
+  buildLabelToIdLookup,
+  pickBestAvailableAchievementForTrackIds,
+  slugifyAchievementItemId,
+} from '../../achievements/nextAchievement'
+import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import { getSpiritIslandEntries, SPIRIT_ISLAND_OBJECT_ID, spiritIslandMappings } from './spiritIslandEntries'
 
 function stripTrailingLevelLabel(value: string): string {
   return value.replace(/\s+L\d+\s*$/i, '').trim()
 }
+
+const SPIRIT_ISLAND_LEVELS = [1, 2, 3, 4, 5, 6]
 
 export default function SpiritIslandView(props: {
   plays: BggPlay[]
@@ -43,10 +51,28 @@ export default function SpiritIslandView(props: {
     return counts
   })
 
+  const spiritWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.spirit, entry.quantity)
+    }
+    return counts
+  })
+
   const adversaryCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries())
       incrementCount(counts, stripTrailingLevelLabel(entry.adversary), entry.quantity)
+    return counts
+  })
+
+  const adversaryWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, stripTrailingLevelLabel(entry.adversary), entry.quantity)
+    }
     return counts
   })
 
@@ -74,6 +100,34 @@ export default function SpiritIslandView(props: {
       [...spiritIslandMappings.adversariesById.values(), 'No adversary'],
     ),
   )
+
+  const spiritLabelToId = createMemo(() =>
+    buildLabelToIdLookup(
+      [...spiritIslandMappings.spiritsById.entries()].map(([id, label]) => ({ id, label })),
+    ),
+  )
+  const adversaryLabelToId = createMemo(() =>
+    buildLabelToIdLookup(
+      [...spiritIslandMappings.adversariesById.entries()].map(([id, label]) => ({ id, label })),
+    ),
+  )
+
+  function getSpiritNextAchievement(spirit: string) {
+    const normalized = normalizeAchievementItemLabel(spirit).toLowerCase()
+    const id = spiritLabelToId().get(normalized) ?? slugifyAchievementItemId(spirit)
+    return pickBestAvailableAchievementForTrackIds(achievements(), [`spiritPlays:${id}`])
+  }
+
+  function getAdversaryNextAchievement(adversary: string) {
+    const normalized = normalizeAchievementItemLabel(adversary).toLowerCase()
+    const id = adversaryLabelToId().get(normalized) ?? slugifyAchievementItemId(adversary)
+    const slug = slugifyAchievementItemId(adversary)
+    const trackIds = [
+      `adversaryWins:${id}`,
+      ...SPIRIT_ISLAND_LEVELS.map((level) => `adversaryLevelWin:${slug}-l${level}`),
+    ]
+    return pickBestAvailableAchievementForTrackIds(achievements(), trackIds)
+  }
 
   const matrixRows = createMemo(() => (flipAxes() ? adversaryKeys() : spiritKeys()))
   const matrixCols = createMemo(() => (flipAxes() ? spiritKeys() : adversaryKeys()))
@@ -139,8 +193,20 @@ export default function SpiritIslandView(props: {
         }
       >
         <div class="statsGrid">
-          <CountTable title="Spirits" counts={spiritCounts()} keys={spiritKeys()} />
-          <CountTable title="Adversaries" counts={adversaryCounts()} keys={adversaryKeys()} />
+          <CountTable
+            title="Spirits"
+            plays={spiritCounts()}
+            wins={spiritWins()}
+            keys={spiritKeys()}
+            getNextAchievement={getSpiritNextAchievement}
+          />
+          <CountTable
+            title="Adversaries"
+            plays={adversaryCounts()}
+            wins={adversaryWins()}
+            keys={adversaryKeys()}
+            getNextAchievement={getAdversaryNextAchievement}
+          />
         </div>
 
         <div class="statsBlock">

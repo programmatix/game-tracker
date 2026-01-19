@@ -1,19 +1,18 @@
 import { For, Show, createMemo } from 'solid-js'
+import type { Achievement } from '../achievements/types'
 import { sortKeysByCountDesc } from '../stats'
-import ProgressBar from './ProgressBar'
 
 export default function CountTable(props: {
   title: string
-  counts: Record<string, number>
+  plays: Record<string, number>
+  wins?: Record<string, number>
   keys?: string[]
-  targetPlays?: number
-  progressWidthPx?: number
+  getNextAchievement?: (key: string) => Achievement | undefined
   isOwned?: (key: string) => boolean
   getWarningTitle?: (key: string) => string | undefined
 }) {
-  const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.counts))
-  const targetPlays = createMemo(() => (props.targetPlays === undefined ? 5 : props.targetPlays))
-  const shouldShowTarget = createMemo(() => targetPlays() > 0)
+  const keys = createMemo(() => props.keys ?? sortKeysByCountDesc(props.plays))
+  const wins = createMemo(() => props.wins ?? {})
   return (
     <div class="statsBlock">
       <h3 class="statsTitle">{props.title}</h3>
@@ -23,9 +22,8 @@ export default function CountTable(props: {
             <tr>
               <th>Name</th>
               <th class="mono">Plays</th>
-              <Show when={shouldShowTarget()}>
-                <th class="mono">Target</th>
-              </Show>
+              <th class="mono">Wins</th>
+              <th>Next</th>
             </tr>
           </thead>
           <tbody>
@@ -52,16 +50,26 @@ export default function CountTable(props: {
                       </Show>
                     </span>
                   </td>
-                  <td class="mono">{(props.counts[key] ?? 0).toLocaleString()}</td>
-                  <Show when={shouldShowTarget()}>
-                    <td>
-                      <ProgressBar
-                        value={props.counts[key] ?? 0}
-                        target={targetPlays()}
-                        widthPx={props.progressWidthPx ?? 160}
-                      />
-                    </td>
-                  </Show>
+                  <td class="mono">{(props.plays[key] ?? 0).toLocaleString()}</td>
+                  <td class="mono">{(wins()[key] ?? 0).toLocaleString()}</td>
+                  <td class="muted">
+                    <Show
+                      when={props.getNextAchievement?.(key)}
+                      fallback={<span class="muted">—</span>}
+                    >
+                      {(achievement) => (
+                        <span>
+                          {achievement().title}
+                          <Show when={achievement().remainingPlays > 0}>
+                            <span class="mono muted">
+                              {' '}
+                              ({achievement().remainingPlays.toLocaleString()} left)
+                            </span>
+                          </Show>
+                        </span>
+                      )}
+                    </Show>
+                  </td>
                 </tr>
               )}
             </For>
