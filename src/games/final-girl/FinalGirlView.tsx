@@ -13,6 +13,7 @@ import {
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
+import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import ownedContentText from './content.txt?raw'
 import {
   getOwnedFinalGirlFinalGirls,
@@ -50,6 +51,7 @@ export default function FinalGirlView(props: {
   authToken?: string
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
   const [hideCounts, setHideCounts] = createSignal(true)
@@ -132,6 +134,14 @@ export default function FinalGirlView(props: {
     return counts
   })
 
+  const playIdsByVillain = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of displayEntries()) {
+      ;(ids[entry.villain] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
   const villainWins = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of displayEntries()) {
@@ -147,6 +157,14 @@ export default function FinalGirlView(props: {
     return counts
   })
 
+  const playIdsByLocation = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of displayEntries()) {
+      ;(ids[entry.location] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
   const locationWins = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of displayEntries()) {
@@ -160,6 +178,14 @@ export default function FinalGirlView(props: {
     const counts: Record<string, number> = {}
     for (const entry of displayEntries()) incrementCount(counts, entry.finalGirl, entry.quantity)
     return counts
+  })
+
+  const playIdsByFinalGirl = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of displayEntries()) {
+      ;(ids[entry.finalGirl] ||= []).push(entry.play.id)
+    }
+    return ids
   })
 
   const finalGirlWins = createMemo(() => {
@@ -178,6 +204,17 @@ export default function FinalGirlView(props: {
       incrementCount(counts[entry.villain]!, entry.location, entry.quantity)
     }
     return counts
+  })
+
+  const playIdsByPair = createMemo(() => {
+    const ids = new Map<string, number[]>()
+    for (const entry of displayEntries()) {
+      const key = `${entry.villain}|||${entry.location}`
+      const existing = ids.get(key)
+      if (existing) existing.push(entry.play.id)
+      else ids.set(key, [entry.play.id])
+    }
+    return ids
   })
 
   function mergeOwnedKeys(played: string[], owned: string[]): string[] {
@@ -406,6 +443,15 @@ export default function FinalGirlView(props: {
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
+            onCellClick={(row, col) => {
+              const villain = flipAxes() ? col : row
+              const location = flipAxes() ? row : col
+              const key = `${villain}|||${location}`
+              props.onOpenPlays({
+                title: `Final Girl • ${villain} × ${location}`,
+                playIds: playIdsByPair().get(key) ?? [],
+              })
+            }}
           />
           <CountTable
             title="Villains"
@@ -423,6 +469,12 @@ export default function FinalGirlView(props: {
                 isOwnedFinalGirlVillain(ownedContent, villain),
                 villainCounts()[villain] ?? 0,
               )
+            }
+            onPlaysClick={(villain) =>
+              props.onOpenPlays({
+                title: `Final Girl • Villain: ${villain}`,
+                playIds: playIdsByVillain()[villain] ?? [],
+              })
             }
           />
           <CountTable
@@ -442,6 +494,12 @@ export default function FinalGirlView(props: {
                 locationCounts()[location] ?? 0,
               )
             }
+            onPlaysClick={(location) =>
+              props.onOpenPlays({
+                title: `Final Girl • Location: ${location}`,
+                playIds: playIdsByLocation()[location] ?? [],
+              })
+            }
           />
         </div>
 
@@ -453,6 +511,12 @@ export default function FinalGirlView(props: {
             keys={finalGirlKeys()}
             getNextAchievement={(finalGirl) =>
               findFinalGirlAchievement('finalGirlPlays', finalGirl, finalGirlLabelToId())
+            }
+            onPlaysClick={(finalGirl) =>
+              props.onOpenPlays({
+                title: `Final Girl • Final Girl: ${finalGirl}`,
+                playIds: playIdsByFinalGirl()[finalGirl] ?? [],
+              })
             }
           />
         </div>

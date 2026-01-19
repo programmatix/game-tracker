@@ -13,6 +13,7 @@ import {
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
+import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import mappingsText from './mappings.txt?raw'
 import {
   normalizeMistfallName,
@@ -116,6 +117,7 @@ export default function MistfallView(props: {
   authToken?: string
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
   const [hideCounts, setHideCounts] = createSignal(true)
@@ -184,6 +186,14 @@ export default function MistfallView(props: {
     return counts
   })
 
+  const playIdsByHero = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      ;(ids[entry.hero] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
   const heroWins = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
@@ -197,6 +207,14 @@ export default function MistfallView(props: {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.quest, entry.quantity)
     return counts
+  })
+
+  const playIdsByQuest = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      ;(ids[entry.quest] ||= []).push(entry.play.id)
+    }
+    return ids
   })
 
   const questWins = createMemo(() => {
@@ -215,6 +233,17 @@ export default function MistfallView(props: {
       incrementCount(counts[entry.hero]!, entry.quest, entry.quantity)
     }
     return counts
+  })
+
+  const playIdsByPair = createMemo(() => {
+    const ids = new Map<string, number[]>()
+    for (const entry of entries()) {
+      const key = `${entry.hero}|||${entry.quest}`
+      const existing = ids.get(key)
+      if (existing) existing.push(entry.play.id)
+      else ids.set(key, [entry.play.id])
+    }
+    return ids
   })
 
   const heroLabelToId = createMemo(() =>
@@ -316,6 +345,12 @@ export default function MistfallView(props: {
             wins={heroWins()}
             keys={mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes)}
             getNextAchievement={getHeroNextAchievement}
+            onPlaysClick={(hero) =>
+              props.onOpenPlays({
+                title: `Mistfall • Hero: ${hero}`,
+                playIds: playIdsByHero()[hero] ?? [],
+              })
+            }
           />
           <CountTable
             title="Quests"
@@ -323,6 +358,12 @@ export default function MistfallView(props: {
             wins={questWins()}
             keys={mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests)}
             getNextAchievement={getQuestNextAchievement}
+            onPlaysClick={(quest) =>
+              props.onOpenPlays({
+                title: `Mistfall • Quest: ${quest}`,
+                playIds: playIdsByQuest()[quest] ?? [],
+              })
+            }
           />
         </div>
 
@@ -358,6 +399,15 @@ export default function MistfallView(props: {
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
+            onCellClick={(row, col) => {
+              const hero = flipAxes() ? col : row
+              const quest = flipAxes() ? row : col
+              const key = `${hero}|||${quest}`
+              props.onOpenPlays({
+                title: `Mistfall • ${hero} × ${quest}`,
+                playIds: playIdsByPair().get(key) ?? [],
+              })
+            }}
           />
         </div>
       </Show>

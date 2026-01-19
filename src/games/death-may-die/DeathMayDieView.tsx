@@ -10,6 +10,7 @@ import {
   pickBestAvailableAchievementForTrackIds,
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
+import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { deathMayDieContent } from './content'
 import { DEATH_MAY_DIE_OBJECT_ID, getDeathMayDieEntries } from './deathMayDieEntries'
 
@@ -19,6 +20,7 @@ export default function DeathMayDieView(props: {
   authToken?: string
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
   const [hideCounts, setHideCounts] = createSignal(true)
@@ -44,6 +46,14 @@ export default function DeathMayDieView(props: {
     return counts
   })
 
+  const playIdsByElderOne = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      ;(ids[entry.elderOne] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
   const elderOneWins = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
@@ -57,6 +67,14 @@ export default function DeathMayDieView(props: {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.scenario, entry.quantity)
     return counts
+  })
+
+  const playIdsByScenario = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      ;(ids[entry.scenario] ||= []).push(entry.play.id)
+    }
+    return ids
   })
 
   const scenarioWins = createMemo(() => {
@@ -75,6 +93,16 @@ export default function DeathMayDieView(props: {
         incrementCount(counts, investigator, entry.quantity)
     }
     return counts
+  })
+
+  const playIdsByInvestigatorAll = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      for (const investigator of entry.investigators) {
+        ;(ids[investigator] ||= []).push(entry.play.id)
+      }
+    }
+    return ids
   })
 
   const investigatorWinsAll = createMemo(() => {
@@ -96,6 +124,15 @@ export default function DeathMayDieView(props: {
     return counts
   })
 
+  const playIdsByInvestigatorMine = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      if (!entry.myInvestigator) continue
+      ;(ids[entry.myInvestigator] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
   const investigatorWinsMine = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
@@ -113,6 +150,17 @@ export default function DeathMayDieView(props: {
       incrementCount(counts[entry.elderOne]!, entry.scenario, entry.quantity)
     }
     return counts
+  })
+
+  const playIdsByPair = createMemo(() => {
+    const ids = new Map<string, number[]>()
+    for (const entry of entries()) {
+      const key = `${entry.elderOne}|||${entry.scenario}`
+      const existing = ids.get(key)
+      if (existing) existing.push(entry.play.id)
+      else ids.set(key, [entry.play.id])
+    }
+    return ids
   })
 
   const elderOneKeys = createMemo(() =>
@@ -210,6 +258,12 @@ export default function DeathMayDieView(props: {
             wins={elderOneWins()}
             keys={elderOneKeys()}
             getNextAchievement={(elderOne) => getNextAchievement('elderOneWins', elderOne)}
+            onPlaysClick={(elderOne) =>
+              props.onOpenPlays({
+                title: `Cthulhu: Death May Die • Elder One: ${elderOne}`,
+                playIds: playIdsByElderOne()[elderOne] ?? [],
+              })
+            }
           />
           <CountTable
             title="Scenarios"
@@ -217,6 +271,12 @@ export default function DeathMayDieView(props: {
             wins={scenarioWins()}
             keys={scenarioKeys()}
             getNextAchievement={(scenario) => getNextAchievement('scenarioPlays', scenario)}
+            onPlaysClick={(scenario) =>
+              props.onOpenPlays({
+                title: `Cthulhu: Death May Die • Scenario: ${scenario}`,
+                playIds: playIdsByScenario()[scenario] ?? [],
+              })
+            }
           />
           <CountTable
             title="My Investigators"
@@ -224,6 +284,12 @@ export default function DeathMayDieView(props: {
             wins={investigatorWinsMine()}
             keys={investigatorKeysMine()}
             getNextAchievement={(investigator) => getNextAchievement('investigatorPlays', investigator)}
+            onPlaysClick={(investigator) =>
+              props.onOpenPlays({
+                title: `Cthulhu: Death May Die • My Investigator: ${investigator}`,
+                playIds: playIdsByInvestigatorMine()[investigator] ?? [],
+              })
+            }
           />
           <CountTable
             title="All Investigators"
@@ -231,6 +297,12 @@ export default function DeathMayDieView(props: {
             wins={investigatorWinsAll()}
             keys={investigatorKeysAll()}
             getNextAchievement={(investigator) => getNextAchievement('investigatorPlays', investigator)}
+            onPlaysClick={(investigator) =>
+              props.onOpenPlays({
+                title: `Cthulhu: Death May Die • Investigator: ${investigator}`,
+                playIds: playIdsByInvestigatorAll()[investigator] ?? [],
+              })
+            }
           />
         </div>
 
@@ -267,6 +339,15 @@ export default function DeathMayDieView(props: {
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
+            onCellClick={(row, col) => {
+              const elderOne = flipAxes() ? col : row
+              const scenario = flipAxes() ? row : col
+              const key = `${elderOne}|||${scenario}`
+              props.onOpenPlays({
+                title: `Cthulhu: Death May Die • ${elderOne} × ${scenario}`,
+                playIds: playIdsByPair().get(key) ?? [],
+              })
+            }}
           />
         </div>
       </Show>
