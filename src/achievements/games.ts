@@ -5,7 +5,7 @@ import { computeFinalGirlAchievements } from '../games/final-girl/achievements'
 import { computeMistfallAchievements } from '../games/mistfall/achievements'
 import { computeSpiritIslandAchievements } from '../games/spirit-island/achievements'
 
-export type GameId = 'finalGirl' | 'spiritIsland' | 'mistfall' | 'deathMayDie'
+export type GameId = 'finalGirl' | 'spiritIsland' | 'mistfall' | 'deathMayDie' | 'bullet'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -18,6 +18,8 @@ export function computeGameAchievements(gameId: GameId, plays: BggPlay[], userna
   if (gameId === 'spiritIsland') return computeSpiritIslandAchievements(plays, username)
   if (gameId === 'mistfall') return computeMistfallAchievements(plays, username)
   if (gameId === 'deathMayDie') return computeDeathMayDieAchievements(plays, username)
+  if (gameId === 'bullet')
+    return buildUnlockedAchievementsForGame({ gameId: 'bullet', gameName: 'Bullet', tracks: [] })
   return []
 }
 
@@ -30,6 +32,7 @@ export function computeAllGameAchievementSummaries(
     { gameId: 'spiritIsland', gameName: 'Spirit Island', achievements: computeSpiritIslandAchievements(plays, username) },
     { gameId: 'mistfall', gameName: 'Mistfall', achievements: computeMistfallAchievements(plays, username) },
     { gameId: 'deathMayDie', gameName: 'Cthulhu: Death May Die', achievements: computeDeathMayDieAchievements(plays, username) },
+    { gameId: 'bullet', gameName: 'Bullet', achievements: computeGameAchievements('bullet', plays, username) },
   ]
 
   return summaries

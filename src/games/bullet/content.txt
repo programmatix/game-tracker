@@ -1,0 +1,39 @@
+# Bullet (Heart + Star base boxes)
+#
+# This list drives the UI and achievements "available" counts (including 0-play rows).
+# Values here should match the display names produced by the tag parsers.
+#
+# Notes for BG Stats:
+# - Use compact tokens (<= 15 chars) in brackets for multi-axis views.
+# - Example: `H: Ekolu` or `Heroine: Ekolu` and `B: History`
+
+# Heroines (Bullet★)
+H: Esfir Volkova [Esfir]
+H: Adelheid Beckenbauer [Adelheid]
+H: Mariel Martin [Mariel]
+H: Ling-Ling Xiao [LingLing]
+H: Senka Kasun [Senka]
+H: Ekolu Kapakahi [Ekolu]
+H: Young-Ja Kim [YoungJa]
+H: Rie Agaki [Rie]
+
+# Heroines (Bullet♥︎)
+H: Rose Blanchett [Rose]
+H: Vesta Jackson [Vesta]
+H: Your News Network [YNN]
+H: Jane Doe [JaneDoe]
+H: Nawa & Baku [NawaBaku]
+H: Planil Lalent Talenti [Planil]
+H: XIV - Balance [Balance]
+H: LXVI - Memory [Memory]
+
+# Bosses
+#
+# BG Stats can store the boss in the same `color=` field (e.g. `B: The Yakuza`)
+# or as a plain tag (e.g. `The Yakuza`). The parser will scan all players for it.
+#
+# TODO: populate full boss list for Heart + Star.
+B: History [History]
+B: The Yakuza [Yakuza]
+B: Fugue in D Minor [Fugue]
+
