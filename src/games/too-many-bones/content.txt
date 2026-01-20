@@ -1,0 +1,35 @@
+# Too Many Bones
+#
+# This list drives the UI and achievements "available" counts (including 0-play rows).
+# Values here should match the display names produced by the tag parsers.
+#
+# Notes for BG Stats:
+# - Put values in the player `color=` field like `G: Boomer／T: Nom`.
+# - You can also use plain tags (no `:`) and the parser will scan all players.
+# - For compact tokens in brackets, the parser matches either the full name or the bracket id.
+
+# Gearlocs
+G: Boomer [Boomer]
+G: Picket [Picket]
+G: Tantrum [Tantrum]
+G: Patch [Patch]
+G: Ghillie [Ghillie]
+G: Tink [Tink]
+G: Nugget [Nugget]
+G: Gasket [Gasket]
+G: Lab Rats [LabRats]
+G: Dart [Dart]
+G: Static [Static]
+G: Polaris [Polaris]
+G: Stanza [Stanza]
+G: Duster [Duster]
+G: Carcass [Carcass]
+
+# Tyrants
+T: Drellen [Drellen]
+T: Mulmesh [Mulmesh]
+T: Nom [Nom]
+T: The Goblin Queen [GoblinQueen]
+T: Gendricks [Gendricks]
+T: Zogue [Zogue]
+T: Riffle [Riffle]

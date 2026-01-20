@@ -53,6 +53,25 @@ type PlaysDrilldownReturn = {
   selectedGameKey: string | null
 }
 
+const MAIN_TABS: ReadonlyArray<MainTab> = [
+  'finalGirl',
+  'spiritIsland',
+  'mistfall',
+  'deathMayDie',
+  'bullet',
+  'achievements',
+  'plays',
+]
+const PLAYS_VIEWS: ReadonlyArray<PlaysView> = ['plays', 'byGame', 'gameDetail', 'drilldown']
+
+function isMainTab(value: string): value is MainTab {
+  return (MAIN_TABS as readonly string[]).includes(value)
+}
+
+function isPlaysView(value: string): value is PlaysView {
+  return (PLAYS_VIEWS as readonly string[]).includes(value)
+}
+
 type PlaysCacheV1 = {
   version: 1
   fetchedAtMs: number
@@ -503,6 +522,58 @@ function App() {
     | { kind: 'app'; nav: AppNavState }
     | { kind: 'drilldown'; navReturn: AppNavState; request: PlaysDrilldownRequest }
 
+  function hashForNavState(nav: AppNavState): string {
+    if (nav.mainTab !== 'plays') return `#${nav.mainTab}`
+
+    if (nav.playsView === 'byGame') return '#plays/byGame'
+    if (nav.playsView === 'gameDetail' && nav.selectedGameKey) {
+      return `#plays/game/${encodeURIComponent(nav.selectedGameKey)}`
+    }
+    if (nav.playsView === 'drilldown') return '#plays/drilldown'
+    return '#plays/plays'
+  }
+
+  function parseNavStateFromHash(hash: string): Partial<AppNavState> | null {
+    const trimmed = (hash || '').replace(/^#/, '').trim()
+    if (!trimmed) return null
+
+    const [head, ...rest] = trimmed.split('/').filter(Boolean)
+    if (!head) return null
+
+    if (head === 'plays') {
+      const viewRaw = rest[0] || 'plays'
+      if (viewRaw === 'game') {
+        const encodedKey = rest[1]
+        if (!encodedKey) return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
+        let decodedKey = ''
+        try {
+          decodedKey = decodeURIComponent(encodedKey)
+        } catch {
+          return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
+        }
+        return {
+          mainTab: 'plays',
+          playsView: 'gameDetail',
+          selectedGameKey: decodedKey,
+        }
+      }
+
+      if (!isPlaysView(viewRaw) || viewRaw === 'drilldown') {
+        return { mainTab: 'plays', playsView: 'plays', selectedGameKey: null }
+      }
+
+      return {
+        mainTab: 'plays',
+        playsView: viewRaw,
+        selectedGameKey: null,
+      }
+    }
+
+    if (isMainTab(head)) return { mainTab: head }
+
+    return null
+  }
+
   function currentNavState(): AppNavState {
     return {
       mainTab: mainTab(),
@@ -568,6 +639,33 @@ function App() {
   }
 
   onMount(() => {
+    const applyNavFromHash = (hash: string) => {
+      const parsed = parseNavStateFromHash(hash)
+      if (!parsed) return
+
+      if (parsed.mainTab && parsed.mainTab !== mainTab()) {
+        setMainTab(parsed.mainTab)
+      }
+
+      if (parsed.mainTab === 'plays') {
+        const nextPlaysView = parsed.playsView ?? playsView()
+        const nextSelectedKey =
+          nextPlaysView === 'gameDetail'
+            ? (parsed.selectedGameKey ?? selectedGameKey())
+            : null
+
+        const playsChanged =
+          nextPlaysView !== playsView() || nextSelectedKey !== selectedGameKey()
+
+        setPlaysView(nextPlaysView)
+        setSelectedGameKey(nextSelectedKey)
+
+        if (playsChanged) resetPage()
+      }
+    }
+
+    applyNavFromHash(window.location.hash)
+
     const onPopState = (event: PopStateEvent) => {
       const state = event.state as AppHistoryState | null
 
@@ -592,15 +690,30 @@ function App() {
       applyNavState(state.nav)
     }
 
+    const onHashChange = () => {
+      if (playsView() === 'drilldown') {
+        const parsed = parseNavStateFromHash(window.location.hash)
+        if (parsed && parsed.mainTab === 'plays' && parsed.playsView !== 'drilldown') {
+          closePlaysDrilldown()
+        }
+      }
+      applyNavFromHash(window.location.hash)
+    }
+
     window.addEventListener('popstate', onPopState)
+    window.addEventListener('hashchange', onHashChange)
     onCleanup(() => window.removeEventListener('popstate', onPopState))
+    onCleanup(() => window.removeEventListener('hashchange', onHashChange))
   })
 
   createEffect(() => {
     if (playsView() === 'drilldown') return
     const nav = currentNavState()
     const state: AppHistoryState = { kind: 'app', nav }
-    window.history.replaceState(state, '', window.location.href)
+    const url = new URL(window.location.href)
+    const desiredHash = hashForNavState(nav)
+    if (url.hash !== desiredHash) url.hash = desiredHash
+    window.history.replaceState(state, '', url.toString())
   })
 
   return (
