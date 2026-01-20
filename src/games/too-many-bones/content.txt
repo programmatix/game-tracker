@@ -17,13 +17,9 @@ G: Ghillie [Ghillie]
 G: Tink [Tink]
 G: Nugget [Nugget]
 G: Gasket [Gasket]
-G: Lab Rats [LabRats]
 G: Dart [Dart]
-G: Static [Static]
-G: Polaris [Polaris]
 G: Stanza [Stanza]
 G: Duster [Duster]
-G: Carcass [Carcass]
 
 # Tyrants
 T: Drellen [Drellen]

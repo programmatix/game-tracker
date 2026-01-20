@@ -14,6 +14,7 @@ import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import BulletView from './games/bullet/BulletView'
+import TooManyBonesView from './games/too-many-bones/TooManyBonesView'
 import AchievementsView from './AchievementsView'
 import { authUser, signOutUser } from './auth/auth'
 import {
@@ -48,6 +49,7 @@ type MainTab =
   | 'mistfall'
   | 'deathMayDie'
   | 'bullet'
+  | 'tooManyBones'
   | 'achievements'
   | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail' | 'drilldown'
@@ -64,6 +66,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'mistfall',
   'deathMayDie',
   'bullet',
+  'tooManyBones',
   'achievements',
   'plays',
 ]
@@ -896,6 +899,16 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'tooManyBones' }}
+                  onClick={() => setMainTab('tooManyBones')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'tooManyBones'}
+                >
+                  Too Many Bones
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'achievements' }}
                   onClick={() => setMainTab('achievements')}
                   type="button"
@@ -1066,6 +1079,18 @@ function App() {
 
           <Show when={mainTab() === 'bullet'}>
             <BulletView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'tooManyBones'}>
+            <TooManyBonesView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
