@@ -212,7 +212,7 @@ export default function BulletView(props: {
             plays={bossCounts()}
             wins={bossWins()}
             keys={bossKeys()}
-            getNextAchievement={(boss) => getNextAchievement('boss', boss)}
+            getNextAchievement={(boss) => getNextAchievement('bossWins', boss)}
             onPlaysClick={(boss) =>
               props.onOpenPlays({
                 title: `Bullet • Boss: ${boss}`,
@@ -225,7 +225,7 @@ export default function BulletView(props: {
             plays={heroineCountsMine()}
             wins={heroineWinsMine()}
             keys={heroineKeys()}
-            getNextAchievement={(heroine) => getNextAchievement('heroine', heroine)}
+            getNextAchievement={(heroine) => getNextAchievement('heroinePlays', heroine)}
             onPlaysClick={(heroine) =>
               props.onOpenPlays({
                 title: `Bullet • My Heroine: ${heroine}`,

@@ -32,8 +32,35 @@ H: LXVI - Memory [Memory]
 # BG Stats can store the boss in the same `color=` field (e.g. `B: The Yakuza`)
 # or as a plain tag (e.g. `The Yakuza`). The parser will scan all players for it.
 #
-# TODO: populate full boss list for Heart + Star.
+# Boss list source: Bullet TTS stats sheet (see `boss-difficulty-ratings` thread on BGG).
+# Includes official bosses (excludes fan-made section).
 B: History [History]
-B: The Yakuza [Yakuza]
+B: 3 - That Which Points [ThatWhichPoints]
 B: Fugue in D Minor [Fugue]
-
+B: Ghost in the Machine [GhostMachine]
+B: Hell on Wheels [HellOnWheels]
+B: Mecha Mary [MechaMary]
+B: The Bauk [Bauk]
+B: The Fanged Sun [FangedSun]
+B: The Yakuza [Yakuza]
+B: Hyper Mode [HyperMode]
+B: Red Barrel [RedBarrel]
+B: Sora [Sora]
+B: The Forest Witch [ForestWitch]
+B: Behemoth [Behemoth]
+B: Celestial Cleaning Ltd. [CelestialCL]
+B: Collective Consciousness [CollectiveCon]
+B: Justicar Doe [Justicar]
+B: Knife & Fork [KnifeFork]
+B: Planil Lalent Talenti [Planil]
+B: Starry Night Memory [StarryMemory]
+B: The Black Rose [BlackRose]
+B: Beethoven [Beethoven]
+B: Chaos Incarnate [ChaosInc]
+B: Elurophobia [Elurophobia]
+B: Mems [Mems]
+B: Gamemaster Die [GamemasterDie]
+B: Shout ★ Live! [ShoutLive]
+B: The Defacer of Tyranny [DefacerTyr]
+B: The Loremaster [Loremaster]
+B: Kewpitrix Engine [KewpitrixEng]
