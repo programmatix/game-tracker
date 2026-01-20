@@ -12,6 +12,7 @@ import FinalGirlView from './games/final-girl/FinalGirlView'
 import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
+import BulletView from './games/bullet/BulletView'
 import AchievementsView from './AchievementsView'
 import { authUser, signOutUser } from './auth/auth'
 import {
@@ -41,6 +42,7 @@ type MainTab =
   | 'spiritIsland'
   | 'mistfall'
   | 'deathMayDie'
+  | 'bullet'
   | 'achievements'
   | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail' | 'drilldown'
@@ -754,6 +756,16 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'bullet' }}
+                  onClick={() => setMainTab('bullet')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'bullet'}
+                >
+                  Bullet
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'achievements' }}
                   onClick={() => setMainTab('achievements')}
                   type="button"
@@ -909,6 +921,18 @@ function App() {
 
           <Show when={mainTab() === 'deathMayDie'}>
             <DeathMayDieView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'bullet'}>
+            <BulletView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
