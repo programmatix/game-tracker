@@ -17,7 +17,13 @@ import {
   stripTrailingLevelLabel,
   sumQuantities,
 } from '../../achievements/gameUtils'
-import { isMeaningfulAchievementItem, normalizeAchievementItemLabel } from '../../achievements/progress'
+import {
+  computePerItemProgress,
+  isMeaningfulAchievementItem,
+  normalizeAchievementItemLabel,
+  pluralize,
+} from '../../achievements/progress'
+import { defaultAchievementLevels } from '../../achievements/levels'
 import type { SpiritIslandSession } from './mindwanderer'
 import { getSpiritIslandEntriesFromSessions, spiritIslandMappings } from './spiritIslandEntries'
 
@@ -43,6 +49,31 @@ function formatSpiritIslandPairLabel(spirit: string, adversary: string): string 
   const spiritLabel = normalizeAchievementItemLabel(spirit)
   const adversaryLabel = normalizeAchievementItemLabel(adversary)
   return `${spiritLabel} × ${adversaryLabel}`
+}
+
+function buildPerItemWinTrack(input: {
+  trackId: string
+  achievementBaseId: string
+  items: Array<{ id: string }>
+  winsByItemId: Record<string, number>
+  noun: string
+  levels?: number[]
+}): AchievementTrack {
+  return {
+    trackId: input.trackId,
+    achievementBaseId: input.achievementBaseId,
+    kind: 'perItem',
+    levels: input.levels ?? defaultAchievementLevels(),
+    titleForLevel: (level) =>
+      `Win with each ${input.noun} ${level} ${pluralize(level, 'win')}`,
+    progressForLevel: (level) =>
+      computePerItemProgress({
+        items: input.items.map((item) => item.id),
+        countsByItem: input.winsByItemId,
+        targetPerItem: level,
+        unitSingular: 'win',
+      }),
+  }
 }
 
 export function computeSpiritIslandAchievements(
@@ -77,6 +108,35 @@ export function computeSpiritIslandAchievements(
       item: buildAchievementItem(e.spirit, spiritLabelToId),
       amount: e.quantity,
     })),
+  })
+
+  const lowComplexitySpiritKeys = new Set(
+    spiritIslandMappings.spirits
+      .filter((spirit) => spirit.complexity === 'Low')
+      .map((spirit) => normalizeKey(spirit.display)),
+  )
+  const lowComplexityPreferred = spiritIslandMappings.spirits
+    .filter((spirit) => spirit.complexity === 'Low')
+    .map((spirit) => buildAchievementItem(spirit.display, spiritLabelToId))
+
+  const lowComplexitySpiritPlays = buildCanonicalCounts({
+    preferredItems: lowComplexityPreferred,
+    observed: entries
+      .filter((e) => lowComplexitySpiritKeys.has(normalizeKey(e.spirit)))
+      .map((e) => ({
+        item: buildAchievementItem(e.spirit, spiritLabelToId),
+        amount: e.quantity,
+      })),
+  })
+
+  const lowComplexitySpiritWins = buildCanonicalCounts({
+    preferredItems: lowComplexityPreferred,
+    observed: entries
+      .filter((e) => e.isWin && lowComplexitySpiritKeys.has(normalizeKey(e.spirit)))
+      .map((e) => ({
+        item: buildAchievementItem(e.spirit, spiritLabelToId),
+        amount: e.quantity,
+      })),
   })
 
   const adversariesBase = buildCanonicalCounts({
@@ -124,6 +184,32 @@ export function computeSpiritIslandAchievements(
       },
     },
   ]
+
+  if (lowComplexitySpiritPlays.items.length > 0) {
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'lowComplexitySpiritPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'low complexity spirit'),
+        verb: 'Play',
+        itemNoun: 'low complexity spirit',
+        unitSingular: 'time',
+        items: lowComplexitySpiritPlays.items,
+        countsByItemId: lowComplexitySpiritPlays.countsByItemId,
+      }),
+    )
+  }
+
+  if (lowComplexitySpiritWins.items.length > 0) {
+    tracks.push(
+      buildPerItemWinTrack({
+        trackId: 'lowComplexitySpiritWins',
+        achievementBaseId: `win-each-${slugifyTrackId('low complexity spirit')}`,
+        items: lowComplexitySpiritWins.items,
+        winsByItemId: lowComplexitySpiritWins.countsByItemId,
+        noun: 'low complexity spirit',
+      }),
+    )
+  }
 
   if (adversariesBase.items.length > 0) {
     const adversaryLevelTracks: AchievementTrack[] = []

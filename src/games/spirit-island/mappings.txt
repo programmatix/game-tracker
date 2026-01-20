@@ -1,100 +1,246 @@
-# Spirit Island mappings
-#
-# This file maps short BG Stats tags (stored in the player's `color` field)
-# to nice display names.
-#
-# Format:
-# - Spirits:    S: <Display Name> [<Id>]
-# - Adversary:  A: <Display Name> [<Id>]
-# - Adv+Level:  AL: <Display Name> [<Id>]
-#
-# Example BG Stats color:
-#   RisingHeat／PrussiaL3
-#
-
-#
-# Spirits (all expansions up to, but not including, Nature Incarnate)
-#
-
-S: River Surges in Sunlight [River]
-S: River Surges in Sunlight [RiverSurgesInSunlight]
-S: Lightning's Swift Strike [Lightning]
-S: Lightning's Swift Strike [LightningsSwiftStrike]
-S: Vital Strength of the Earth [VitalEarth]
-S: Vital Strength of the Earth [VitalStrengthOfTheEarth]
-S: Shadows Flicker Like Flame [Shadows]
-S: Shadows Flicker Like Flame [ShadowsFlickerLikeFlame]
-S: Thunderspeaker [Thunder]
-S: Thunderspeaker [Thunderspeaker]
-S: Bringer of Dreams and Nightmares [Bringer]
-S: Bringer of Dreams and Nightmares [BringerOfDreamsAndNightmares]
-S: Ocean's Hungry Grasp [Ocean]
-S: Ocean's Hungry Grasp [OceansHungryGrasp]
-S: A Spread of Rampant Green [RampGreen]
-S: A Spread of Rampant Green [ASpreadOfRampantGreen]
-
-S: Sharp Fangs Behind the Leaves [Fangs]
-S: Sharp Fangs Behind the Leaves [SharpFangsBehindTheLeaves]
-S: Keeper of the Forbidden Wilds [Keeper]
-S: Keeper of the Forbidden Wilds [KeeperOfTheForbiddenWilds]
-
-S: Heart of the Wildfire [Wildfire]
-S: Heart of the Wildfire [HeartOfTheWildfire]
-S: Serpent Slumbering Beneath the Island [Serpent]
-S: Serpent Slumbering Beneath the Island [SerpentSlumberingBeneathTheIsland]
-
-S: Many Minds Move as One [ManyMinds]
-S: Many Minds Move as One [ManyMindsMoveAsOne]
-S: Shifting Memory of Ages [ShiftMem]
-S: Shifting Memory of Ages [ShiftingMemoryOfAges]
-S: Stone's Unyielding Defiance [Stone]
-S: Stone's Unyielding Defiance [StonesUnyieldingDefiance]
-S: Grinning Trickster Stirs Up Trouble [Trickster]
-S: Grinning Trickster Stirs Up Trouble [GrinningTricksterStirsUpTrouble]
-S: Lure of the Deep Wilderness [Lure]
-S: Lure of the Deep Wilderness [LureOfTheDeepWilderness]
-S: Volcano Looming High [Volcano]
-S: Volcano Looming High [VolcanoLoomingHigh]
-S: Vengeance as a Burning Plague [Vengeance]
-S: Vengeance as a Burning Plague [VengeanceAsABurningPlague]
-S: Starlight Seeks Its Form [Starlight]
-S: Starlight Seeks Its Form [StarlightSeeksItsForm]
-S: Fractured Days Split the Sky [Fractured]
-S: Fractured Days Split the Sky [FracturedDaysSplitTheSky]
-S: Shroud of Silent Mist [Shroud]
-S: Shroud of Silent Mist [ShroudOfSilentMist]
-
-S: Finder of Paths Unseen [Finder]
-S: Finder of Paths Unseen [FinderOfPathsUnseen]
-S: Downpour Drenches the World [Downpour]
-S: Downpour Drenches the World [DownpourDrenchesTheWorld]
-
-S: Rising Heat of Stone and Sand [RisingHeat]
-S: Rising Heat of Stone and Sand [RisingHeatOfStoneAndSand]
-S: Sun-Bright Whirlwind [Whirlwind]
-S: Sun-Bright Whirlwind [SunBrightWhirlwind]
-S: Devouring Teeth Lurk Underfoot [DevTeeth]
-S: Devouring Teeth Lurk Underfoot [DevouringTeethLurkUnderfoot]
-S: Eyes Watch from the Trees [EyesWatch]
-S: Eyes Watch from the Trees [EyesWatchFromTheTrees]
-S: Fathomless Mud of the Swamp [MudSwamp]
-S: Fathomless Mud of the Swamp [FathomlessMudOfTheSwamp]
-
-#
-# Adversaries (all expansions up to, but not including, Nature Incarnate)
-#
-
-A: Brandenburg-Prussia [Prussia]
-A: Brandenburg-Prussia [TheKingdomOfBrandenburgPrussia]
-A: England [England]
-A: England [TheKingdomOfEngland]
-A: Sweden [Sweden]
-A: Sweden [TheKingdomOfSweden]
-A: France [France]
-A: France [TheKingdomOfFrance]
-A: Russia [Russia]
-A: Russia [TheTsardomOfRussia]
-A: Habsburg Monarchy [Habsburg]
-A: Habsburg Monarchy [TheHabsburgMonarchy]
-
-AL: Brandenburg-Prussia L3 [PrussiaL3]
+{
+  "spirits": [
+    {
+      "id": "RiverSurgesInSunlight",
+      "display": "River Surges in Sunlight",
+      "group": "Core",
+      "complexity": "Low",
+      "aliases": ["River"]
+    },
+    {
+      "id": "LightningsSwiftStrike",
+      "display": "Lightning's Swift Strike",
+      "group": "Core",
+      "complexity": "Low",
+      "aliases": ["Lightning"]
+    },
+    {
+      "id": "VitalStrengthOfTheEarth",
+      "display": "Vital Strength of the Earth",
+      "group": "Core",
+      "complexity": "Low",
+      "aliases": ["VitalEarth"]
+    },
+    {
+      "id": "ShadowsFlickerLikeFlame",
+      "display": "Shadows Flicker Like Flame",
+      "group": "Core",
+      "complexity": "Low",
+      "aliases": ["Shadows"]
+    },
+    {
+      "id": "Thunderspeaker",
+      "display": "Thunderspeaker",
+      "group": "Core",
+      "complexity": "Moderate",
+      "aliases": ["Thunder"]
+    },
+    {
+      "id": "BringerOfDreamsAndNightmares",
+      "display": "Bringer of Dreams and Nightmares",
+      "group": "Core",
+      "complexity": "High",
+      "aliases": ["Bringer"]
+    },
+    {
+      "id": "OceansHungryGrasp",
+      "display": "Ocean's Hungry Grasp",
+      "group": "Core",
+      "complexity": "High",
+      "aliases": ["Ocean"]
+    },
+    {
+      "id": "ASpreadOfRampantGreen",
+      "display": "A Spread of Rampant Green",
+      "group": "Core",
+      "complexity": "Moderate",
+      "aliases": ["RampGreen"]
+    },
+    {
+      "id": "SharpFangsBehindTheLeaves",
+      "display": "Sharp Fangs Behind the Leaves",
+      "group": "Branch & Claw",
+      "complexity": "Moderate",
+      "aliases": ["Fangs"]
+    },
+    {
+      "id": "KeeperOfTheForbiddenWilds",
+      "display": "Keeper of the Forbidden Wilds",
+      "group": "Branch & Claw",
+      "complexity": "Moderate",
+      "aliases": ["Keeper"]
+    },
+    {
+      "id": "HeartOfTheWildfire",
+      "display": "Heart of the Wildfire",
+      "group": "Promo Pack 1",
+      "complexity": "High",
+      "aliases": ["Wildfire"]
+    },
+    {
+      "id": "SerpentSlumberingBeneathTheIsland",
+      "display": "Serpent Slumbering Beneath the Island",
+      "group": "Promo Pack 1",
+      "complexity": "High",
+      "aliases": ["Serpent"]
+    },
+    {
+      "id": "ManyMindsMoveAsOne",
+      "display": "Many Minds Move as One",
+      "group": "Jagged Earth",
+      "complexity": "Moderate",
+      "aliases": ["ManyMinds"]
+    },
+    {
+      "id": "ShiftingMemoryOfAges",
+      "display": "Shifting Memory of Ages",
+      "group": "Jagged Earth",
+      "complexity": "Moderate",
+      "aliases": ["ShiftMem"]
+    },
+    {
+      "id": "StonesUnyieldingDefiance",
+      "display": "Stone's Unyielding Defiance",
+      "group": "Jagged Earth",
+      "complexity": "Moderate",
+      "aliases": ["Stone"]
+    },
+    {
+      "id": "GrinningTricksterStirsUpTrouble",
+      "display": "Grinning Trickster Stirs Up Trouble",
+      "group": "Jagged Earth",
+      "complexity": "Moderate",
+      "aliases": ["Trickster"]
+    },
+    {
+      "id": "LureOfTheDeepWilderness",
+      "display": "Lure of the Deep Wilderness",
+      "group": "Jagged Earth",
+      "complexity": "Moderate",
+      "aliases": ["Lure"]
+    },
+    {
+      "id": "VolcanoLoomingHigh",
+      "display": "Volcano Looming High",
+      "group": "Jagged Earth",
+      "complexity": "Moderate",
+      "aliases": ["Volcano"]
+    },
+    {
+      "id": "VengeanceAsABurningPlague",
+      "display": "Vengeance as a Burning Plague",
+      "group": "Jagged Earth",
+      "complexity": "High",
+      "aliases": ["Vengeance"]
+    },
+    {
+      "id": "StarlightSeeksItsForm",
+      "display": "Starlight Seeks Its Form",
+      "group": "Jagged Earth",
+      "complexity": "Very High",
+      "aliases": ["Starlight"]
+    },
+    {
+      "id": "FracturedDaysSplitTheSky",
+      "display": "Fractured Days Split the Sky",
+      "group": "Jagged Earth",
+      "complexity": "Very High",
+      "aliases": ["Fractured"]
+    },
+    {
+      "id": "ShroudOfSilentMist",
+      "display": "Shroud of Silent Mist",
+      "group": "Jagged Earth",
+      "complexity": "High",
+      "aliases": ["Shroud"]
+    },
+    {
+      "id": "FinderOfPathsUnseen",
+      "display": "Finder of Paths Unseen",
+      "group": "Promo Pack 2",
+      "complexity": "Very High",
+      "aliases": ["Finder"]
+    },
+    {
+      "id": "DownpourDrenchesTheWorld",
+      "display": "Downpour Drenches the World",
+      "group": "Promo Pack 2",
+      "complexity": "High",
+      "aliases": ["Downpour"]
+    },
+    {
+      "id": "RisingHeatOfStoneAndSand",
+      "display": "Rising Heat of Stone and Sand",
+      "group": "Horizons",
+      "complexity": "Low",
+      "aliases": ["RisingHeat"]
+    },
+    {
+      "id": "SunBrightWhirlwind",
+      "display": "Sun-Bright Whirlwind",
+      "group": "Horizons",
+      "complexity": "Low",
+      "aliases": ["Whirlwind"]
+    },
+    {
+      "id": "DevouringTeethLurkUnderfoot",
+      "display": "Devouring Teeth Lurk Underfoot",
+      "group": "Horizons",
+      "complexity": "Low",
+      "aliases": ["DevTeeth"]
+    },
+    {
+      "id": "EyesWatchFromTheTrees",
+      "display": "Eyes Watch from the Trees",
+      "group": "Horizons",
+      "complexity": "Low",
+      "aliases": ["EyesWatch"]
+    },
+    {
+      "id": "FathomlessMudOfTheSwamp",
+      "display": "Fathomless Mud of the Swamp",
+      "group": "Horizons",
+      "complexity": "Low",
+      "aliases": ["MudSwamp"]
+    }
+  ],
+  "adversaries": [
+    {
+      "id": "TheKingdomOfBrandenburgPrussia",
+      "display": "Brandenburg-Prussia",
+      "aliases": ["Prussia"]
+    },
+    {
+      "id": "TheKingdomOfEngland",
+      "display": "England",
+      "aliases": ["England"]
+    },
+    {
+      "id": "TheKingdomOfSweden",
+      "display": "Sweden",
+      "aliases": ["Sweden"]
+    },
+    {
+      "id": "TheKingdomOfFrance",
+      "display": "France",
+      "aliases": ["France"]
+    },
+    {
+      "id": "TheTsardomOfRussia",
+      "display": "Russia",
+      "aliases": ["Russia"]
+    },
+    {
+      "id": "TheHabsburgMonarchy",
+      "display": "Habsburg Monarchy",
+      "aliases": ["Habsburg"]
+    }
+  ],
+  "adversaryLevels": [
+    {
+      "id": "PrussiaL3",
+      "display": "Brandenburg-Prussia L3",
+      "aliases": ["PrussiaL3"]
+    }
+  ]
+}

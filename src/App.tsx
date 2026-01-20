@@ -80,6 +80,60 @@ function isPlaysView(value: string): value is PlaysView {
   return (PLAYS_VIEWS as readonly string[]).includes(value)
 }
 
+type AppNavState = {
+  mainTab: MainTab
+  playsView: PlaysView
+  selectedGameKey: string | null
+}
+
+function hashForNavState(nav: AppNavState): string {
+  if (nav.mainTab !== 'plays') return `#${nav.mainTab}`
+
+  if (nav.playsView === 'byGame') return '#plays/byGame'
+  if (nav.playsView === 'gameDetail' && nav.selectedGameKey) {
+    return `#plays/game/${encodeURIComponent(nav.selectedGameKey)}`
+  }
+  if (nav.playsView === 'drilldown') return '#plays/drilldown'
+  return '#plays/plays'
+}
+
+function parseNavStateFromHash(hash: string): Partial<AppNavState> | null {
+  const trimmed = (hash || '').replace(/^#/, '').trim()
+  if (!trimmed) return null
+
+  const [head, ...rest] = trimmed.split('/').filter(Boolean)
+  if (!head) return null
+
+  if (head === 'plays') {
+    const viewRaw = rest[0] || 'plays'
+    if (viewRaw === 'game') {
+      const encodedKey = rest[1]
+      if (!encodedKey) return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
+      let decodedKey = ''
+      try {
+        decodedKey = decodeURIComponent(encodedKey)
+      } catch {
+        return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
+      }
+      return {
+        mainTab: 'plays',
+        playsView: 'gameDetail',
+        selectedGameKey: decodedKey,
+      }
+    }
+
+    if (!isPlaysView(viewRaw) || viewRaw === 'drilldown') {
+      return { mainTab: 'plays', playsView: 'plays', selectedGameKey: null }
+    }
+
+    return { mainTab: 'plays', playsView: viewRaw, selectedGameKey: null }
+  }
+
+  if (isMainTab(head)) return { mainTab: head }
+
+  return null
+}
+
 type PlaysCacheV1 = {
   version: 1
   fetchedAtMs: number
@@ -162,11 +216,22 @@ function getPlayerColorForUser(play: {
 }
 
 function App() {
+  const parsedHash =
+    typeof window === 'undefined' ? null : parseNavStateFromHash(window.location.hash)
+  const initialMainTab: MainTab = parsedHash?.mainTab ?? 'finalGirl'
+  const initialPlaysView: PlaysView =
+    initialMainTab === 'plays' ? (parsedHash?.playsView ?? 'plays') : 'plays'
+  const initialSelectedGameKey: string | null =
+    initialMainTab === 'plays' && initialPlaysView === 'gameDetail'
+      ? (parsedHash?.selectedGameKey ?? null)
+      : null
+
   const [page, setPage] = createSignal(1)
   const [pageDraft, setPageDraft] = createSignal(String(page()))
-  const [mainTab, setMainTab] = createSignal<MainTab>('finalGirl')
-  const [playsView, setPlaysView] = createSignal<PlaysView>('plays')
-  const [selectedGameKey, setSelectedGameKey] = createSignal<string | null>(null)
+  const [mainTab, setMainTab] = createSignal<MainTab>(initialMainTab)
+  const [playsView, setPlaysView] = createSignal<PlaysView>(initialPlaysView)
+  const [selectedGameKey, setSelectedGameKey] =
+    createSignal<string | null>(initialSelectedGameKey)
   const [playsDrilldown, setPlaysDrilldown] = createSignal<PlaysDrilldownRequest | null>(null)
   const [playsDrilldownReturn, setPlaysDrilldownReturn] =
     createSignal<PlaysDrilldownReturn | null>(null)
@@ -215,6 +280,14 @@ function App() {
     onCleanup(() => {
       cancelled = true
     })
+  })
+
+  createEffect(() => {
+    if (mainTab() === 'plays') return
+    if (playsView() !== 'drilldown') return
+    setPlaysDrilldown(null)
+    setPlaysDrilldownReturn(null)
+    setPlaysView('plays')
   })
 
   const allPlays = createMemo<BggPlaysResponse>(() => {
@@ -532,67 +605,9 @@ function App() {
     setPageDraft('1')
   }
 
-  type AppNavState = {
-    mainTab: MainTab
-    playsView: PlaysView
-    selectedGameKey: string | null
-  }
-
   type AppHistoryState =
     | { kind: 'app'; nav: AppNavState }
     | { kind: 'drilldown'; navReturn: AppNavState; request: PlaysDrilldownRequest }
-
-  function hashForNavState(nav: AppNavState): string {
-    if (nav.mainTab !== 'plays') return `#${nav.mainTab}`
-
-    if (nav.playsView === 'byGame') return '#plays/byGame'
-    if (nav.playsView === 'gameDetail' && nav.selectedGameKey) {
-      return `#plays/game/${encodeURIComponent(nav.selectedGameKey)}`
-    }
-    if (nav.playsView === 'drilldown') return '#plays/drilldown'
-    return '#plays/plays'
-  }
-
-  function parseNavStateFromHash(hash: string): Partial<AppNavState> | null {
-    const trimmed = (hash || '').replace(/^#/, '').trim()
-    if (!trimmed) return null
-
-    const [head, ...rest] = trimmed.split('/').filter(Boolean)
-    if (!head) return null
-
-    if (head === 'plays') {
-      const viewRaw = rest[0] || 'plays'
-      if (viewRaw === 'game') {
-        const encodedKey = rest[1]
-        if (!encodedKey) return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
-        let decodedKey = ''
-        try {
-          decodedKey = decodeURIComponent(encodedKey)
-        } catch {
-          return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
-        }
-        return {
-          mainTab: 'plays',
-          playsView: 'gameDetail',
-          selectedGameKey: decodedKey,
-        }
-      }
-
-      if (!isPlaysView(viewRaw) || viewRaw === 'drilldown') {
-        return { mainTab: 'plays', playsView: 'plays', selectedGameKey: null }
-      }
-
-      return {
-        mainTab: 'plays',
-        playsView: viewRaw,
-        selectedGameKey: null,
-      }
-    }
-
-    if (isMainTab(head)) return { mainTab: head }
-
-    return null
-  }
 
   function currentNavState(): AppNavState {
     return {
@@ -607,6 +622,14 @@ function App() {
     setPlaysView(next.playsView)
     setSelectedGameKey(next.selectedGameKey)
     resetPage()
+  }
+
+  function pushNavState(next: AppNavState) {
+    if (mainTab() === 'plays' && playsView() === 'drilldown') return
+    const url = new URL(window.location.href)
+    url.hash = hashForNavState(next)
+    const state: AppHistoryState = { kind: 'app', nav: next }
+    window.history.pushState(state, '', url.toString())
   }
 
   function openPlaysDrilldown(request: PlaysDrilldownRequest, options?: { pushHistory?: boolean }) {
@@ -659,33 +682,6 @@ function App() {
   }
 
   onMount(() => {
-    const applyNavFromHash = (hash: string) => {
-      const parsed = parseNavStateFromHash(hash)
-      if (!parsed) return
-
-      if (parsed.mainTab && parsed.mainTab !== mainTab()) {
-        setMainTab(parsed.mainTab)
-      }
-
-      if (parsed.mainTab === 'plays') {
-        const nextPlaysView = parsed.playsView ?? playsView()
-        const nextSelectedKey =
-          nextPlaysView === 'gameDetail'
-            ? (parsed.selectedGameKey ?? selectedGameKey())
-            : null
-
-        const playsChanged =
-          nextPlaysView !== playsView() || nextSelectedKey !== selectedGameKey()
-
-        setPlaysView(nextPlaysView)
-        setSelectedGameKey(nextSelectedKey)
-
-        if (playsChanged) resetPage()
-      }
-    }
-
-    applyNavFromHash(window.location.hash)
-
     const onPopState = (event: PopStateEvent) => {
       const state = event.state as AppHistoryState | null
 
@@ -710,24 +706,12 @@ function App() {
       applyNavState(state.nav)
     }
 
-    const onHashChange = () => {
-      if (playsView() === 'drilldown') {
-        const parsed = parseNavStateFromHash(window.location.hash)
-        if (parsed && parsed.mainTab === 'plays' && parsed.playsView !== 'drilldown') {
-          closePlaysDrilldown()
-        }
-      }
-      applyNavFromHash(window.location.hash)
-    }
-
     window.addEventListener('popstate', onPopState)
-    window.addEventListener('hashchange', onHashChange)
     onCleanup(() => window.removeEventListener('popstate', onPopState))
-    onCleanup(() => window.removeEventListener('hashchange', onHashChange))
   })
 
   createEffect(() => {
-    if (playsView() === 'drilldown') return
+    if (mainTab() === 'plays' && playsView() === 'drilldown') return
     const nav = currentNavState()
     const state: AppHistoryState = { kind: 'app', nav }
     const url = new URL(window.location.href)
@@ -850,7 +834,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'finalGirl' }}
-                  onClick={() => setMainTab('finalGirl')}
+                  onClick={() => {
+                    if (mainTab() === 'finalGirl') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'finalGirl' }
+                    setMainTab('finalGirl')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'finalGirl'}
@@ -860,7 +849,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
-                  onClick={() => setMainTab('spiritIsland')}
+                  onClick={() => {
+                    if (mainTab() === 'spiritIsland') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'spiritIsland' }
+                    setMainTab('spiritIsland')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'spiritIsland'}
@@ -870,7 +864,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'mistfall' }}
-                  onClick={() => setMainTab('mistfall')}
+                  onClick={() => {
+                    if (mainTab() === 'mistfall') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'mistfall' }
+                    setMainTab('mistfall')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'mistfall'}
@@ -880,7 +879,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'deathMayDie' }}
-                  onClick={() => setMainTab('deathMayDie')}
+                  onClick={() => {
+                    if (mainTab() === 'deathMayDie') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'deathMayDie' }
+                    setMainTab('deathMayDie')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'deathMayDie'}
@@ -890,7 +894,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'bullet' }}
-                  onClick={() => setMainTab('bullet')}
+                  onClick={() => {
+                    if (mainTab() === 'bullet') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'bullet' }
+                    setMainTab('bullet')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'bullet'}
@@ -900,7 +909,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'tooManyBones' }}
-                  onClick={() => setMainTab('tooManyBones')}
+                  onClick={() => {
+                    if (mainTab() === 'tooManyBones') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'tooManyBones' }
+                    setMainTab('tooManyBones')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'tooManyBones'}
@@ -910,7 +924,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'achievements' }}
-                  onClick={() => setMainTab('achievements')}
+                  onClick={() => {
+                    if (mainTab() === 'achievements') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'achievements' }
+                    setMainTab('achievements')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'achievements'}
@@ -920,7 +939,12 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'plays' }}
-                  onClick={() => setMainTab('plays')}
+                  onClick={() => {
+                    if (mainTab() === 'plays') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'plays' }
+                    setMainTab('plays')
+                    pushNavState(next)
+                  }}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'plays'}
@@ -938,10 +962,16 @@ function App() {
                         class="tabButton"
                         classList={{ tabButtonActive: playsView() === 'plays' }}
                         onClick={() => {
+                          if (playsView() === 'plays') return
                           setPlaysView('plays')
                           setSelectedGameKey(null)
                           setPlaysDrilldown(null)
                           resetPage()
+                          pushNavState({
+                            mainTab: 'plays',
+                            playsView: 'plays',
+                            selectedGameKey: null,
+                          })
                         }}
                         type="button"
                         role="tab"
@@ -953,10 +983,16 @@ function App() {
                         class="tabButton"
                         classList={{ tabButtonActive: playsView() === 'byGame' }}
                         onClick={() => {
+                          if (playsView() === 'byGame') return
                           setPlaysView('byGame')
                           setSelectedGameKey(null)
                           setPlaysDrilldown(null)
                           resetPage()
+                          pushNavState({
+                            mainTab: 'plays',
+                            playsView: 'byGame',
+                            selectedGameKey: null,
+                          })
                         }}
                         type="button"
                         role="tab"
@@ -978,6 +1014,11 @@ function App() {
                           setPlaysView('byGame')
                           setSelectedGameKey(null)
                           resetPage()
+                          pushNavState({
+                            mainTab: 'plays',
+                            playsView: 'byGame',
+                            selectedGameKey: null,
+                          })
                         }
                       }}
                     >
@@ -1147,9 +1188,15 @@ function App() {
                               class="gameButtonInline"
                               type="button"
                               onClick={() => {
-                                setSelectedGameKey(gameKeyFromPlay(play))
+                                const key = gameKeyFromPlay(play)
+                                setSelectedGameKey(key)
                                 setPlaysView('gameDetail')
                                 resetPage()
+                                pushNavState({
+                                  mainTab: 'plays',
+                                  playsView: 'gameDetail',
+                                  selectedGameKey: key,
+                                })
                               }}
                             >
                               {play.item?.attributes.name || ''}
@@ -1278,6 +1325,11 @@ function App() {
                                     setSelectedGameKey(row.key)
                                     setPlaysView('gameDetail')
                                     resetPage()
+                                    pushNavState({
+                                      mainTab: 'plays',
+                                      playsView: 'gameDetail',
+                                      selectedGameKey: row.key,
+                                    })
                                   }}
                                 >
                                   {row.name}
