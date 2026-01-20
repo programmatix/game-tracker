@@ -48,7 +48,7 @@ S: Downpour Drenches the World [Downpour]
 S: Rising Heat of Stone and Sand [RisingHeat]
 S: Sun-Bright Whirlwind [Whirlwind]
 S: Devouring Teeth Lurk Underfoot [DevTeeth]
-S: Eyes Watch from the Trees [Eyes]
+S: Eyes Watch from the Trees [EyesWatch]
 S: Fathomless Mud of the Swamp [MudSwamp]
 
 #

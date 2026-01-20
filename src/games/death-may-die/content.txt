@@ -16,14 +16,14 @@ S: 5
 S: 6
 
 # Investigators (core / Season 1)
-I: Ahmed Yasin
+I: Ahmed Yasin [Ahmed]
 I: Borden
-I: Elizabeth Ives
-I: Fatima Safar
-I: John Morgan
-I: Lord Adam Benchley
+I: Elizabeth Ives [Eliz]
+I: Fatima Safar [Fatima]
+I: John Morgan [John]
+I: Lord Adam Benchley [LordAdam]
 I: Rasputin
-I: Sergeant Ian Welles
-I: Sister Beth
-I: The Kid
+I: Sergeant Ian Welles [Ian]
+I: Sister Beth [Beth]
+I: The Kid [Kid]
 
