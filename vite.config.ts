@@ -31,6 +31,10 @@ export default defineConfig(({ command, mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/bgg/, ''),
         },
+        '/si': {
+          target: 'https://mindwanderer.net',
+          changeOrigin: true,
+        },
       },
     },
   }

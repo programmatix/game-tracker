@@ -1,0 +1,2463 @@
+[
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 0,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 26,
+        "createdAt": "2024-11-29T15:01:20.829Z",
+        "aspects": {},
+        "blightRemaining": 7,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "UncannyMelting"
+        ],
+        "adversary": null,
+        "boards": [
+            "C"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "WashAway",
+                "RiversBounty",
+                "BoonOfVigor",
+                "NaturesResilience",
+                "SongOfSanctity",
+                "FlashFloods",
+                "AcceleratedRot",
+                "PullBeneathTheHungryEarth"
+            ]
+        },
+        "supportingAdversaryLevel": null,
+        "dahanOnIsland": 8,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 1,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": -1,
+        "blightOnIsland": 7,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 2,
+        "createdAt": "2025-09-19T14:30:30.619Z",
+        "aspects": {},
+        "blightRemaining": 0,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "PullBeneathTheHungryEarth"
+        ],
+        "adversary": null,
+        "boards": [
+            "C"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "SongOfSanctity",
+                "WashAway",
+                "FlashFloods",
+                "NaturesResilience",
+                "BoonOfVigor",
+                "RiversBounty",
+                "AcceleratedRot",
+                "UncannyMelting"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 4,
+        "turn": 4
+    },
+    {
+        "terrorLevel": 1,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": -1,
+        "blightOnIsland": 9,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "HeartOfTheWildfire"
+        ],
+        "score": 1,
+        "createdAt": "2025-09-19T15:10:15.003Z",
+        "aspects": {},
+        "blightRemaining": 0,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "ElementalBoon",
+            "ShadowsOfTheBurningForest",
+            "Drought",
+            "TalonsOfLightning",
+            "Tsunami",
+            "TerrifyingNightmares",
+            "TheLandThrashesInFuriousPain",
+            "WrapInWingsOfSunlight",
+            "Powerstorm",
+            "ParalyzingFright",
+            "BlazingRenewal",
+            "VengeanceOfTheDead"
+        ],
+        "adversary": null,
+        "boards": [
+            "H"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "HeartOfTheWildfire": [
+                "PoisonedLand",
+                "PillarOfLivingFlame",
+                "VoraciousGrowth",
+                "CleansingFloods",
+                "FlashFires"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 5
+    },
+    {
+        "terrorLevel": 1,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": -1,
+        "blightOnIsland": 9,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "HeartOfTheWildfire"
+        ],
+        "score": 2,
+        "createdAt": "2025-09-19T15:31:37.258Z",
+        "aspects": {},
+        "blightRemaining": 0,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "QuickenTheEarthsStruggles",
+            "EntrancingApparitions",
+            "LandOfHauntsAndEmbers",
+            "RainOfBlood",
+            "DelusionsOfDanger",
+            "RouseTheTreesAndStones",
+            "CallToIsolation",
+            "GiftOfConstancy",
+            "CallToBloodshed",
+            "GiftOfLivingEnergy",
+            "LureOfTheUnknown",
+            "DarkAndTangledWoods",
+            "VeilTheNightsHunt",
+            "CallToMigrate",
+            "GiftOfPower"
+        ],
+        "adversary": null,
+        "boards": [
+            "H"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "HeartOfTheWildfire": [
+                "EnticingSplendor",
+                "AsphyxiatingSmoke",
+                "CallToTend",
+                "FlamesFury",
+                "FlashFires",
+                "DriftDownIntoSlumber",
+                "ThreateningFlames",
+                "CallOfTheDahanWays",
+                "UncannyMelting"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 7,
+        "turn": 4
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 3,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 24,
+        "createdAt": "2025-09-19T16:20:47.448Z",
+        "aspects": {},
+        "blightRemaining": 4,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "UncannyMelting"
+        ],
+        "adversary": null,
+        "boards": [
+            "F"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "WashAway",
+                "SongOfSanctity",
+                "NaturesResilience",
+                "AcceleratedRot",
+                "FlashFloods",
+                "RiversBounty",
+                "Tsunami",
+                "PullBeneathTheHungryEarth"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 7,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 3,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "DevouringTeethLurkUnderfoot"
+        ],
+        "score": 23,
+        "createdAt": "2025-09-19T16:55:29.245Z",
+        "aspects": {},
+        "blightRemaining": 4,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "QuickenTheEarthsStruggles"
+        ],
+        "adversary": null,
+        "boards": [
+            "G"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "DevouringTeethLurkUnderfoot": [
+                "PoisonedLand",
+                "HerdTowardsTheLurkingMaw",
+                "DevouringAnts",
+                "MarkTerritoryWithScarsAndTeeth",
+                "GnawingRootbiters",
+                "FerociousRampage",
+                "SavageMawbeasts",
+                "RouseTheTreesAndStones",
+                "PillarOfLivingFlame"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 1,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel1",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "FathomlessMudOfTheSwamp"
+        ],
+        "score": 31,
+        "createdAt": "2025-09-19T17:17:38.876Z",
+        "aspects": {},
+        "blightRemaining": 6,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "UncannyMelting"
+        ],
+        "adversary": null,
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "FathomlessMudOfTheSwamp": [
+                "FoulVaporsAndFetidMuck",
+                "EntrancingApparitions",
+                "ExaltationOfTangledGrowth",
+                "CleansingFloods",
+                "PullBeneathTheHungryEarth",
+                "OpenShiftingWaterways",
+                "IntractableThicketsAndThorns",
+                "SteamVents"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 3
+    },
+    {
+        "terrorLevel": 1,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel1",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SunBrightWhirlwind"
+        ],
+        "score": 22,
+        "createdAt": "2025-09-19T17:44:32.812Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "NaturesResilience",
+            "DevouringAnts",
+            "GiftOfLivingEnergy",
+            "LandOfHauntsAndEmbers",
+            "QuickenTheEarthsStruggles",
+            "UncannyMelting",
+            "VisionsOfFieryDoom",
+            "Drought",
+            "DarkAndTangledWoods",
+            "GiftOfConstancy",
+            "RouseTheTreesAndStones",
+            "PoisonedLand",
+            "BlazingRenewal",
+            "CleansingFloods",
+            "ParalyzingFright",
+            "VigorOfTheBreakingDawn",
+            "EntwinedPower",
+            "TheTreesAndStonesSpeakOfWar",
+            "VengeanceOfTheDead",
+            "AcceleratedRot"
+        ],
+        "adversary": null,
+        "boards": [
+            "A"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "SunBrightWhirlwind": [
+                "ScatterToTheWinds",
+                "DissolveTheBondsOfKinship",
+                "GiftOfWindSpedSteps",
+                "Powerstorm",
+                "TheJungleHungers",
+                "TempestOfLeavesAndBranches",
+                "SteamVents"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 3,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 4,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "LightningsSwiftStrike"
+        ],
+        "score": 22,
+        "createdAt": "2025-09-19T18:19:50.968Z",
+        "aspects": {},
+        "blightRemaining": 5,
+        "difficulty": -1,
+        "powerCardsInDiscard": [
+            "EnticingSplendor",
+            "UncannyMelting",
+            "NaturesResilience",
+            "VoraciousGrowth",
+            "CallToBloodshed",
+            "EntrancingApparitions",
+            "Drought",
+            "GiftOfConstancy",
+            "EncompassingWard",
+            "MistsOfOblivion",
+            "TheJungleHungers",
+            "DissolveTheBondsOfKinship"
+        ],
+        "adversary": null,
+        "boards": [
+            "B"
+        ],
+        "scenario": null,
+        "blightCard": "DownwardSpiral",
+        "powerCardsOwned": {
+            "LightningsSwiftStrike": [
+                "DriftDownIntoSlumber",
+                "LureOfTheUnknown",
+                "InfiniteVitality",
+                "ShatterHomesteads",
+                "RagingStorm",
+                "HarbingersOfTheLightning",
+                "RouseTheTreesAndStones"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 5,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "ShadowsFlickerLikeFlame"
+        ],
+        "score": 24,
+        "createdAt": "2025-09-19T19:22:07.226Z",
+        "aspects": {},
+        "blightRemaining": 4,
+        "difficulty": -1,
+        "powerCardsInDiscard": [
+            "UncannyMelting",
+            "ReachingGrasp",
+            "DevouringAnts",
+            "CallToMigrate",
+            "SavageMawbeasts",
+            "GnawingRootbiters",
+            "GiftOfLivingEnergy",
+            "EnticingSplendor",
+            "DriftDownIntoSlumber",
+            "GiftOfConstancy",
+            "CallToIsolation",
+            "EncompassingWard",
+            "ShadowsOfTheBurningForest",
+            "VigorOfTheBreakingDawn",
+            "TheTreesAndStonesSpeakOfWar",
+            "MistsOfOblivion",
+            "EntwinedPower",
+            "DissolveTheBondsOfKinship",
+            "IndomitableClaim"
+        ],
+        "adversary": null,
+        "boards": [
+            "G"
+        ],
+        "scenario": null,
+        "blightCard": "DownwardSpiral",
+        "powerCardsOwned": {
+            "ShadowsFlickerLikeFlame": [
+                "WindsOfRustAndAtrophy",
+                "CallOfTheDahanWays",
+                "CropsWitherAndFade",
+                "FavorsCalledDue",
+                "MantleOfDread",
+                "Tsunami",
+                "RouseTheTreesAndStones",
+                "LandOfHauntsAndEmbers"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 7,
+        "turn": 4
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 4,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "DevouringTeethLurkUnderfoot"
+        ],
+        "score": 20,
+        "createdAt": "2025-09-19T19:52:24.320Z",
+        "aspects": {},
+        "blightRemaining": 4,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "QuickenTheEarthsStruggles"
+        ],
+        "adversary": null,
+        "boards": [
+            "B"
+        ],
+        "scenario": null,
+        "blightCard": "MemoryFadesToDust",
+        "powerCardsOwned": {
+            "DevouringTeethLurkUnderfoot": [
+                "GnawingRootbiters",
+                "HerdTowardsTheLurkingMaw",
+                "DevouringAnts",
+                "GiftOfFuriousMight",
+                "RouseTheTreesAndStones",
+                "FerociousRampage",
+                "PillarOfLivingFlame",
+                "MarkTerritoryWithScarsAndTeeth"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 4,
+        "turn": 5
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": 1,
+        "blightOnIsland": 3,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "EyesWatchFromTheTrees"
+        ],
+        "score": 30,
+        "createdAt": "2025-09-19T21:13:29.586Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 2,
+        "powerCardsInDiscard": [
+            "InfestedAquifers",
+            "DevouringAnts",
+            "VoraciousGrowth",
+            "ElementalBoon",
+            "SapTheStrengthOfMultitudes",
+            "PortentsOfDisaster",
+            "ScourTheLand",
+            "VisionsOfFieryDoom",
+            "PactOfTheJoinedHunt",
+            "GrantHatredARavenousForm",
+            "UnlockTheGatesOfDeepestPower",
+            "PillarOfLivingFlame"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "A"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "EyesWatchFromTheTrees": [
+                "EnticingSplendor",
+                "SweepIntoTheSea",
+                "BoonOfWatchfulGuarding",
+                "DelusionsOfDanger",
+                "DisorientingLandscape",
+                "EerieNoisesAndMovingTrees",
+                "MysteriousAbductions"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 3,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "ASpreadOfRampantGreen"
+        ],
+        "score": 20,
+        "createdAt": "2025-09-19T23:15:45.713Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "EntrapTheForcesOfCorruption",
+            "SongOfSanctity",
+            "SapTheStrengthOfMultitudes",
+            "RazorSharpUndergrowth",
+            "FireInTheSky",
+            "AnimatedWrackroot",
+            "CallToMigrate",
+            "LandOfHauntsAndEmbers",
+            "StrongAndConstantCurrents",
+            "GiftOfLivingEnergy",
+            "DriftDownIntoSlumber",
+            "GiftOfTwinnedDays",
+            "GiftOfConstancy",
+            "DevouringAnts",
+            "TormentingRotflies",
+            "ScreamDiseaseIntoTheWind",
+            "EnticingSplendor",
+            "WeepForWhatIsLost",
+            "Powerstorm",
+            "PoisonedLand",
+            "PillarOfLivingFlame"
+        ],
+        "adversary": null,
+        "boards": [
+            "C"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "ASpreadOfRampantGreen": [
+                "QuickenTheEarthsStruggles",
+                "ProwlingPanthers",
+                "SteamVents",
+                "FavorOfTheSunAndStarLitDark",
+                "TwistedFlowersMurmurUltimatums",
+                "RainOfBlood",
+                "OvergrowInANight",
+                "GiftOfProliferation",
+                "StemTheFlowOfFreshWater",
+                "CallOfTheDahanWays"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": 2,
+        "blightOnIsland": 8,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 21,
+        "createdAt": "2025-09-20T01:08:21.296Z",
+        "aspects": {
+            "RiverSurgesInSunlight": "Sunshine"
+        },
+        "blightRemaining": 0,
+        "difficulty": 4,
+        "powerCardsInDiscard": [
+            "BatsScoutForRaidsByDarkness",
+            "PactOfTheJoinedHunt",
+            "GiftOfNaturesConnection",
+            "VeilTheNightsHunt",
+            "GiftOfPower",
+            "DryWoodExplodesInSmolderingSplinters",
+            "AnimatedWrackroot",
+            "InflameTheFiresOfLife",
+            "CallToIsolation",
+            "TeemingRivers",
+            "MesmerizedTranquility",
+            "TormentingRotflies",
+            "DarkAndTangledWoods",
+            "RainOfBlood",
+            "EntrapTheForcesOfCorruption",
+            "TreacherousWaterways",
+            "SapTheStrengthOfMultitudes",
+            "NaturesResilience",
+            "SweepIntoTheSea",
+            "PentUpCalamity",
+            "FocusTheLandsAnguish",
+            "DissolveTheBondsOfKinship",
+            "MistsOfOblivion",
+            "InsatiableHungerOfTheSwarm",
+            "SmotheringInfestation",
+            "DrawTowardsAConsumingVoid",
+            "VolcanicEruption",
+            "TerrifyingNightmares",
+            "FireAndFlood",
+            "StranglingFirevine"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "UntendedLandCrumbles",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "FlashFloods",
+                "CyclesOfTimeAndTide",
+                "VengeanceOfTheDead",
+                "IrresistibleCall",
+                "CallToFerocity",
+                "TheTreesAndStonesSpeakOfWar",
+                "WallsOfRockAndThorn",
+                "RiversBounty"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 10,
+        "turn": 10
+    },
+    {
+        "terrorLevel": 1,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": -1,
+        "blightOnIsland": 8,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 4,
+        "createdAt": "2025-09-20T07:46:16.975Z",
+        "aspects": {
+            "RiverSurgesInSunlight": "Sunshine"
+        },
+        "blightRemaining": 0,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "SunsetsFireFlowsAcrossTheLand",
+            "CallToGuard",
+            "PoisonedDew",
+            "TwilightFogBringsMadness",
+            "SteamVents",
+            "SkyStretchesToShore",
+            "Drought",
+            "PortentsOfDisaster",
+            "SetThemOnAnEverTwistingTrail",
+            "MesmerizedTranquility",
+            "PullBeneathTheHungryEarth",
+            "SwarmingWasps"
+        ],
+        "adversary": null,
+        "boards": [
+            "E"
+        ],
+        "scenario": null,
+        "blightCard": "UntendedLandCrumbles",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "FlowDownriverBlowDownwind",
+                "FlashFloods",
+                "UncannyMelting",
+                "VeilTheNightsHunt",
+                "WashAway",
+                "RiversBounty",
+                "PactOfTheJoinedHunt"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 5
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 3,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SharpFangsBehindTheLeaves"
+        ],
+        "score": 23,
+        "createdAt": "2025-09-20T10:08:53.270Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "GiftOfConstancy",
+            "VoraciousGrowth",
+            "EntrapTheForcesOfCorruption",
+            "CallToTend",
+            "TreacherousWaterways",
+            "CallToGuard",
+            "StrongAndConstantCurrents",
+            "BirdsCryWarning",
+            "GiftOfLivingEnergy",
+            "AnimatedWrackroot",
+            "CallToTrade",
+            "CallToIsolation",
+            "DisorientingLandscape",
+            "ShadowsOfTheBurningForest",
+            "HauntedByPrimalMemories",
+            "PromisesOfProtection",
+            "EncompassingWard",
+            "ProwlingPanthers"
+        ],
+        "adversary": null,
+        "boards": [
+            "A"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "SharpFangsBehindTheLeaves": [
+                "CarapacedLand",
+                "FleshrotFever",
+                "PreyOnTheBuilders",
+                "TeethGleamFromDarkness",
+                "GuardianSerpents",
+                "TerrifyingChase",
+                "RenewingBoon",
+                "TooNearTheJungle",
+                "BloodDrawsPredators",
+                "DarkAndTangledWoods"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "ASpreadOfRampantGreen"
+        ],
+        "score": 21,
+        "createdAt": "2025-09-20T13:03:58.107Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "GiftOfConstancy",
+            "SwarmingWasps",
+            "SetThemOnAnEverTwistingTrail",
+            "RoilingBogAndSnaggingThorn",
+            "SunsetsFireFlowsAcrossTheLand",
+            "EncompassingWard",
+            "AnimatedWrackroot",
+            "CallToTrade",
+            "PactOfTheJoinedHunt",
+            "TwilightFogBringsMadness",
+            "DomesticatedAnimalsGoBerserk",
+            "DireMetamorphosis",
+            "FlowDownriverBlowDownwind",
+            "GiftOfNaturesConnection",
+            "LureOfTheUnknown",
+            "GiftOfTwinnedDays",
+            "RitesOfTheLandsRejection",
+            "VeilTheNightsHunt"
+        ],
+        "adversary": null,
+        "boards": [
+            "C"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "ASpreadOfRampantGreen": [
+                "CallToTend",
+                "FieldsChokedWithGrowth",
+                "SkiesHeraldTheSeasonOfReturn",
+                "GiftOfProliferation",
+                "ThrivingChokefungus",
+                "ElusiveAmbushes",
+                "DarkAndTangledWoods",
+                "OvergrowInANight",
+                "UnquenchableFlames",
+                "StemTheFlowOfFreshWater"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 4,
+        "supportingAdversary": null,
+        "endingResult": "WinTerrorVictory",
+        "adversaryLevel": 0,
+        "blightOnIsland": 3,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "BringerOfDreamsAndNightmares"
+        ],
+        "score": 23,
+        "createdAt": "2025-09-20T16:20:21.332Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 1,
+        "powerCardsInDiscard": [
+            "CallToBloodshed",
+            "AbsorbCorruption",
+            "ProwlingPanthers",
+            "UncannyMelting",
+            "DryWoodExplodesInSmolderingSplinters",
+            "SteamVents",
+            "GoldsAllure",
+            "BloodDrawsPredators",
+            "GiftOfConstancy",
+            "RenewingRain",
+            "HazardsSpreadAcrossTheIsland",
+            "ElusiveAmbushes",
+            "EncompassingWard",
+            "MesmerizedTranquility",
+            "PullBeneathTheHungryEarth",
+            "ScourTheLand",
+            "EntrapTheForcesOfCorruption",
+            "Drought",
+            "StranglingFirevine",
+            "GrantHatredARavenousForm",
+            "EntwinedPower"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "B"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "BringerOfDreamsAndNightmares": [
+                "PredatoryNightmares",
+                "EntrancingApparitions",
+                "SapTheStrengthOfMultitudes",
+                "DreadApparitions",
+                "RainOfBlood",
+                "DomesticatedAnimalsGoBerserk",
+                "TreacherousWaterways",
+                "VeilTheNightsHunt",
+                "InfestationOfVenomousSpiders",
+                "DreamsOfTheDahan"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 7,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "VengeanceAsABurningPlague"
+        ],
+        "score": 9,
+        "createdAt": "2025-09-21T12:43:00.436Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "GuardianSerpents",
+            "CallToTrade",
+            "GiftOfPower",
+            "LandOfHauntsAndEmbers",
+            "TeemingRivers",
+            "EntrancingApparitions",
+            "DesiccatingWinds",
+            "AbsorbCorruption",
+            "RazorSharpUndergrowth",
+            "FlowDownriverBlowDownwind",
+            "ManifestIncarnation",
+            "EntwinedPower",
+            "SpillBitternessIntoTheEarth",
+            "PyroclasticFlow",
+            "InsatiableHungerOfTheSwarm",
+            "UnlockTheGatesOfDeepestPower"
+        ],
+        "adversary": null,
+        "boards": [
+            "G"
+        ],
+        "scenario": "Blitz",
+        "blightCard": "ThrivingCommunities",
+        "powerCardsOwned": {
+            "VengeanceAsABurningPlague": [
+                "FetidBreathSpreadsInfection",
+                "MesmerizedTranquility",
+                "InflameTheFiresOfLife",
+                "BloodwrackPlague",
+                "StrikeLowWithSuddenFevers",
+                "SleepAndNeverWaken",
+                "Plaguebearers"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 0,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 6,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "VengeanceAsABurningPlague"
+        ],
+        "score": 18,
+        "createdAt": "2025-09-21T13:26:38.330Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "PactOfTheJoinedHunt",
+            "SpurOnWithWordsOfFire",
+            "FavorOfTheSunAndStarLitDark",
+            "StrongAndConstantCurrents",
+            "ScourTheLand",
+            "CyclesOfTimeAndTide",
+            "GiftOfNaturesConnection",
+            "PromisesOfProtection",
+            "GiftOfPower",
+            "MesmerizedTranquility",
+            "UtterACurseOfDreadAndBone",
+            "WeaveTogetherTheFabricOfPlace",
+            "ParalyzingFright"
+        ],
+        "adversary": null,
+        "boards": [
+            "F"
+        ],
+        "scenario": null,
+        "blightCard": "UnnaturalProliferation",
+        "powerCardsOwned": {
+            "VengeanceAsABurningPlague": [
+                "EntrancingApparitions",
+                "FieryVengeance",
+                "StrikeLowWithSuddenFevers",
+                "TerritorialStrife",
+                "VengeanceOfTheDead",
+                "FetidBreathSpreadsInfection",
+                "Plaguebearers"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 4,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 29,
+        "createdAt": "2025-09-21T19:22:43.518Z",
+        "aspects": {},
+        "blightRemaining": 6,
+        "difficulty": -3,
+        "powerCardsInDiscard": [],
+        "adversary": null,
+        "boards": [
+            "G"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "WashAway",
+                "NaturesResilience",
+                "PullBeneathTheHungryEarth",
+                "AcceleratedRot",
+                "UncannyMelting",
+                "RiversBounty",
+                "FlashFloods"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 10,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SerpentSlumberingBeneathTheIsland"
+        ],
+        "score": 25,
+        "createdAt": "2025-09-22T19:37:59.626Z",
+        "aspects": {},
+        "blightRemaining": 6,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "CallToTend",
+            "PullBeneathTheHungryEarth",
+            "RouseTheTreesAndStones",
+            "RainOfBlood",
+            "LureOfTheUnknown",
+            "GnawingRootbiters",
+            "DevouringAnts",
+            "VoraciousGrowth",
+            "ReachingGrasp",
+            "QuickenTheEarthsStruggles",
+            "GiftOfLivingEnergy",
+            "UncannyMelting",
+            "CallToBloodshed",
+            "CallToMigrate",
+            "GiftOfConstancy",
+            "SapTheStrengthOfMultitudes",
+            "EntwinedPower",
+            "DissolveTheBondsOfKinship",
+            "TheTreesAndStonesSpeakOfWar"
+        ],
+        "adversary": null,
+        "boards": [
+            "F"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "SerpentSlumberingBeneathTheIsland": [
+                "GiftOfThePrimordialDeeps",
+                "ElementalBoon",
+                "ElementalAegis",
+                "SteamVents",
+                "Tsunami",
+                "EntrancingApparitions",
+                "GiftOfFlowingPower",
+                "AbsorbEssence",
+                "DelusionsOfDanger"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 4,
+        "turn": 5
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "VitalStrengthOfTheEarth"
+        ],
+        "score": 21,
+        "createdAt": "2025-09-25T11:21:03.425Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "CallToMigrate",
+            "TeemingRivers",
+            "BloodDrawsPredators",
+            "InfestedAquifers",
+            "SunsetsFireFlowsAcrossTheLand",
+            "HauntedByPrimalMemories",
+            "GiftOfConstancy",
+            "StormSwath",
+            "SleepAndNeverWaken",
+            "UnrelentingGrowth"
+        ],
+        "adversary": null,
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "VitalStrengthOfTheEarth": [
+                "GuardTheHealingLand",
+                "AYearOfPerfectStillness",
+                "TerritorialStrife",
+                "VigorOfTheBreakingDawn",
+                "RitualsOfDestruction",
+                "DrawOfTheFruitfulEarth"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": 0,
+        "blightOnIsland": 8,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 12,
+        "createdAt": "2025-09-25T12:31:45.962Z",
+        "aspects": {
+            "RiverSurgesInSunlight": "Sunshine"
+        },
+        "blightRemaining": 0,
+        "difficulty": 1,
+        "powerCardsInDiscard": [
+            "UncannyMelting",
+            "PullBeneathTheHungryEarth"
+        ],
+        "adversary": "TheKingdomOfEngland",
+        "boards": [
+            "F"
+        ],
+        "scenario": null,
+        "blightCard": "ThrivingCommunities",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "FlashFloods",
+                "AcceleratedRot",
+                "SongOfSanctity",
+                "Tsunami",
+                "RiversBounty",
+                "WashAway",
+                "NaturesResilience"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 9,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": 0,
+        "blightOnIsland": 8,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RiverSurgesInSunlight"
+        ],
+        "score": 15,
+        "createdAt": "2025-09-25T13:49:51.317Z",
+        "aspects": {},
+        "blightRemaining": 0,
+        "difficulty": 2,
+        "powerCardsInDiscard": [
+            "InflameTheFiresOfLife",
+            "DisorientingLandscape",
+            "TeemingRivers",
+            "CallToMigrate",
+            "AbsorbCorruption",
+            "VeilTheNightsHunt",
+            "ShadowsOfTheBurningForest",
+            "TormentingRotflies",
+            "SearAngerIntoTheWildLands",
+            "TreacherousWaterways",
+            "Powerstorm",
+            "IndomitableClaim",
+            "SeaMonsters",
+            "AngryBears",
+            "MistsOfOblivion",
+            "ManifestIncarnation"
+        ],
+        "adversary": "TheKingdomOfFrance",
+        "boards": [
+            "H"
+        ],
+        "scenario": null,
+        "blightCard": "ThrivingCommunities",
+        "powerCardsOwned": {
+            "RiverSurgesInSunlight": [
+                "DarkAndTangledWoods",
+                "BatsScoutForRaidsByDarkness",
+                "TerrifyingNightmares",
+                "FlashFloods",
+                "CleansingFloods",
+                "BoonOfVigor",
+                "WashAway"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 10,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": 0,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "EyesWatchFromTheTrees"
+        ],
+        "score": 27,
+        "createdAt": "2025-09-25T14:29:37.954Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 1,
+        "powerCardsInDiscard": [
+            "CallToMigrate",
+            "DomesticatedAnimalsGoBerserk",
+            "GiftOfLivingEnergy",
+            "ElusiveAmbushes",
+            "PurifyingFlame",
+            "ConfoundingMists",
+            "BatsScoutForRaidsByDarkness",
+            "TransformToAMurderousDarkness",
+            "InstrumentsOfTheirOwnRuin",
+            "Powerstorm"
+        ],
+        "adversary": "TheTsardomOfRussia",
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "EyesWatchFromTheTrees": [
+                "DriftDownIntoSlumber",
+                "EerieNoisesAndMovingTrees",
+                "WeaveTogetherTheFabricOfPlace",
+                "WhisperedGuidanceThroughTheNight",
+                "BoonOfWatchfulGuarding",
+                "MysteriousAbductions"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 4,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 4,
+        "supportingAdversary": null,
+        "endingResult": "WinTerrorVictory",
+        "adversaryLevel": 1,
+        "blightOnIsland": 6,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "ShadowsFlickerLikeFlame"
+        ],
+        "score": 28,
+        "createdAt": "2025-09-25T15:49:28.678Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 2,
+        "powerCardsInDiscard": [
+            "HazardsSpreadAcrossTheIsland",
+            "SongOfSanctity",
+            "BatsScoutForRaidsByDarkness",
+            "Drought",
+            "PromisesOfProtection",
+            "ReachingGrasp",
+            "UncannyMelting",
+            "PortentsOfDisaster",
+            "EncompassingWard",
+            "InflameTheFiresOfLife",
+            "HereThereBeMonsters",
+            "RazorSharpUndergrowth",
+            "UnquenchableFlames",
+            "GiftOfLivingEnergy",
+            "BloodDrawsPredators",
+            "GnawingRootbiters",
+            "RenewingRain",
+            "PoisonedDew",
+            "EnticingSplendor",
+            "SettleIntoHuntingGrounds",
+            "TheLandThrashesInFuriousPain",
+            "CastDownIntoTheBrinyDeep"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "G"
+        ],
+        "scenario": null,
+        "blightCard": "UnnaturalProliferation",
+        "powerCardsOwned": {
+            "ShadowsFlickerLikeFlame": [
+                "ConcealingShadows",
+                "ShadowsOfTheBurningForest",
+                "CallToMigrate",
+                "MantleOfDread",
+                "ParalyzingFright",
+                "CallToBloodshed",
+                "TerrorTurnsToMadness",
+                "FavorsCalledDue",
+                "VisionsOfFieryDoom",
+                "CropsWitherAndFade"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "ShadowsFlickerLikeFlame"
+        ],
+        "score": 24,
+        "createdAt": "2025-09-25T16:27:02.320Z",
+        "aspects": {
+            "ShadowsFlickerLikeFlame": "Madness"
+        },
+        "blightRemaining": 2,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "DryWoodExplodesInSmolderingSplinters",
+            "TheShoreSeethesWithHatred",
+            "SapTheStrengthOfMultitudes",
+            "SuckingOoze",
+            "GiftOfPower",
+            "GnawingRootbiters",
+            "FavorOfTheSunAndStarLitDark",
+            "SetThemOnAnEverTwistingTrail",
+            "EnticingSplendor",
+            "WeaveTogetherTheFabricOfPlace",
+            "SeaMonsters",
+            "AngryBears"
+        ],
+        "adversary": null,
+        "boards": [
+            "B"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "ShadowsFlickerLikeFlame": [
+                "HauntedByPrimalMemories",
+                "MantleOfDread",
+                "FavorsCalledDue",
+                "WrapInWingsOfSunlight",
+                "UnquenchableFlames",
+                "ShadowsOfTheBurningForest",
+                "CropsWitherAndFade"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 5
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SunBrightWhirlwind"
+        ],
+        "score": 20,
+        "createdAt": "2025-09-25T17:25:04.691Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "InflameTheFiresOfLife",
+            "LandOfHauntsAndEmbers",
+            "FavorOfTheSunAndStarLitDark",
+            "GiftOfPower",
+            "SuckingOoze",
+            "PurifyingFlame",
+            "SkiesHeraldTheSeasonOfReturn",
+            "ThrivingChokefungus",
+            "DryWoodExplodesInSmolderingSplinters",
+            "TerrorTurnsToMadness",
+            "MesmerizedTranquility",
+            "HazardsSpreadAcrossTheIsland",
+            "RenewingBoon",
+            "CallToTrade",
+            "SunsetsFireFlowsAcrossTheLand",
+            "FlowDownriverBlowDownwind",
+            "PoisonedDew",
+            "TheShoreSeethesWithHatred",
+            "GnawingRootbiters",
+            "TreesRadiateCelestialBrilliance",
+            "WeaveTogetherTheFabricOfPlace",
+            "DeathFallsGentlyFromOpenBlossoms",
+            "UnrelentingGrowth",
+            "UtterACurseOfDreadAndBone",
+            "PillarOfLivingFlame",
+            "UnlockTheGatesOfDeepestPower",
+            "TransformToAMurderousDarkness",
+            "EntwinedPower"
+        ],
+        "adversary": null,
+        "boards": [
+            "H"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "SunBrightWhirlwind": [
+                "SetThemOnAnEverTwistingTrail",
+                "TempestOfLeavesAndBranches",
+                "ConfoundingMists",
+                "IndomitableClaim",
+                "WrapInWingsOfSunlight",
+                "InstrumentsOfTheirOwnRuin",
+                "TerritorialStrife",
+                "GiftOfWindSpedSteps",
+                "DelusionsOfDanger",
+                "EnticingSplendor"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "FathomlessMudOfTheSwamp"
+        ],
+        "score": 22,
+        "createdAt": "2025-09-25T19:03:57.766Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "InfestedAquifers",
+            "RazorSharpUndergrowth",
+            "CallToMigrate"
+        ],
+        "adversary": null,
+        "boards": [
+            "F"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "FathomlessMudOfTheSwamp": [
+                "IntractableThicketsAndThorns",
+                "NaturesResilience",
+                "FoulVaporsAndFetidMuck",
+                "ExaltationOfTangledGrowth",
+                "OpenShiftingWaterways"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 3,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "LightningsSwiftStrike"
+        ],
+        "score": 26,
+        "createdAt": "2025-09-25T20:30:27.079Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "RazorSharpUndergrowth",
+            "RainOfBlood",
+            "PortentsOfDisaster",
+            "RitesOfTheLandsRejection",
+            "GiftOfConstancy",
+            "PactOfTheJoinedHunt",
+            "UnquenchableFlames",
+            "CarapacedLand",
+            "ThrivingChokefungus"
+        ],
+        "adversary": null,
+        "boards": [
+            "F"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "LightningsSwiftStrike": [
+                "BirdsCryWarning",
+                "HarbingersOfTheLightning",
+                "LightningsBoon",
+                "ShatterHomesteads",
+                "LureOfTheUnknown",
+                "RagingStorm",
+                "WeepForWhatIsLost"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 4
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": -1,
+        "blightOnIsland": 6,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RisingHeatOfStoneAndSand"
+        ],
+        "score": 17,
+        "createdAt": "2025-09-26T14:31:32.247Z",
+        "aspects": {},
+        "blightRemaining": 1,
+        "difficulty": 0,
+        "powerCardsInDiscard": [],
+        "adversary": null,
+        "boards": [
+            "A"
+        ],
+        "scenario": null,
+        "blightCard": "UnnaturalProliferation",
+        "powerCardsOwned": {
+            "RisingHeatOfStoneAndSand": [
+                "SwelteringExhaustion",
+                "Drought",
+                "StingingSandstorm",
+                "GiftOfSearingHeat",
+                "VisionsOfFieryDoom",
+                "CallOnHerdersForAid",
+                "PurifyingFlame"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "B2",
+        "spirits": [
+            "SunBrightWhirlwind",
+            "EyesWatchFromTheTrees"
+        ],
+        "score": 30,
+        "createdAt": "2025-09-27T08:20:55.716Z",
+        "aspects": {},
+        "blightRemaining": 12,
+        "difficulty": -3,
+        "powerCardsInDiscard": [
+            "CallOfTheDahanWays",
+            "ReachingGrasp",
+            "RainOfBlood",
+            "QuickenTheEarthsStruggles",
+            "VoraciousGrowth",
+            "Drought",
+            "CallToMigrate",
+            "SapTheStrengthOfMultitudes",
+            "ShadowsOfTheBurningForest",
+            "GiftOfConstancy",
+            "EncompassingWard",
+            "VisionsOfFieryDoom",
+            "LandOfHauntsAndEmbers",
+            "SteamVents",
+            "DriftDownIntoSlumber",
+            "CallToIsolation",
+            "SavageMawbeasts",
+            "GiftOfLivingEnergy",
+            "GiftOfPower",
+            "PullBeneathTheHungryEarth",
+            "DevouringAnts",
+            "EntwinedPower",
+            "PoisonedLand",
+            "TalonsOfLightning"
+        ],
+        "adversary": null,
+        "boards": [
+            "E",
+            "C"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "SunBrightWhirlwind": [
+                "TheTreesAndStonesSpeakOfWar",
+                "PurifyingFlame",
+                "ScatterToTheWinds",
+                "CallToBloodshed",
+                "TempestOfLeavesAndBranches",
+                "LureOfTheUnknown",
+                "GiftOfWindSpedSteps",
+                "NaturesResilience",
+                "VeilTheNightsHunt"
+            ],
+            "EyesWatchFromTheTrees": [
+                "BoonOfWatchfulGuarding",
+                "MysteriousAbductions",
+                "EerieNoisesAndMovingTrees",
+                "EntrancingApparitions",
+                "WhisperedGuidanceThroughTheNight",
+                "UncannyMelting"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 12,
+        "turn": 4
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "B2",
+        "spirits": [
+            "KeeperOfTheForbiddenWilds",
+            "EyesWatchFromTheTrees"
+        ],
+        "score": 25,
+        "createdAt": "2025-09-27T18:41:37.713Z",
+        "aspects": {},
+        "blightRemaining": 11,
+        "difficulty": -1,
+        "powerCardsInDiscard": [
+            "CallToTrade",
+            "GnawingRootbiters",
+            "CallOfTheDahanWays",
+            "EncompassingWard",
+            "CallToFerocity",
+            "SwarmingWasps",
+            "RenewingRain",
+            "LureOfTheUnknown",
+            "TwilightFogBringsMadness",
+            "EnticingSplendor",
+            "CallToMigrate",
+            "InfestedAquifers",
+            "TormentingRotflies",
+            "RazorSharpUndergrowth",
+            "SavageMawbeasts",
+            "InflameTheFiresOfLife",
+            "AnimatedWrackroot",
+            "GiftOfPower",
+            "PoisonedDew",
+            "PortentsOfDisaster",
+            "GiftOfLivingEnergy",
+            "SpurOnWithWordsOfFire",
+            "PullBeneathTheHungryEarth",
+            "GoldsAllure",
+            "PromisesOfProtection",
+            "TeemingRivers",
+            "PactOfTheJoinedHunt",
+            "SapTheStrengthOfMultitudes",
+            "NaturesResilience",
+            "ConfoundingMists",
+            "CallToIsolation",
+            "PillarOfLivingFlame",
+            "DissolveTheBondsOfKinship",
+            "CleansingFloods"
+        ],
+        "adversary": null,
+        "boards": [
+            "A",
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "NoBlightCard",
+        "powerCardsOwned": {
+            "KeeperOfTheForbiddenWilds": [
+                "SacrosanctWilderness",
+                "RegrowFromRoots",
+                "PurifyingFlame",
+                "BoonOfGrowingPower",
+                "TheJungleHungers",
+                "ToweringWrath",
+                "DelusionsOfDanger",
+                "ElusiveAmbushes",
+                "QuickenTheEarthsStruggles"
+            ],
+            "EyesWatchFromTheTrees": [
+                "WhisperedGuidanceThroughTheNight",
+                "EntrancingApparitions",
+                "DevouringAnts",
+                "BoonOfWatchfulGuarding",
+                "VisionsOfFieryDoom",
+                "MysteriousAbductions",
+                "DisorientingLandscape",
+                "DarkAndTangledWoods",
+                "EerieNoisesAndMovingTrees"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 12,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SharpFangsBehindTheLeaves"
+        ],
+        "score": 25,
+        "createdAt": "2025-09-30T08:02:26.742Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "LandOfHauntsAndEmbers",
+            "RouseTheTreesAndStones",
+            "HereThereBeMonsters",
+            "BatsScoutForRaidsByDarkness",
+            "FireInTheSky",
+            "SkyStretchesToShore",
+            "SteamVents",
+            "SetThemOnAnEverTwistingTrail",
+            "ReachingGrasp",
+            "GiftOfTwinnedDays",
+            "StrongAndConstantCurrents",
+            "UnquenchableFlames",
+            "CallToGuard",
+            "PromisesOfProtection",
+            "HazardsSpreadAcrossTheIsland",
+            "TwilightFogBringsMadness",
+            "VoiceOfCommand",
+            "TwistedFlowersMurmurUltimatums",
+            "StormSwath"
+        ],
+        "adversary": null,
+        "boards": [
+            "A"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "SharpFangsBehindTheLeaves": [
+                "TerrifyingChase",
+                "TeethGleamFromDarkness",
+                "DomesticatedAnimalsGoBerserk",
+                "SwarmingWasps",
+                "TooNearTheJungle",
+                "GnawingRootbiters",
+                "SleepAndNeverWaken",
+                "PreyOnTheBuilders",
+                "CarapacedLand"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 5
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SharpFangsBehindTheLeaves"
+        ],
+        "score": 23,
+        "createdAt": "2025-09-30T12:43:10.106Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "CallToMigrate",
+            "RouseTheTreesAndStones",
+            "DryWoodExplodesInSmolderingSplinters",
+            "InflameTheFiresOfLife",
+            "CallToBloodshed",
+            "SongOfSanctity",
+            "FavorOfTheSunAndStarLitDark",
+            "RitesOfTheLandsRejection",
+            "AnimatedWrackroot",
+            "ShadowsOfTheBurningForest",
+            "PromisesOfProtection",
+            "DriftDownIntoSlumber",
+            "HazardsSpreadAcrossTheIsland",
+            "SteamVents",
+            "GrantHatredARavenousForm",
+            "VengeanceOfTheDead",
+            "UtterACurseOfDreadAndBone",
+            "InsatiableHungerOfTheSwarm",
+            "InfestationOfVenomousSpiders",
+            "InfiniteVitality"
+        ],
+        "adversary": null,
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "SharpFangsBehindTheLeaves": [
+                "TerrifyingChase",
+                "TreesRadiateCelestialBrilliance",
+                "ElementalBoon",
+                "ProwlingPanthers",
+                "PreyOnTheBuilders",
+                "TooNearTheJungle",
+                "CleansingFloods",
+                "TeethGleamFromDarkness"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 4,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": 0,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SharpFangsBehindTheLeaves"
+        ],
+        "score": 34,
+        "createdAt": "2025-09-30T15:00:56.537Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 1,
+        "powerCardsInDiscard": [
+            "QuickenTheEarthsStruggles",
+            "SpurOnWithWordsOfFire",
+            "TerrorTurnsToMadness",
+            "SunsetsFireFlowsAcrossTheLand",
+            "StrongAndConstantCurrents",
+            "SapTheStrengthOfMultitudes",
+            "VeilTheNightsHunt",
+            "TormentingRotflies",
+            "AnimatedWrackroot",
+            "VisionsOfFieryDoom",
+            "ReachingGrasp",
+            "FlowDownriverBlowDownwind"
+        ],
+        "adversary": "TheTsardomOfRussia",
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "SharpFangsBehindTheLeaves": [
+                "RazorSharpUndergrowth",
+                "CallToGuard",
+                "EnticingSplendor",
+                "PreyOnTheBuilders",
+                "TooNearTheJungle",
+                "NaturesResilience",
+                "TerrifyingChase",
+                "TeethGleamFromDarkness"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 4
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": 1,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "SharpFangsBehindTheLeaves"
+        ],
+        "score": 39,
+        "createdAt": "2025-09-30T20:37:35.388Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 3,
+        "powerCardsInDiscard": [
+            "SwarmingWasps",
+            "GuardianSerpents",
+            "ElusiveAmbushes",
+            "CyclesOfTimeAndTide",
+            "SkyStretchesToShore",
+            "FleshrotFever",
+            "HauntedByPrimalMemories",
+            "TerritorialStrife",
+            "ScourTheLand",
+            "ScreamDiseaseIntoTheWind",
+            "ProwlingPanthers",
+            "RainOfBlood",
+            "FlowDownriverBlowDownwind",
+            "SuckingOoze",
+            "CallToFerocity",
+            "FireInTheSky",
+            "WeepForWhatIsLost",
+            "FavorOfTheSunAndStarLitDark",
+            "VoraciousGrowth",
+            "BatsScoutForRaidsByDarkness",
+            "ReachingGrasp"
+        ],
+        "adversary": "TheTsardomOfRussia",
+        "boards": [
+            "A"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "SharpFangsBehindTheLeaves": [
+                "InflameTheFiresOfLife",
+                "EntrapTheForcesOfCorruption",
+                "TeethGleamFromDarkness",
+                "RenewingBoon",
+                "TerrifyingChase",
+                "DomesticatedAnimalsGoBerserk",
+                "PoisonedDew",
+                "TooNearTheJungle",
+                "HereThereBeMonsters",
+                "PreyOnTheBuilders",
+                "BloodDrawsPredators"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 6
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": 0,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "ASpreadOfRampantGreen"
+        ],
+        "score": 25,
+        "createdAt": "2025-10-02T12:28:03.300Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 1,
+        "powerCardsInDiscard": [
+            "DelusionsOfDanger",
+            "PromisesOfProtection",
+            "GiftOfTwinnedDays",
+            "RoilingBogAndSnaggingThorn",
+            "StrongAndConstantCurrents",
+            "Drought",
+            "CyclesOfTimeAndTide",
+            "CallToGuard",
+            "UncannyMelting",
+            "TeemingRivers",
+            "GoldsAllure",
+            "BloodDrawsPredators",
+            "EnticingSplendor",
+            "TerritorialStrife",
+            "SunsetsFireFlowsAcrossTheLand",
+            "LikeCallsToLike",
+            "AbsorbCorruption",
+            "DevouringAnts",
+            "RouseTheTreesAndStones",
+            "SavageTransformation",
+            "TransformToAMurderousDarkness",
+            "WindsOfRustAndAtrophy"
+        ],
+        "adversary": "TheKingdomOfEngland",
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "ASpreadOfRampantGreen": [
+                "FieldsChokedWithGrowth",
+                "NaturesResilience",
+                "WeepForWhatIsLost",
+                "PoisonedDew",
+                "StemTheFlowOfFreshWater",
+                "RazorSharpUndergrowth",
+                "EntrancingApparitions",
+                "GiftOfProliferation",
+                "OvergrowInANight",
+                "TheJungleHungers"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 7,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 2,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel2",
+        "adversaryLevel": -1,
+        "blightOnIsland": 4,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "GrinningTricksterStirsUpTrouble"
+        ],
+        "score": 26,
+        "createdAt": "2025-10-05T19:28:43.117Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 0,
+        "powerCardsInDiscard": [
+            "SearAngerIntoTheWildLands",
+            "DisorientingLandscape",
+            "RitesOfTheLandsRejection",
+            "ScreamDiseaseIntoTheWind",
+            "PactOfTheJoinedHunt",
+            "DesiccatingWinds",
+            "PurifyingFlame",
+            "RenewingBoon",
+            "ScourTheLand",
+            "GiftOfTwinnedDays",
+            "DevouringAnts"
+        ],
+        "adversary": null,
+        "boards": [
+            "G"
+        ],
+        "scenario": null,
+        "blightCard": "InvadersFindTheLandToTheirLiking",
+        "powerCardsOwned": {
+            "GrinningTricksterStirsUpTrouble": [
+                "VeilTheNightsHunt",
+                "ImpersonateAuthority",
+                "OverenthusiasticArson",
+                "InciteTheMob",
+                "DryWoodExplodesInSmolderingSplinters",
+                "UnexpectedTigers"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 4
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": 0,
+        "blightOnIsland": 1,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "EyesWatchFromTheTrees"
+        ],
+        "score": 32,
+        "createdAt": "2025-10-17T09:04:34.754Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 1,
+        "powerCardsInDiscard": [
+            "TerritorialStrife",
+            "WeepForWhatIsLost",
+            "DesiccatingWinds",
+            "HereThereBeMonsters",
+            "CallToMigrate",
+            "ScourTheLand"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "E"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "EyesWatchFromTheTrees": [
+                "DriftDownIntoSlumber",
+                "MysteriousAbductions",
+                "WhisperedGuidanceThroughTheNight",
+                "RouseTheTreesAndStones",
+                "BoonOfWatchfulGuarding",
+                "EerieNoisesAndMovingTrees"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 5
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": 1,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "FathomlessMudOfTheSwamp"
+        ],
+        "score": 28,
+        "createdAt": "2025-11-06T22:48:24.419Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 2,
+        "powerCardsInDiscard": [
+            "Drought",
+            "DisorientingLandscape",
+            "DarkAndTangledWoods",
+            "ShadowsOfTheBurningForest",
+            "InfestedAquifers",
+            "GuardianSerpents",
+            "CallToIsolation",
+            "SapTheStrengthOfMultitudes",
+            "FavorOfTheSunAndStarLitDark",
+            "BargainsOfPowerAndProtection",
+            "MistsOfOblivion",
+            "SleepAndNeverWaken"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "E"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "FathomlessMudOfTheSwamp": [
+                "CallOfTheDahanWays",
+                "OpenShiftingWaterways",
+                "VoraciousGrowth",
+                "FoulVaporsAndFetidMuck",
+                "IntractableThicketsAndThorns",
+                "DrawTowardsAConsumingVoid",
+                "RoilingBogAndSnaggingThorn"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 4,
+        "turn": 7
+    },
+    {
+        "terrorLevel": 4,
+        "supportingAdversary": null,
+        "endingResult": "WinTerrorVictory",
+        "adversaryLevel": 2,
+        "blightOnIsland": 5,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RisingHeatOfStoneAndSand"
+        ],
+        "score": 36,
+        "createdAt": "2025-12-14T21:07:21.702Z",
+        "aspects": {},
+        "blightRemaining": 3,
+        "difficulty": 4,
+        "powerCardsInDiscard": [],
+        "adversary": "TheTsardomOfRussia",
+        "boards": [
+            "D"
+        ],
+        "scenario": null,
+        "blightCard": "ThrivingCommunities",
+        "powerCardsOwned": {
+            "RisingHeatOfStoneAndSand": [
+                "EncompassingWard",
+                "VisionsOfFieryDoom",
+                "SwelteringExhaustion",
+                "StingingSandstorm",
+                "IndomitableClaim",
+                "Drought",
+                "PurifyingFlame",
+                "GiftOfSearingHeat"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": 3,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "RisingHeatOfStoneAndSand"
+        ],
+        "score": 43,
+        "createdAt": "2026-01-15T21:38:17.972Z",
+        "aspects": {},
+        "blightRemaining": 5,
+        "difficulty": 6,
+        "powerCardsInDiscard": [
+            "ScreamDiseaseIntoTheWind",
+            "StrongAndConstantCurrents",
+            "InflameTheFiresOfLife",
+            "EntrapTheForcesOfCorruption",
+            "SavageMawbeasts",
+            "BloodDrawsPredators",
+            "RoilingBogAndSnaggingThorn",
+            "PoisonedDew",
+            "SkyStretchesToShore",
+            "SunsetsFireFlowsAcrossTheLand",
+            "CyclesOfTimeAndTide",
+            "RenewingRain",
+            "BirdsCryWarning",
+            "WrapInWingsOfSunlight",
+            "TigersHunting",
+            "TreesRadiateCelestialBrilliance"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "F"
+        ],
+        "scenario": null,
+        "blightCard": "UnnaturalProliferation",
+        "powerCardsOwned": {
+            "RisingHeatOfStoneAndSand": [
+                "PullBeneathTheHungryEarth",
+                "CallOnHerdersForAid",
+                "NaturesResilience",
+                "SwelteringExhaustion",
+                "DreamOfTheUntouchedLand",
+                "GiftOfSearingHeat",
+                "StingingSandstorm",
+                "PortentsOfDisaster"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 5,
+        "turn": 9
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "LoseTooMuchBlight",
+        "adversaryLevel": 4,
+        "blightOnIsland": 8,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "LightningsSwiftStrike"
+        ],
+        "score": 18,
+        "createdAt": "2026-01-17T22:25:33.284Z",
+        "aspects": {},
+        "blightRemaining": 0,
+        "difficulty": 7,
+        "powerCardsInDiscard": [
+            "CallOfTheDahanWays",
+            "NaturesResilience",
+            "GiftOfTwinnedDays",
+            "BirdsCryWarning",
+            "DarkAndTangledWoods",
+            "CallToBloodshed",
+            "PactOfTheJoinedHunt",
+            "TheShoreSeethesWithHatred",
+            "PoisonedDew",
+            "TeemingRivers",
+            "LikeCallsToLike",
+            "GiftOfLivingEnergy",
+            "GnawingRootbiters",
+            "TreacherousWaterways",
+            "EntrancingApparitions"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "E"
+        ],
+        "scenario": null,
+        "blightCard": "PowerCorrodesTheSpirit",
+        "powerCardsOwned": {
+            "LightningsSwiftStrike": [
+                "SapTheStrengthOfMultitudes",
+                "ConfoundingMists",
+                "LightningsBoon",
+                "SpurOnWithWordsOfFire",
+                "ShatterHomesteads",
+                "FireInTheSky",
+                "RagingStorm",
+                "HarbingersOfTheLightning",
+                "SwarmingWasps"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 3,
+        "turn": 8
+    },
+    {
+        "terrorLevel": 3,
+        "supportingAdversary": null,
+        "endingResult": "WinInvadersDestroyedTerrorLevel3",
+        "adversaryLevel": 4,
+        "blightOnIsland": 2,
+        "waveNumber": 1,
+        "layoutId": "S1",
+        "spirits": [
+            "EyesWatchFromTheTrees"
+        ],
+        "score": 53,
+        "createdAt": "2026-01-18T21:47:43.846Z",
+        "aspects": {},
+        "blightRemaining": 2,
+        "difficulty": 7,
+        "powerCardsInDiscard": [
+            "ScourTheLand",
+            "RenewingBoon",
+            "SteamVents",
+            "ThrivingChokefungus",
+            "DarkAndTangledWoods",
+            "DesiccatingWinds",
+            "DisorientingLandscape",
+            "WrapInWingsOfSunlight",
+            "InsatiableHungerOfTheSwarm",
+            "UnlockTheGatesOfDeepestPower"
+        ],
+        "adversary": "TheKingdomOfBrandenburgPrussia",
+        "boards": [
+            "H"
+        ],
+        "scenario": null,
+        "blightCard": "NotFlipped",
+        "powerCardsOwned": {
+            "EyesWatchFromTheTrees": [
+                "EerieNoisesAndMovingTrees",
+                "WhisperedGuidanceThroughTheNight",
+                "MysteriousAbductions",
+                "DriftDownIntoSlumber",
+                "TwistedFlowersMurmurUltimatums",
+                "BoonOfWatchfulGuarding"
+            ]
+        },
+        "supportingAdversaryLevel": -1,
+        "dahanOnIsland": 6,
+        "turn": 6
+    }
+]

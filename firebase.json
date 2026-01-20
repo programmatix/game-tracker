@@ -8,6 +8,7 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       { "source": "/bgg/**", "function": "bggProxy" },
+      { "source": "/si/**", "function": "spiritIslandProxy" },
       { "source": "**", "destination": "/index.html" }
     ]
   }

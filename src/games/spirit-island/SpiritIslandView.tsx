@@ -12,7 +12,12 @@ import {
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
-import { getSpiritIslandEntries, SPIRIT_ISLAND_OBJECT_ID, spiritIslandMappings } from './spiritIslandEntries'
+import type { SpiritIslandSession } from './mindwanderer'
+import {
+  getSpiritIslandEntriesFromSessions,
+  SPIRIT_ISLAND_OBJECT_ID,
+  spiritIslandMappings,
+} from './spiritIslandEntries'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 
 function stripTrailingLevelLabel(value: string): string {
@@ -25,6 +30,9 @@ export default function SpiritIslandView(props: {
   plays: BggPlay[]
   username: string
   authToken?: string
+  spiritIslandSessions?: SpiritIslandSession[]
+  spiritIslandSessionsLoading?: boolean
+  spiritIslandSessionsError?: string | null
   pinnedAchievementIds: ReadonlySet<string>
   suppressAvailableAchievementTrackIds?: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
@@ -38,10 +46,14 @@ export default function SpiritIslandView(props: {
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
   )
 
-  const entries = createMemo(() => getSpiritIslandEntries(props.plays, props.username))
+  const entries = createMemo(() =>
+    props.spiritIslandSessions ? getSpiritIslandEntriesFromSessions(props.spiritIslandSessions) : [],
+  )
 
   const achievements = createMemo(() =>
-    computeGameAchievements('spiritIsland', props.plays, props.username),
+    computeGameAchievements('spiritIsland', props.plays, props.username, {
+      spiritIslandSessions: props.spiritIslandSessions,
+    }),
   )
 
   const totalSpiritIslandPlays = createMemo(() =>
@@ -52,14 +64,6 @@ export default function SpiritIslandView(props: {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.spirit, entry.quantity)
     return counts
-  })
-
-  const playIdsBySpirit = createMemo(() => {
-    const ids: Record<string, number[]> = {}
-    for (const entry of entries()) {
-      ;(ids[entry.spirit] ||= []).push(entry.play.id)
-    }
-    return ids
   })
 
   const spiritWins = createMemo(() => {
@@ -76,15 +80,6 @@ export default function SpiritIslandView(props: {
     for (const entry of entries())
       incrementCount(counts, stripTrailingLevelLabel(entry.adversary), entry.quantity)
     return counts
-  })
-
-  const playIdsByAdversary = createMemo(() => {
-    const ids: Record<string, number[]> = {}
-    for (const entry of entries()) {
-      const key = stripTrailingLevelLabel(entry.adversary)
-      ;(ids[key] ||= []).push(entry.play.id)
-    }
-    return ids
   })
 
   const adversaryWins = createMemo(() => {
@@ -105,19 +100,6 @@ export default function SpiritIslandView(props: {
       incrementCount(counts[spirit]!, adversary, entry.quantity)
     }
     return counts
-  })
-
-  const playIdsByPair = createMemo(() => {
-    const ids = new Map<string, number[]>()
-    for (const entry of entries()) {
-      const spirit = entry.spirit
-      const adversary = stripTrailingLevelLabel(entry.adversary)
-      const key = `${spirit}|||${adversary}`
-      const existing = ids.get(key)
-      if (existing) existing.push(entry.play.id)
-      else ids.set(key, [entry.play.id])
-    }
-    return ids
   })
 
   const spiritKeys = createMemo(() =>
@@ -219,10 +201,16 @@ export default function SpiritIslandView(props: {
         when={entries().length > 0}
         fallback={
           <div class="muted">
-            No Spirit Island plays found. For BG Stats tags, put values in the player{' '}
-            <span class="mono">color</span> field like{' '}
-            <span class="mono">RisingHeat／PrussiaL3</span> or{' '}
-            <span class="mono">S: RisingHeat／AL: PrussiaL3</span>.
+            <Show
+              when={props.spiritIslandSessionsLoading}
+              fallback={
+                props.spiritIslandSessionsError
+                  ? `Failed to load Spirit Island sessions: ${props.spiritIslandSessionsError}`
+                  : 'No Spirit Island sessions found.'
+              }
+            >
+              Loading Spirit Island sessions…
+            </Show>
           </div>
         }
       >
@@ -233,12 +221,6 @@ export default function SpiritIslandView(props: {
             wins={spiritWins()}
             keys={spiritKeys()}
             getNextAchievement={getSpiritNextAchievement}
-            onPlaysClick={(spirit) =>
-              props.onOpenPlays({
-                title: `Spirit Island • Spirit: ${spirit}`,
-                playIds: playIdsBySpirit()[spirit] ?? [],
-              })
-            }
           />
           <CountTable
             title="Adversaries"
@@ -246,12 +228,6 @@ export default function SpiritIslandView(props: {
             wins={adversaryWins()}
             keys={adversaryKeys()}
             getNextAchievement={getAdversaryNextAchievement}
-            onPlaysClick={(adversary) =>
-              props.onOpenPlays({
-                title: `Spirit Island • Adversary: ${adversary}`,
-                playIds: playIdsByAdversary()[adversary] ?? [],
-              })
-            }
           />
         </div>
 
@@ -287,15 +263,6 @@ export default function SpiritIslandView(props: {
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
-            onCellClick={(row, col) => {
-              const spirit = flipAxes() ? col : row
-              const adversary = flipAxes() ? row : col
-              const key = `${spirit}|||${adversary}`
-              props.onOpenPlays({
-                title: `Spirit Island • ${spirit} × ${adversary}`,
-                playIds: playIdsByPair().get(key) ?? [],
-              })
-            }}
           />
         </div>
       </Show>

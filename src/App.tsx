@@ -3,6 +3,7 @@ import {
   Show,
   createEffect,
   createMemo,
+  createResource,
   createSignal,
   onCleanup,
   onMount,
@@ -33,6 +34,10 @@ import { pickBestAvailableAchievementForTrackIds } from './achievements/nextAchi
 import { computeAllGameAchievementSummaries } from './achievements/games'
 import NewAchievementsBanner from './components/NewAchievementsBanner'
 import type { PlaysDrilldownRequest } from './playsDrilldown'
+import {
+  fetchSpiritIslandSessions,
+  SPIRIT_ISLAND_MINDWANDERER_UID,
+} from './games/spirit-island/mindwanderer'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -166,6 +171,16 @@ function App() {
     () => (import.meta.env.BGG_TOKEN || import.meta.env.VITE_BGG_TOKEN || '').trim(),
   )
 
+  const [spiritIslandSessions] = createResource(
+    () => SPIRIT_ISLAND_MINDWANDERER_UID,
+    (uid: string) => fetchSpiritIslandSessions(uid),
+  )
+  const spiritIslandSessionsError = createMemo(() => {
+    const error = spiritIslandSessions.error
+    if (!error) return null
+    return error instanceof Error ? error.message : String(error)
+  })
+
   const [playsCache, setPlaysCache] = createSignal<PlaysCacheV1 | null>(readPlaysCache())
   const [playsError, setPlaysError] = createSignal<string | null>(null)
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
@@ -256,7 +271,9 @@ function App() {
   )
 
   const allAchievements = createMemo(() => {
-    const summaries = computeAllGameAchievementSummaries(allPlays().plays, USERNAME)
+    const summaries = computeAllGameAchievementSummaries(allPlays().plays, USERNAME, {
+      spiritIslandSessions: spiritIslandSessions(),
+    })
     return summaries.flatMap((summary) => summary.achievements)
   })
 
@@ -1013,6 +1030,9 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
+              spiritIslandSessions={spiritIslandSessions()}
+              spiritIslandSessionsLoading={spiritIslandSessions.loading}
+              spiritIslandSessionsError={spiritIslandSessionsError()}
               pinnedAchievementIds={pinnedAchievementIds()}
               suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
@@ -1060,6 +1080,7 @@ function App() {
             <AchievementsView
               plays={allPlays().plays}
               username={USERNAME}
+              spiritIslandSessions={spiritIslandSessions()}
               pinnedAchievementIds={pinnedAchievementIds()}
               suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}

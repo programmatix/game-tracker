@@ -18,7 +18,8 @@ import {
   sumQuantities,
 } from '../../achievements/gameUtils'
 import { isMeaningfulAchievementItem, normalizeAchievementItemLabel } from '../../achievements/progress'
-import { getSpiritIslandEntries, spiritIslandMappings } from './spiritIslandEntries'
+import type { SpiritIslandSession } from './mindwanderer'
+import { getSpiritIslandEntriesFromSessions, spiritIslandMappings } from './spiritIslandEntries'
 
 const SPIRIT_ISLAND_LEVELS = [1, 2, 3, 4, 5, 6]
 
@@ -44,8 +45,14 @@ function formatSpiritIslandPairLabel(spirit: string, adversary: string): string 
   return `${spiritLabel} × ${adversaryLabel}`
 }
 
-export function computeSpiritIslandAchievements(plays: BggPlay[], username: string) {
-  const entries = getSpiritIslandEntries(plays, username)
+export function computeSpiritIslandAchievements(
+  plays: BggPlay[],
+  username: string,
+  sessions?: SpiritIslandSession[],
+) {
+  void plays
+  void username
+  const entries = sessions ? getSpiritIslandEntriesFromSessions(sessions) : []
   const totalPlays = sumQuantities(entries)
 
   const spiritLabelToId = buildItemIdLookup(spiritIslandMappings.spiritsById)

@@ -7,6 +7,7 @@ import {
   resolveSpiritIslandAdversary,
   resolveSpiritIslandSpirit,
 } from './mappings'
+import type { SpiritIslandSession } from './mindwanderer'
 
 export const SPIRIT_ISLAND_OBJECT_ID = '162886'
 
@@ -18,6 +19,28 @@ export type SpiritIslandEntry = {
   adversary: string
   quantity: number
   isWin: boolean
+}
+
+function hashToPositiveInt(value: string): number {
+  let hash = 5381
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 33) ^ value.charCodeAt(i)
+  }
+  return Math.abs(hash) || 1
+}
+
+function isoDateFromTimestamp(value: string): string {
+  const parsed = new Date(value)
+  if (!Number.isFinite(parsed.getTime())) return ''
+  return parsed.toISOString().slice(0, 10)
+}
+
+function humanizePascalCase(value: string): string {
+  return value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function playQuantity(play: { attributes: Record<string, string> }): number {
@@ -106,3 +129,70 @@ export function getSpiritIslandEntries(plays: BggPlay[], username: string): Spir
   return result
 }
 
+function resolveSpiritFromMindwandererId(token: string): string {
+  const resolved = resolveSpiritIslandSpirit(token, spiritIslandMappings)
+  return resolved || humanizePascalCase(token) || 'Unknown spirit'
+}
+
+function resolveAdversaryFromMindwandererId(token: string): string {
+  const resolved = resolveSpiritIslandAdversary(token, spiritIslandMappings)
+  return (
+    (resolved ? formatSpiritIslandAdversaryLabel(resolved) : humanizePascalCase(token)) ||
+    'No adversary'
+  )
+}
+
+function formatAdversaryWithLevel(adversary: string, level: number): string {
+  if (!Number.isFinite(level) || level <= 0) return adversary
+  return `${adversary} L${level}`
+}
+
+function makePseudoPlayFromSession(session: SpiritIslandSession, index: number): BggPlay {
+  const date = isoDateFromTimestamp(session.createdAt)
+  const id = hashToPositiveInt(`${session.createdAt}#${index}`)
+  return {
+    id,
+    attributes: {
+      date,
+      quantity: '1',
+    },
+    item: {
+      attributes: {
+        name: 'Spirit Island',
+        objecttype: 'thing',
+        objectid: SPIRIT_ISLAND_OBJECT_ID,
+      },
+    },
+    players: [],
+    raw: session.raw,
+  }
+}
+
+export function getSpiritIslandEntriesFromSessions(
+  sessions: SpiritIslandSession[],
+): SpiritIslandEntry[] {
+  const result: SpiritIslandEntry[] = []
+
+  for (const [index, session] of sessions.entries()) {
+    const spiritIds = session.spirits.length > 0 ? session.spirits : ['UnknownSpirit']
+    const adversaryBase = session.adversary
+      ? resolveAdversaryFromMindwandererId(session.adversary)
+      : 'No adversary'
+    const adversary = formatAdversaryWithLevel(adversaryBase, session.adversaryLevel)
+
+    const isWin = session.endingResult.trim().toLowerCase().startsWith('win')
+    const play = makePseudoPlayFromSession(session, index)
+
+    for (const spiritId of spiritIds) {
+      result.push({
+        play,
+        spirit: resolveSpiritFromMindwandererId(spiritId),
+        adversary,
+        quantity: 1,
+        isWin,
+      })
+    }
+  }
+
+  return result
+}

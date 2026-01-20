@@ -6,6 +6,7 @@ import { computeMistfallAchievements } from '../games/mistfall/achievements'
 import { computeSpiritIslandAchievements } from '../games/spirit-island/achievements'
 import { computeBulletAchievements } from '../games/bullet/achievements'
 import { computeTooManyBonesAchievements } from '../games/too-many-bones/achievements'
+import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
   | 'finalGirl'
@@ -21,9 +22,19 @@ export type GameAchievementSummary = {
   achievements: Achievement[]
 }
 
-export function computeGameAchievements(gameId: GameId, plays: BggPlay[], username: string) {
+export type ComputeAchievementsOptions = {
+  spiritIslandSessions?: SpiritIslandSession[]
+}
+
+export function computeGameAchievements(
+  gameId: GameId,
+  plays: BggPlay[],
+  username: string,
+  options?: ComputeAchievementsOptions,
+) {
   if (gameId === 'finalGirl') return computeFinalGirlAchievements(plays, username)
-  if (gameId === 'spiritIsland') return computeSpiritIslandAchievements(plays, username)
+  if (gameId === 'spiritIsland')
+    return computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions)
   if (gameId === 'mistfall') return computeMistfallAchievements(plays, username)
   if (gameId === 'deathMayDie') return computeDeathMayDieAchievements(plays, username)
   if (gameId === 'bullet') return computeBulletAchievements(plays, username)
@@ -34,10 +45,11 @@ export function computeGameAchievements(gameId: GameId, plays: BggPlay[], userna
 export function computeAllGameAchievementSummaries(
   plays: BggPlay[],
   username: string,
+  options?: ComputeAchievementsOptions,
 ): GameAchievementSummary[] {
   const summaries: GameAchievementSummary[] = [
     { gameId: 'finalGirl', gameName: 'Final Girl', achievements: computeFinalGirlAchievements(plays, username) },
-    { gameId: 'spiritIsland', gameName: 'Spirit Island', achievements: computeSpiritIslandAchievements(plays, username) },
+    { gameId: 'spiritIsland', gameName: 'Spirit Island', achievements: computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions) },
     { gameId: 'mistfall', gameName: 'Mistfall', achievements: computeMistfallAchievements(plays, username) },
     { gameId: 'deathMayDie', gameName: 'Cthulhu: Death May Die', achievements: computeDeathMayDieAchievements(plays, username) },
     { gameId: 'bullet', gameName: 'Bullet', achievements: computeBulletAchievements(plays, username) },

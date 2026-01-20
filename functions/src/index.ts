@@ -52,6 +52,50 @@ export const bggProxy = functions.https.onRequest(async (req, res) => {
   }
 })
 
+export const spiritIslandProxy = functions.https.onRequest(async (req, res) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.status(405).set('allow', 'GET, HEAD').send('Method Not Allowed')
+    return
+  }
+
+  const originalUrl = req.originalUrl || req.url || ''
+  const parsed = new URL(originalUrl, 'http://localhost')
+  const path = parsed.pathname
+
+  if (path !== '/si/player/json.cgi') {
+    res.status(404).send('Not Found')
+    return
+  }
+
+  const upstreamUrl = new URL(`https://mindwanderer.net${path}${parsed.search}`)
+  const headers: Record<string, string> = {
+    accept: req.get('accept') || 'application/json',
+    'user-agent': 'game-tracker (firebase-functions)',
+  }
+
+  try {
+    const upstream = await fetch(upstreamUrl, {
+      method: req.method,
+      headers,
+    })
+
+    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8'
+    res.status(upstream.status).set('content-type', contentType)
+
+    const cacheControl = upstream.headers.get('cache-control')
+    if (cacheControl) res.set('cache-control', cacheControl)
+
+    const etag = upstream.headers.get('etag')
+    if (etag) res.set('etag', etag)
+
+    const body = await upstream.text()
+    res.send(body)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    res.status(502).send(`Upstream Spirit Island request failed: ${message}`)
+  }
+})
+
 function normalizePinnedAchievementIds(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.filter((id) => typeof id === 'string' && id.trim()).map((id) => id.trim())
