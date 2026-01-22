@@ -1,0 +1,99 @@
+# Bullet (Heart + Star base boxes)
+#
+# This list drives the UI and achievements "available" counts (including 0-play rows).
+# Values here should match the display names produced by the tag parsers.
+
+heroines:
+  - display: Esfir Volkova
+    id: Esfir
+  - display: Adelheid Beckenbauer
+    id: Adelheid
+  - display: Mariel Martin
+    id: Mariel
+  - display: Ling-Ling Xiao
+    id: LingLing
+  - display: Senka Kasun
+    id: Senka
+  - display: Ekolu Kapakahi
+    id: Ekolu
+  - display: Young-Ja Kim
+    id: YoungJa
+  - display: Rie Agaki
+    id: Rie
+  - display: Rose Blanchett
+    id: Rose
+  - display: Vesta Jackson
+    id: Vesta
+  - display: Your News Network
+    id: YNN
+  - display: Jane Doe
+    id: JaneDoe
+  - display: Nawa & Baku
+    id: NawaBaku
+  - display: Planil Lalent Talenti
+    id: Planil
+  - display: XIV - Balance
+    id: Balance
+  - display: LXVI - Memory
+    id: Memory
+bosses:
+  - display: History
+    id: History
+  - display: 3 - That Which Points
+    id: ThatWhichPoints
+  - display: Fugue in D Minor
+    id: Fugue
+  - display: Ghost in the Machine
+    id: GhostMachine
+  - display: Hell on Wheels
+    id: HellOnWheels
+  - display: Mecha Mary
+    id: MechaMary
+  - display: The Bauk
+    id: Bauk
+  - display: The Fanged Sun
+    id: FangedSun
+  - display: The Yakuza
+    id: Yakuza
+  - display: Hyper Mode
+    id: HyperMode
+  - display: Red Barrel
+    id: RedBarrel
+  - display: Sora
+    id: Sora
+  - display: The Forest Witch
+    id: ForestWitch
+  - display: Behemoth
+    id: Behemoth
+  - display: Celestial Cleaning Ltd.
+    id: CelestialCL
+  - display: Collective Consciousness
+    id: CollectiveCon
+  - display: Justicar Doe
+    id: Justicar
+  - display: Knife & Fork
+    id: KnifeFork
+  - display: Planil Lalent Talenti
+    id: Planil
+  - display: Starry Night Memory
+    id: StarryMemory
+  - display: The Black Rose
+    id: BlackRose
+  - display: Beethoven
+    id: Beethoven
+  - display: Chaos Incarnate
+    id: ChaosInc
+  - display: Elurophobia
+    id: Elurophobia
+  - display: Mems
+    id: Mems
+  - display: Gamemaster Die
+    id: GamemasterDie
+  - display: Shout ★ Live!
+    id: ShoutLive
+  - display: The Defacer of Tyranny
+    id: DefacerTyr
+  - display: The Loremaster
+    id: Loremaster
+  - display: Kewpitrix Engine
+    id: KewpitrixEng

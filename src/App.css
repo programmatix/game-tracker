@@ -529,6 +529,19 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.heatmapColGroupHead {
+  height: 28px;
+  padding: 6px 8px;
+  background: rgba(18, 20, 32, 0.98);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
 .heatmapColLabel {
   position: absolute;
   left: 50%;
@@ -571,6 +584,21 @@
   line-height: 1;
   cursor: help;
   user-select: none;
+}
+
+.heatmapRowGroupHead {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  padding: 6px 8px;
+  background: rgba(18, 20, 32, 0.98);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
 }
 
 .heatmapRowHead {

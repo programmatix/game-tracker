@@ -1,6 +1,6 @@
 import type { BggPlay } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
-import mappingsText from './mappings.txt?raw'
+import mappingsText from './mappings.yaml?raw'
 import {
   parseMistfallMappings,
   resolveMistfallHero,

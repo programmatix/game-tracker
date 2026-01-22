@@ -1,0 +1,51 @@
+# Mistfall mappings
+#
+# Short BG Stats tokens -> display names.
+#
+# Example BG Stats color:
+#   H: Fengray／Q: Quest 2
+#   Hareag／M2
+#   H: Melekai／Q: H1
+
+heroes:
+  - display: Fengray
+    id: Fengray
+  - display: Celenthia
+    id: Celenthia
+  - display: Arani
+    id: Arani
+  - display: Crow
+    id: Crow
+  - display: Arendi
+    id: Arendi
+  - display: Vendia
+    id: Vendia
+  - display: Hareag
+    id: Hareag
+  - display: Elatha
+    id: Elatha
+  - display: Melekai
+    id: Melekai
+  - display: Valkea
+    id: Valkea
+  - display: Tarah
+    id: Tarah
+quests:
+  - display: "Mistfall — Quest 1: Into the Wilds"
+    id: M1
+  - display: "Mistfall — Quest 2: The Abomination"
+    id: M2
+  - display: "Mistfall — Quest 3: Tangled Paths"
+    id: M3
+  - display: "Mistfall — Quest 4: Consuming Flames"
+    id: M4
+  - display: "Heart of the Mists — Quest 1: The Great Hunt"
+    id: H1
+  - display: "Heart of the Mists — Quest 2: Mother of Nightmares"
+    id: H2
+  - display: "Heart of the Mists — Quest 3: Dragon Eternal"
+    id: H3
+  - display: "Heart of the Mists — Quest 4: The Black Gate"
+    id: H4
+  - display: "Heart of the Mists — Quest 5: Hope's End"
+    id: H5

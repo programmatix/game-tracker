@@ -1,0 +1,34 @@
+# Cthulhu: Death May Die (core only)
+#
+# This list drives the UI and achievements "available" counts (including 0-play rows).
+# Values here should match the display names produced by the tag parsers.
+
+elderOnes:
+  - Cthulhu
+  - Hastur
+scenarios:
+  - "1"
+  - "2"
+  - "3"
+  - "4"
+  - "5"
+  - "6"
+investigators:
+  - display: Ahmed Yasin
+    id: Ahmed
+  - display: Borden
+  - display: Elizabeth Ives
+    id: Eliz
+  - display: Fatima Safar
+    id: Fatima
+  - display: John Morgan
+    id: John
+  - display: Lord Adam Benchley
+    id: LordAdam
+  - display: Rasputin
+  - display: Sergeant Ian Welles
+    id: Ian
+  - display: Sister Beth
+    id: Beth
+  - display: The Kid
+    id: Kid

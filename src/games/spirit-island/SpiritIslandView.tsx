@@ -1,4 +1,4 @@
-import { Show, createMemo, createResource, createSignal } from 'solid-js'
+import { For, Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
@@ -25,6 +25,7 @@ function stripTrailingLevelLabel(value: string): string {
 }
 
 const SPIRIT_ISLAND_LEVELS = [1, 2, 3, 4, 5, 6]
+const SPIRIT_COMPLEXITY_ORDER = ['Low', 'Moderate', 'High', 'Very High'] as const
 
 export default function SpiritIslandView(props: {
   plays: BggPlay[]
@@ -102,12 +103,91 @@ export default function SpiritIslandView(props: {
     return counts
   })
 
-  const spiritKeys = createMemo(() =>
-    mergeCanonicalKeys(
+  const spiritComplexityByKey = createMemo(() => {
+    const map = new Map<string, string>()
+    for (const spirit of spiritIslandMappings.spirits) {
+      const key = normalizeAchievementItemLabel(spirit.display).toLowerCase()
+      if (!key) continue
+      map.set(key, spirit.complexity)
+    }
+    return map
+  })
+
+  function getSpiritComplexity(spirit: string): string | undefined {
+    const key = normalizeAchievementItemLabel(spirit).toLowerCase()
+    return spiritComplexityByKey().get(key)
+  }
+
+  const isKnownSpiritComplexity = (
+    value: string,
+  ): value is (typeof SPIRIT_COMPLEXITY_ORDER)[number] =>
+    (SPIRIT_COMPLEXITY_ORDER as readonly string[]).includes(value)
+
+  const spiritKeysByComplexity = createMemo(() => {
+    const all = mergeCanonicalKeys(
       sortKeysByCountDesc(spiritCounts()),
-      [...spiritIslandMappings.spiritsById.values()],
-    ),
-  )
+      spiritIslandMappings.spirits.map((spirit) => spirit.display),
+    )
+
+    const counts = spiritCounts()
+    const sortWithinGroup = (a: string, b: string) => {
+      const delta = (counts[b] ?? 0) - (counts[a] ?? 0)
+      if (delta !== 0) return delta
+      return a.localeCompare(b)
+    }
+
+    const grouped = new Map<string, string[]>()
+    const unknown: string[] = []
+
+    for (const spirit of all) {
+      const complexity = getSpiritComplexity(spirit)
+      if (complexity && isKnownSpiritComplexity(complexity)) {
+        const list = grouped.get(complexity) ?? []
+        list.push(spirit)
+        grouped.set(complexity, list)
+        continue
+      }
+      unknown.push(spirit)
+    }
+
+    const ordered: string[] = []
+    for (const complexity of SPIRIT_COMPLEXITY_ORDER) {
+      const list = grouped.get(complexity)?.slice() ?? []
+      list.sort(sortWithinGroup)
+      ordered.push(...list)
+    }
+    unknown.sort(sortWithinGroup)
+    ordered.push(...unknown)
+    return ordered
+  })
+
+  const spiritKeysByComplexityLevel = createMemo(() => {
+    const counts = spiritCounts()
+    const sortWithinGroup = (a: string, b: string) => {
+      const delta = (counts[b] ?? 0) - (counts[a] ?? 0)
+      if (delta !== 0) return delta
+      return a.localeCompare(b)
+    }
+
+    const grouped: Record<(typeof SPIRIT_COMPLEXITY_ORDER)[number], string[]> = {
+      Low: [],
+      Moderate: [],
+      High: [],
+      'Very High': [],
+    }
+    const other: string[] = []
+
+    for (const spirit of spiritKeysByComplexity()) {
+      const complexity = getSpiritComplexity(spirit)
+      if (complexity && complexity in grouped)
+        grouped[complexity as keyof typeof grouped].push(spirit)
+      else other.push(spirit)
+    }
+
+    for (const complexity of SPIRIT_COMPLEXITY_ORDER) grouped[complexity].sort(sortWithinGroup)
+    other.sort(sortWithinGroup)
+    return { grouped, other }
+  })
 
   const adversaryKeys = createMemo(() =>
     mergeCanonicalKeys(
@@ -144,8 +224,8 @@ export default function SpiritIslandView(props: {
     return pickBestAvailableAchievementForTrackIds(achievements(), trackIds)
   }
 
-  const matrixRows = createMemo(() => (flipAxes() ? adversaryKeys() : spiritKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? spiritKeys() : adversaryKeys()))
+  const matrixRows = createMemo(() => (flipAxes() ? adversaryKeys() : spiritKeysByComplexity()))
+  const matrixCols = createMemo(() => (flipAxes() ? spiritKeysByComplexity() : adversaryKeys()))
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -215,13 +295,26 @@ export default function SpiritIslandView(props: {
         }
       >
         <div class="statsGrid">
-          <CountTable
-            title="Spirits"
-            plays={spiritCounts()}
-            wins={spiritWins()}
-            keys={spiritKeys()}
-            getNextAchievement={getSpiritNextAchievement}
-          />
+          <For each={SPIRIT_COMPLEXITY_ORDER}>
+            {(complexity) => (
+              <CountTable
+                title={`Spirits (${complexity})`}
+                plays={spiritCounts()}
+                wins={spiritWins()}
+                keys={spiritKeysByComplexityLevel().grouped[complexity]}
+                getNextAchievement={getSpiritNextAchievement}
+              />
+            )}
+          </For>
+          <Show when={spiritKeysByComplexityLevel().other.length > 0}>
+            <CountTable
+              title="Spirits (Other)"
+              plays={spiritCounts()}
+              wins={spiritWins()}
+              keys={spiritKeysByComplexityLevel().other}
+              getNextAchievement={getSpiritNextAchievement}
+            />
+          </Show>
           <CountTable
             title="Adversaries"
             plays={adversaryCounts()}
@@ -260,6 +353,8 @@ export default function SpiritIslandView(props: {
             hideCounts={hideCounts()}
             rowHeader={flipAxes() ? 'Adversary' : 'Spirit'}
             colHeader={flipAxes() ? 'Spirit' : 'Adversary'}
+            rowGroupBy={flipAxes() ? undefined : getSpiritComplexity}
+            colGroupBy={flipAxes() ? getSpiritComplexity : undefined}
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }

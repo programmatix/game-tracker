@@ -1,6 +1,6 @@
 import type { BggPlay } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
-import ownedContentText from './content.txt?raw'
+import ownedContentText from './content.yaml?raw'
 import { parseOwnedFinalGirlContent, resolveFinalGirlBgStatsTags } from './ownedContent'
 
 export const FINAL_GIRL_OBJECT_ID = '277659'
@@ -60,4 +60,3 @@ export function getFinalGirlEntries(plays: BggPlay[], username: string): FinalGi
 
   return result
 }
-

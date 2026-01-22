@@ -14,7 +14,7 @@ import {
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import ownedContentText from './content.txt?raw'
+import ownedContentText from './content.yaml?raw'
 import {
   getOwnedFinalGirlFinalGirls,
   getOwnedFinalGirlLocations,
@@ -296,7 +296,7 @@ export default function FinalGirlView(props: {
   ): string | undefined {
     if (playCount <= 0) return undefined
     if (isOwned) return undefined
-    return `${kind} "${name}" appears in plays but is not listed in owned content (content.txt) (or the spelling doesn't match).`
+    return `${kind} "${name}" appears in plays but is not listed in owned content (content.yaml) (or the spelling doesn't match).`
   }
 
   const villainLabelToId = createMemo(() =>

@@ -1,0 +1,43 @@
+# Too Many Bones
+#
+# This list drives the UI and achievements "available" counts (including 0-play rows).
+# Values here should match the display names produced by the tag parsers.
+
+gearlocs:
+  - display: Boomer
+    id: Boomer
+  - display: Picket
+    id: Picket
+  - display: Tantrum
+    id: Tantrum
+  - display: Patch
+    id: Patch
+  - display: Ghillie
+    id: Ghillie
+  - display: Tink
+    id: Tink
+  - display: Nugget
+    id: Nugget
+  - display: Gasket
+    id: Gasket
+  - display: Dart
+    id: Dart
+  - display: Stanza
+    id: Stanza
+  - display: Duster
+    id: Duster
+tyrants:
+  - display: Drellen
+    id: Drellen
+  - display: Mulmesh
+    id: Mulmesh
+  - display: Nom
+    id: Nom
+  - display: The Goblin Queen
+    id: GoblinQueen
+  - display: Gendricks
+    id: Gendricks
+  - display: Zogue
+    id: Zogue
+  - display: Riffle
+    id: Riffle

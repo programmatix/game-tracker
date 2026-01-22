@@ -1,3 +1,5 @@
+import { isRecord, parseYamlValue } from '../../yaml'
+
 export type SpiritIslandMappings = {
   spirits: SpiritIslandSpirit[]
   adversaries: SpiritIslandAdversary[]
@@ -33,13 +35,6 @@ function normalizeSpiritIslandId(value: string): string {
   return value.trim().toLowerCase().replace(/[\s_-]+/g, '')
 }
 
-function parseDisplayAndId(raw: string): { display: string; id?: string } {
-  const match = /^(?<display>.*?)(?:\s*\[(?<id>[^\]]+)\])?\s*$/i.exec(raw.trim())
-  const display = (match?.groups?.display ?? raw).trim().replace(/\s+/g, ' ')
-  const id = match?.groups?.id?.trim()
-  return { display, id: id || undefined }
-}
-
 type SpiritIslandMappingsJson = {
   spirits?: SpiritIslandSpirit[]
   adversaries?: SpiritIslandAdversary[]
@@ -67,90 +62,140 @@ function pushAliases(map: Map<string, string>, display: string, aliases: string[
 }
 
 export function parseSpiritIslandMappings(text: string): SpiritIslandMappings {
-  const json = parseSpiritIslandMappingsJson(text)
-  if (json) {
-    const spirits = (json.spirits ?? []).filter(
-      (spirit): spirit is SpiritIslandSpirit =>
-        Boolean(
-          spirit &&
-            typeof spirit === 'object' &&
-            typeof spirit.id === 'string' &&
-            typeof spirit.display === 'string' &&
-            typeof spirit.group === 'string' &&
-            typeof spirit.complexity === 'string',
-        ),
-    )
+  const yaml = parseYamlValue(text)
+  if (isRecord(yaml)) {
+    const spirits = Array.isArray(yaml.spirits)
+      ? (yaml.spirits as unknown[]).filter(
+          (spirit): spirit is SpiritIslandSpirit =>
+            Boolean(
+              spirit &&
+                typeof spirit === 'object' &&
+                typeof (spirit as SpiritIslandSpirit).id === 'string' &&
+                typeof (spirit as SpiritIslandSpirit).display === 'string' &&
+                typeof (spirit as SpiritIslandSpirit).group === 'string' &&
+                typeof (spirit as SpiritIslandSpirit).complexity === 'string',
+            ),
+        )
+      : null
 
-    const adversaries = (json.adversaries ?? []).filter(
-      (adversary): adversary is SpiritIslandAdversary =>
-        Boolean(
-          adversary &&
-            typeof adversary === 'object' &&
-            typeof adversary.id === 'string' &&
-            typeof adversary.display === 'string',
-        ),
-    )
+    const adversaries = Array.isArray(yaml.adversaries)
+      ? (yaml.adversaries as unknown[]).filter(
+          (adversary): adversary is SpiritIslandAdversary =>
+            Boolean(
+              adversary &&
+                typeof adversary === 'object' &&
+                typeof (adversary as SpiritIslandAdversary).id === 'string' &&
+                typeof (adversary as SpiritIslandAdversary).display === 'string',
+            ),
+        )
+      : null
 
-    const adversaryLevels = (json.adversaryLevels ?? []).filter(
-      (entry): entry is SpiritIslandAdversaryLevel =>
-        Boolean(entry && typeof entry === 'object' && typeof entry.id === 'string' && typeof entry.display === 'string'),
-    )
+    const adversaryLevels = Array.isArray(yaml.adversaryLevels)
+      ? (yaml.adversaryLevels as unknown[]).filter(
+          (entry): entry is SpiritIslandAdversaryLevel =>
+            Boolean(
+              entry &&
+                typeof entry === 'object' &&
+                typeof (entry as SpiritIslandAdversaryLevel).id === 'string' &&
+                typeof (entry as SpiritIslandAdversaryLevel).display === 'string',
+            ),
+        )
+      : null
 
-    const spiritsById = new Map<string, string>()
-    const adversariesById = new Map<string, string>()
-    const adversaryLevelsById = new Map<string, string>()
+    if (spirits && adversaries && adversaryLevels) {
+      const spiritsById = new Map<string, string>()
+      const adversariesById = new Map<string, string>()
+      const adversaryLevelsById = new Map<string, string>()
 
-    for (const spirit of spirits) {
-      pushAliases(spiritsById, spirit.display, [spirit.id, spirit.display, ...(spirit.aliases ?? [])])
+      for (const spirit of spirits) {
+        pushAliases(spiritsById, spirit.display, [spirit.id, spirit.display, ...(spirit.aliases ?? [])])
+      }
+
+      for (const adversary of adversaries) {
+        pushAliases(adversariesById, adversary.display, [
+          adversary.id,
+          adversary.display,
+          ...(adversary.aliases ?? []),
+        ])
+      }
+
+      for (const level of adversaryLevels) {
+        pushAliases(adversaryLevelsById, level.display, [level.id, level.display, ...(level.aliases ?? [])])
+      }
+
+      return { spirits, adversaries, adversaryLevels, spiritsById, adversariesById, adversaryLevelsById }
     }
-
-    for (const adversary of adversaries) {
-      pushAliases(adversariesById, adversary.display, [
-        adversary.id,
-        adversary.display,
-        ...(adversary.aliases ?? []),
-      ])
-    }
-
-    for (const level of adversaryLevels) {
-      pushAliases(adversaryLevelsById, level.display, [level.id, level.display, ...(level.aliases ?? [])])
-    }
-
-    return { spirits, adversaries, adversaryLevels, spiritsById, adversariesById, adversaryLevelsById }
   }
+
+  const json = parseSpiritIslandMappingsJson(text)
+  if (!json) {
+    throw new Error('Failed to parse Spirit Island mappings (expected YAML or JSON)')
+  }
+
+  const spirits = (json.spirits ?? []).filter(
+    (spirit): spirit is SpiritIslandSpirit =>
+      Boolean(
+        spirit &&
+          typeof spirit === 'object' &&
+          typeof spirit.id === 'string' &&
+          typeof spirit.display === 'string' &&
+          typeof spirit.group === 'string' &&
+          typeof spirit.complexity === 'string',
+      ),
+  )
+
+  const adversaries = (json.adversaries ?? []).filter(
+    (adversary): adversary is SpiritIslandAdversary =>
+      Boolean(
+        adversary &&
+          typeof adversary === 'object' &&
+          typeof adversary.id === 'string' &&
+          typeof adversary.display === 'string',
+      ),
+  )
+
+  const adversaryLevels = (json.adversaryLevels ?? []).filter(
+    (entry): entry is SpiritIslandAdversaryLevel =>
+      Boolean(
+        entry &&
+          typeof entry === 'object' &&
+          typeof entry.id === 'string' &&
+          typeof entry.display === 'string',
+      ),
+  )
 
   const spiritsById = new Map<string, string>()
   const adversariesById = new Map<string, string>()
   const adversaryLevelsById = new Map<string, string>()
 
-  for (const rawLine of text.split(/\r?\n/)) {
-    const line = rawLine.trim()
-    if (!line) continue
-    if (line.startsWith('#')) continue
+  for (const spirit of spirits) {
+    pushAliases(spiritsById, spirit.display, [
+      spirit.id,
+      spirit.display,
+      ...(spirit.aliases ?? []),
+    ])
+  }
 
-    const match =
-      /^(?<key>S|Spirit|A|Adv|Adversary|AL|AdversaryLevel)\s*:\s*(?<value>.+)$/i.exec(
-        line,
-      )
-    const key = match?.groups?.key?.toLowerCase()
-    const value = match?.groups?.value ?? ''
-    if (!key) continue
+  for (const adversary of adversaries) {
+    pushAliases(adversariesById, adversary.display, [
+      adversary.id,
+      adversary.display,
+      ...(adversary.aliases ?? []),
+    ])
+  }
 
-    const { display, id } = parseDisplayAndId(value)
-    const normalizedId = normalizeSpiritIslandId(id ?? display)
-    if (!normalizedId) continue
-
-    if (key === 's' || key === 'spirit') spiritsById.set(normalizedId, display)
-    if (key === 'a' || key === 'adv' || key === 'adversary')
-      adversariesById.set(normalizedId, display)
-    if (key === 'al' || key === 'adversarylevel')
-      adversaryLevelsById.set(normalizedId, display)
+  for (const level of adversaryLevels) {
+    pushAliases(adversaryLevelsById, level.display, [
+      level.id,
+      level.display,
+      ...(level.aliases ?? []),
+    ])
   }
 
   return {
-    spirits: [],
-    adversaries: [],
-    adversaryLevels: [],
+    spirits,
+    adversaries,
+    adversaryLevels,
     spiritsById,
     adversariesById,
     adversaryLevelsById,
