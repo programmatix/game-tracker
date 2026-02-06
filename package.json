@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.app.json && node ./node_modules/typescript/bin/tsc -p tsconfig.node.json && vite build",
     "preview": "vite preview",
+    "bgg:plays:xml": "node scripts/bgg-plays.js",
+    "bgg:plays:json": "node scripts/bgg-plays-json.js",
     "firebase:emulators": "firebase emulators:start",
     "firebase:deploy": "firebase deploy",
     "firebase:deploy:hosting": "pnpm build && firebase deploy --only hosting"

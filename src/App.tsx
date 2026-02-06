@@ -29,7 +29,6 @@ import {
 import {
   computeNewlyUnlockedAchievements,
   computeTrackIdsForAchievements,
-  pickCompletedAchievementIds,
 } from './achievements/newlyUnlocked'
 import { pickBestAvailableAchievementForTrackIds } from './achievements/nextAchievement'
 import { computeAllGameAchievementSummaries } from './achievements/games'
@@ -243,6 +242,13 @@ function App() {
     () => SPIRIT_ISLAND_MINDWANDERER_UID,
     (uid: string) => fetchSpiritIslandSessions(uid),
   )
+  const spiritIslandSessionsValue = createMemo(() => {
+    try {
+      return spiritIslandSessions()
+    } catch {
+      return undefined
+    }
+  })
   const spiritIslandSessionsError = createMemo(() => {
     const error = spiritIslandSessions.error
     if (!error) return null
@@ -348,7 +354,7 @@ function App() {
 
   const allAchievements = createMemo(() => {
     const summaries = computeAllGameAchievementSummaries(allPlays().plays, USERNAME, {
-      spiritIslandSessions: spiritIslandSessions(),
+      spiritIslandSessions: spiritIslandSessionsValue(),
     })
     return summaries.flatMap((summary) => summary.achievements)
   })
@@ -367,9 +373,8 @@ function App() {
   )
 
   function dismissNewlyUnlockedAchievements() {
-    const completedIds = pickCompletedAchievementIds(allAchievements())
     const nextSeen = new Set(seenCompletedAchievementIds())
-    for (const id of completedIds) nextSeen.add(id)
+    for (const achievement of newlyUnlockedAchievements()) nextSeen.add(achievement.id)
     setSeenCompletedAchievementIds(nextSeen)
     writeSeenCompletedAchievementIds(nextSeen)
   }
@@ -1084,7 +1089,7 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
-              spiritIslandSessions={spiritIslandSessions()}
+              spiritIslandSessions={spiritIslandSessionsValue()}
               spiritIslandSessionsLoading={spiritIslandSessions.loading}
               spiritIslandSessionsError={spiritIslandSessionsError()}
               pinnedAchievementIds={pinnedAchievementIds()}
@@ -1146,7 +1151,7 @@ function App() {
             <AchievementsView
               plays={allPlays().plays}
               username={USERNAME}
-              spiritIslandSessions={spiritIslandSessions()}
+              spiritIslandSessions={spiritIslandSessionsValue()}
               pinnedAchievementIds={pinnedAchievementIds()}
               suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
