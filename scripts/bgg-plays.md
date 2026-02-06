@@ -4,6 +4,11 @@ Fetch a BoardGameGeek user's play history as XML and optionally write it to `dat
 
 If BGG returns `401 Unauthorized`, set a token via `--token`, or put `BGG_TOKEN=` / `VITE_BGG_TOKEN=` in `.env`.
 
+There is also a JSON version that parses the XML into a JSON structure:
+
+- `node scripts/bgg-plays-json.js ...`
+- or `pnpm bgg:plays:json -- ...`
+
 ## Examples
 
 Fetch a single page:
@@ -28,4 +33,10 @@ Print to stdout:
 
 ```bash
 node scripts/bgg-plays.js --username stony82 --all --stdout
+```
+
+Fetch all pages as JSON and print to stdout:
+
+```bash
+node scripts/bgg-plays-json.js --username stony82 --all --pretty --stdout
 ```
