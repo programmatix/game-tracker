@@ -19,13 +19,6 @@ function normalizeFinalGirlId(value: string): string {
   return value.trim().toLowerCase()
 }
 
-function parseDisplayAndId(raw: string): { display: string; id?: string } {
-  const match = /^(?<display>.*?)(?:\s*\[(?<id>[^\]]+)\])?\s*$/i.exec(raw.trim())
-  const display = (match?.groups?.display ?? raw).trim().replace(/\s+/g, ' ')
-  const id = match?.groups?.id?.trim()
-  return { display, id: id || undefined }
-}
-
 type FinalGirlYamlItem =
   | string
   | {
@@ -132,131 +125,20 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       }
     }
 
-    return {
-      ownedVillains,
-      ownedLocations,
-      ownedFinalGirls,
-      finalGirlLocationsByName,
-      locationBoxesByName,
-      villainsById,
-      locationsById,
-      finalGirlsById,
-    }
-  }
+	    return {
+	      ownedVillains,
+	      ownedLocations,
+	      ownedFinalGirls,
+	      finalGirlLocationsByName,
+	      locationBoxesByName,
+	      villainsById,
+	      locationsById,
+	      finalGirlsById,
+	    }
+	  }
 
-  type PendingEntry = { display: string; id?: string }
-
-  const lines = text.split(/\r?\n/)
-  let block: string[] = []
-
-  const flushBlock = () => {
-    if (block.length === 0) return
-
-    let currentLocationDisplay: string | undefined
-    let currentBoxDisplay: string | undefined
-    const pendingVillains: PendingEntry[] = []
-    const pendingFinalGirls: PendingEntry[] = []
-
-    const commitVillain = (villain: PendingEntry, location?: string) => {
-      const normalizedId = normalizeFinalGirlId(villain.id ?? villain.display)
-      villainsById.set(normalizedId, { display: villain.display, location })
-    }
-
-    const commitFinalGirl = (finalGirl: PendingEntry, location?: string) => {
-      const normalizedId = normalizeFinalGirlId(finalGirl.id ?? finalGirl.display)
-      finalGirlsById.set(normalizedId, finalGirl.display)
-      if (location) finalGirlLocationsByName.set(normalizeFinalGirlName(finalGirl.display), location)
-    }
-
-    for (const rawLine of block) {
-      const line = rawLine.trim()
-      if (!line) continue
-      if (line.startsWith('#')) continue
-
-      const match =
-        /^(?<key>V|Villain|L|Location|FG|Final Girl|FinalGirl|B|Box|Game Box|GameBox)\s*:\s*(?<value>.+)$/i.exec(
-          line,
-        )
-      const key = match?.groups?.key?.toLowerCase()
-      const value = match?.groups?.value ?? ''
-      if (!key) continue
-
-      const { display, id } = parseDisplayAndId(value)
-      const normalized = normalizeFinalGirlName(display)
-      if (!normalized) continue
-
-      if (key === 'l' || key === 'location') {
-        ownedLocations.set(normalized, display)
-        currentLocationDisplay = display
-        const normalizedId = normalizeFinalGirlId(id ?? display)
-        locationsById.set(normalizedId, display)
-
-        if (currentBoxDisplay) {
-          locationBoxesByName.set(normalizeFinalGirlName(currentLocationDisplay), currentBoxDisplay)
-        }
-
-        for (const pending of pendingVillains.splice(0, pendingVillains.length)) {
-          commitVillain(pending, currentLocationDisplay)
-        }
-        for (const pending of pendingFinalGirls.splice(0, pendingFinalGirls.length)) {
-          commitFinalGirl(pending, currentLocationDisplay)
-        }
-      }
-
-      if (
-        key === 'b' ||
-        key === 'box' ||
-        key === 'game box' ||
-        key === 'gamebox'
-      ) {
-        currentBoxDisplay = display
-        if (currentLocationDisplay) {
-          locationBoxesByName.set(normalizeFinalGirlName(currentLocationDisplay), currentBoxDisplay)
-        }
-      }
-
-      if (key === 'v' || key === 'villain') {
-        ownedVillains.set(normalized, display)
-        const villain: PendingEntry = { display, id }
-        if (currentLocationDisplay) commitVillain(villain, currentLocationDisplay)
-        else pendingVillains.push(villain)
-      }
-
-      if (key === 'fg' || key === 'final girl' || key === 'finalgirl') {
-        ownedFinalGirls.set(normalized, display)
-        const finalGirl: PendingEntry = { display, id }
-        if (currentLocationDisplay) commitFinalGirl(finalGirl, currentLocationDisplay)
-        else pendingFinalGirls.push(finalGirl)
-      }
-    }
-
-    for (const pending of pendingVillains) commitVillain(pending)
-    for (const pending of pendingFinalGirls) commitFinalGirl(pending)
-
-    block = []
-  }
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim()
-    if (!line) {
-      flushBlock()
-      continue
-    }
-    block.push(rawLine)
-  }
-  flushBlock()
-
-  return {
-    ownedVillains,
-    ownedLocations,
-    ownedFinalGirls,
-    finalGirlLocationsByName,
-    locationBoxesByName,
-    villainsById,
-    locationsById,
-    finalGirlsById,
-  }
-}
+	  throw new Error('Failed to parse Final Girl content (expected YAML with a `sets` array).')
+	}
 
 export function isOwnedFinalGirlVillain(content: OwnedFinalGirlContent, villain: string): boolean {
   if (content.ownedVillains.size === 0) return true

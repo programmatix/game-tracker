@@ -35,24 +35,6 @@ function normalizeSpiritIslandId(value: string): string {
   return value.trim().toLowerCase().replace(/[\s_-]+/g, '')
 }
 
-type SpiritIslandMappingsJson = {
-  spirits?: SpiritIslandSpirit[]
-  adversaries?: SpiritIslandAdversary[]
-  adversaryLevels?: SpiritIslandAdversaryLevel[]
-}
-
-function parseSpiritIslandMappingsJson(text: string): SpiritIslandMappingsJson | null {
-  const trimmed = text.trim()
-  if (!trimmed.startsWith('{')) return null
-  try {
-    const parsed = JSON.parse(trimmed) as unknown
-    if (!parsed || typeof parsed !== 'object') return null
-    return parsed as SpiritIslandMappingsJson
-  } catch {
-    return null
-  }
-}
-
 function pushAliases(map: Map<string, string>, display: string, aliases: string[]) {
   for (const alias of aliases) {
     const normalized = normalizeSpiritIslandId(alias)
@@ -127,79 +109,9 @@ export function parseSpiritIslandMappings(text: string): SpiritIslandMappings {
     }
   }
 
-  const json = parseSpiritIslandMappingsJson(text)
-  if (!json) {
-    throw new Error('Failed to parse Spirit Island mappings (expected YAML or JSON)')
-  }
-
-  const spirits = (json.spirits ?? []).filter(
-    (spirit): spirit is SpiritIslandSpirit =>
-      Boolean(
-        spirit &&
-          typeof spirit === 'object' &&
-          typeof spirit.id === 'string' &&
-          typeof spirit.display === 'string' &&
-          typeof spirit.group === 'string' &&
-          typeof spirit.complexity === 'string',
-      ),
+  throw new Error(
+    'Failed to parse Spirit Island content (expected YAML with `spirits`, `adversaries`, and `adversaryLevels` arrays).',
   )
-
-  const adversaries = (json.adversaries ?? []).filter(
-    (adversary): adversary is SpiritIslandAdversary =>
-      Boolean(
-        adversary &&
-          typeof adversary === 'object' &&
-          typeof adversary.id === 'string' &&
-          typeof adversary.display === 'string',
-      ),
-  )
-
-  const adversaryLevels = (json.adversaryLevels ?? []).filter(
-    (entry): entry is SpiritIslandAdversaryLevel =>
-      Boolean(
-        entry &&
-          typeof entry === 'object' &&
-          typeof entry.id === 'string' &&
-          typeof entry.display === 'string',
-      ),
-  )
-
-  const spiritsById = new Map<string, string>()
-  const adversariesById = new Map<string, string>()
-  const adversaryLevelsById = new Map<string, string>()
-
-  for (const spirit of spirits) {
-    pushAliases(spiritsById, spirit.display, [
-      spirit.id,
-      spirit.display,
-      ...(spirit.aliases ?? []),
-    ])
-  }
-
-  for (const adversary of adversaries) {
-    pushAliases(adversariesById, adversary.display, [
-      adversary.id,
-      adversary.display,
-      ...(adversary.aliases ?? []),
-    ])
-  }
-
-  for (const level of adversaryLevels) {
-    pushAliases(adversaryLevelsById, level.display, [
-      level.id,
-      level.display,
-      ...(level.aliases ?? []),
-    ])
-  }
-
-  return {
-    spirits,
-    adversaries,
-    adversaryLevels,
-    spiritsById,
-    adversariesById,
-    adversaryLevelsById,
-  }
 }
 
 export function resolveSpiritIslandSpirit(

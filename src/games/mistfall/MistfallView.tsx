@@ -14,7 +14,7 @@ import {
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import mappingsText from './mappings.yaml?raw'
+import mappingsText from './content.yaml?raw'
 import {
   normalizeMistfallName,
   parseMistfallMappings,
