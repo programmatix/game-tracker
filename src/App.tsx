@@ -15,6 +15,7 @@ import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import BulletView from './games/bullet/BulletView'
 import TooManyBonesView from './games/too-many-bones/TooManyBonesView'
+import UnsettledView from './games/unsettled/UnsettledView'
 import AchievementsView from './AchievementsView'
 import { authUser, signOutUser } from './auth/auth'
 import {
@@ -44,6 +45,7 @@ const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
 type MainTab =
   | 'finalGirl'
+  | 'unsettled'
   | 'spiritIsland'
   | 'mistfall'
   | 'deathMayDie'
@@ -61,6 +63,7 @@ type PlaysDrilldownReturn = {
 
 const MAIN_TABS: ReadonlyArray<MainTab> = [
   'finalGirl',
+  'unsettled',
   'spiritIsland',
   'mistfall',
   'deathMayDie',
@@ -868,6 +871,21 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'unsettled' }}
+                  onClick={() => {
+                    if (mainTab() === 'unsettled') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'unsettled' }
+                    setMainTab('unsettled')
+                    pushNavState(next)
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'unsettled'}
+                >
+                  Unsettled
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'mistfall' }}
                   onClick={() => {
                     if (mainTab() === 'mistfall') return
@@ -880,21 +898,6 @@ function App() {
                   aria-selected={mainTab() === 'mistfall'}
                 >
                   Mistfall
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'deathMayDie' }}
-                  onClick={() => {
-                    if (mainTab() === 'deathMayDie') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'deathMayDie' }
-                    setMainTab('deathMayDie')
-                    pushNavState(next)
-                  }}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'deathMayDie'}
-                >
-                  Death May Die
                 </button>
                 <button
                   class="tabButton"
@@ -1095,6 +1098,15 @@ function App() {
               pinnedAchievementIds={pinnedAchievementIds()}
               suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'unsettled'}>
+            <UnsettledView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
               onOpenPlays={openPlaysDrilldown}
             />
           </Show>

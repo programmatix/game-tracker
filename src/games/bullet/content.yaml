@@ -6,94 +6,140 @@
 heroines:
   - display: Esfir Volkova
     id: Esfir
+    set: Heart
   - display: Adelheid Beckenbauer
     id: Adelheid
+    set: Heart
   - display: Mariel Martin
     id: Mariel
+    set: Heart
   - display: Ling-Ling Xiao
     id: LingLing
+    set: Heart
   - display: Senka Kasun
     id: Senka
+    set: Heart
   - display: Ekolu Kapakahi
     id: Ekolu
+    set: Heart
   - display: Young-Ja Kim
     id: YoungJa
+    set: Heart
   - display: Rie Agaki
     id: Rie
+    set: Heart
   - display: Rose Blanchett
     id: Rose
+    set: Star
   - display: Vesta Jackson
     id: Vesta
+    set: Star
   - display: Your News Network
     id: YNN
+    set: Star
   - display: Jane Doe
     id: JaneDoe
+    set: Star
   - display: Nawa & Baku
     id: NawaBaku
+    set: Star
   - display: Planil Lalent Talenti
     id: Planil
+    set: Star
   - display: XIV - Balance
     id: Balance
+    set: Star
   - display: LXVI - Memory
     id: Memory
+    set: Star
 bosses:
   - display: History
     id: History
+    set: Star
   - display: 3 - That Which Points
     id: ThatWhichPoints
+    set: Star
   - display: Fugue in D Minor
     id: Fugue
+    set: Star
   - display: Ghost in the Machine
     id: GhostMachine
+    set: Star
   - display: Hell on Wheels
     id: HellOnWheels
+    set: Star
   - display: Mecha Mary
     id: MechaMary
+    set: Star
   - display: The Bauk
     id: Bauk
+    set: Star
   - display: The Fanged Sun
     id: FangedSun
+    set: Star
   - display: The Yakuza
     id: Yakuza
+    set: Heart
   - display: Hyper Mode
     id: HyperMode
+    set: Heart
   - display: Red Barrel
     id: RedBarrel
+    set: Heart
   - display: Sora
     id: Sora
+    set: Heart
   - display: The Forest Witch
     id: ForestWitch
+    set: Heart
   - display: Behemoth
     id: Behemoth
+    set: Heart
   - display: Celestial Cleaning Ltd.
     id: CelestialCL
+    set: Star
   - display: Collective Consciousness
     id: CollectiveCon
+    set: Star
   - display: Justicar Doe
     id: Justicar
+    set: Star
   - display: Knife & Fork
     id: KnifeFork
+    set: Star
   - display: Planil Lalent Talenti
     id: Planil
+    set: Star
   - display: Starry Night Memory
     id: StarryMemory
+    set: Star
   - display: The Black Rose
     id: BlackRose
+    set: Star
   - display: Beethoven
     id: Beethoven
+    set: Star
   - display: Chaos Incarnate
     id: ChaosInc
+    set: Heart
   - display: Elurophobia
     id: Elurophobia
+    set: Heart
   - display: Mems
     id: Mems
+    set: Heart
   - display: Gamemaster Die
     id: GamemasterDie
+    set: Heart
   - display: Shout ★ Live!
     id: ShoutLive
+    set: Heart
   - display: The Defacer of Tyranny
     id: DefacerTyr
+    set: Heart
   - display: The Loremaster
     id: Loremaster
+    set: Heart
   - display: Kewpitrix Engine
     id: KewpitrixEng
+    set: Heart

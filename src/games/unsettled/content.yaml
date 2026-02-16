@@ -1,0 +1,25 @@
+# Unsettled owned content
+#
+# BG Stats recommended tags:
+# - Planet: use `P:` (or just `G` / `W`)
+# - Task: use `T:` (or just `A` / `B` / `C`)
+#
+# Example:
+#   G／A
+#   P: Grakkis／T: A
+
+planets:
+  - display: Grakkis
+    id: G
+    aliases:
+      - Grakkis
+  - display: Wenora
+    id: W
+    aliases:
+      - Wenora
+
+tasks:
+  - A
+  - B
+  - C
+
