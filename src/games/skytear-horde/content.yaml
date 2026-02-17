@@ -1,0 +1,107 @@
+# Skytear Horde
+#
+# This list drives the UI (including 0-play rows) for "hero precons" and "enemy precons".
+# Values here should match the display names produced by the tag parser.
+#
+# For BG Stats tags, use the player `color` field with segments like:
+#   H: Frostbite／E: Undead
+# or shorthand:
+#   Frostbite／Undead
+#
+# Notes:
+# - `id` values are intended to be short tokens you can type in BG Stats.
+# - `aliases` are optional; they help resolve variations in spelling.
+
+heroPrecons:
+  # Core box (CORE)
+  - display: The Frostbite Stronghold
+    id: Frostbite
+    aliases: [Frostbite Stronghold]
+    box: core
+  - display: The Gaping Maw
+    id: GapingMaw
+    aliases: [Gaping Maw]
+    box: core
+  - display: The Leviathan's Temple
+    id: Leviathan
+    aliases: [Leviathans Temple, Leviathan's Temple]
+    box: core
+  - display: The Living Rampart
+    id: LivingRampart
+    aliases: [Living Rampart]
+    box: core
+  - display: The Scythe Sanctuary
+    id: Scythe
+    aliases: [Scythe Sanctuary]
+    box: core
+  - display: The Wind Burner
+    id: Wind
+    aliases: [Wind Burner]
+    box: core
+
+  # Other boxes / expansions (non-CORE on SkytearHordeDB)
+  - display: The Cloud Gate
+    id: CloudGate
+    aliases: [Cloud Gate]
+    box: campaigns
+  - display: The Executioner's Den
+    id: Executioner
+    aliases: [Executioners Den, Executioner's Den]
+    box: campaigns
+  - display: Shrine of Kyoku
+    id: Kyoku
+    aliases: [Shrine of Kyoku, Shrine of Kyoku (1)]
+    box: campaigns
+  - display: Pools of Flyema
+    id: Flyema
+    aliases: [Pools of Flyema]
+    box: campaigns
+  - display: Carchlan of Xotlan
+    id: Carchlan
+    aliases: [Carchlan, Xotlan]
+    box: campaigns
+  - display: Tefmet's Oasis
+    id: Tefmet
+    aliases: [Tefmets Oasis, Tefmet's Oasis]
+    box: campaigns
+
+enemyPrecons:
+  # These correspond to the 12 "Horde Set" buckets shown on SkytearHordeDB (excluding "Common").
+  - display: Animerk
+    id: Animerk
+    box: campaigns
+  - display: Faefolk
+    id: Faefolk
+    box: campaigns
+  - display: Monoliths
+    id: Monoliths
+    box: monoliths
+  - display: Nightmare
+    id: Nightmare
+    box: campaigns
+  - display: Predator
+    id: Predator
+    box: campaigns
+  - display: Renegade
+    id: Renegade
+    box: campaigns
+  - display: Scaleson
+    id: Scaleson
+    box: core
+  - display: Sinklings
+    id: Sinklings
+    box: core
+  - display: Skybooters
+    id: Skybooters
+    box: core
+  - display: Slitherers
+    id: Slitherers
+    box: core
+  - display: The Brood
+    id: Brood
+    aliases: [Broods]
+    box: campaigns
+  - display: Undead
+    id: Undead
+    box: campaigns
+

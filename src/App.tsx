@@ -16,6 +16,7 @@ import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import BulletView from './games/bullet/BulletView'
 import TooManyBonesView from './games/too-many-bones/TooManyBonesView'
 import UnsettledView from './games/unsettled/UnsettledView'
+import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
 import AchievementsView from './AchievementsView'
 import { authUser, signOutUser } from './auth/auth'
 import {
@@ -45,6 +46,7 @@ const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
 type MainTab =
   | 'finalGirl'
+  | 'skytearHorde'
   | 'unsettled'
   | 'spiritIsland'
   | 'mistfall'
@@ -63,6 +65,7 @@ type PlaysDrilldownReturn = {
 
 const MAIN_TABS: ReadonlyArray<MainTab> = [
   'finalGirl',
+  'skytearHorde',
   'unsettled',
   'spiritIsland',
   'mistfall',
@@ -856,6 +859,21 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'skytearHorde' }}
+                  onClick={() => {
+                    if (mainTab() === 'skytearHorde') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'skytearHorde' }
+                    setMainTab('skytearHorde')
+                    pushNavState(next)
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'skytearHorde'}
+                >
+                  Skytear Horde
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
                   onClick={() => {
                     if (mainTab() === 'spiritIsland') return
@@ -1083,6 +1101,15 @@ function App() {
               pinnedAchievementIds={pinnedAchievementIds()}
               suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'skytearHorde'}>
+            <SkytearHordeView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
               onOpenPlays={openPlaysDrilldown}
             />
           </Show>
