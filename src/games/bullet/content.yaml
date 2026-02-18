@@ -95,51 +95,9 @@ bosses:
   - display: Behemoth
     id: Behemoth
     set: Heart
-  - display: Celestial Cleaning Ltd.
-    id: CelestialCL
-    set: Star
-  - display: Collective Consciousness
-    id: CollectiveCon
-    set: Star
-  - display: Justicar Doe
-    id: Justicar
-    set: Star
-  - display: Knife & Fork
-    id: KnifeFork
-    set: Star
-  - display: Planil Lalent Talenti
-    id: Planil
-    set: Star
-  - display: Starry Night Memory
-    id: StarryMemory
-    set: Star
-  - display: The Black Rose
-    id: BlackRose
-    set: Star
-  - display: Beethoven
-    id: Beethoven
-    set: Star
   - display: Chaos Incarnate
     id: ChaosInc
     set: Heart
   - display: Elurophobia
     id: Elurophobia
-    set: Heart
-  - display: Mems
-    id: Mems
-    set: Heart
-  - display: Gamemaster Die
-    id: GamemasterDie
-    set: Heart
-  - display: Shout ★ Live!
-    id: ShoutLive
-    set: Heart
-  - display: The Defacer of Tyranny
-    id: DefacerTyr
-    set: Heart
-  - display: The Loremaster
-    id: Loremaster
-    set: Heart
-  - display: Kewpitrix Engine
-    id: KewpitrixEng
     set: Heart

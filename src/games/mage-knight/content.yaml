@@ -1,0 +1,20 @@
+# Mage Knight
+#
+# This list drives the UI (including 0-play rows) and token resolution.
+# Use the player `color` field in BG Stats with either:
+# - just the hero token/name (e.g. `Goldyx`)
+# - or key/value (e.g. `H: Goldyx`)
+
+heroes:
+  - display: Tovak
+    id: Tovak
+  - display: Norowas
+    id: Norowas
+  - display: Arythea
+    id: Arythea
+  - display: Goldyx
+    id: Goldyx
+  - display: Wolfhawk
+    id: Wolfhawk
+  - display: Braevalar
+    id: Braevalar

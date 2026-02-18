@@ -8,44 +8,71 @@
 #   H: Melekai／Q: H1
 
 heroes:
+  # Core
   - display: Fengray
     id: Fengray
+    group: Core
   - display: Celenthia
     id: Celenthia
+    group: Core
   - display: Arani
     id: Arani
+    group: Core
   - display: Crow
     id: Crow
+    group: Core
   - display: Arendi
     id: Arendi
+    group: Core
   - display: Vendia
     id: Vendia
+    group: Core
+
+  # Heart of the Mist
   - display: Hareag
     id: Hareag
+    group: Heart of the Mist
   - display: Elatha
     id: Elatha
+    group: Heart of the Mist
   - display: Melekai
     id: Melekai
+    group: Heart of the Mist
   - display: Valkea
     id: Valkea
+    group: Heart of the Mist
   - display: Tarah
     id: Tarah
+    group: Heart of the Mist
+
 quests:
+  # Core
   - display: "Mistfall — Quest 1: Into the Wilds"
     id: M1
+    group: Core
   - display: "Mistfall — Quest 2: The Abomination"
     id: M2
+    group: Core
   - display: "Mistfall — Quest 3: Tangled Paths"
     id: M3
+    group: Core
   - display: "Mistfall — Quest 4: Consuming Flames"
     id: M4
+    group: Core
+
+  # Heart of the Mist
   - display: "Heart of the Mists — Quest 1: The Great Hunt"
     id: H1
+    group: Heart of the Mist
   - display: "Heart of the Mists — Quest 2: Mother of Nightmares"
     id: H2
+    group: Heart of the Mist
   - display: "Heart of the Mists — Quest 3: Dragon Eternal"
     id: H3
+    group: Heart of the Mist
   - display: "Heart of the Mists — Quest 4: The Black Gate"
     id: H4
+    group: Heart of the Mist
   - display: "Heart of the Mists — Quest 5: Hope's End"
     id: H5
+    group: Heart of the Mist

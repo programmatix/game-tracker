@@ -487,17 +487,19 @@
 }
 
 .heatmapWrap {
+  --heatmap-cell-size: 32px;
+  --heatmap-grid-color: rgba(108, 92, 192, 0.92);
   overflow: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(121, 103, 210, 0.55);
   max-height: 560px;
-  background: rgba(0, 0, 0, 0.18);
+  background: #25204f;
 }
 
 .heatmapTable {
   border-collapse: separate;
-  border-spacing: 5px;
-  padding: 10px;
+  border-spacing: 0;
+  padding: 0;
 }
 
 .heatmapCorner {
@@ -505,56 +507,82 @@
   top: 0;
   left: 0;
   z-index: 4;
-  background: rgba(18, 20, 32, 0.98);
-  color: var(--muted);
+  background: #25204f;
+  color: rgba(255, 255, 255, 0.72);
   font-size: 12px;
   text-align: left;
-  padding: 6px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 10px;
+  border-right: 1px solid var(--heatmap-grid-color);
+  border-bottom: 1px solid var(--heatmap-grid-color);
   white-space: nowrap;
 }
 
 .heatmapColHead {
   position: sticky;
-  top: 0;
+  top: var(--heatmap-col-group-height, 0px);
   z-index: 3;
-  height: 130px;
-  width: 24px;
-  padding: 0;
-  overflow: visible;
+  width: var(--heatmap-cell-size);
+  min-width: var(--heatmap-cell-size);
+  max-width: var(--heatmap-cell-size);
+  padding: 8px 0;
   vertical-align: bottom;
-  background: rgba(18, 20, 32, 0.98);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+  background: #25204f;
+  border-right: 1px solid var(--heatmap-grid-color);
+  border-bottom: 1px solid var(--heatmap-grid-color);
 }
 
 .heatmapColGroupHead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   height: 28px;
-  padding: 6px 8px;
-  background: rgba(18, 20, 32, 0.98);
-  color: var(--muted);
+  padding: 0;
+  background: #25204f;
+  color: rgba(255, 255, 255, 0.84);
   font-size: 11px;
   font-weight: 650;
   text-align: center;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid var(--heatmap-grid-color);
+  border-bottom: 1px solid var(--heatmap-grid-color);
   white-space: nowrap;
+  overflow: hidden;
+}
+
+.heatmapColGroupLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heatmapColGroupLabel::before,
+.heatmapColGroupLabel::after {
+  content: '';
+  flex: 0 1 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .heatmapColLabel {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%) rotate(-90deg);
-  transform-origin: center;
+  writing-mode: vertical-rl;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   white-space: nowrap;
   font-size: 11px;
+  font-weight: 650;
   line-height: 1;
-  color: var(--muted);
-  padding: 0;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.heatmapColLabel .heatmapLabelText {
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .heatmapRowLabel {
@@ -586,58 +614,85 @@
   user-select: none;
 }
 
-.heatmapRowGroupHead {
+.heatmapRowGroupCell {
   position: sticky;
   left: 0;
   z-index: 2;
-  padding: 6px 8px;
-  background: rgba(18, 20, 32, 0.98);
-  color: var(--muted);
-  font-size: 12px;
+  background: #25204f;
+  border-right: 1px solid var(--heatmap-grid-color);
+  border-bottom: 1px solid var(--heatmap-grid-color);
+  padding: 0;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  overflow: hidden;
+}
+
+.heatmapRowGroupLabel {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  font-size: 11px;
   font-weight: 650;
-  text-align: left;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.84);
   white-space: nowrap;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .heatmapRowHead {
   position: sticky;
-  left: 0;
+  left: var(--heatmap-row-group-width, 0px);
   z-index: 2;
-  background: rgba(18, 20, 32, 0.98);
-  color: rgba(255, 255, 255, 0.9);
+  background: #25204f;
+  color: rgba(255, 255, 255, 0.98);
   font-size: 12px;
+  line-height: var(--heatmap-cell-size);
+  font-weight: 700;
   text-align: left;
-  padding: 6px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  max-width: 260px;
+  padding: 0 10px;
+  border-right: 1px solid var(--heatmap-grid-color);
+  border-bottom: 1px solid var(--heatmap-grid-color);
+  max-width: 220px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.heatmapCellWrap {
+  padding: 0;
+  width: var(--heatmap-cell-size);
+  min-width: var(--heatmap-cell-size);
+  max-width: var(--heatmap-cell-size);
+  height: var(--heatmap-cell-size);
+  border-right: 1px solid var(--heatmap-grid-color);
+  border-bottom: 1px solid var(--heatmap-grid-color);
+  background: #141329;
+}
+
 .heatmapCell {
   appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: transparent;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  border: 0;
+  background: #141329;
   padding: 0;
   display: grid;
   place-items: center;
   font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.9);
   user-select: none;
   cursor: default;
 }
 
 .heatmapCellZero {
-  color: rgba(255, 255, 255, 0.38);
-  border-style: dashed;
+  color: rgba(255, 255, 255, 0.2);
 }
 
 .heatmapCellClickable {

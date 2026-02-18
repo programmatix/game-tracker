@@ -1,6 +1,7 @@
 import {
   For,
   Show,
+  batch,
   createEffect,
   createMemo,
   createResource,
@@ -15,6 +16,7 @@ import MistfallView from './games/mistfall/MistfallView'
 import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import BulletView from './games/bullet/BulletView'
 import TooManyBonesView from './games/too-many-bones/TooManyBonesView'
+import MageKnightView from './games/mage-knight/MageKnightView'
 import UnsettledView from './games/unsettled/UnsettledView'
 import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
 import AchievementsView from './AchievementsView'
@@ -56,6 +58,7 @@ type MainTab =
   | 'deathMayDie'
   | 'bullet'
   | 'tooManyBones'
+  | 'mageKnight'
   | 'achievements'
   | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail' | 'drilldown'
@@ -76,6 +79,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'deathMayDie',
   'bullet',
   'tooManyBones',
+  'mageKnight',
   'achievements',
   'plays',
 ]
@@ -629,16 +633,18 @@ function App() {
 
   function openPlaysDrilldown(request: PlaysDrilldownRequest, options?: { pushHistory?: boolean }) {
     const returnState = currentNavState()
-    setPlaysDrilldownReturn({
-      mainTab: returnState.mainTab,
-      playsView: returnState.playsView,
-      selectedGameKey: returnState.selectedGameKey,
+    batch(() => {
+      setPlaysDrilldownReturn({
+        mainTab: returnState.mainTab,
+        playsView: returnState.playsView,
+        selectedGameKey: returnState.selectedGameKey,
+      })
+      setPlaysDrilldown(request)
+      setSelectedGameKey(null)
+      setMainTab('plays')
+      setPlaysView('drilldown')
+      resetPage()
     })
-    setPlaysDrilldown(request)
-    setSelectedGameKey(null)
-    setPlaysView('drilldown')
-    setMainTab('plays')
-    resetPage()
 
     const shouldPush = options?.pushHistory !== false
     if (!shouldPush) return
@@ -909,6 +915,21 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'mageKnight' }}
+                  onClick={() => {
+                    if (mainTab() === 'mageKnight') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'mageKnight' }
+                    setMainTab('mageKnight')
+                    pushNavState(next)
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'mageKnight'}
+                >
+                  Mage Knight
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'achievements' }}
                   onClick={() => {
                     if (mainTab() === 'achievements') return
@@ -1146,6 +1167,15 @@ function App() {
               pinnedAchievementIds={pinnedAchievementIds()}
               suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'mageKnight'}>
+            <MageKnightView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
               onOpenPlays={openPlaysDrilldown}
             />
           </Show>

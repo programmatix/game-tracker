@@ -118,7 +118,8 @@ export function parseSkytearHordePlayerColor(color: string): SkytearHordePlayerT
     }
   }
 
-  if (!heroPrecon && tags[0]) heroPrecon = resolveHeroPrecon(tags[0])
+  // Avoid classifying a single enemy-like shorthand tag (e.g. "Slitherers L3") as hero.
+  if (!heroPrecon && !enemyPrecon && tags[0]) heroPrecon = resolveHeroPrecon(tags[0])
   if (!enemyPrecon && tags[1]) {
     const split = splitEnemyTokenAndLevel(tags[1])
     enemyPrecon = split.token ? resolveEnemyPrecon(split.token) : undefined
@@ -132,4 +133,3 @@ export function parseSkytearHordePlayerColor(color: string): SkytearHordePlayerT
 
   return { heroPrecon, enemyPrecon, enemyLevel, extraTags }
 }
-

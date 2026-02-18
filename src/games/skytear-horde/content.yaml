@@ -66,7 +66,7 @@ heroPrecons:
     box: campaigns
 
 enemyPrecons:
-  # These correspond to the 12 "Horde Set" buckets shown on SkytearHordeDB (excluding "Common").
+  # SkytearHordeDB `/cards` currently shows 13 Horde Sets including "Common" (12 excluding it).
   - display: Animerk
     id: Animerk
     box: campaigns
@@ -104,4 +104,3 @@ enemyPrecons:
   - display: Undead
     id: Undead
     box: campaigns
-
