@@ -45,7 +45,7 @@
 
 .main {
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -777,5 +777,11 @@
   }
   .statsGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .hideOnMobile {
+    display: none;
   }
 }

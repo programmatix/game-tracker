@@ -9,7 +9,6 @@ import { skytearHordeContent } from './content'
 import {
   getSkytearHordeEntries,
   SKYTEAR_HORDE_OBJECT_ID,
-  type SkytearHordeEntry,
 } from './skytearHordeEntries'
 
 export default function SkytearHordeView(props: {
@@ -18,6 +17,38 @@ export default function SkytearHordeView(props: {
   authToken?: string
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
+  const BOX_ORDER = ['core', 'campaigns', 'monoliths'] as const
+
+  const sortByBoxThenCount = (
+    keys: string[],
+    counts: Record<string, number>,
+    boxByKey: Map<string, string>,
+    canonical: string[],
+  ): string[] => {
+    const canonicalIndex = new Map<string, number>()
+    canonical.forEach((key, index) => canonicalIndex.set(key, index))
+
+    const boxRank = (box: string) => {
+      const idx = BOX_ORDER.indexOf(box as (typeof BOX_ORDER)[number])
+      return idx >= 0 ? idx : BOX_ORDER.length
+    }
+
+    return keys.slice().sort((a, b) => {
+      const aBox = (boxByKey.get(a) || '').trim().toLowerCase()
+      const bBox = (boxByKey.get(b) || '').trim().toLowerCase()
+      const byBox = boxRank(aBox) - boxRank(bBox)
+      if (byBox !== 0) return byBox
+
+      const byCount = (counts[b] ?? 0) - (counts[a] ?? 0)
+      if (byCount !== 0) return byCount
+
+      const byCanonical = (canonicalIndex.get(a) ?? Number.MAX_SAFE_INTEGER) - (canonicalIndex.get(b) ?? Number.MAX_SAFE_INTEGER)
+      if (byCanonical !== 0) return byCanonical
+
+      return a.localeCompare(b)
+    })
+  }
+
   const [flipAxes, setFlipAxes] = createSignal(false)
   const [hideCounts, setHideCounts] = createSignal(true)
 
@@ -42,6 +73,15 @@ export default function SkytearHordeView(props: {
     return counts
   })
 
+  const enemyLevelCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.enemyLevel) continue
+      incrementCount(counts, `L${entry.enemyLevel}`, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByHero = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
@@ -54,6 +94,16 @@ export default function SkytearHordeView(props: {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
       ;(ids[entry.enemyPrecon] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
+  const playIdsByEnemyLevel = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      if (!entry.enemyLevel) continue
+      const key = `L${entry.enemyLevel}`
+      ;(ids[key] ||= []).push(entry.play.id)
     }
     return ids
   })
@@ -78,12 +128,24 @@ export default function SkytearHordeView(props: {
     return ids
   })
 
-  const heroKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(heroCounts()), skytearHordeContent.heroPrecons),
-  )
-  const enemyKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(enemyCounts()), skytearHordeContent.enemyPrecons),
-  )
+  const heroKeys = createMemo(() => {
+    const merged = mergeCanonicalKeys(sortKeysByCountDesc(heroCounts()), skytearHordeContent.heroPrecons)
+    return sortByBoxThenCount(
+      merged,
+      heroCounts(),
+      skytearHordeContent.heroBoxByPrecon,
+      skytearHordeContent.heroPrecons,
+    )
+  })
+  const enemyKeys = createMemo(() => {
+    const merged = mergeCanonicalKeys(sortKeysByCountDesc(enemyCounts()), skytearHordeContent.enemyPrecons)
+    return sortByBoxThenCount(
+      merged,
+      enemyCounts(),
+      skytearHordeContent.enemyBoxByPrecon,
+      skytearHordeContent.enemyPrecons,
+    )
+  })
 
   const matrixRows = createMemo(() => (flipAxes() ? enemyKeys() : heroKeys()))
   const matrixCols = createMemo(() => (flipAxes() ? heroKeys() : enemyKeys()))
@@ -211,9 +273,22 @@ export default function SkytearHordeView(props: {
               })
             }
           />
+
+          <Show when={Object.keys(enemyLevelCounts()).length > 0}>
+            <CountTable
+              title="Enemy levels"
+              plays={enemyLevelCounts()}
+              keys={sortKeysByCountDesc(enemyLevelCounts())}
+              onPlaysClick={(level) =>
+                props.onOpenPlays({
+                  title: `Skytear Horde • Enemy level: ${level}`,
+                  playIds: playIdsByEnemyLevel()[level] ?? [],
+                })
+              }
+            />
+          </Show>
         </div>
       </Show>
     </div>
   )
 }
-

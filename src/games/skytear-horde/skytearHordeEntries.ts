@@ -8,6 +8,7 @@ export type SkytearHordeEntry = {
   play: BggPlay
   heroPrecon: string
   enemyPrecon: string
+  enemyLevel?: number
   quantity: number
   isWin: boolean
 }
@@ -42,6 +43,7 @@ export function getSkytearHordeEntries(plays: BggPlay[], username: string): Skyt
       play,
       heroPrecon: parsed.heroPrecon?.trim() || 'Unknown hero precon',
       enemyPrecon: parsed.enemyPrecon?.trim() || 'Unknown enemy precon',
+      enemyLevel: parsed.enemyLevel,
       quantity: playQuantity(play),
       isWin: player?.attributes.win === '1',
     })

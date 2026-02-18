@@ -6,6 +6,10 @@ export type OwnedFinalGirlContent = {
   ownedFinalGirls: Map<string, string>
   finalGirlLocationsByName: Map<string, string>
   locationBoxesByName: Map<string, string>
+  villainSeasonsByName: Map<string, string>
+  locationSeasonsByName: Map<string, string>
+  finalGirlSeasonsByName: Map<string, string>
+  seasonOrder: string[]
   villainsById: Map<string, { display: string; location?: string }>
   locationsById: Map<string, string>
   finalGirlsById: Map<string, string>
@@ -34,18 +38,54 @@ type FinalGirlYamlSet = {
   finalGirls?: FinalGirlYamlItem[]
 }
 
+type FinalGirlYamlSeason = {
+  season?: string
+  sets?: FinalGirlYamlSet[]
+}
+
+type FinalGirlYamlSetWithSeason = {
+  set: FinalGirlYamlSet
+  season?: string
+}
+
+function collectFinalGirlSets(yaml: unknown): FinalGirlYamlSetWithSeason[] {
+  if (!isRecord(yaml)) return []
+  if (Array.isArray(yaml.sets)) {
+    return (yaml.sets as FinalGirlYamlSet[]).map((set) => ({ set }))
+  }
+
+  if (!Array.isArray(yaml.seasons)) return []
+
+  const sets: FinalGirlYamlSetWithSeason[] = []
+  for (const rawSeason of yaml.seasons as unknown[]) {
+    if (!isRecord(rawSeason)) continue
+    const season = rawSeason as FinalGirlYamlSeason
+    const seasonLabel =
+      typeof season.season === 'string' ? season.season.trim().replace(/\s+/g, ' ') : undefined
+    if (!Array.isArray(season.sets)) continue
+    for (const rawSet of season.sets) sets.push({ set: rawSet, season: seasonLabel })
+  }
+  return sets
+}
+
 export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent {
   const ownedVillains = new Map<string, string>()
   const ownedLocations = new Map<string, string>()
   const ownedFinalGirls = new Map<string, string>()
   const finalGirlLocationsByName = new Map<string, string>()
   const locationBoxesByName = new Map<string, string>()
+  const villainSeasonsByName = new Map<string, string>()
+  const locationSeasonsByName = new Map<string, string>()
+  const finalGirlSeasonsByName = new Map<string, string>()
+  const seasonOrder: string[] = []
+  const seenSeasons = new Set<string>()
   const villainsById = new Map<string, { display: string; location?: string }>()
   const locationsById = new Map<string, string>()
   const finalGirlsById = new Map<string, string>()
 
   const yaml = parseYamlValue(text)
-  if (isRecord(yaml) && Array.isArray(yaml.sets)) {
+  const sets = collectFinalGirlSets(yaml)
+  if (sets.length > 0) {
     const applyAliases = <T>(
       map: Map<string, T>,
       normalizer: (value: string) => string,
@@ -76,9 +116,15 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       return { display, id: id || undefined, aliases }
     }
 
-    for (const rawSet of yaml.sets as unknown[]) {
+    for (const entry of sets) {
+      const rawSet = entry.set
       if (!isRecord(rawSet)) continue
       const set = rawSet as FinalGirlYamlSet
+      const season = entry.season?.trim()
+      if (season && !seenSeasons.has(season)) {
+        seenSeasons.add(season)
+        seasonOrder.push(season)
+      }
 
       const box = typeof set.box === 'string' ? set.box.trim() : undefined
 
@@ -88,6 +134,7 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       if (location) {
         const normalized = normalizeFinalGirlName(location)
         ownedLocations.set(normalized, location)
+        if (season) locationSeasonsByName.set(normalized, season)
         applyAliases(
           locationsById,
           normalizeFinalGirlId,
@@ -101,7 +148,9 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       for (const rawVillain of villains) {
         const villainItem = coerceItem(rawVillain)
         if (!villainItem) continue
-        ownedVillains.set(normalizeFinalGirlName(villainItem.display), villainItem.display)
+        const normalized = normalizeFinalGirlName(villainItem.display)
+        ownedVillains.set(normalized, villainItem.display)
+        if (season) villainSeasonsByName.set(normalized, season)
         applyAliases(
           villainsById,
           normalizeFinalGirlId,
@@ -114,8 +163,10 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       for (const rawFinalGirl of finalGirls) {
         const finalGirlItem = coerceItem(rawFinalGirl)
         if (!finalGirlItem) continue
-        ownedFinalGirls.set(normalizeFinalGirlName(finalGirlItem.display), finalGirlItem.display)
-        if (location) finalGirlLocationsByName.set(normalizeFinalGirlName(finalGirlItem.display), location)
+        const normalized = normalizeFinalGirlName(finalGirlItem.display)
+        ownedFinalGirls.set(normalized, finalGirlItem.display)
+        if (location) finalGirlLocationsByName.set(normalized, location)
+        if (season) finalGirlSeasonsByName.set(normalized, season)
         applyAliases(
           finalGirlsById,
           normalizeFinalGirlId,
@@ -125,20 +176,26 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       }
     }
 
-	    return {
-	      ownedVillains,
-	      ownedLocations,
-	      ownedFinalGirls,
-	      finalGirlLocationsByName,
-	      locationBoxesByName,
-	      villainsById,
-	      locationsById,
-	      finalGirlsById,
-	    }
-	  }
+    return {
+      ownedVillains,
+      ownedLocations,
+      ownedFinalGirls,
+      finalGirlLocationsByName,
+      locationBoxesByName,
+      villainSeasonsByName,
+      locationSeasonsByName,
+      finalGirlSeasonsByName,
+      seasonOrder,
+      villainsById,
+      locationsById,
+      finalGirlsById,
+    }
+  }
 
-	  throw new Error('Failed to parse Final Girl content (expected YAML with a `sets` array).')
-	}
+  throw new Error(
+    'Failed to parse Final Girl content (expected YAML with a `sets` array, or a `seasons` array containing `sets`).',
+  )
+}
 
 export function isOwnedFinalGirlVillain(content: OwnedFinalGirlContent, villain: string): boolean {
   if (content.ownedVillains.size === 0) return true

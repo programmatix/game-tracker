@@ -2,64 +2,88 @@
 #
 # Used to resolve your BG Stats tags (V:/L:/FG:) and drive available counts.
 
-sets:
-  - box: Panic at Station 2891
-    location:
-      display: Station 2891
-      id: Station
-    villains:
-      - display: The Organism
-        id: Organism
-    finalGirls:
-      - display: Uki
-  - box: A Knock at the Door
-    location:
-      display: Wingard Cottage
-      id: Wingard
-    villains:
-      - display: The Intruders
-        id: Intruders
-  - box: The Haunting of Creech Manor
-    location:
-      display: Creech Manor
-      id: Creech
-    villains:
-      - display: The Poltergeist
-        id: Poltrgeist
-  - box: Once Upon a Full Moon
-    location:
-      display: Storybook Woods
-      id: Storybook
-    villains:
-      - display: Big Bad Wolf
-        id: BigBadWolf
-  - box: Madness in the Dark
-    location:
-      display: Wolfe Asylum
-      id: Wolfe
-    villains:
-      - display: The Ratchet Lady
-        id: Ratchet
-  - box: The Falconwood Files
-    location:
-      display: Falconwood
-    villains:
-      - display: Slayer
-  - box: The Marrek Murders
-    location:
-      display: Marrek Warehouse
-      id: Marrek
-    villains:
-      - display: Tormento
-  - box: Frightmare on Maple Lane
-    location:
-      display: Maple Lane
-    villains:
-      - display: Dr. Fright
-  - box: Into the Void
-    location:
-      display: USCSS Konrad
-      id: Konrad
-    villains:
-      - display: The Evomorph
-        id: Evomorph
+seasons:
+  - season: Season 1
+    sets:
+      - box: Panic at Station 2891
+        location:
+          display: Station 2891
+          id: Station
+        villains:
+          - display: The Organism
+            id: Organism
+        finalGirls:
+          - display: Uki
+      - box: A Knock at the Door
+        location:
+          display: Wingard Cottage
+          id: Wingard
+        villains:
+          - display: The Intruders
+            id: Intruders
+      - box: The Haunting of Creech Manor
+        location:
+          display: Creech Manor
+          id: Creech
+        villains:
+          - display: The Poltergeist
+            id: Poltrgeist
+      - box: Once Upon a Full Moon
+        location:
+          display: Storybook Woods
+          id: Storybook
+        villains:
+          - display: Big Bad Wolf
+            id: BigBadWolf
+      - box: Madness in the Dark
+        location:
+          display: Wolfe Asylum
+          id: Wolfe
+        villains:
+          - display: The Ratchet Lady
+            id: Ratchet
+  - season: Season 2
+    sets:
+      - box: The Falconwood Files
+        location:
+          display: Falconwood
+        villains:
+          - display: Slayer
+      - box: The Marrek Murders
+        location:
+          display: Marrek Warehouse
+          id: Marrek
+        villains:
+          - display: Tormento
+      - box: Frightmare on Maple Lane
+        location:
+          display: Maple Lane
+        villains:
+          - display: Dr. Fright
+      - box: Into the Void
+        location:
+          display: USCSS Konrad
+          id: Konrad
+        villains:
+          - display: The Evomorph
+            id: Evomorph
+      - box: Bad Times at Buddyland
+        location:
+          display: Buddyland
+          id: Buddyland
+        villains:
+          - display: Billy the Bear
+            id: Billy
+            aliases:
+              - Buddy
+  - season: Season 3
+    sets:
+      - box: Shriek
+        location:
+          display: Mega Boardgame Convention
+          id: MegaBGCon
+          aliases:
+            - Mega Board Game Con
+        villains:
+          - display: Mort the Teenage Dirtbag
+            id: Mort

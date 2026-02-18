@@ -231,45 +231,122 @@ export default function FinalGirlView(props: {
     return merged
   }
 
+  function mergeObservedAfterOwned(owned: string[], observed: string[]): string[] {
+    const seen = new Set<string>()
+    const merged: string[] = []
+
+    for (const name of owned) {
+      const normalized = normalizeFinalGirlName(name)
+      if (!normalized || seen.has(normalized)) continue
+      seen.add(normalized)
+      merged.push(name)
+    }
+
+    for (const name of observed) {
+      const normalized = normalizeFinalGirlName(name)
+      if (!normalized || seen.has(normalized)) continue
+      seen.add(normalized)
+      merged.push(name)
+    }
+
+    return merged
+  }
+
+  const seasonRank = createMemo(() => {
+    const rank = new Map<string, number>()
+    ownedContent.seasonOrder.forEach((season, index) =>
+      rank.set(normalizeFinalGirlName(season), index),
+    )
+    return rank
+  })
+
+  const sortBySeasonThenCount = (keys: string[], counts: Record<string, number>, seasonByName: Map<string, string>) =>
+    keys.slice().sort((a, b) => {
+      const aSeason = seasonByName.get(normalizeFinalGirlName(a))
+      const bSeason = seasonByName.get(normalizeFinalGirlName(b))
+      const aRank =
+        aSeason === undefined
+          ? Number.MAX_SAFE_INTEGER
+          : (seasonRank().get(normalizeFinalGirlName(aSeason)) ?? Number.MAX_SAFE_INTEGER)
+      const bRank =
+        bSeason === undefined
+          ? Number.MAX_SAFE_INTEGER
+          : (seasonRank().get(normalizeFinalGirlName(bSeason)) ?? Number.MAX_SAFE_INTEGER)
+      if (aRank !== bRank) return aRank - bRank
+
+      const byCount = (counts[b] ?? 0) - (counts[a] ?? 0)
+      if (byCount !== 0) return byCount
+
+      return a.localeCompare(b)
+    })
+
   const villainKeys = createMemo(() =>
-    mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent)),
+    sortBySeasonThenCount(
+      mergeOwnedKeys(sortKeysByCountDesc(villainCounts()), getOwnedFinalGirlVillains(ownedContent)),
+      villainCounts(),
+      ownedContent.villainSeasonsByName,
+    ),
   )
   const locationKeys = createMemo(() =>
-    mergeOwnedKeys(
-      sortKeysByCountDesc(locationCounts()),
-      getOwnedFinalGirlLocations(ownedContent),
+    sortBySeasonThenCount(
+      mergeOwnedKeys(
+        sortKeysByCountDesc(locationCounts()),
+        getOwnedFinalGirlLocations(ownedContent),
+      ),
+      locationCounts(),
+      ownedContent.locationSeasonsByName,
     ),
   )
   const finalGirlKeys = createMemo(() =>
-    mergeOwnedKeys(
-      sortKeysByCountDesc(finalGirlCounts()),
-      getOwnedFinalGirlFinalGirls(ownedContent),
+    sortBySeasonThenCount(
+      mergeOwnedKeys(
+        sortKeysByCountDesc(finalGirlCounts()),
+        getOwnedFinalGirlFinalGirls(ownedContent),
+      ),
+      finalGirlCounts(),
+      ownedContent.finalGirlSeasonsByName,
     ),
   )
 
   const matrixRows = createMemo(() => {
     if (flipAxes()) {
-      return mergeOwnedKeys(
-        sortKeysByCountDesc(locationCounts()),
-        getOwnedFinalGirlLocations(ownedContent),
+      return sortBySeasonThenCount(
+        mergeObservedAfterOwned(
+          getOwnedFinalGirlLocations(ownedContent),
+          sortKeysByCountDesc(locationCounts()),
+        ),
+        locationCounts(),
+        ownedContent.locationSeasonsByName,
       )
     }
-    return mergeOwnedKeys(
-      sortKeysByCountDesc(villainCounts()),
-      getOwnedFinalGirlVillains(ownedContent),
+    return sortBySeasonThenCount(
+      mergeObservedAfterOwned(
+        getOwnedFinalGirlVillains(ownedContent),
+        sortKeysByCountDesc(villainCounts()),
+      ),
+      villainCounts(),
+      ownedContent.villainSeasonsByName,
     )
   })
 
   const matrixCols = createMemo(() => {
     if (flipAxes()) {
-      return mergeOwnedKeys(
-        sortKeysByCountDesc(villainCounts()),
-        getOwnedFinalGirlVillains(ownedContent),
+      return sortBySeasonThenCount(
+        mergeObservedAfterOwned(
+          getOwnedFinalGirlVillains(ownedContent),
+          sortKeysByCountDesc(villainCounts()),
+        ),
+        villainCounts(),
+        ownedContent.villainSeasonsByName,
       )
     }
-    return mergeOwnedKeys(
-      sortKeysByCountDesc(locationCounts()),
-      getOwnedFinalGirlLocations(ownedContent),
+    return sortBySeasonThenCount(
+      mergeObservedAfterOwned(
+        getOwnedFinalGirlLocations(ownedContent),
+        sortKeysByCountDesc(locationCounts()),
+      ),
+      locationCounts(),
+      ownedContent.locationSeasonsByName,
     )
   })
 
@@ -287,6 +364,15 @@ export default function FinalGirlView(props: {
     }
     return max
   })
+
+  const rowGroupBy = (row: string) =>
+    flipAxes()
+      ? ownedContent.locationSeasonsByName.get(normalizeFinalGirlName(row))
+      : ownedContent.villainSeasonsByName.get(normalizeFinalGirlName(row))
+  const colGroupBy = (col: string) =>
+    flipAxes()
+      ? ownedContent.villainSeasonsByName.get(normalizeFinalGirlName(col))
+      : ownedContent.locationSeasonsByName.get(normalizeFinalGirlName(col))
 
   function getOwnedContentWarningTitle(
     kind: 'Villain' | 'Location',
@@ -412,6 +498,8 @@ export default function FinalGirlView(props: {
             hideCounts={hideCounts()}
             rowHeader={flipAxes() ? 'Location' : 'Villain'}
             colHeader={flipAxes() ? 'Villain' : 'Location'}
+            rowGroupBy={rowGroupBy}
+            colGroupBy={colGroupBy}
             getRowWarningTitle={(row) =>
               flipAxes()
                 ? getOwnedContentWarningTitle(
@@ -460,6 +548,9 @@ export default function FinalGirlView(props: {
             plays={villainCounts()}
             wins={villainWins()}
             keys={villainKeys()}
+            groupBy={(villain) =>
+              ownedContent.villainSeasonsByName.get(normalizeFinalGirlName(villain))
+            }
             getNextAchievement={(villain) =>
               findFinalGirlAchievement('villainWins', villain, villainLabelToId())
             }
@@ -484,6 +575,9 @@ export default function FinalGirlView(props: {
             plays={locationCounts()}
             wins={locationWins()}
             keys={locationKeys()}
+            groupBy={(location) =>
+              ownedContent.locationSeasonsByName.get(normalizeFinalGirlName(location))
+            }
             getNextAchievement={(location) =>
               findFinalGirlAchievement('locationPlays', location, locationLabelToId())
             }
@@ -511,6 +605,9 @@ export default function FinalGirlView(props: {
             plays={finalGirlCounts()}
             wins={finalGirlWins()}
             keys={finalGirlKeys()}
+            groupBy={(finalGirl) =>
+              ownedContent.finalGirlSeasonsByName.get(normalizeFinalGirlName(finalGirl))
+            }
             getNextAchievement={(finalGirl) =>
               findFinalGirlAchievement('finalGirlPlays', finalGirl, finalGirlLabelToId())
             }

@@ -7,6 +7,7 @@ export default function CountTable(props: {
   plays: Record<string, number>
   wins?: Record<string, number>
   keys?: string[]
+  groupBy?: (key: string) => string | undefined
   getNextAchievement?: (key: string) => Achievement | undefined
   isOwned?: (key: string) => boolean
   getWarningTitle?: (key: string) => string | undefined
@@ -29,64 +30,83 @@ export default function CountTable(props: {
           </thead>
           <tbody>
             <For each={keys()}>
-              {(key) => (
-                <tr
-                  classList={{
-                    dimRow: props.isOwned ? !(props.isOwned(key) ?? true) : false,
-                  }}
-                >
-                  <td>
-                    <span class="heatmapRowLabel">
-                      <span class="heatmapLabelText">{key}</span>
-                      <Show when={props.getWarningTitle?.(key)}>
-                        {(warningTitle) => (
-                          <span
-                            class="contentWarningIcon"
-                            title={warningTitle()}
-                            aria-label={warningTitle()}
-                          >
-                            ⚠
-                          </span>
-                        )}
-                      </Show>
-                    </span>
-                  </td>
-                  <td class="mono">
-                    <Show
-                      when={Boolean(props.onPlaysClick) && (props.plays[key] ?? 0) > 0}
-                      fallback={(props.plays[key] ?? 0).toLocaleString()}
-                    >
-                      <button
-                        type="button"
-                        class="countLink"
-                        onClick={() => props.onPlaysClick?.(key)}
-                        title="View plays"
-                      >
-                        {(props.plays[key] ?? 0).toLocaleString()}
-                      </button>
+              {(key, index) => {
+                const groupLabel = () => props.groupBy?.(key) ?? ''
+                const prevGroupLabel = () =>
+                  index() > 0 && props.groupBy ? props.groupBy(keys()[index() - 1]!) ?? '' : null
+                const shouldRenderGroupHeader = () =>
+                  Boolean(props.groupBy) &&
+                  groupLabel().trim().length > 0 &&
+                  groupLabel() !== prevGroupLabel()
+
+                return (
+                  <>
+                    <Show when={shouldRenderGroupHeader()}>
+                      <tr>
+                        <th class="heatmapRowGroupHead" colSpan={4}>
+                          {groupLabel()}
+                        </th>
+                      </tr>
                     </Show>
-                  </td>
-                  <td class="mono">{(wins()[key] ?? 0).toLocaleString()}</td>
-                  <td class="muted">
-                    <Show
-                      when={props.getNextAchievement?.(key)}
-                      fallback={<span class="muted">—</span>}
+                    <tr
+                      classList={{
+                        dimRow: props.isOwned ? !(props.isOwned(key) ?? true) : false,
+                      }}
                     >
-                      {(achievement) => (
-                        <span>
-                          {achievement().title}
-                          <Show when={achievement().remainingPlays > 0}>
-                            <span class="mono muted">
-                              {' '}
-                              ({achievement().remainingPlays.toLocaleString()} left)
-                            </span>
+                      <td>
+                        <span class="heatmapRowLabel">
+                          <span class="heatmapLabelText">{key}</span>
+                          <Show when={props.getWarningTitle?.(key)}>
+                            {(warningTitle) => (
+                              <span
+                                class="contentWarningIcon"
+                                title={warningTitle()}
+                                aria-label={warningTitle()}
+                              >
+                                ⚠
+                              </span>
+                            )}
                           </Show>
                         </span>
-                      )}
-                    </Show>
-                  </td>
-                </tr>
-              )}
+                      </td>
+                      <td class="mono">
+                        <Show
+                          when={Boolean(props.onPlaysClick) && (props.plays[key] ?? 0) > 0}
+                          fallback={(props.plays[key] ?? 0).toLocaleString()}
+                        >
+                          <button
+                            type="button"
+                            class="countLink"
+                            onClick={() => props.onPlaysClick?.(key)}
+                            title="View plays"
+                          >
+                            {(props.plays[key] ?? 0).toLocaleString()}
+                          </button>
+                        </Show>
+                      </td>
+                      <td class="mono">{(wins()[key] ?? 0).toLocaleString()}</td>
+                      <td class="muted">
+                        <Show
+                          when={props.getNextAchievement?.(key)}
+                          fallback={<span class="muted">—</span>}
+                        >
+                          {(achievement) => (
+                            <span>
+                              {achievement().title}
+                              <Show when={achievement().remainingPlays > 0}>
+                                <span class="mono muted">
+                                  {' '}
+                                  ({achievement().remainingPlays.toLocaleString()} left)
+                                </span>
+                              </Show>
+                            </span>
+                          )}
+                        </Show>
+                      </td>
+                    </tr>
+                  </>
+                )
+              }}
             </For>
           </tbody>
         </table>

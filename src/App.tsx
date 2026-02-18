@@ -41,6 +41,7 @@ import {
   fetchSpiritIslandSessions,
   SPIRIT_ISLAND_MINDWANDERER_UID,
 } from './games/spirit-island/mindwanderer'
+import { formatPlayLength } from './formatPlayLength'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -395,26 +396,6 @@ function App() {
     maybeWriteAchievementsSnapshot(allAchievements())
   })
 
-  const mostRecentPlay = createMemo(() => {
-    let best:
-      | { date: string; name: string; objectid?: string; objecttype?: string }
-      | undefined
-
-    for (const play of allPlays().plays) {
-      const date = play.attributes.date || ''
-      if (!date) continue
-
-      const name = play.item?.attributes.name || 'Unknown'
-      const objectid = play.item?.attributes.objectid
-      const objecttype = play.item?.attributes.objecttype
-
-      if (!best || compareIsoDatesDesc(date, best.date) < 0) {
-        best = { date, name, objectid, objecttype }
-      }
-    }
-
-    return best
-  })
   const totalPages = createMemo(() =>
     Math.max(1, Math.ceil(allPlays().plays.length / PLAYS_PER_PAGE)),
   )
@@ -802,45 +783,6 @@ function App() {
 
       <main class="main">
         <section class="panel">
-          <div class="panelHeader">
-            <h2>Profile</h2>
-          </div>
-
-          <div class="profile">
-            <dl class="kv">
-              <div class="kvRow">
-                <dt>User</dt>
-                <dd class="mono">{allPlays().username || USERNAME}</dd>
-              </div>
-              <div class="kvRow">
-                <dt>User ID</dt>
-                <dd class="mono">{allPlays().userid || '—'}</dd>
-              </div>
-              <div class="kvRow">
-                <dt>Total plays</dt>
-                <dd class="mono">{totalPlayCount().toLocaleString()}</dd>
-              </div>
-              <div class="kvRow">
-                <dt>Most recent play</dt>
-                <dd class="mono">
-                  <Show when={mostRecentPlay()} fallback={'—'}>
-                    {(recent) => (
-                      <>
-                        {recent().date} — {recent().name}
-                      </>
-                    )}
-                  </Show>
-                </dd>
-              </div>
-            </dl>
-            <details class="details">
-              <summary>Raw plays document</summary>
-              <pre>{JSON.stringify(allPlays().raw, null, 2)}</pre>
-            </details>
-          </div>
-        </section>
-
-        <section class="panel">
           <div class="panelHeader playsHeader">
             <div class="panelHeaderLeft">
               <h2>Views</h2>
@@ -1112,7 +1054,7 @@ function App() {
           </div>
 
           <Show when={mainTab() === 'monthlyChecklist'}>
-            <MonthlyChecklistView plays={allPlays().plays} />
+            <MonthlyChecklistView plays={allPlays().plays} authToken={bggAuthToken()} />
           </Show>
 
           <Show when={mainTab() === 'finalGirl'}>
@@ -1273,7 +1215,7 @@ function App() {
                             </div>
                           </td>
                           <td class="mono">{play.attributes.quantity || ''}</td>
-                          <td class="mono">{play.attributes.length || ''}</td>
+                          <td class="mono">{formatPlayLength(play.attributes.length)}</td>
                           <td>{play.attributes.location || ''}</td>
                           <td class="mono">{play.attributes.incomplete || ''}</td>
                           <td class="mono">{play.attributes.nowinstats || ''}</td>
@@ -1488,7 +1430,7 @@ function App() {
                             </div>
                           </td>
                           <td class="mono">{play.attributes.quantity || ''}</td>
-                          <td class="mono">{play.attributes.length || ''}</td>
+                          <td class="mono">{formatPlayLength(play.attributes.length)}</td>
                           <td>{play.attributes.location || ''}</td>
                           <td class="mono">{play.attributes.incomplete || ''}</td>
                           <td class="mono">{play.attributes.nowinstats || ''}</td>

@@ -41,3 +41,24 @@ tyrants:
     id: Zogue
   - display: Riffle
     id: Riffle
+  - display: Barnacle
+    id: Barnacle
+  - display: Duster
+    id: Duster
+  - display: Vol'Kesh
+    id: VolKesh
+    aliases: [Vol’Kesh]
+  - display: Kollossum
+    id: Kollossum
+  - display: Nobulous
+    id: Nobulous
+  - display: Rok & Rol
+    id: RokAndRol
+  - display: Domina
+    id: Domina
+  - display: Cinder
+    id: Cinder
+  - display: Gavenkog
+    id: Gavenkog
+  - display: Nexus
+    id: Nexus
