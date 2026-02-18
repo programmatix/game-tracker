@@ -4,6 +4,7 @@ import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import AchievementsPanel from '../../components/AchievementsPanel'
+import GameThingThumb from '../../components/GameThingThumb'
 import { computeGameAchievements } from '../../achievements/games'
 import {
   pickBestAvailableAchievementForTrackIds,
@@ -164,19 +165,12 @@ export default function TooManyBonesView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={thing()?.image || thing()?.thumbnail}>
-          {(thumbnail) => (
-            <a
-              class="finalGirlThumbLink"
-              href={`https://boardgamegeek.com/boardgame/${TOO_MANY_BONES_OBJECT_ID}`}
-              target="_blank"
-              rel="noreferrer"
-              title="View on BoardGameGeek"
-            >
-              <img class="finalGirlThumb" src={thumbnail()} alt="" loading="lazy" />
-            </a>
-          )}
-        </Show>
+        <GameThingThumb
+          objectId={TOO_MANY_BONES_OBJECT_ID}
+          image={thing()?.image}
+          thumbnail={thing()?.thumbnail}
+          alt="Too Many Bones thumbnail"
+        />
 
         <div class="finalGirlMeta">
           <div class="metaTitleRow">

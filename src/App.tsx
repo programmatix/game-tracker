@@ -228,6 +228,10 @@ function getPlayerColorForUser(play: {
   return player?.attributes.color || ''
 }
 
+function bggPlayUrl(playId: number): string {
+  return `https://boardgamegeek.com/play/details/${playId}`
+}
+
 function App() {
   const parsedHash =
     typeof window === 'undefined' ? null : parseNavStateFromHash(window.location.hash)
@@ -1201,6 +1205,7 @@ function App() {
                 <table class="table">
                   <thead>
                     <tr>
+                      <th>Link</th>
                       <th>Play</th>
                       <th>Date</th>
                       <th>Game</th>
@@ -1219,6 +1224,11 @@ function App() {
                     <For each={pagedPlays()}>
                       {(play) => (
                         <tr>
+                          <td class="mono">
+                            <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
+                              Open
+                            </a>
+                          </td>
                           <td class="mono">{play.id}</td>
                           <td class="mono">{play.attributes.date || ''}</td>
                           <td>
@@ -1402,6 +1412,7 @@ function App() {
                 <table class="table">
                   <thead>
                     <tr>
+                      <th>Link</th>
                       <th>Date</th>
                       <th>Color</th>
                     </tr>
@@ -1410,6 +1421,11 @@ function App() {
                     <For each={drilldownPagedPlays()}>
                       {(play) => (
                         <tr>
+                          <td class="mono">
+                            <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
+                              Open
+                            </a>
+                          </td>
                           <td class="mono">{play.attributes.date || ''}</td>
                           <td class="mono">{getPlayerColorForUser(play, USERNAME)}</td>
                         </tr>
@@ -1432,6 +1448,7 @@ function App() {
                 <table class="table">
                   <thead>
                     <tr>
+                      <th>Link</th>
                       <th>Play</th>
                       <th>Date</th>
                       <th>Game</th>
@@ -1450,6 +1467,11 @@ function App() {
                     <For each={selectedGamePagedPlays()}>
                       {(play) => (
                         <tr>
+                          <td class="mono">
+                            <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
+                              Open
+                            </a>
+                          </td>
                           <td class="mono">{play.id}</td>
                           <td class="mono">{play.attributes.date || ''}</td>
                           <td>

@@ -6,6 +6,7 @@ import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import CountTable from '../../components/CountTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import GameThingThumb from '../../components/GameThingThumb'
 import { computeGameAchievements } from '../../achievements/games'
 import {
   buildLabelToIdLookup,
@@ -406,24 +407,12 @@ export default function FinalGirlView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={finalGirlThing()?.image || finalGirlThing()?.thumbnail}>
-          {(thumbnail) => (
-            <a
-              class="finalGirlThumbLink"
-              href={`https://boardgamegeek.com/boardgame/${FINAL_GIRL_OBJECT_ID}`}
-              target="_blank"
-              rel="noreferrer"
-              title="View on BoardGameGeek"
-            >
-              <img
-                class="finalGirlThumb"
-                src={thumbnail()}
-                alt="Final Girl thumbnail"
-                loading="lazy"
-              />
-            </a>
-          )}
-        </Show>
+        <GameThingThumb
+          objectId={FINAL_GIRL_OBJECT_ID}
+          image={finalGirlThing()?.image}
+          thumbnail={finalGirlThing()?.thumbnail}
+          alt="Final Girl thumbnail"
+        />
         <div class="meta">
           Final Girl plays in dataset:{' '}
           <span class="mono">{totalFinalGirlPlays().toLocaleString()}</span>

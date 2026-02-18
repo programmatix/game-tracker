@@ -2,6 +2,7 @@ import { Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
+import GameThingThumb from '../../components/GameThingThumb'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { mageKnightContent } from './content'
@@ -76,24 +77,12 @@ export default function MageKnightView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={thing()?.image || thing()?.thumbnail}>
-          {(thumbnail) => (
-            <a
-              class="finalGirlThumbLink"
-              href="https://boardgamegeek.com/boardgame/248562"
-              target="_blank"
-              rel="noreferrer"
-              title="View on BoardGameGeek"
-            >
-              <img
-                class="finalGirlThumb"
-                src={thumbnail()}
-                alt="Mage Knight thumbnail"
-                loading="lazy"
-              />
-            </a>
-          )}
-        </Show>
+        <GameThingThumb
+          objectId={MAGE_KNIGHT_ULTIMATE_OBJECT_ID}
+          image={thing()?.image}
+          thumbnail={thing()?.thumbnail}
+          alt="Mage Knight thumbnail"
+        />
 
         <div class="finalGirlMeta">
           <div class="metaTitleRow">

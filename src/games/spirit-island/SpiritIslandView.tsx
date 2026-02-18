@@ -4,6 +4,7 @@ import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import GameThingThumb from '../../components/GameThingThumb'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { computeGameAchievements } from '../../achievements/games'
 import {
@@ -245,24 +246,12 @@ export default function SpiritIslandView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={spiritIslandThing()?.image || spiritIslandThing()?.thumbnail}>
-          {(thumbnail) => (
-            <a
-              class="finalGirlThumbLink"
-              href={`https://boardgamegeek.com/boardgame/${SPIRIT_ISLAND_OBJECT_ID}`}
-              target="_blank"
-              rel="noreferrer"
-              title="View on BoardGameGeek"
-            >
-              <img
-                class="finalGirlThumb"
-                src={thumbnail()}
-                alt="Spirit Island thumbnail"
-                loading="lazy"
-              />
-            </a>
-          )}
-        </Show>
+        <GameThingThumb
+          objectId={SPIRIT_ISLAND_OBJECT_ID}
+          image={spiritIslandThing()?.image}
+          thumbnail={spiritIslandThing()?.thumbnail}
+          alt="Spirit Island thumbnail"
+        />
         <div class="meta">
           Spirit Island plays in dataset:{' '}
           <span class="mono">{totalSpiritIslandPlays().toLocaleString()}</span>

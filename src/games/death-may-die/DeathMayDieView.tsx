@@ -4,6 +4,7 @@ import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import GameThingThumb from '../../components/GameThingThumb'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { computeGameAchievements } from '../../achievements/games'
 import {
@@ -209,24 +210,12 @@ export default function DeathMayDieView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={deathMayDieThing()?.image || deathMayDieThing()?.thumbnail}>
-          {(thumbnail) => (
-            <a
-              class="finalGirlThumbLink"
-              href={`https://boardgamegeek.com/boardgame/${DEATH_MAY_DIE_OBJECT_ID}`}
-              target="_blank"
-              rel="noreferrer"
-              title="View on BoardGameGeek"
-            >
-              <img
-                class="finalGirlThumb"
-                src={thumbnail()}
-                alt="Cthulhu: Death May Die thumbnail"
-                loading="lazy"
-              />
-            </a>
-          )}
-        </Show>
+        <GameThingThumb
+          objectId={DEATH_MAY_DIE_OBJECT_ID}
+          image={deathMayDieThing()?.image}
+          thumbnail={deathMayDieThing()?.thumbnail}
+          alt="Cthulhu: Death May Die thumbnail"
+        />
         <div class="meta">
           Cthulhu: Death May Die plays in dataset:{' '}
           <span class="mono">{totalPlays().toLocaleString()}</span>

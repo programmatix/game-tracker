@@ -5,6 +5,7 @@ import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } f
 import CountTable from '../../components/CountTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import GameThingThumb from '../../components/GameThingThumb'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import { computeGameAchievements } from '../../achievements/games'
 import {
@@ -298,24 +299,12 @@ export default function MistfallView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={mistfallThing()?.image || mistfallThing()?.thumbnail}>
-          {(thumbnail) => (
-            <a
-              class="finalGirlThumbLink"
-              href={`https://boardgamegeek.com/boardgame/${MISTFALL_BASE_OBJECT_ID}`}
-              target="_blank"
-              rel="noreferrer"
-              title="View on BoardGameGeek"
-            >
-              <img
-                class="finalGirlThumb"
-                src={thumbnail()}
-                alt="Mistfall thumbnail"
-                loading="lazy"
-              />
-            </a>
-          )}
-        </Show>
+        <GameThingThumb
+          objectId={MISTFALL_BASE_OBJECT_ID}
+          image={mistfallThing()?.image}
+          thumbnail={mistfallThing()?.thumbnail}
+          alt="Mistfall thumbnail"
+        />
         <div class="meta">
           Mistfall plays in dataset: <span class="mono">{totalPlays().toLocaleString()}</span>
         </div>

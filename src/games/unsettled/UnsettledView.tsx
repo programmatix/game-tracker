@@ -1,8 +1,9 @@
-import { Show, createMemo, createResource, createSignal } from 'solid-js'
+import { createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import GameThingThumb from '../../components/GameThingThumb'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys } from '../../stats'
 import { unsettledContent } from './content'
@@ -111,7 +112,7 @@ export default function UnsettledView(props: {
   )
 
   const taskKeys = createMemo(() =>
-    mergeCanonicalKeys(Object.keys(taskCounts()), unsettledContent.tasks, (value) =>
+    mergeCanonicalKeys(unsettledContent.tasks, Object.keys(taskCounts()), (value) =>
       value.trim().toUpperCase(),
     ),
   )
@@ -135,22 +136,22 @@ export default function UnsettledView(props: {
   })
 
   return (
-    <div class="gameView">
-      <div class="gameHeader">
-        <div class="gameHeaderLeft">
-          <h2>Unsettled</h2>
-          <div class="muted">
-            <span class="mono">{totalPlays().toLocaleString()}</span> plays
+    <div class="finalGirl">
+      <div class="finalGirlMetaRow">
+        <GameThingThumb
+          objectId={UNSETTLED_OBJECT_ID}
+          image={thing()?.image}
+          thumbnail={thing()?.thumbnail}
+          alt="Unsettled thumbnail"
+        />
+        <div class="finalGirlMeta">
+          <div class="metaTitleRow">
+            <div class="metaTitle">Unsettled</div>
+            <div class="metaPlays">
+              Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
+            </div>
           </div>
-        </div>
-        <div class="gameHeaderRight">
-          <Show when={thing()}>
-            {(resolved) => (
-              <Show when={resolved().image || resolved().thumbnail}>
-                {(thumb) => <img class="finalGirlThumb" src={thumb()} alt="Unsettled" />}
-              </Show>
-            )}
-          </Show>
+          <div class="muted">Planet × task tracker</div>
         </div>
       </div>
 

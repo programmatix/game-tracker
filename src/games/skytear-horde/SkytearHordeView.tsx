@@ -3,6 +3,7 @@ import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import GameThingThumb from '../../components/GameThingThumb'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { skytearHordeContent } from './content'
@@ -175,22 +176,22 @@ export default function SkytearHordeView(props: {
       : skytearHordeContent.enemyBoxByPrecon.get(col)
 
   return (
-    <div class="gameView">
-      <div class="gameHeader">
-        <div class="gameHeaderLeft">
-          <h2>Skytear Horde</h2>
-          <div class="muted">
-            <span class="mono">{totalPlays().toLocaleString()}</span> plays
+    <div class="finalGirl">
+      <div class="finalGirlMetaRow">
+        <GameThingThumb
+          objectId={SKYTEAR_HORDE_OBJECT_ID}
+          image={thing()?.image}
+          thumbnail={thing()?.thumbnail}
+          alt="Skytear Horde thumbnail"
+        />
+        <div class="finalGirlMeta">
+          <div class="metaTitleRow">
+            <div class="metaTitle">Skytear Horde</div>
+            <div class="metaPlays">
+              Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
+            </div>
           </div>
-        </div>
-        <div class="gameHeaderRight">
-          <Show when={thing()}>
-            {(resolved) => (
-              <Show when={resolved().image || resolved().thumbnail}>
-                {(thumb) => <img class="finalGirlThumb" src={thumb()} alt="Skytear Horde" />}
-              </Show>
-            )}
-          </Show>
+          <div class="muted">Hero precon × enemy precon tracker</div>
         </div>
       </div>
 
