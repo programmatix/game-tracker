@@ -76,7 +76,7 @@ export default function MageKnightView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={thing()?.thumbnail}>
+        <Show when={thing()?.image || thing()?.thumbnail}>
           {(thumbnail) => (
             <a
               class="finalGirlThumbLink"

@@ -164,7 +164,7 @@ export default function TooManyBonesView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={thing()?.thumbnail}>
+        <Show when={thing()?.image || thing()?.thumbnail}>
           {(thumbnail) => (
             <a
               class="finalGirlThumbLink"
@@ -296,4 +296,3 @@ export default function TooManyBonesView(props: {
     </div>
   )
 }
-

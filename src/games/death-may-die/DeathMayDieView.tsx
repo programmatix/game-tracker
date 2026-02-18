@@ -209,7 +209,7 @@ export default function DeathMayDieView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={deathMayDieThing()?.thumbnail}>
+        <Show when={deathMayDieThing()?.image || deathMayDieThing()?.thumbnail}>
           {(thumbnail) => (
             <a
               class="finalGirlThumbLink"

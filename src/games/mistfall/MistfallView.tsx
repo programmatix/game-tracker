@@ -298,7 +298,7 @@ export default function MistfallView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={mistfallThing()?.thumbnail}>
+        <Show when={mistfallThing()?.image || mistfallThing()?.thumbnail}>
           {(thumbnail) => (
             <a
               class="finalGirlThumbLink"

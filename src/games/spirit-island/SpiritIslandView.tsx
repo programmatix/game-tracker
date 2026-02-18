@@ -245,7 +245,7 @@ export default function SpiritIslandView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={spiritIslandThing()?.thumbnail}>
+        <Show when={spiritIslandThing()?.image || spiritIslandThing()?.thumbnail}>
           {(thumbnail) => (
             <a
               class="finalGirlThumbLink"

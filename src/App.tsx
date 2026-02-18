@@ -555,7 +555,7 @@ function App() {
               const authToken = bggAuthToken()
               if (!authToken) return
               const thing = await fetchThingSummary(objectid, { authToken })
-              noteThumbnail(objectid, thing.thumbnail)
+              noteThumbnail(objectid, thing.image || thing.thumbnail)
             } catch {
               objectIdsFailed.add(objectid)
             } finally {

@@ -146,8 +146,8 @@ export default function UnsettledView(props: {
         <div class="gameHeaderRight">
           <Show when={thing()}>
             {(resolved) => (
-              <Show when={resolved().thumbnail}>
-                {(thumb) => <img class="gameThumb" src={thumb()} alt="Unsettled" />}
+              <Show when={resolved().image || resolved().thumbnail}>
+                {(thumb) => <img class="finalGirlThumb" src={thumb()} alt="Unsettled" />}
               </Show>
             )}
           </Show>

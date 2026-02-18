@@ -186,8 +186,8 @@ export default function SkytearHordeView(props: {
         <div class="gameHeaderRight">
           <Show when={thing()}>
             {(resolved) => (
-              <Show when={resolved().thumbnail}>
-                {(thumb) => <img class="gameThumb" src={thumb()} alt="Skytear Horde" />}
+              <Show when={resolved().image || resolved().thumbnail}>
+                {(thumb) => <img class="finalGirlThumb" src={thumb()} alt="Skytear Horde" />}
               </Show>
             )}
           </Show>

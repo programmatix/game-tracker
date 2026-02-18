@@ -406,7 +406,7 @@ export default function FinalGirlView(props: {
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
-        <Show when={finalGirlThing()?.thumbnail}>
+        <Show when={finalGirlThing()?.image || finalGirlThing()?.thumbnail}>
           {(thumbnail) => (
             <a
               class="finalGirlThumbLink"
