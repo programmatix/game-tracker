@@ -18,6 +18,7 @@ import TooManyBonesView from './games/too-many-bones/TooManyBonesView'
 import UnsettledView from './games/unsettled/UnsettledView'
 import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
 import AchievementsView from './AchievementsView'
+import MonthlyChecklistView from './MonthlyChecklistView'
 import { authUser, signOutUser } from './auth/auth'
 import {
   fetchPinnedAchievementIds,
@@ -45,6 +46,7 @@ import './App.css'
 const USERNAME = 'stony82'
 const PLAYS_PER_PAGE = 25
 type MainTab =
+  | 'monthlyChecklist'
   | 'finalGirl'
   | 'skytearHorde'
   | 'unsettled'
@@ -64,6 +66,7 @@ type PlaysDrilldownReturn = {
 }
 
 const MAIN_TABS: ReadonlyArray<MainTab> = [
+  'monthlyChecklist',
   'finalGirl',
   'skytearHorde',
   'unsettled',
@@ -844,6 +847,21 @@ function App() {
               <div class="tabs" role="tablist" aria-label="Views">
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'monthlyChecklist' }}
+                  onClick={() => {
+                    if (mainTab() === 'monthlyChecklist') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'monthlyChecklist' }
+                    setMainTab('monthlyChecklist')
+                    pushNavState(next)
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'monthlyChecklist'}
+                >
+                  This month
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'finalGirl' }}
                   onClick={() => {
                     if (mainTab() === 'finalGirl') return
@@ -1092,6 +1110,10 @@ function App() {
               </div>
             </Show>
           </div>
+
+          <Show when={mainTab() === 'monthlyChecklist'}>
+            <MonthlyChecklistView plays={allPlays().plays} />
+          </Show>
 
           <Show when={mainTab() === 'finalGirl'}>
             <FinalGirlView
