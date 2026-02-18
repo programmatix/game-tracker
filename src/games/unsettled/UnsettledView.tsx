@@ -8,6 +8,14 @@ import { incrementCount, mergeCanonicalKeys } from '../../stats'
 import { unsettledContent } from './content'
 import { getUnsettledEntries, UNSETTLED_OBJECT_ID } from './unsettledEntries'
 
+function normalizeLabel(value: string): string {
+  return value.trim().toLowerCase()
+}
+
+function pairKey(planet: string, task: string): string {
+  return `${normalizeLabel(planet)}|||${normalizeLabel(task)}`
+}
+
 export default function UnsettledView(props: {
   plays: BggPlay[]
   username: string
@@ -57,17 +65,23 @@ export default function UnsettledView(props: {
   })
 
   const playIdsByPlanet = createMemo(() => {
-    const ids: Record<string, number[]> = {}
+    const ids = new Map<string, number[]>()
     for (const entry of entries()) {
-      ;(ids[entry.planet] ||= []).push(entry.play.id)
+      const key = normalizeLabel(entry.planet)
+      const existing = ids.get(key)
+      if (existing) existing.push(entry.play.id)
+      else ids.set(key, [entry.play.id])
     }
     return ids
   })
 
   const playIdsByTask = createMemo(() => {
-    const ids: Record<string, number[]> = {}
+    const ids = new Map<string, number[]>()
     for (const entry of entries()) {
-      ;(ids[entry.task] ||= []).push(entry.play.id)
+      const key = normalizeLabel(entry.task)
+      const existing = ids.get(key)
+      if (existing) existing.push(entry.play.id)
+      else ids.set(key, [entry.play.id])
     }
     return ids
   })
@@ -75,7 +89,7 @@ export default function UnsettledView(props: {
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
-      const key = `${entry.planet}|||${entry.task}`
+      const key = pairKey(entry.planet, entry.task)
       const existing = ids.get(key)
       if (existing) existing.push(entry.play.id)
       else ids.set(key, [entry.play.id])
@@ -173,7 +187,7 @@ export default function UnsettledView(props: {
           onCellClick={(row, col) => {
             const planet = flipAxes() ? col : row
             const task = flipAxes() ? row : col
-            const key = `${planet}|||${task}`
+            const key = pairKey(planet, task)
             props.onOpenPlays({
               title: `Unsettled • ${planet} × ${task}`,
               playIds: playIdsByPair().get(key) ?? [],
@@ -188,7 +202,7 @@ export default function UnsettledView(props: {
           onPlaysClick={(planet) =>
             props.onOpenPlays({
               title: `Unsettled • Planet: ${planet}`,
-              playIds: playIdsByPlanet()[planet] ?? [],
+              playIds: playIdsByPlanet().get(normalizeLabel(planet)) ?? [],
             })
           }
         />
@@ -203,7 +217,7 @@ export default function UnsettledView(props: {
           onPlaysClick={(task) =>
             props.onOpenPlays({
               title: `Unsettled • Task: ${task}`,
-              playIds: playIdsByTask()[task] ?? [],
+              playIds: playIdsByTask().get(normalizeLabel(task)) ?? [],
             })
           }
         />
@@ -211,4 +225,3 @@ export default function UnsettledView(props: {
     </div>
   )
 }
-

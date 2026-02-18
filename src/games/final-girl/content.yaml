@@ -5,6 +5,27 @@
 seasons:
   - season: Season 1
     sets:
+      - box: The Haunting of Creech Manor
+        location:
+          display: Creech Manor
+          id: Creech
+        villains:
+          - display: The Poltergeist
+            id: Poltrgeist
+      - box: Frightmare on Maple Lane
+        location:
+          display: Maple Lane
+        villains:
+          - display: Dr. Fright
+  - season: Season 2
+    sets:
+      - box: Into the Void
+        location:
+          display: USCSS Konrad
+          id: Konrad
+        villains:
+          - display: The Evomorph
+            id: Evomorph
       - box: Panic at Station 2891
         location:
           display: Station 2891
@@ -21,13 +42,6 @@ seasons:
         villains:
           - display: The Intruders
             id: Intruders
-      - box: The Haunting of Creech Manor
-        location:
-          display: Creech Manor
-          id: Creech
-        villains:
-          - display: The Poltergeist
-            id: Poltrgeist
       - box: Once Upon a Full Moon
         location:
           display: Storybook Woods
@@ -42,7 +56,7 @@ seasons:
         villains:
           - display: The Ratchet Lady
             id: Ratchet
-  - season: Season 2
+  - season: Season 3
     sets:
       - box: The Falconwood Files
         location:
@@ -55,18 +69,8 @@ seasons:
           id: Marrek
         villains:
           - display: Tormento
-      - box: Frightmare on Maple Lane
-        location:
-          display: Maple Lane
-        villains:
-          - display: Dr. Fright
-      - box: Into the Void
-        location:
-          display: USCSS Konrad
-          id: Konrad
-        villains:
-          - display: The Evomorph
-            id: Evomorph
+  - season: Season 4
+    sets:
       - box: Bad Times at Buddyland
         location:
           display: Buddyland
@@ -76,7 +80,7 @@ seasons:
             id: Billy
             aliases:
               - Buddy
-  - season: Season 3
+  - season: Special Features
     sets:
       - box: Shriek
         location:
