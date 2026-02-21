@@ -59,6 +59,7 @@ export default function SkytearHordeView(props: {
   )
 
   const entries = createMemo(() => getSkytearHordeEntries(props.plays, props.username))
+  const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
 
@@ -190,6 +191,19 @@ export default function SkytearHordeView(props: {
             <div class="metaPlays">
               Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
             </div>
+            <button
+              class="linkButton"
+              type="button"
+              disabled={allPlayIds().length === 0}
+              onClick={() =>
+                props.onOpenPlays({
+                  title: 'Skytear Horde • All plays',
+                  playIds: allPlayIds(),
+                })
+              }
+            >
+              View all plays
+            </button>
           </div>
           <div class="muted">Hero precon × enemy precon tracker</div>
         </div>
