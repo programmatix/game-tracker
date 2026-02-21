@@ -11,7 +11,12 @@ import {
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
+import {
+  incrementCount,
+  mergeCanonicalKeys,
+  sortKeysByCountDesc,
+  sortKeysByGroupThenCountDesc,
+} from '../../stats'
 import { tooManyBonesContent } from './content'
 import { getTooManyBonesEntries, TOO_MANY_BONES_OBJECT_ID } from './tooManyBonesEntries'
 
@@ -132,14 +137,53 @@ export default function TooManyBonesView(props: {
     return ids
   })
 
+  const gearlocGroupOrder = createMemo(() => {
+    const order: string[] = []
+    const seen = new Set<string>()
+    for (const gearloc of tooManyBonesContent.gearlocs) {
+      const group = tooManyBonesContent.gearlocGroupByName.get(gearloc)?.trim()
+      if (!group || seen.has(group)) continue
+      seen.add(group)
+      order.push(group)
+    }
+    return order
+  })
+
+  const tyrantGroupOrder = createMemo(() => {
+    const order: string[] = []
+    const seen = new Set<string>()
+    for (const tyrant of tooManyBonesContent.tyrants) {
+      const group = tooManyBonesContent.tyrantGroupByName.get(tyrant)?.trim()
+      if (!group || seen.has(group)) continue
+      seen.add(group)
+      order.push(group)
+    }
+    return order
+  })
+
   const tyrantKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(tyrantCounts()), tooManyBonesContent.tyrants),
+    sortKeysByGroupThenCountDesc(
+      mergeCanonicalKeys(sortKeysByCountDesc(tyrantCounts()), tooManyBonesContent.tyrants),
+      tyrantCounts(),
+      (tyrant) => tooManyBonesContent.tyrantGroupByName.get(tyrant),
+      tyrantGroupOrder(),
+    ),
   )
   const gearlocKeysMine = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(gearlocCountsMine()), tooManyBonesContent.gearlocs),
+    sortKeysByGroupThenCountDesc(
+      mergeCanonicalKeys(sortKeysByCountDesc(gearlocCountsMine()), tooManyBonesContent.gearlocs),
+      gearlocCountsMine(),
+      (gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc),
+      gearlocGroupOrder(),
+    ),
   )
   const gearlocKeysAll = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(gearlocCountsAll()), tooManyBonesContent.gearlocs),
+    sortKeysByGroupThenCountDesc(
+      mergeCanonicalKeys(sortKeysByCountDesc(gearlocCountsAll()), tooManyBonesContent.gearlocs),
+      gearlocCountsAll(),
+      (gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc),
+      gearlocGroupOrder(),
+    ),
   )
 
   const matrixRows = createMemo(() => (flipAxes() ? gearlocKeysMine() : tyrantKeys()))

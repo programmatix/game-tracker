@@ -38,3 +38,37 @@ export function mergeCanonicalKeys(
 
   return merged
 }
+
+export function sortKeysByGroupThenCountDesc(
+  keys: string[],
+  counts: Record<string, number>,
+  groupBy: (key: string) => string | undefined,
+  groupOrder?: string[],
+): string[] {
+  const groupOrderIndex = new Map<string, number>()
+  if (groupOrder) {
+    for (const group of groupOrder) {
+      const normalized = group.trim()
+      if (!normalized || groupOrderIndex.has(normalized)) continue
+      groupOrderIndex.set(normalized, groupOrderIndex.size)
+    }
+  }
+
+  const getGroupRank = (group: string): number =>
+    groupOrderIndex.size > 0 ? (groupOrderIndex.get(group) ?? Number.MAX_SAFE_INTEGER) : 0
+
+  return [...keys].sort((a, b) => {
+    const groupA = (groupBy(a) ?? '').trim()
+    const groupB = (groupBy(b) ?? '').trim()
+    if (groupA !== groupB) {
+      const groupRankDelta = getGroupRank(groupA) - getGroupRank(groupB)
+      if (groupRankDelta !== 0) return groupRankDelta
+      if (groupA.length === 0 || groupB.length === 0) return groupA.length === 0 ? 1 : -1
+      return groupA.localeCompare(groupB)
+    }
+
+    const countDelta = (counts[b] ?? 0) - (counts[a] ?? 0)
+    if (countDelta !== 0) return countDelta
+    return a.localeCompare(b)
+  })
+}

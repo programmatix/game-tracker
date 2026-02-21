@@ -33,7 +33,7 @@ gearlocs:
     id: Dart
     group: AddOn
   
-  - display: Stanza
+  - display: Figment
     id: Figment
     group: Unbreakable
   - id: Gale
