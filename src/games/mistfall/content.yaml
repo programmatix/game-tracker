@@ -47,32 +47,32 @@ heroes:
 
 quests:
   # Core
-  - display: "Mistfall — Quest 1: Into the Wilds"
+  - display: "Quest 1: Into the Wilds"
     id: M1
     group: Core
-  - display: "Mistfall — Quest 2: The Abomination"
+  - display: "Quest 2: The Abomination"
     id: M2
     group: Core
-  - display: "Mistfall — Quest 3: Tangled Paths"
+  - display: "Quest 3: Tangled Paths"
     id: M3
     group: Core
-  - display: "Mistfall — Quest 4: Consuming Flames"
+  - display: "Quest 4: Consuming Flames"
     id: M4
     group: Core
 
   # Heart of the Mist
-  - display: "Heart of the Mists — Quest 1: The Great Hunt"
+  - display: "Quest 1: The Great Hunt"
     id: H1
     group: Heart of the Mist
-  - display: "Heart of the Mists — Quest 2: Mother of Nightmares"
+  - display: "Quest 2: Mother of Nightmares"
     id: H2
     group: Heart of the Mist
-  - display: "Heart of the Mists — Quest 3: Dragon Eternal"
+  - display: "Quest 3: Dragon Eternal"
     id: H3
     group: Heart of the Mist
-  - display: "Heart of the Mists — Quest 4: The Black Gate"
+  - display: "Quest 4: The Black Gate"
     id: H4
     group: Heart of the Mist
-  - display: "Heart of the Mists — Quest 5: Hope's End"
+  - display: "Quest 5: Hope's End"
     id: H5
     group: Heart of the Mist

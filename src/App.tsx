@@ -231,6 +231,30 @@ function getPlayerColorForUser(play: {
   return player?.attributes.color || ''
 }
 
+function getBggPlayerDisplayName(attributes: Record<string, string>): string {
+  const username = (attributes.username || '').trim()
+  if (username) return username
+  const name = (attributes.name || '').trim()
+  if (name) return name
+  return 'Unknown player'
+}
+
+function getOtherPlayersSummary(
+  play: { players: Array<{ attributes: Record<string, string> }> },
+  username: string,
+): string {
+  const user = username.toLowerCase()
+  const others = play.players.filter((p) => (p.attributes.username || '').toLowerCase() !== user)
+  if (others.length === 0) return '—'
+  return others
+    .map((player) => {
+      const who = getBggPlayerDisplayName(player.attributes)
+      const color = (player.attributes.color || '').trim()
+      return color ? `${who}: ${color}` : `${who}: —`
+    })
+    .join(' | ')
+}
+
 function bggPlayUrl(playId: number): string {
   return `https://boardgamegeek.com/play/details/${playId}`
 }
@@ -1456,7 +1480,8 @@ function App() {
                     <tr>
                       <th>Link</th>
                       <th>Date</th>
-                      <th>Color</th>
+                      <th>{`Color (${USERNAME})`}</th>
+                      <th>Other Players</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1470,6 +1495,7 @@ function App() {
                           </td>
                           <td class="mono">{play.attributes.date || ''}</td>
                           <td class="mono">{getPlayerColorForUser(play, USERNAME)}</td>
+                          <td>{getOtherPlayersSummary(play, USERNAME)}</td>
                         </tr>
                       )}
                     </For>
