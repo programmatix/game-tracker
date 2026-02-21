@@ -26,7 +26,7 @@ function normalizeFinalGirlId(value: string): string {
 type FinalGirlYamlItem =
   | string
   | {
-      display: string
+      display?: string
       id?: string
       aliases?: string[]
     }
@@ -106,8 +106,12 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
         return { display, aliases: [] }
       }
 
-      if (!isRecord(item) || typeof item.display !== 'string') return null
-      const display = item.display.trim().replace(/\s+/g, ' ')
+      if (!isRecord(item)) return null
+      const display = (
+        typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : ''
+      )
+        .trim()
+        .replace(/\s+/g, ' ')
       if (!display) return null
       const id = typeof item.id === 'string' ? item.id.trim() : undefined
       const aliases = Array.isArray(item.aliases)

@@ -11,7 +11,7 @@ export type TooManyBonesContent = {
 type TooManyBonesYamlItem =
   | string
   | {
-      display: string
+      display?: string
       id?: string
       aliases?: string[]
     }
@@ -48,8 +48,10 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
         return
       }
 
-      if (!isRecord(item) || typeof item.display !== 'string') return
-      const display = item.display.trim()
+      if (!isRecord(item)) return
+      const display =
+        (typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : '')
+          .trim()
       if (!display) return
       list.push(display)
       const aliases = Array.isArray(item.aliases)

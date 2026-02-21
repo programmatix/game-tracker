@@ -1102,6 +1102,9 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
               onOpenPlays={openPlaysDrilldown}
             />
           </Show>
@@ -1126,6 +1129,9 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
               onOpenPlays={openPlaysDrilldown}
             />
           </Show>
@@ -1183,6 +1189,9 @@ function App() {
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
               onOpenPlays={openPlaysDrilldown}
             />
           </Show>

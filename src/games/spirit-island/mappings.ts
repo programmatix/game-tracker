@@ -47,41 +47,52 @@ export function parseSpiritIslandMappings(text: string): SpiritIslandMappings {
   const yaml = parseYamlValue(text)
   if (isRecord(yaml)) {
     const spirits = Array.isArray(yaml.spirits)
-      ? (yaml.spirits as unknown[]).filter(
-          (spirit): spirit is SpiritIslandSpirit =>
-            Boolean(
-              spirit &&
-                typeof spirit === 'object' &&
-                typeof (spirit as SpiritIslandSpirit).id === 'string' &&
-                typeof (spirit as SpiritIslandSpirit).display === 'string' &&
-                typeof (spirit as SpiritIslandSpirit).group === 'string' &&
-                typeof (spirit as SpiritIslandSpirit).complexity === 'string',
-            ),
-        )
+      ? (yaml.spirits as unknown[])
+          .map((spirit) => {
+            if (!isRecord(spirit) || typeof spirit.id !== 'string') return null
+            const id = spirit.id.trim()
+            const display = (typeof spirit.display === 'string' ? spirit.display : spirit.id).trim()
+            const group = typeof spirit.group === 'string' ? spirit.group.trim() : ''
+            const complexity =
+              typeof spirit.complexity === 'string' ? spirit.complexity.trim() : ''
+            if (!id || !display || !group || !complexity) return null
+            const aliases = Array.isArray(spirit.aliases)
+              ? spirit.aliases.filter((alias): alias is string => typeof alias === 'string')
+              : undefined
+            return { id, display, group, complexity, ...(aliases ? { aliases } : {}) }
+          })
+          .filter((spirit): spirit is SpiritIslandSpirit => spirit !== null)
       : null
 
     const adversaries = Array.isArray(yaml.adversaries)
-      ? (yaml.adversaries as unknown[]).filter(
-          (adversary): adversary is SpiritIslandAdversary =>
-            Boolean(
-              adversary &&
-                typeof adversary === 'object' &&
-                typeof (adversary as SpiritIslandAdversary).id === 'string' &&
-                typeof (adversary as SpiritIslandAdversary).display === 'string',
-            ),
-        )
+      ? (yaml.adversaries as unknown[])
+          .map((adversary) => {
+            if (!isRecord(adversary) || typeof adversary.id !== 'string') return null
+            const id = adversary.id.trim()
+            const display =
+              (typeof adversary.display === 'string' ? adversary.display : adversary.id).trim()
+            if (!id || !display) return null
+            const aliases = Array.isArray(adversary.aliases)
+              ? adversary.aliases.filter((alias): alias is string => typeof alias === 'string')
+              : undefined
+            return { id, display, ...(aliases ? { aliases } : {}) }
+          })
+          .filter((adversary): adversary is SpiritIslandAdversary => adversary !== null)
       : null
 
     const adversaryLevels = Array.isArray(yaml.adversaryLevels)
-      ? (yaml.adversaryLevels as unknown[]).filter(
-          (entry): entry is SpiritIslandAdversaryLevel =>
-            Boolean(
-              entry &&
-                typeof entry === 'object' &&
-                typeof (entry as SpiritIslandAdversaryLevel).id === 'string' &&
-                typeof (entry as SpiritIslandAdversaryLevel).display === 'string',
-            ),
-        )
+      ? (yaml.adversaryLevels as unknown[])
+          .map((entry) => {
+            if (!isRecord(entry) || typeof entry.id !== 'string') return null
+            const id = entry.id.trim()
+            const display = (typeof entry.display === 'string' ? entry.display : entry.id).trim()
+            if (!id || !display) return null
+            const aliases = Array.isArray(entry.aliases)
+              ? entry.aliases.filter((alias): alias is string => typeof alias === 'string')
+              : undefined
+            return { id, display, ...(aliases ? { aliases } : {}) }
+          })
+          .filter((entry): entry is SpiritIslandAdversaryLevel => entry !== null)
       : null
 
     if (spirits && adversaries && adversaryLevels) {

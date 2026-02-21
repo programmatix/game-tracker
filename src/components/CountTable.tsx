@@ -23,6 +23,7 @@ export default function CountTable(props: {
           <thead>
             <tr>
               <th>Name</th>
+              <th class="mono">Played</th>
               <th class="mono">Plays</th>
               <th class="mono">Wins</th>
               <th>Next</th>
@@ -43,7 +44,7 @@ export default function CountTable(props: {
                   <>
                     <Show when={shouldRenderGroupHeader()}>
                       <tr>
-                        <th class="heatmapRowGroupHead" colSpan={4}>
+                        <th class="heatmapRowGroupHead" colSpan={5}>
                           {groupLabel()}
                         </th>
                       </tr>
@@ -69,6 +70,7 @@ export default function CountTable(props: {
                           </Show>
                         </span>
                       </td>
+                      <td class="mono">{(props.plays[key] ?? 0) > 0 ? '✓' : ''}</td>
                       <td class="mono">
                         <Show
                           when={Boolean(props.onPlaysClick) && (props.plays[key] ?? 0) > 0}

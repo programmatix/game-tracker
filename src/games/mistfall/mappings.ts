@@ -20,7 +20,7 @@ export function normalizeMistfallName(value: string): string {
 type MistfallYamlItem =
   | string
   | {
-      display: string
+      display?: string
       id?: string
       aliases?: string[]
       group?: string
@@ -65,8 +65,10 @@ export function parseMistfallMappings(text: string): MistfallMappings {
         return
       }
 
-      if (!isRecord(item) || typeof item.display !== 'string') return
-      const display = item.display.trim()
+      if (!isRecord(item)) return
+      const display =
+        (typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : '')
+          .trim()
       if (!display) return
       const group = typeof item.group === 'string' ? item.group.trim() : ''
       if (group) groupByName.set(display, group)

@@ -128,6 +128,11 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     label: 'Spirit Island',
     titleIncludes: ['spirit island'],
   },
+  {
+    key: 'swordAndSorcery',
+    label: 'Sword & Sorcery',
+    titleIncludes: ['sword & sorcery', 'sword and sorcery'],
+  },
   // { key: 'gloomhaven', label: 'Gloomhaven', titleIncludes: ['gloomhaven'] },
   { key: 'bullet', label: 'Bullet', titleIncludes: ['bullet'] },
 ] as const

@@ -11,7 +11,7 @@ export type UnsettledContent = {
 type UnsettledYamlItem =
   | string
   | {
-      display: string
+      display?: string
       id?: string
       aliases?: string[]
     }
@@ -64,8 +64,10 @@ export function parseUnsettledContent(text: string): UnsettledContent {
       return
     }
 
-    if (!isRecord(item) || typeof item.display !== 'string') return
-    const display = item.display.trim()
+    if (!isRecord(item)) return
+    const display =
+      (typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : '')
+        .trim()
     if (!display) return
     planets.push(display)
 
@@ -81,4 +83,3 @@ export function parseUnsettledContent(text: string): UnsettledContent {
 }
 
 export const unsettledContent = parseUnsettledContent(contentText)
-

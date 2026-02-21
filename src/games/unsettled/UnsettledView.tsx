@@ -3,7 +3,13 @@ import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
+import { computeGameAchievements } from '../../achievements/games'
+import {
+  pickBestAvailableAchievementForTrackIds,
+  slugifyAchievementItemId,
+} from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys } from '../../stats'
 import { unsettledContent } from './content'
@@ -21,6 +27,9 @@ export default function UnsettledView(props: {
   plays: BggPlay[]
   username: string
   authToken?: string
+  pinnedAchievementIds: ReadonlySet<string>
+  suppressAvailableAchievementTrackIds?: ReadonlySet<string>
+  onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
@@ -33,6 +42,9 @@ export default function UnsettledView(props: {
 
   const entries = createMemo(() => getUnsettledEntries(props.plays, props.username))
   const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
+  const achievements = createMemo(() =>
+    computeGameAchievements('unsettled', props.plays, props.username),
+  )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
 
@@ -136,6 +148,11 @@ export default function UnsettledView(props: {
     return max
   })
 
+  function getNextAchievement(trackIdPrefix: string, label: string) {
+    const id = slugifyAchievementItemId(label)
+    return pickBestAvailableAchievementForTrackIds(achievements(), [`${trackIdPrefix}:${id}`])
+  }
+
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
@@ -165,6 +182,15 @@ export default function UnsettledView(props: {
           <div class="muted">Planet × task tracker</div>
         </div>
       </div>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
 
       <div class="matrixControls">
         <label class="checkboxLabel">
@@ -211,6 +237,7 @@ export default function UnsettledView(props: {
           plays={planetCounts()}
           wins={planetWins()}
           keys={planetKeys()}
+          getNextAchievement={(planet) => getNextAchievement('planetPlays', planet)}
           onPlaysClick={(planet) =>
             props.onOpenPlays({
               title: `Unsettled • Planet: ${planet}`,
@@ -226,6 +253,7 @@ export default function UnsettledView(props: {
           plays={taskCounts()}
           wins={taskWins()}
           keys={taskKeys()}
+          getNextAchievement={(task) => getNextAchievement('taskPlays', task)}
           onPlaysClick={(task) =>
             props.onOpenPlays({
               title: `Unsettled • Task: ${task}`,

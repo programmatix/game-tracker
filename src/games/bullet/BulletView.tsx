@@ -217,8 +217,8 @@ export default function BulletView(props: {
   }
 
   return (
-    <div class="finalGirl">
-      <div class="finalGirlMetaRow">
+    <div class="gameView">
+      <div class="gameMetaRow">
         <GameThingThumb
           objectId={BULLET_OBJECT_ID}
           image={thing()?.image}
@@ -226,7 +226,7 @@ export default function BulletView(props: {
           alt="Bullet thumbnail"
         />
 
-        <div class="finalGirlMeta">
+        <div class="gameMeta">
           <div class="metaTitleRow">
             <div class="metaTitle">Bullet</div>
             <div class="metaPlays">
@@ -313,7 +313,7 @@ export default function BulletView(props: {
         <div class="statsBlock">
           <div class="statsTitleRow">
             <h3 class="statsTitle">{flipAxes() ? 'Heroine × Boss' : 'Boss × Heroine'}</h3>
-            <div class="finalGirlControls">
+            <div class="gameControls">
               <label class="controlCheckbox">
                 <input
                   type="checkbox"

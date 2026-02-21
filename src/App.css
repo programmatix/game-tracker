@@ -194,27 +194,32 @@
   min-width: 0;
 }
 
-.finalGirl {
+.finalGirl,
+.gameView {
   display: grid;
   gap: 14px;
 }
 
-.finalGirlMetaRow {
+.finalGirlMetaRow,
+.gameMetaRow {
   display: flex;
   gap: 12px;
   align-items: flex-start;
 }
 
-.finalGirlMetaRow .meta {
+.finalGirlMetaRow .meta,
+.gameMetaRow .meta {
   margin-bottom: 0;
 }
 
-.finalGirlThumbLink {
+.finalGirlThumbLink,
+.gameThingThumbLink {
   flex: 0 0 auto;
   border-radius: 14px;
 }
 
-.finalGirlThumb {
+.finalGirlThumb,
+.gameThingThumb {
   width: 72px;
   height: 72px;
   border-radius: 14px;
@@ -250,7 +255,8 @@
   flex-wrap: wrap;
 }
 
-.finalGirlControls {
+.finalGirlControls,
+.gameControls {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;

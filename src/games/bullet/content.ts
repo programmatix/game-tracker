@@ -13,7 +13,7 @@ export type BulletContent = {
 type BulletYamlItem =
   | string
   | {
-      display: string
+      display?: string
       id?: string
       aliases?: string[]
       set?: string
@@ -58,8 +58,10 @@ export function parseBulletContent(text: string): BulletContent {
         return
       }
 
-      if (!isRecord(item) || typeof item.display !== 'string') return
-      const display = item.display.trim()
+      if (!isRecord(item)) return
+      const display =
+        (typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : '')
+          .trim()
       if (!display) return
       list.push(display)
       const set = typeof item.set === 'string' ? item.set.trim() : ''

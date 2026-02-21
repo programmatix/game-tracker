@@ -9,7 +9,7 @@ export type MageKnightContent = {
 type MageKnightYamlItem =
   | string
   | {
-      display: string
+      display?: string
       id?: string
       aliases?: string[]
     }
@@ -44,8 +44,10 @@ export function parseMageKnightContent(text: string): MageKnightContent {
         return
       }
 
-      if (!isRecord(item) || typeof item.display !== 'string') return
-      const display = item.display.trim()
+      if (!isRecord(item)) return
+      const display =
+        (typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : '')
+          .trim()
       if (!display) return
 
       heroes.push(display)

@@ -12,7 +12,7 @@ type DeathMayDieYamlItem =
   | string
   | number
   | {
-      display: string
+      display?: string
       id?: string
       aliases?: string[]
     }
@@ -58,8 +58,12 @@ export function parseDeathMayDieContent(text: string): DeathMayDieContent {
           ? String(item)
           : typeof item === 'string'
             ? item
-            : isRecord(item) && typeof item.display === 'string'
-              ? item.display
+            : isRecord(item)
+              ? typeof item.display === 'string'
+                ? item.display
+                : typeof item.id === 'string'
+                  ? item.id
+                  : ''
               : ''
       const trimmed = raw.trim()
       if (!trimmed) continue
@@ -81,8 +85,10 @@ export function parseDeathMayDieContent(text: string): DeathMayDieContent {
         continue
       }
 
-      if (!isRecord(item) || typeof item.display !== 'string') continue
-      const display = item.display.trim()
+      if (!isRecord(item)) continue
+      const display =
+        (typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : '')
+          .trim()
       if (!display) continue
       investigators.push(display)
       const aliases = Array.isArray(item.aliases)

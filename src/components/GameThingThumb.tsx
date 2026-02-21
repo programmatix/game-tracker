@@ -11,13 +11,13 @@ export default function GameThingThumb(props: {
     <Show when={props.image || props.thumbnail}>
       {(src) => (
         <a
-          class="finalGirlThumbLink"
+          class="gameThingThumbLink"
           href={`https://boardgamegeek.com/boardgame/${props.objectId}`}
           target="_blank"
           rel="noreferrer"
           title="View on BoardGameGeek"
         >
-          <img class="finalGirlThumb" src={src()} alt={props.alt} loading={props.loading ?? 'lazy'} />
+          <img class="gameThingThumb" src={src()} alt={props.alt} loading={props.loading ?? 'lazy'} />
         </a>
       )}
     </Show>

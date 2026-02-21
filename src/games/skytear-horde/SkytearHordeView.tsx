@@ -3,7 +3,13 @@ import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
+import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
+import { computeGameAchievements } from '../../achievements/games'
+import {
+  pickBestAvailableAchievementForTrackIds,
+  slugifyAchievementItemId,
+} from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { skytearHordeContent } from './content'
@@ -16,6 +22,9 @@ export default function SkytearHordeView(props: {
   plays: BggPlay[]
   username: string
   authToken?: string
+  pinnedAchievementIds: ReadonlySet<string>
+  suppressAvailableAchievementTrackIds?: ReadonlySet<string>
+  onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const BOX_ORDER = ['core', 'campaigns', 'monoliths'] as const
@@ -60,6 +69,9 @@ export default function SkytearHordeView(props: {
 
   const entries = createMemo(() => getSkytearHordeEntries(props.plays, props.username))
   const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
+  const achievements = createMemo(() =>
+    computeGameAchievements('skytearHorde', props.plays, props.username),
+  )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
 
@@ -176,6 +188,11 @@ export default function SkytearHordeView(props: {
       ? skytearHordeContent.heroBoxByPrecon.get(col)
       : skytearHordeContent.enemyBoxByPrecon.get(col)
 
+  function getNextAchievement(trackIdPrefix: string, label: string) {
+    const id = slugifyAchievementItemId(label)
+    return pickBestAvailableAchievementForTrackIds(achievements(), [`${trackIdPrefix}:${id}`])
+  }
+
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
@@ -208,6 +225,15 @@ export default function SkytearHordeView(props: {
           <div class="muted">Hero precon × enemy precon tracker</div>
         </div>
       </div>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
 
       <Show
         when={entries().length > 0}
@@ -268,6 +294,7 @@ export default function SkytearHordeView(props: {
             plays={heroCounts()}
             keys={heroKeys()}
             groupBy={(hero) => skytearHordeContent.heroBoxByPrecon.get(hero)}
+            getNextAchievement={(key) => getNextAchievement('heroPreconPlays', key)}
             onPlaysClick={(hero) =>
               props.onOpenPlays({
                 title: `Skytear Horde • Hero precon: ${hero}`,
@@ -283,6 +310,7 @@ export default function SkytearHordeView(props: {
             plays={enemyCounts()}
             keys={enemyKeys()}
             groupBy={(enemy) => skytearHordeContent.enemyBoxByPrecon.get(enemy)}
+            getNextAchievement={(key) => getNextAchievement('enemyPreconWins', key)}
             onPlaysClick={(enemy) =>
               props.onOpenPlays({
                 title: `Skytear Horde • Enemy precon: ${enemy}`,

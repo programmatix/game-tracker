@@ -2,7 +2,13 @@ import { Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
+import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
+import { computeGameAchievements } from '../../achievements/games'
+import {
+  pickBestAvailableAchievementForTrackIds,
+  slugifyAchievementItemId,
+} from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { mageKnightContent } from './content'
@@ -14,6 +20,9 @@ export default function MageKnightView(props: {
   plays: BggPlay[]
   username: string
   authToken?: string
+  pinnedAchievementIds: ReadonlySet<string>
+  suppressAvailableAchievementTrackIds?: ReadonlySet<string>
+  onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [thing] = createResource(
@@ -23,6 +32,9 @@ export default function MageKnightView(props: {
 
   const entries = createMemo(() => getMageKnightEntries(props.plays, props.username))
   const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
+  const achievements = createMemo(() =>
+    computeGameAchievements('mageKnight', props.plays, props.username),
+  )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
 
@@ -75,6 +87,11 @@ export default function MageKnightView(props: {
     mergeCanonicalKeys(sortKeysByCountDesc(heroCountsMine()), mageKnightContent.heroes),
   )
 
+  function getNextAchievement(trackIdPrefix: string, label: string) {
+    const id = slugifyAchievementItemId(label)
+    return pickBestAvailableAchievementForTrackIds(achievements(), [`${trackIdPrefix}:${id}`])
+  }
+
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
@@ -106,6 +123,15 @@ export default function MageKnightView(props: {
         </div>
       </div>
 
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
+
       <Show
         when={entries().length > 0}
         fallback={
@@ -122,6 +148,12 @@ export default function MageKnightView(props: {
             plays={heroCountsMine()}
             wins={heroWinsMine()}
             keys={heroKeys()}
+            getNextAchievement={(hero) =>
+              pickBestAvailableAchievementForTrackIds(achievements(), [
+                `heroPlays:${slugifyAchievementItemId(hero)}`,
+                `heroWins:${slugifyAchievementItemId(hero)}`,
+              ])
+            }
             onPlaysClick={(hero) =>
               props.onOpenPlays({
                 title: `Mage Knight • My hero: ${hero}`,
@@ -133,6 +165,7 @@ export default function MageKnightView(props: {
             title="All heroes"
             plays={heroCountsAll()}
             keys={heroKeys()}
+            getNextAchievement={(hero) => getNextAchievement('heroPlays', hero)}
             onPlaysClick={(hero) =>
               props.onOpenPlays({
                 title: `Mage Knight • Hero: ${hero}`,
