@@ -339,7 +339,10 @@ function App() {
     setIsFetchingPlays(true)
     setPlaysError(null)
     try {
-      const response = await fetchAllUserPlays(USERNAME, { authToken: bggAuthToken() })
+      const response = await fetchAllUserPlays(USERNAME, {
+        authToken: bggAuthToken(),
+        bypassCache: Boolean(options?.force),
+      })
       const nextCache: PlaysCacheV1 = {
         version: 1,
         fetchedAtMs: Date.now(),

@@ -39,6 +39,12 @@ export type BggThingSummary = {
 
 const BGG_BASE = '/bgg/xmlapi2'
 
+type BggRequestOptions = {
+  signal?: AbortSignal
+  authToken?: string
+  bypassCache?: boolean
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -93,7 +99,7 @@ function elementToObject(element: Element): unknown {
 
 async function fetchXml(
   path: string,
-  options?: { signal?: AbortSignal; authToken?: string },
+  options?: BggRequestOptions,
 ): Promise<Document> {
   let delayMs = 800
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -102,10 +108,19 @@ async function fetchXml(
     }
     const authToken = options?.authToken?.trim()
     if (authToken) headers.authorization = `Bearer ${authToken}`
+    if (options?.bypassCache) {
+      headers['cache-control'] = 'no-cache'
+      headers.pragma = 'no-cache'
+    }
 
-    const response = await fetch(`${BGG_BASE}${path}`, {
+    const requestPath = options?.bypassCache
+      ? `${path}${path.includes('?') ? '&' : '?'}_=${Date.now()}`
+      : path
+
+    const response = await fetch(`${BGG_BASE}${requestPath}`, {
       signal: options?.signal,
       headers,
+      cache: options?.bypassCache ? 'no-store' : 'default',
     })
 
     if (response.status === 202) {
@@ -174,7 +189,7 @@ export function parsePlaysXmlText(xmlText: string): BggPlaysResponse {
 
 export async function fetchUserProfile(
   username: string,
-  options?: { signal?: AbortSignal; authToken?: string },
+  options?: BggRequestOptions,
 ): Promise<BggUserProfile> {
   const query = new URLSearchParams({ name: username })
   const doc = await fetchXml(`/user?${query.toString()}`, options)
@@ -202,7 +217,7 @@ export async function fetchUserProfile(
 export async function fetchUserPlays(
   username: string,
   page: number,
-  options?: { signal?: AbortSignal; authToken?: string },
+  options?: BggRequestOptions,
 ): Promise<BggPlaysResponse> {
   const query = new URLSearchParams({ username, page: String(page) })
   const doc = await fetchXml(`/plays?${query.toString()}`, options)
@@ -252,7 +267,7 @@ export async function fetchUserPlays(
 
 export async function fetchAllUserPlays(
   username: string,
-  options?: { signal?: AbortSignal; authToken?: string },
+  options?: BggRequestOptions,
 ): Promise<BggPlaysResponse> {
   const pages: BggPlaysResponse[] = []
 
@@ -294,7 +309,7 @@ export async function fetchAllUserPlays(
 
 export async function fetchThingSummary(
   id: string,
-  options?: { signal?: AbortSignal; authToken?: string },
+  options?: BggRequestOptions,
 ): Promise<BggThingSummary> {
   const query = new URLSearchParams({ id })
   const doc = await fetchXml(`/thing?${query.toString()}`, options)
