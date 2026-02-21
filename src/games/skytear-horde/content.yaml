@@ -16,58 +16,78 @@ heroPrecons:
   # Core box (CORE)
   - id: Kurumo Warriors
     box: core
+    aliases: [KWar]
   - id: Taulot Followers
     box: core
+    aliases: [TFoll]
   - id: Liothan Shapeshifters
     box: core
+    aliases: [LShap]
   - id: Nupten Illusionists
     box: core
+    aliases: [NIllu]
 
   - id: Kurumo Artificers
     box: monoliths
+    aliases: [KArti]
   - id: Taulot Custodians
     box: monoliths
+    aliases: [TCust]
   - id: Liothan Enforcers
     box: monoliths
+    aliases: [LEnfo]
   - id: Nupten Diviners
     box: monoliths
-
+    aliases: [NDivi]
   - id: Kurumo Disciples
     box: campaigns
+    aliases: [KDisc]
   - id: Taulot Dwellers
     box: campaigns
+    aliases: [TDwel]
   - id: Liothan Zealots
     box: campaigns
-
+    aliases: [LZeal]
 
 
 enemyPrecons:
   - id: Undead
     box: core
+    aliases: [Undea]
   - id: Renegade
     box: core
+    aliases: [Reneg]
   - id: Predator
     box: core
+    aliases: [Preda]
   - id: Nightmare
     box: core
+    aliases: [Night]
 
   - id: Sinklings
     box: monoliths
+    aliases: [Sinkl]
   - id: Slitherers
     box: monoliths
+    aliases: [Slith]
   - id: Monoliths
     box: monoliths
+    aliases: [Monol]
   - display: The Brood
     id: Brood
-    aliases: [Broods]
+    aliases: [Brood]
     box: monoliths
 
   - id: Animerk
     box: campaigns
+    aliases: [Anim]
   - id: Faefolk
     box: campaigns
+    aliases: [Faefo]
   - display: Skybooter
     id: Skybooters
     box: campaigns
+    aliases: [Skybo]
   - id: Scaleson
     box: campaigns
+    aliases: [Scale]

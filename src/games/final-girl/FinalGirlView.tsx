@@ -104,6 +104,7 @@ export default function FinalGirlView(props: {
     }
     return result
   })
+  const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
 
   const achievements = createMemo(() =>
     computeGameAchievements('finalGirl', props.plays, props.username),
@@ -419,6 +420,17 @@ export default function FinalGirlView(props: {
           {' • '}Showing: <span class="mono">{displayFinalGirlPlays().toLocaleString()}</span>
           {' • '}Owned villains: <span class="mono">{ownedContent.ownedVillains.size}</span>
           {' • '}Owned locations: <span class="mono">{ownedContent.ownedLocations.size}</span>
+          {' • '}
+          <button
+            class="linkButton"
+            type="button"
+            disabled={allPlayIds().length === 0}
+            onClick={() =>
+              props.onOpenPlays({ title: 'Final Girl • All plays', playIds: allPlayIds() })
+            }
+          >
+            View all plays
+          </button>
         </div>
       </div>
 

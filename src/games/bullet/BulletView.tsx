@@ -33,6 +33,7 @@ export default function BulletView(props: {
   )
 
   const entries = createMemo(() => getBulletEntries(props.plays, props.username))
+  const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
 
   const achievements = createMemo(() =>
     computeGameAchievements('bullet', props.plays, props.username),
@@ -175,6 +176,16 @@ export default function BulletView(props: {
             <div class="metaPlays">
               Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
             </div>
+            <button
+              class="linkButton"
+              type="button"
+              disabled={allPlayIds().length === 0}
+              onClick={() =>
+                props.onOpenPlays({ title: 'Bullet • All plays', playIds: allPlayIds() })
+              }
+            >
+              View all plays
+            </button>
           </div>
           <div class="muted">Boss mode: boss × my heroine</div>
         </div>

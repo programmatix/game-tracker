@@ -33,6 +33,7 @@ export default function TooManyBonesView(props: {
   )
 
   const entries = createMemo(() => getTooManyBonesEntries(props.plays, props.username))
+  const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
 
   const achievements = createMemo(() =>
     computeGameAchievements('tooManyBones', props.plays, props.username),
@@ -178,6 +179,19 @@ export default function TooManyBonesView(props: {
             <div class="metaPlays">
               Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
             </div>
+            <button
+              class="linkButton"
+              type="button"
+              disabled={allPlayIds().length === 0}
+              onClick={() =>
+                props.onOpenPlays({
+                  title: 'Too Many Bones • All plays',
+                  playIds: allPlayIds(),
+                })
+              }
+            >
+              View all plays
+            </button>
           </div>
           <div class="muted">Tyrant mode: tyrant × my gearloc</div>
         </div>

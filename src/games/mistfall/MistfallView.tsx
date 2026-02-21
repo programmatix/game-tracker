@@ -162,6 +162,7 @@ export default function MistfallView(props: {
 
     return result
   })
+  const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
 
   const achievements = createMemo(() =>
     computeGameAchievements('mistfall', props.plays, props.username),
@@ -307,6 +308,17 @@ export default function MistfallView(props: {
         />
         <div class="meta">
           Mistfall plays in dataset: <span class="mono">{totalPlays().toLocaleString()}</span>
+          {' • '}
+          <button
+            class="linkButton"
+            type="button"
+            disabled={allPlayIds().length === 0}
+            onClick={() =>
+              props.onOpenPlays({ title: 'Mistfall • All plays', playIds: allPlayIds() })
+            }
+          >
+            View all plays
+          </button>
         </div>
       </div>
 

@@ -51,6 +51,7 @@ export default function SpiritIslandView(props: {
   const entries = createMemo(() =>
     props.spiritIslandSessions ? getSpiritIslandEntriesFromSessions(props.spiritIslandSessions) : [],
   )
+  const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
 
   const achievements = createMemo(() =>
     computeGameAchievements('spiritIsland', props.plays, props.username, {
@@ -255,6 +256,20 @@ export default function SpiritIslandView(props: {
         <div class="meta">
           Spirit Island plays in dataset:{' '}
           <span class="mono">{totalSpiritIslandPlays().toLocaleString()}</span>
+          {' • '}
+          <button
+            class="linkButton"
+            type="button"
+            disabled={allPlayIds().length === 0}
+            onClick={() =>
+              props.onOpenPlays({
+                title: 'Spirit Island • All plays',
+                playIds: allPlayIds(),
+              })
+            }
+          >
+            View all plays
+          </button>
         </div>
       </div>
 

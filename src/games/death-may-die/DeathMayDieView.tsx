@@ -33,6 +33,7 @@ export default function DeathMayDieView(props: {
   )
 
   const entries = createMemo(() => getDeathMayDieEntries(props.plays, props.username))
+  const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
 
   const achievements = createMemo(() =>
     computeGameAchievements('deathMayDie', props.plays, props.username),
@@ -219,6 +220,20 @@ export default function DeathMayDieView(props: {
         <div class="meta">
           Cthulhu: Death May Die plays in dataset:{' '}
           <span class="mono">{totalPlays().toLocaleString()}</span>
+          {' • '}
+          <button
+            class="linkButton"
+            type="button"
+            disabled={allPlayIds().length === 0}
+            onClick={() =>
+              props.onOpenPlays({
+                title: 'Cthulhu: Death May Die • All plays',
+                playIds: allPlayIds(),
+              })
+            }
+          >
+            View all plays
+          </button>
         </div>
       </div>
 
