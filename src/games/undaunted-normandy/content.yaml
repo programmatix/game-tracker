@@ -1,0 +1,37 @@
+# Undaunted: Normandy
+#
+# Use BG Stats player color tags like:
+#   US／Normandy Scenario 3
+#   Germany／Normandy Scenario 2
+# or keyed:
+#   F: US／S: 3
+
+scenarios:
+  - Normandy Scenario 1
+  - Normandy Scenario 2
+  - Normandy Scenario 3
+  - Normandy Scenario 4
+  - Normandy Scenario 5
+  - Normandy Scenario 6
+  - Normandy Scenario 7
+  - Normandy Scenario 8
+  - Normandy Scenario 9
+  - Normandy Scenario 10
+  - Normandy Scenario 11
+  - Normandy Scenario 12
+
+sides:
+  - display: US
+    id: US
+    aliases:
+      - USA
+      - American
+      - Americans
+      - Allied
+      - Allies
+  - display: Germans
+    id: DE
+    aliases:
+      - Germany
+      - German
+      - Axis

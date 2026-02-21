@@ -17,6 +17,7 @@ import SpiritIslandView from './games/spirit-island/SpiritIslandView'
 import BulletView from './games/bullet/BulletView'
 import TooManyBonesView from './games/too-many-bones/TooManyBonesView'
 import MageKnightView from './games/mage-knight/MageKnightView'
+import UndauntedNormandyView from './games/undaunted-normandy/UndauntedNormandyView'
 import UnsettledView from './games/unsettled/UnsettledView'
 import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
 import AchievementsView from './AchievementsView'
@@ -59,6 +60,7 @@ type MainTab =
   | 'bullet'
   | 'tooManyBones'
   | 'mageKnight'
+  | 'undauntedNormandy'
   | 'achievements'
   | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail' | 'drilldown'
@@ -80,6 +82,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'bullet',
   'tooManyBones',
   'mageKnight',
+  'undauntedNormandy',
   'achievements',
   'plays',
 ]
@@ -937,6 +940,21 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'undauntedNormandy' }}
+                  onClick={() => {
+                    if (mainTab() === 'undauntedNormandy') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'undauntedNormandy' }
+                    setMainTab('undauntedNormandy')
+                    pushNavState(next)
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'undauntedNormandy'}
+                >
+                  Undaunted: Normandy
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'achievements' }}
                   onClick={() => {
                     if (mainTab() === 'achievements') return
@@ -1186,6 +1204,18 @@ function App() {
 
           <Show when={mainTab() === 'mageKnight'}>
             <MageKnightView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'undauntedNormandy'}>
+            <UndauntedNormandyView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}

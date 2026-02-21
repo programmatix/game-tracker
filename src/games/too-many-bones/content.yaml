@@ -6,59 +6,90 @@
 gearlocs:
   - display: Boomer
     id: Boomer
+    group: Core
   - display: Picket
     id: Picket
+    group: Core
   - display: Tantrum
     id: Tantrum
-  - display: Patch
-    id: Patch
+    group: Core
+  - display: Patches
+    id: Patches
+    group: Core
+
   - display: Ghillie
     id: Ghillie
+    group: AddOn
   - display: Tink
     id: Tink
+    group: AddOn
   - display: Nugget
     id: Nugget
+    group: AddOn
   - display: Gasket
     id: Gasket
+    group: AddOn
   - display: Dart
     id: Dart
+    group: AddOn
+  
   - display: Stanza
-    id: Stanza
+    id: Figment
+    group: Unbreakable
+  - id: Gale
+    group: Unbreakable
+
+  - id: Stanza
+    group: Undertow
   - display: Duster
     id: Duster
+    group: Undertow
+
 tyrants:
   - display: Drellen
     id: Drellen
+    group: Core
   - display: Mulmesh
     id: Mulmesh
+    group: Core
   - display: Nom
     id: Nom
-  - display: The Goblin Queen
-    id: GoblinQueen
+    group: Core
   - display: Gendricks
     id: Gendricks
-  - display: Zogue
-    id: Zogue
-  - display: Riffle
-    id: Riffle
+    group: Core
+  - display: The Goblin King
+    id: GoblinKing
+    group: Core
+
+  - display: The Goblin Queen
+    id: GoblinQueen
+    group: Undertow
   - display: Barnacle
     id: Barnacle
-  - display: Duster
-    id: Duster
+    group: Undertow
   - display: Vol'Kesh
     id: VolKesh
-    aliases: [Vol’Kesh]
+    group: Undertow
   - display: Kollossum
     id: Kollossum
+    group: Undertow
   - display: Nobulous
     id: Nobulous
+    group: Undertow
+
   - display: Rok & Rol
     id: RokAndRol
+    group: Unbreakable
   - display: Domina
     id: Domina
+    group: Unbreakable
   - display: Cinder
     id: Cinder
+    group: Unbreakable
   - display: Gavenkog
     id: Gavenkog
+    group: Unbreakable
   - display: Nexus
     id: Nexus
+    group: Unbreakable

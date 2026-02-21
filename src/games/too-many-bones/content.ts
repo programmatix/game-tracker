@@ -6,6 +6,8 @@ export type TooManyBonesContent = {
   tyrants: string[]
   gearlocsById: Map<string, string>
   tyrantsById: Map<string, string>
+  gearlocGroupByName: Map<string, string>
+  tyrantGroupByName: Map<string, string>
 }
 
 type TooManyBonesYamlItem =
@@ -14,6 +16,7 @@ type TooManyBonesYamlItem =
       display?: string
       id?: string
       aliases?: string[]
+      group?: string
     }
 
 function normalizeId(value: string): string {
@@ -30,6 +33,8 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
     const tyrants: string[] = []
     const gearlocsById = new Map<string, string>()
     const tyrantsById = new Map<string, string>()
+    const gearlocGroupByName = new Map<string, string>()
+    const tyrantGroupByName = new Map<string, string>()
 
     const applyAliases = (map: Map<string, string>, display: string, tokens: string[]) => {
       for (const token of tokens) {
@@ -39,7 +44,12 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
       }
     }
 
-    const applyItem = (item: TooManyBonesYamlItem, list: string[], map: Map<string, string>) => {
+    const applyItem = (
+      item: TooManyBonesYamlItem,
+      list: string[],
+      map: Map<string, string>,
+      groupByName: Map<string, string>,
+    ) => {
       if (typeof item === 'string') {
         const display = item.trim()
         if (!display) return
@@ -54,16 +64,27 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
           .trim()
       if (!display) return
       list.push(display)
+      const group = typeof item.group === 'string' ? item.group.trim() : ''
+      if (group) groupByName.set(display, group)
       const aliases = Array.isArray(item.aliases)
         ? item.aliases.filter((alias): alias is string => typeof alias === 'string')
         : []
       applyAliases(map, display, [display, ...(typeof item.id === 'string' ? [item.id] : []), ...aliases])
     }
 
-    for (const item of yaml.gearlocs as TooManyBonesYamlItem[]) applyItem(item, gearlocs, gearlocsById)
-    for (const item of yaml.tyrants as TooManyBonesYamlItem[]) applyItem(item, tyrants, tyrantsById)
+    for (const item of yaml.gearlocs as TooManyBonesYamlItem[])
+      applyItem(item, gearlocs, gearlocsById, gearlocGroupByName)
+    for (const item of yaml.tyrants as TooManyBonesYamlItem[])
+      applyItem(item, tyrants, tyrantsById, tyrantGroupByName)
 
-    return { gearlocs, tyrants, gearlocsById, tyrantsById }
+    return {
+      gearlocs,
+      tyrants,
+      gearlocsById,
+      tyrantsById,
+      gearlocGroupByName,
+      tyrantGroupByName,
+    }
   }
 
   throw new Error(

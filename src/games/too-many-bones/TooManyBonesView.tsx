@@ -144,6 +144,14 @@ export default function TooManyBonesView(props: {
 
   const matrixRows = createMemo(() => (flipAxes() ? gearlocKeysMine() : tyrantKeys()))
   const matrixCols = createMemo(() => (flipAxes() ? tyrantKeys() : gearlocKeysMine()))
+  const rowGroupBy = (row: string) =>
+    flipAxes()
+      ? tooManyBonesContent.gearlocGroupByName.get(row)
+      : tooManyBonesContent.tyrantGroupByName.get(row)
+  const colGroupBy = (col: string) =>
+    flipAxes()
+      ? tooManyBonesContent.tyrantGroupByName.get(col)
+      : tooManyBonesContent.gearlocGroupByName.get(col)
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -222,6 +230,7 @@ export default function TooManyBonesView(props: {
             plays={tyrantCounts()}
             wins={tyrantWins()}
             keys={tyrantKeys()}
+            groupBy={(tyrant) => tooManyBonesContent.tyrantGroupByName.get(tyrant)}
             getNextAchievement={(key) => getNextAchievement('tyrantWins', key)}
             onPlaysClick={(tyrant) =>
               props.onOpenPlays({
@@ -235,6 +244,7 @@ export default function TooManyBonesView(props: {
             plays={gearlocCountsMine()}
             wins={gearlocWinsMine()}
             keys={gearlocKeysMine()}
+            groupBy={(gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc)}
             getNextAchievement={(key) => getNextAchievement('gearlocPlays', key)}
             onPlaysClick={(gearloc) =>
               props.onOpenPlays({
@@ -247,6 +257,7 @@ export default function TooManyBonesView(props: {
             title="All gearlocs"
             plays={gearlocCountsAll()}
             keys={gearlocKeysAll()}
+            groupBy={(gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc)}
             onPlaysClick={(gearloc) =>
               props.onOpenPlays({
                 title: `Too Many Bones • Gearloc: ${gearloc}`,
@@ -284,6 +295,8 @@ export default function TooManyBonesView(props: {
             cols={matrixCols()}
             rowHeader={flipAxes() ? 'Gearloc' : 'Tyrant'}
             colHeader={flipAxes() ? 'Tyrant' : 'Gearloc'}
+            rowGroupBy={rowGroupBy}
+            colGroupBy={colGroupBy}
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }
