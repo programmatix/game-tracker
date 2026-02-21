@@ -120,6 +120,31 @@ export default function SpiritIslandView(props: {
     return spiritComplexityByKey().get(key)
   }
 
+  const spiritGroupByKey = createMemo(() => {
+    const map = new Map<string, string>()
+    for (const spirit of spiritIslandMappings.spirits) {
+      const key = normalizeAchievementItemLabel(spirit.display).toLowerCase()
+      if (!key) continue
+      map.set(key, spirit.group)
+    }
+    return map
+  })
+
+  function getSpiritGroup(spirit: string): string | undefined {
+    const key = normalizeAchievementItemLabel(spirit).toLowerCase()
+    return spiritGroupByKey().get(key)
+  }
+
+  const spiritGroupOrder = createMemo(() => {
+    const order = new Map<string, number>()
+    for (const spirit of spiritIslandMappings.spirits) {
+      const group = spirit.group.trim().toLowerCase()
+      if (!group || order.has(group)) continue
+      order.set(group, order.size)
+    }
+    return order
+  })
+
   const isKnownSpiritComplexity = (
     value: string,
   ): value is (typeof SPIRIT_COMPLEXITY_ORDER)[number] =>
@@ -166,6 +191,11 @@ export default function SpiritIslandView(props: {
   const spiritKeysByComplexityLevel = createMemo(() => {
     const counts = spiritCounts()
     const sortWithinGroup = (a: string, b: string) => {
+      const aGroup = (getSpiritGroup(a) || '').trim().toLowerCase()
+      const bGroup = (getSpiritGroup(b) || '').trim().toLowerCase()
+      const byGroup = (spiritGroupOrder().get(aGroup) ?? Number.MAX_SAFE_INTEGER) - (spiritGroupOrder().get(bGroup) ?? Number.MAX_SAFE_INTEGER)
+      if (byGroup !== 0) return byGroup
+
       const delta = (counts[b] ?? 0) - (counts[a] ?? 0)
       if (delta !== 0) return delta
       return a.localeCompare(b)
@@ -189,6 +219,22 @@ export default function SpiritIslandView(props: {
     for (const complexity of SPIRIT_COMPLEXITY_ORDER) grouped[complexity].sort(sortWithinGroup)
     other.sort(sortWithinGroup)
     return { grouped, other }
+  })
+
+  const spiritKeysByGroup = createMemo(() => {
+    const all = spiritKeysByComplexity()
+    const counts = spiritCounts()
+
+    return all.slice().sort((a, b) => {
+      const aGroup = (getSpiritGroup(a) || '').trim().toLowerCase()
+      const bGroup = (getSpiritGroup(b) || '').trim().toLowerCase()
+      const byGroup = (spiritGroupOrder().get(aGroup) ?? Number.MAX_SAFE_INTEGER) - (spiritGroupOrder().get(bGroup) ?? Number.MAX_SAFE_INTEGER)
+      if (byGroup !== 0) return byGroup
+
+      const delta = (counts[b] ?? 0) - (counts[a] ?? 0)
+      if (delta !== 0) return delta
+      return a.localeCompare(b)
+    })
   })
 
   const adversaryKeys = createMemo(() =>
@@ -226,8 +272,8 @@ export default function SpiritIslandView(props: {
     return pickBestAvailableAchievementForTrackIds(achievements(), trackIds)
   }
 
-  const matrixRows = createMemo(() => (flipAxes() ? adversaryKeys() : spiritKeysByComplexity()))
-  const matrixCols = createMemo(() => (flipAxes() ? spiritKeysByComplexity() : adversaryKeys()))
+  const matrixRows = createMemo(() => (flipAxes() ? adversaryKeys() : spiritKeysByGroup()))
+  const matrixCols = createMemo(() => (flipAxes() ? spiritKeysByGroup() : adversaryKeys()))
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -306,6 +352,7 @@ export default function SpiritIslandView(props: {
                 plays={spiritCounts()}
                 wins={spiritWins()}
                 keys={spiritKeysByComplexityLevel().grouped[complexity]}
+                groupBy={getSpiritGroup}
                 getNextAchievement={getSpiritNextAchievement}
               />
             )}
@@ -316,6 +363,7 @@ export default function SpiritIslandView(props: {
               plays={spiritCounts()}
               wins={spiritWins()}
               keys={spiritKeysByComplexityLevel().other}
+              groupBy={getSpiritGroup}
               getNextAchievement={getSpiritNextAchievement}
             />
           </Show>
@@ -357,8 +405,8 @@ export default function SpiritIslandView(props: {
             hideCounts={hideCounts()}
             rowHeader={flipAxes() ? 'Adversary' : 'Spirit'}
             colHeader={flipAxes() ? 'Spirit' : 'Adversary'}
-            rowGroupBy={flipAxes() ? undefined : getSpiritComplexity}
-            colGroupBy={flipAxes() ? getSpiritComplexity : undefined}
+            rowGroupBy={flipAxes() ? undefined : getSpiritGroup}
+            colGroupBy={flipAxes() ? getSpiritGroup : undefined}
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }

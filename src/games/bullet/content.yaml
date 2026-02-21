@@ -53,51 +53,53 @@ heroines:
     id: Memory
     set: Star
 bosses:
-  - display: History
-    id: History
+  - display: Collective Consciousness
+    id: Collective
     set: Star
-  - display: 3 - That Which Points
-    id: ThatWhichPoints
+  - id: Behemoth
     set: Star
-  - display: Fugue in D Minor
-    id: Fugue
+  - display: Celestial Cleaning Inc
+    id: Celestial
     set: Star
-  - display: Ghost in the Machine
-    id: GhostMachine
+  - display: Planil Latent Talenti
+    id: PlanilBoss
     set: Star
-  - display: Hell on Wheels
-    id: HellOnWheels
+  - display: Starry Night Memory
+    id: StarryNight
     set: Star
-  - display: Mecha Mary
-    id: MechaMary
+  - display: Knife & Fork
+    id: KnifeFork
     set: Star
+  - display: Justiciar Doe
+    id: Justiciar
+    set: Star
+  - display: The Black Rose
+    id: BlackRose
+    set: Star
+
+
+
   - display: The Bauk
     id: Bauk
-    set: Star
+    set: Heart
+  - display: Mecha Mary
+    id: MechaMary
+    set: Heart
+  - display: Hell on Wheels
+    id: HellOnWheels
+    set: Heart
+  - display: Fugue in D Minor
+    id: Fugue
+    set: Heart
   - display: The Fanged Sun
     id: FangedSun
-    set: Star
+    set: Heart
   - display: The Yakuza
     id: Yakuza
     set: Heart
-  - display: Hyper Mode
-    id: HyperMode
+  - display: Ghost in the Machine
+    id: GhostMachine
     set: Heart
-  - display: Red Barrel
-    id: RedBarrel
-    set: Heart
-  - display: Sora
-    id: Sora
-    set: Heart
-  - display: The Forest Witch
-    id: ForestWitch
-    set: Heart
-  - display: Behemoth
-    id: Behemoth
-    set: Heart
-  - display: Chaos Incarnate
-    id: ChaosInc
-    set: Heart
-  - display: Elurophobia
-    id: Elurophobia
+  - display: 3 - That Which Points
+    id: ThatWhichPoints
     set: Heart

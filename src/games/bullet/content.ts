@@ -6,6 +6,8 @@ export type BulletContent = {
   bosses: string[]
   heroinesById: Map<string, string>
   bossesById: Map<string, string>
+  heroineSetByName: Map<string, string>
+  bossSetByName: Map<string, string>
 }
 
 type BulletYamlItem =
@@ -14,6 +16,7 @@ type BulletYamlItem =
       display: string
       id?: string
       aliases?: string[]
+      set?: string
     }
 
 function normalizeId(value: string): string {
@@ -30,6 +33,8 @@ export function parseBulletContent(text: string): BulletContent {
     const bosses: string[] = []
     const heroinesById = new Map<string, string>()
     const bossesById = new Map<string, string>()
+    const heroineSetByName = new Map<string, string>()
+    const bossSetByName = new Map<string, string>()
 
     const applyAliases = (map: Map<string, string>, display: string, tokens: string[]) => {
       for (const token of tokens) {
@@ -39,7 +44,12 @@ export function parseBulletContent(text: string): BulletContent {
       }
     }
 
-    const applyItem = (item: BulletYamlItem, list: string[], map: Map<string, string>) => {
+    const applyItem = (
+      item: BulletYamlItem,
+      list: string[],
+      map: Map<string, string>,
+      setByName: Map<string, string>,
+    ) => {
       if (typeof item === 'string') {
         const display = item.trim()
         if (!display) return
@@ -52,16 +62,20 @@ export function parseBulletContent(text: string): BulletContent {
       const display = item.display.trim()
       if (!display) return
       list.push(display)
+      const set = typeof item.set === 'string' ? item.set.trim() : ''
+      if (set) setByName.set(display, set)
       const aliases = Array.isArray(item.aliases)
         ? item.aliases.filter((alias): alias is string => typeof alias === 'string')
         : []
       applyAliases(map, display, [display, ...(typeof item.id === 'string' ? [item.id] : []), ...aliases])
     }
 
-    for (const item of yaml.heroines as BulletYamlItem[]) applyItem(item, heroines, heroinesById)
-    for (const item of yaml.bosses as BulletYamlItem[]) applyItem(item, bosses, bossesById)
+    for (const item of yaml.heroines as BulletYamlItem[])
+      applyItem(item, heroines, heroinesById, heroineSetByName)
+    for (const item of yaml.bosses as BulletYamlItem[])
+      applyItem(item, bosses, bossesById, bossSetByName)
 
-    return { heroines, bosses, heroinesById, bossesById }
+    return { heroines, bosses, heroinesById, bossesById, heroineSetByName, bossSetByName }
   }
 
   throw new Error(

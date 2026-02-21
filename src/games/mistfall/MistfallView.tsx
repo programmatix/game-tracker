@@ -183,6 +183,38 @@ export default function MistfallView(props: {
     return merged
   }
 
+  const sortByGroupThenCount = (
+    keys: string[],
+    counts: Record<string, number>,
+    groupByKey: Map<string, string>,
+    canonical: string[],
+  ): string[] => {
+    const groupOrder = new Map<string, number>()
+    for (const key of canonical) {
+      const group = (groupByKey.get(key) || '').trim().toLowerCase()
+      if (!group || groupOrder.has(group)) continue
+      groupOrder.set(group, groupOrder.size)
+    }
+
+    const canonicalIndex = new Map<string, number>()
+    canonical.forEach((key, index) => canonicalIndex.set(key, index))
+
+    return keys.slice().sort((a, b) => {
+      const aGroup = (groupByKey.get(a) || '').trim().toLowerCase()
+      const bGroup = (groupByKey.get(b) || '').trim().toLowerCase()
+      const byGroup = (groupOrder.get(aGroup) ?? Number.MAX_SAFE_INTEGER) - (groupOrder.get(bGroup) ?? Number.MAX_SAFE_INTEGER)
+      if (byGroup !== 0) return byGroup
+
+      const byCount = (counts[b] ?? 0) - (counts[a] ?? 0)
+      if (byCount !== 0) return byCount
+
+      const byCanonical = (canonicalIndex.get(a) ?? Number.MAX_SAFE_INTEGER) - (canonicalIndex.get(b) ?? Number.MAX_SAFE_INTEGER)
+      if (byCanonical !== 0) return byCanonical
+
+      return a.localeCompare(b)
+    })
+  }
+
   const heroCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.hero, entry.quantity)
@@ -271,16 +303,36 @@ export default function MistfallView(props: {
     ])
   }
 
-  const matrixRows = createMemo(() =>
+  const heroKeys = createMemo(() => {
+    const merged = mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes)
+    return sortByGroupThenCount(
+      merged,
+      heroCounts(),
+      mappings.heroGroupByName,
+      mappings.allHeroes,
+    )
+  })
+
+  const questKeys = createMemo(() => {
+    const merged = mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests)
+    return sortByGroupThenCount(
+      merged,
+      questCounts(),
+      mappings.questGroupByName,
+      mappings.allQuests,
+    )
+  })
+
+  const matrixRows = createMemo(() => (flipAxes() ? questKeys() : heroKeys()))
+  const matrixCols = createMemo(() => (flipAxes() ? heroKeys() : questKeys()))
+  const rowGroupBy = (row: string) =>
     flipAxes()
-      ? mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests)
-      : mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes),
-  )
-  const matrixCols = createMemo(() =>
+      ? mappings.questGroupByName.get(row)
+      : mappings.heroGroupByName.get(row)
+  const colGroupBy = (col: string) =>
     flipAxes()
-      ? mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes)
-      : mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests),
-  )
+      ? mappings.heroGroupByName.get(col)
+      : mappings.questGroupByName.get(col)
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -346,7 +398,8 @@ export default function MistfallView(props: {
             title="Heroes"
             plays={heroCounts()}
             wins={heroWins()}
-            keys={mergeKnownKeys(sortKeysByCountDesc(heroCounts()), mappings.allHeroes)}
+            keys={heroKeys()}
+            groupBy={(hero) => mappings.heroGroupByName.get(hero)}
             getNextAchievement={getHeroNextAchievement}
             onPlaysClick={(hero) =>
               props.onOpenPlays({
@@ -359,7 +412,8 @@ export default function MistfallView(props: {
             title="Quests"
             plays={questCounts()}
             wins={questWins()}
-            keys={mergeKnownKeys(sortKeysByCountDesc(questCounts()), mappings.allQuests)}
+            keys={questKeys()}
+            groupBy={(quest) => mappings.questGroupByName.get(quest)}
             getNextAchievement={getQuestNextAchievement}
             onPlaysClick={(quest) =>
               props.onOpenPlays({
@@ -399,6 +453,8 @@ export default function MistfallView(props: {
             hideCounts={hideCounts()}
             rowHeader={flipAxes() ? 'Quest' : 'Hero'}
             colHeader={flipAxes() ? 'Hero' : 'Quest'}
+            rowGroupBy={rowGroupBy}
+            colGroupBy={colGroupBy}
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }

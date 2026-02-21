@@ -267,6 +267,7 @@ export default function SkytearHordeView(props: {
             title="Hero precons"
             plays={heroCounts()}
             keys={heroKeys()}
+            groupBy={(hero) => skytearHordeContent.heroBoxByPrecon.get(hero)}
             onPlaysClick={(hero) =>
               props.onOpenPlays({
                 title: `Skytear Horde • Hero precon: ${hero}`,
@@ -281,6 +282,7 @@ export default function SkytearHordeView(props: {
             title="Enemy precons"
             plays={enemyCounts()}
             keys={enemyKeys()}
+            groupBy={(enemy) => skytearHordeContent.enemyBoxByPrecon.get(enemy)}
             onPlaysClick={(enemy) =>
               props.onOpenPlays({
                 title: `Skytear Horde • Enemy precon: ${enemy}`,

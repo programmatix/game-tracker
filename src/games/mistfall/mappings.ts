@@ -5,6 +5,8 @@ export type MistfallMappings = {
   questsById: Map<string, string>
   allHeroes: string[]
   allQuests: string[]
+  heroGroupByName: Map<string, string>
+  questGroupByName: Map<string, string>
 }
 
 export function normalizeMistfallId(value: string): string {
@@ -21,6 +23,7 @@ type MistfallYamlItem =
       display: string
       id?: string
       aliases?: string[]
+      group?: string
     }
 
 export function parseMistfallMappings(text: string): MistfallMappings {
@@ -30,6 +33,8 @@ export function parseMistfallMappings(text: string): MistfallMappings {
     const questsById = new Map<string, string>()
     const allHeroes: string[] = []
     const allQuests: string[] = []
+    const heroGroupByName = new Map<string, string>()
+    const questGroupByName = new Map<string, string>()
     const seenHeroNames = new Set<string>()
     const seenQuestNames = new Set<string>()
 
@@ -46,6 +51,7 @@ export function parseMistfallMappings(text: string): MistfallMappings {
       map: Map<string, string>,
       list: string[],
       seen: Set<string>,
+      groupByName: Map<string, string>,
     ) => {
       if (typeof item === 'string') {
         const display = item.trim()
@@ -62,6 +68,8 @@ export function parseMistfallMappings(text: string): MistfallMappings {
       if (!isRecord(item) || typeof item.display !== 'string') return
       const display = item.display.trim()
       if (!display) return
+      const group = typeof item.group === 'string' ? item.group.trim() : ''
+      if (group) groupByName.set(display, group)
       const aliases = Array.isArray(item.aliases)
         ? item.aliases.filter((alias): alias is string => typeof alias === 'string')
         : []
@@ -74,13 +82,20 @@ export function parseMistfallMappings(text: string): MistfallMappings {
     }
 
     for (const item of yaml.heroes as MistfallYamlItem[]) {
-      applyItem(item, heroesById, allHeroes, seenHeroNames)
+      applyItem(item, heroesById, allHeroes, seenHeroNames, heroGroupByName)
     }
     for (const item of yaml.quests as MistfallYamlItem[]) {
-      applyItem(item, questsById, allQuests, seenQuestNames)
+      applyItem(item, questsById, allQuests, seenQuestNames, questGroupByName)
     }
 
-    return { heroesById, questsById, allHeroes, allQuests }
+    return {
+      heroesById,
+      questsById,
+      allHeroes,
+      allQuests,
+      heroGroupByName,
+      questGroupByName,
+    }
   }
 
   throw new Error(

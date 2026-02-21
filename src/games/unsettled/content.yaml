@@ -17,9 +17,12 @@ planets:
     id: W
     aliases:
       - Wenora
+  - display: Blackout
+    id: B
+  - display: Strannos
+    id: S
 
 tasks:
   - A
   - B
   - C
-

@@ -132,15 +132,71 @@ export default function BulletView(props: {
     return ids
   })
 
-  const bossKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(bossCounts()), bulletContent.bosses),
-  )
-  const heroineKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(heroineCountsMine()), bulletContent.heroines),
-  )
+  const sortByGroupThenCount = (
+    keys: string[],
+    counts: Record<string, number>,
+    groupByKey: Map<string, string>,
+    canonical: string[],
+  ): string[] => {
+    const groupOrder = new Map<string, number>()
+    for (const key of canonical) {
+      const group = (groupByKey.get(key) || '').trim().toLowerCase()
+      if (!group || groupOrder.has(group)) continue
+      groupOrder.set(group, groupOrder.size)
+    }
+
+    const canonicalIndex = new Map<string, number>()
+    canonical.forEach((key, index) => canonicalIndex.set(key, index))
+
+    return keys.slice().sort((a, b) => {
+      const aGroup = (groupByKey.get(a) || '').trim().toLowerCase()
+      const bGroup = (groupByKey.get(b) || '').trim().toLowerCase()
+      const byGroup = (groupOrder.get(aGroup) ?? Number.MAX_SAFE_INTEGER) - (groupOrder.get(bGroup) ?? Number.MAX_SAFE_INTEGER)
+      if (byGroup !== 0) return byGroup
+
+      const byCount = (counts[b] ?? 0) - (counts[a] ?? 0)
+      if (byCount !== 0) return byCount
+
+      const byCanonical = (canonicalIndex.get(a) ?? Number.MAX_SAFE_INTEGER) - (canonicalIndex.get(b) ?? Number.MAX_SAFE_INTEGER)
+      if (byCanonical !== 0) return byCanonical
+
+      return a.localeCompare(b)
+    })
+  }
+
+  const bossKeys = createMemo(() => {
+    const merged = mergeCanonicalKeys(sortKeysByCountDesc(bossCounts()), bulletContent.bosses)
+    return sortByGroupThenCount(merged, bossCounts(), bulletContent.bossSetByName, bulletContent.bosses)
+  })
+  const heroineKeys = createMemo(() => {
+    const merged = mergeCanonicalKeys(sortKeysByCountDesc(heroineCountsMine()), bulletContent.heroines)
+    return sortByGroupThenCount(
+      merged,
+      heroineCountsMine(),
+      bulletContent.heroineSetByName,
+      bulletContent.heroines,
+    )
+  })
+  const heroineKeysAll = createMemo(() => {
+    const merged = mergeCanonicalKeys(sortKeysByCountDesc(heroineCountsAll()), bulletContent.heroines)
+    return sortByGroupThenCount(
+      merged,
+      heroineCountsAll(),
+      bulletContent.heroineSetByName,
+      bulletContent.heroines,
+    )
+  })
 
   const matrixRows = createMemo(() => (flipAxes() ? heroineKeys() : bossKeys()))
   const matrixCols = createMemo(() => (flipAxes() ? bossKeys() : heroineKeys()))
+  const rowGroupBy = (row: string) =>
+    flipAxes()
+      ? bulletContent.heroineSetByName.get(row)
+      : bulletContent.bossSetByName.get(row)
+  const colGroupBy = (col: string) =>
+    flipAxes()
+      ? bulletContent.bossSetByName.get(col)
+      : bulletContent.heroineSetByName.get(col)
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -217,6 +273,7 @@ export default function BulletView(props: {
             plays={bossCounts()}
             wins={bossWins()}
             keys={bossKeys()}
+            groupBy={(boss) => bulletContent.bossSetByName.get(boss)}
             getNextAchievement={(boss) => getNextAchievement('bossWins', boss)}
             onPlaysClick={(boss) =>
               props.onOpenPlays({
@@ -230,6 +287,7 @@ export default function BulletView(props: {
             plays={heroineCountsMine()}
             wins={heroineWinsMine()}
             keys={heroineKeys()}
+            groupBy={(heroine) => bulletContent.heroineSetByName.get(heroine)}
             getNextAchievement={(heroine) => getNextAchievement('heroinePlays', heroine)}
             onPlaysClick={(heroine) =>
               props.onOpenPlays({
@@ -241,7 +299,8 @@ export default function BulletView(props: {
           <CountTable
             title="All Heroines"
             plays={heroineCountsAll()}
-            keys={mergeCanonicalKeys(sortKeysByCountDesc(heroineCountsAll()), bulletContent.heroines)}
+            keys={heroineKeysAll()}
+            groupBy={(heroine) => bulletContent.heroineSetByName.get(heroine)}
             onPlaysClick={(heroine) =>
               props.onOpenPlays({
                 title: `Bullet • Heroine: ${heroine}`,
@@ -278,6 +337,8 @@ export default function BulletView(props: {
             cols={matrixCols()}
             rowHeader={flipAxes() ? 'Heroine' : 'Boss'}
             colHeader={flipAxes() ? 'Boss' : 'Heroine'}
+            rowGroupBy={rowGroupBy}
+            colGroupBy={colGroupBy}
             maxCount={matrixMax()}
             hideCounts={hideCounts()}
             getCount={(row, col) =>
