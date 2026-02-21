@@ -1,7 +1,9 @@
 import type { BggPlay } from '../../bgg'
 import {
+  isTooManyBonesDifficultyToken,
   isTooManyBonesGearlocToken,
   isTooManyBonesTyrantToken,
+  normalizeTooManyBonesDifficulty,
   parseTooManyBonesPlayerColor,
 } from './tooManyBones'
 
@@ -10,8 +12,9 @@ export const TOO_MANY_BONES_OBJECT_ID = '192135'
 export type TooManyBonesEntry = {
   play: BggPlay
   tyrant: string
+  difficulty?: string
   gearlocs: string[]
-  myGearloc?: string
+  myGearlocs: string[]
   quantity: number
   isWin: boolean
 }
@@ -53,10 +56,13 @@ export function getTooManyBonesEntries(plays: BggPlay[], username: string): TooM
           win: player.attributes.win === '1',
           gearloc: parsed.gearloc,
           tyrant: parsed.tyrant,
+          difficulty: parsed.difficulty,
           extraTags: parsed.extraTags,
         }
       })
-      .filter((player) => Boolean(player.gearloc || player.tyrant || player.extraTags.length > 0))
+      .filter((player) =>
+        Boolean(player.gearloc || player.tyrant || player.difficulty || player.extraTags.length > 0),
+      )
 
     const gearlocsSet = new Map<string, string>()
     for (const player of parsedPlayers) {
@@ -71,7 +77,15 @@ export function getTooManyBonesEntries(plays: BggPlay[], username: string): TooM
     const gearlocs = [...gearlocsSet.values()]
 
     const myPlayer = parsedPlayers.find((p) => p.username === user)
-    const myGearloc = myPlayer?.gearloc && isTooManyBonesGearlocToken(myPlayer.gearloc) ? myPlayer.gearloc : undefined
+    const myGearlocsSet = new Map<string, string>()
+    if (myPlayer?.gearloc && isTooManyBonesGearlocToken(myPlayer.gearloc)) {
+      myGearlocsSet.set(myPlayer.gearloc.toLowerCase(), myPlayer.gearloc)
+    }
+    for (const tag of myPlayer?.extraTags ?? []) {
+      if (!isTooManyBonesGearlocToken(tag)) continue
+      myGearlocsSet.set(tag.toLowerCase(), tag)
+    }
+    const myGearlocs = [...myGearlocsSet.values()]
     const isWin = myPlayer?.win === true
 
     const tyrantCandidates = parsedPlayers
@@ -81,12 +95,21 @@ export function getTooManyBonesEntries(plays: BggPlay[], username: string): TooM
       .filter((value) => isTooManyBonesTyrantToken(value))
 
     const tyrant = chooseMostCommonOrFirst(tyrantCandidates) || 'Unknown tyrant'
+    const difficultyCandidates = parsedPlayers
+      .flatMap((p) => [p.difficulty, ...p.extraTags])
+      .filter(Boolean)
+      .map((value) => value!.trim())
+      .filter((value) => isTooManyBonesDifficultyToken(value))
+      .map((value) => normalizeTooManyBonesDifficulty(value) || value)
+
+    const difficulty = chooseMostCommonOrFirst(difficultyCandidates)
 
     result.push({
       play,
       tyrant,
+      difficulty,
       gearlocs,
-      myGearloc,
+      myGearlocs,
       quantity: playQuantity(play),
       isWin,
     })
@@ -94,4 +117,3 @@ export function getTooManyBonesEntries(plays: BggPlay[], username: string): TooM
 
   return result
 }
-

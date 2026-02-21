@@ -2,8 +2,10 @@ import contentText from './content.yaml?raw'
 import { isRecord, parseYamlValue } from '../../yaml'
 
 export type TooManyBonesContent = {
+  difficulties: string[]
   gearlocs: string[]
   tyrants: string[]
+  difficultiesById: Map<string, string>
   gearlocsById: Map<string, string>
   tyrantsById: Map<string, string>
   gearlocGroupByName: Map<string, string>
@@ -28,9 +30,16 @@ function normalizeId(value: string): string {
 
 export function parseTooManyBonesContent(text: string): TooManyBonesContent {
   const yaml = parseYamlValue(text)
-  if (isRecord(yaml) && Array.isArray(yaml.gearlocs) && Array.isArray(yaml.tyrants)) {
+  if (
+    isRecord(yaml) &&
+    Array.isArray(yaml.difficulties) &&
+    Array.isArray(yaml.gearlocs) &&
+    Array.isArray(yaml.tyrants)
+  ) {
+    const difficulties: string[] = []
     const gearlocs: string[] = []
     const tyrants: string[] = []
+    const difficultiesById = new Map<string, string>()
     const gearlocsById = new Map<string, string>()
     const tyrantsById = new Map<string, string>()
     const gearlocGroupByName = new Map<string, string>()
@@ -72,14 +81,18 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
       applyAliases(map, display, [display, ...(typeof item.id === 'string' ? [item.id] : []), ...aliases])
     }
 
+    for (const item of yaml.difficulties as TooManyBonesYamlItem[])
+      applyItem(item, difficulties, difficultiesById, new Map<string, string>())
     for (const item of yaml.gearlocs as TooManyBonesYamlItem[])
       applyItem(item, gearlocs, gearlocsById, gearlocGroupByName)
     for (const item of yaml.tyrants as TooManyBonesYamlItem[])
       applyItem(item, tyrants, tyrantsById, tyrantGroupByName)
 
     return {
+      difficulties,
       gearlocs,
       tyrants,
+      difficultiesById,
       gearlocsById,
       tyrantsById,
       gearlocGroupByName,
@@ -88,7 +101,7 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
   }
 
   throw new Error(
-    'Failed to parse Too Many Bones content (expected YAML with `gearlocs` and `tyrants` arrays).',
+    'Failed to parse Too Many Bones content (expected YAML with `difficulties`, `gearlocs`, and `tyrants` arrays).',
   )
 }
 

@@ -90,8 +90,7 @@ export default function TooManyBonesView(props: {
   const gearlocCountsMine = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
-      if (!entry.myGearloc) continue
-      incrementCount(counts, entry.myGearloc, entry.quantity)
+      for (const gearloc of entry.myGearlocs) incrementCount(counts, gearloc, entry.quantity)
     }
     return counts
   })
@@ -99,8 +98,9 @@ export default function TooManyBonesView(props: {
   const playIdsByGearlocMine = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
-      if (!entry.myGearloc) continue
-      ;(ids[entry.myGearloc] ||= []).push(entry.play.id)
+      for (const gearloc of entry.myGearlocs) {
+        ;(ids[gearloc] ||= []).push(entry.play.id)
+      }
     }
     return ids
   })
@@ -108,9 +108,8 @@ export default function TooManyBonesView(props: {
   const gearlocWinsMine = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
-      if (!entry.myGearloc) continue
       if (!entry.isWin) continue
-      incrementCount(counts, entry.myGearloc, entry.quantity)
+      for (const gearloc of entry.myGearlocs) incrementCount(counts, gearloc, entry.quantity)
     }
     return counts
   })
@@ -118,9 +117,9 @@ export default function TooManyBonesView(props: {
   const matrix = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
     for (const entry of entries()) {
-      if (!entry.myGearloc) continue
+      if (entry.myGearlocs.length === 0) continue
       counts[entry.tyrant] ||= {}
-      incrementCount(counts[entry.tyrant]!, entry.myGearloc, entry.quantity)
+      for (const gearloc of entry.myGearlocs) incrementCount(counts[entry.tyrant]!, gearloc, entry.quantity)
     }
     return counts
   })
@@ -128,11 +127,12 @@ export default function TooManyBonesView(props: {
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
-      if (!entry.myGearloc) continue
-      const key = `${entry.tyrant}|||${entry.myGearloc}`
-      const existing = ids.get(key)
-      if (existing) existing.push(entry.play.id)
-      else ids.set(key, [entry.play.id])
+      for (const gearloc of entry.myGearlocs) {
+        const key = `${entry.tyrant}|||${gearloc}`
+        const existing = ids.get(key)
+        if (existing) existing.push(entry.play.id)
+        else ids.set(key, [entry.play.id])
+      }
     }
     return ids
   })
@@ -264,7 +264,7 @@ export default function TooManyBonesView(props: {
           <div class="muted">
             No Too Many Bones plays found. For BG Stats tags, put values in the player{' '}
             <span class="mono">color</span> field like{' '}
-            <span class="mono">G: Boomer／T: Nom</span>.
+            <span class="mono">Boomer／Duster／Drellen／H</span> or <span class="mono">G: Boomer／T: Nom／D: A</span>.
           </div>
         }
       >

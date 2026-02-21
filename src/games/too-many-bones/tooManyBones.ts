@@ -4,6 +4,7 @@ import { tooManyBonesContent } from './content'
 export type TooManyBonesPlayerTags = {
   gearloc?: string
   tyrant?: string
+  difficulty?: string
   extraTags: string[]
 }
 
@@ -36,6 +37,12 @@ export function normalizeTooManyBonesTyrant(input: string): string | undefined {
   return tooManyBonesContent.tyrantsById.get(normalizeId(token)) ?? token
 }
 
+export function normalizeTooManyBonesDifficulty(input: string): string | undefined {
+  const token = stripDecorations(input)
+  if (!token) return undefined
+  return tooManyBonesContent.difficultiesById.get(normalizeId(token)) ?? token
+}
+
 export function isTooManyBonesGearlocToken(input: string): boolean {
   const normalized = normalizeTooManyBonesGearloc(input)
   if (!normalized) return false
@@ -46,6 +53,12 @@ export function isTooManyBonesTyrantToken(input: string): boolean {
   const normalized = normalizeTooManyBonesTyrant(input)
   if (!normalized) return false
   return tooManyBonesContent.tyrantsById.has(normalizeId(normalized))
+}
+
+export function isTooManyBonesDifficultyToken(input: string): boolean {
+  const normalized = normalizeTooManyBonesDifficulty(input)
+  if (!normalized) return false
+  return tooManyBonesContent.difficultiesById.has(normalizeId(normalized))
 }
 
 export function parseTooManyBonesPlayerColor(color: string): TooManyBonesPlayerTags {
@@ -64,8 +77,9 @@ export function parseTooManyBonesPlayerColor(color: string): TooManyBonesPlayerT
     }
   })
 
-  const kvGearloc = getBgStatsValue(parsedKv, ['G', 'Gearloc', 'H', 'Hero', 'C', 'Char', 'Character'])
+  const kvGearloc = getBgStatsValue(parsedKv, ['G', 'Gearloc', 'Hero', 'C', 'Char', 'Character'])
   const kvTyrant = getBgStatsValue(parsedKv, ['T', 'Tyrant', 'Boss'])
+  const kvDifficulty = getBgStatsValue(parsedKv, ['D', 'Diff', 'Difficulty', 'Mode'])
 
   const usedTagIndexes = new Set<number>()
 
@@ -165,8 +179,23 @@ export function parseTooManyBonesPlayerColor(color: string): TooManyBonesPlayerT
 
   const gearloc = gearlocCandidate ? normalizeTooManyBonesGearloc(gearlocCandidate) : undefined
   const tyrant = tyrantCandidate ? normalizeTooManyBonesTyrant(tyrantCandidate) : undefined
+  let difficultyCandidate = kvDifficulty ? stripDecorations(kvDifficulty) : undefined
+
+  if (!difficultyCandidate) {
+    for (const candidate of tagCandidates) {
+      if (usedTagIndexes.has(candidate.index)) continue
+      if (!tooManyBonesContent.difficultiesById.has(candidate.id)) continue
+      difficultyCandidate = candidate.tag
+      usedTagIndexes.add(candidate.index)
+      break
+    }
+  }
+
+  const difficulty = difficultyCandidate
+    ? normalizeTooManyBonesDifficulty(difficultyCandidate)
+    : undefined
 
   const extraTags = tagValues.filter((_, index) => !usedTagIndexes.has(index))
 
-  return { gearloc, tyrant, extraTags }
+  return { gearloc, tyrant, difficulty, extraTags }
 }

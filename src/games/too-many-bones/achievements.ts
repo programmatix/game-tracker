@@ -29,9 +29,9 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
 
   const gearlocs = buildCanonicalCounts({
     preferredItems: tooManyBonesContent.gearlocs.map((gearloc) => buildAchievementItem(gearloc)),
-    observed: entries
-      .filter((e) => Boolean(e.myGearloc))
-      .map((e) => ({ item: buildAchievementItem(e.myGearloc!), amount: e.quantity })),
+    observed: entries.flatMap((e) =>
+      e.myGearlocs.map((gearloc) => ({ item: buildAchievementItem(gearloc), amount: e.quantity })),
+    ),
   })
 
   const tracks: AchievementTrack[] = [
@@ -40,7 +40,10 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
       completionForLevel: (level) => {
         const entry = findCompletionEntryForCounter({ entries, target: level })
         if (!entry) return undefined
-        const detailParts = [entry.tyrant !== 'Unknown tyrant' ? entry.tyrant : undefined, entry.myGearloc].filter(Boolean)
+        const detailParts = [
+          entry.tyrant !== 'Unknown tyrant' ? entry.tyrant : undefined,
+          entry.myGearlocs[0],
+        ].filter(Boolean)
         return buildCompletionFromPlay(entry.play, detailParts.join(' • ') || 'Play')
       },
     },
@@ -79,7 +82,7 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
               predicate: (e) => e.isWin && e.tyrant !== 'Unknown tyrant' && normalizeKey(e.tyrant) === labelKey,
             })
             if (!entry) return undefined
-            const gearloc = entry.myGearloc ? ` • ${entry.myGearloc}` : ''
+            const gearloc = entry.myGearlocs[0] ? ` • ${entry.myGearlocs[0]}` : ''
             return buildCompletionFromPlay(entry.play, `${entry.tyrant}${gearloc}`)
           },
         }
@@ -117,11 +120,14 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
             const entry = findCompletionEntryForCounter({
               entries,
               target: targetPlays,
-              predicate: (e) => Boolean(e.myGearloc) && normalizeKey(e.myGearloc!) === labelKey,
+              predicate: (e) =>
+                e.myGearlocs.some((gearloc) => normalizeKey(gearloc) === labelKey),
             })
             if (!entry) return undefined
+            const detailGearloc =
+              entry.myGearlocs.find((gearloc) => normalizeKey(gearloc) === labelKey) ?? entry.myGearlocs[0]
             const tyrant = entry.tyrant !== 'Unknown tyrant' ? ` • ${entry.tyrant}` : ''
-            return buildCompletionFromPlay(entry.play, `${entry.myGearloc}${tyrant}`)
+            return buildCompletionFromPlay(entry.play, `${detailGearloc}${tyrant}`)
           },
         }
       }),
@@ -134,4 +140,3 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
     tracks,
   })
 }
-

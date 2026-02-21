@@ -3,6 +3,17 @@
 # This list drives the UI and achievements "available" counts (including 0-play rows).
 # Values here should match the display names produced by the tag parsers.
 
+difficulties:
+  - display: Adventure
+    id: Adventure
+    aliases: [A]
+  - display: Heroic
+    id: Heroic
+    aliases: [H]
+  - display: Legendary
+    id: Legendary
+    aliases: [L]
+
 gearlocs:
   - display: Boomer
     id: Boomer
@@ -16,6 +27,18 @@ gearlocs:
   - display: Patches
     id: Patches
     group: Core
+
+  - display: Figment
+    id: Figment
+    group: Unbreakable
+  - id: Gale
+    group: Unbreakable
+
+  - id: Stanza
+    group: Undertow
+  - display: Duster
+    id: Duster
+    group: Undertow
 
   - display: Ghillie
     id: Ghillie
@@ -33,18 +56,6 @@ gearlocs:
     id: Dart
     group: AddOn
   
-  - display: Figment
-    id: Figment
-    group: Unbreakable
-  - id: Gale
-    group: Unbreakable
-
-  - id: Stanza
-    group: Undertow
-  - display: Duster
-    id: Duster
-    group: Undertow
-
 tyrants:
   - display: Drellen
     id: Drellen
@@ -61,6 +72,11 @@ tyrants:
   - display: The Goblin King
     id: GoblinKing
     group: Core
+  - id: Marrow
+    group: Core
+    # Causing parsing problems
+  # - id: Duster
+  #   group: Core
 
   - display: The Goblin Queen
     id: GoblinQueen
