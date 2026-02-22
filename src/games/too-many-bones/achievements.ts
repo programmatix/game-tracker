@@ -22,7 +22,14 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
   const totalPlays = sumQuantities(entries)
   const normalizeKey = (value: string) => normalizeAchievementItemLabel(value).toLowerCase()
 
-  const tyrants = buildCanonicalCounts({
+  const tyrantPlays = buildCanonicalCounts({
+    preferredItems: tooManyBonesContent.tyrants.map((tyrant) => buildAchievementItem(tyrant)),
+    observed: entries
+      .filter((e) => e.tyrant !== 'Unknown tyrant')
+      .map((e) => ({ item: buildAchievementItem(e.tyrant), amount: e.quantity })),
+  })
+
+  const tyrantWins = buildCanonicalCounts({
     preferredItems: tooManyBonesContent.tyrants.map((tyrant) => buildAchievementItem(tyrant)),
     observed: entries
       .filter((e) => e.tyrant !== 'Unknown tyrant')
@@ -51,8 +58,67 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
     },
   ]
 
-  if (tyrants.items.length > 0) {
-    const tyrantLabelById = new Map(tyrants.items.map((item) => [item.id, item.label]))
+  if (tyrantPlays.items.length > 0) {
+    const tyrantPlayLabelById = new Map(tyrantPlays.items.map((item) => [item.id, item.label]))
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'tyrantPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'tyrant'),
+        verb: 'Play',
+        itemNoun: 'tyrant',
+        unitSingular: 'time',
+        items: tyrantPlays.items,
+        countsByItemId: tyrantPlays.countsByItemId,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'tyrantPlays',
+        verb: 'Play',
+        itemNoun: 'tyrant',
+        unitSingular: 'time',
+        items: tyrantPlays.items,
+        countsByItemId: tyrantPlays.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? tyrantPlayLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => e.tyrant !== 'Unknown tyrant' && normalizeKey(e.tyrant) === labelKey,
+            })
+            if (!entry) return undefined
+            const gearloc = entry.myGearlocs[0] ? ` • ${entry.myGearlocs[0]}` : ''
+            return buildCompletionFromPlay(entry.play, `${entry.tyrant}${gearloc}`)
+          },
+        }
+      }),
+    )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: tyrantPlays.items,
+      groupByItemLabel: tooManyBonesContent.tyrantGroupByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `tyrantPlaysByGroup:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-tyrant-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `tyrant in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: tyrantPlays.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
+  }
+
+  if (tyrantWins.items.length > 0) {
+    const tyrantWinLabelById = new Map(tyrantWins.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'tyrantWins',
@@ -60,19 +126,19 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
         verb: 'Defeat',
         itemNoun: 'tyrant',
         unitSingular: 'win',
-        items: tyrants.items,
-        countsByItemId: tyrants.countsByItemId,
+        items: tyrantWins.items,
+        countsByItemId: tyrantWins.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'tyrantWins',
         verb: 'Defeat',
         itemNoun: 'tyrant',
         unitSingular: 'win',
-        items: tyrants.items,
-        countsByItemId: tyrants.countsByItemId,
+        items: tyrantWins.items,
+        countsByItemId: tyrantWins.countsByItemId,
       }).map((track) => {
         const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
-        const label = itemId ? tyrantLabelById.get(itemId) : undefined
+        const label = itemId ? tyrantWinLabelById.get(itemId) : undefined
         if (!label) return track
         const labelKey = normalizeKey(label)
         return {
@@ -92,7 +158,7 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
     )
 
     for (const grouped of groupAchievementItemsByLabel({
-      items: tyrants.items,
+      items: tyrantWins.items,
       groupByItemLabel: tooManyBonesContent.tyrantGroupByName,
     })) {
       tracks.push(
@@ -103,7 +169,7 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
           itemNoun: `tyrant in ${grouped.group}`,
           unitSingular: 'win',
           items: grouped.items,
-          countsByItemId: tyrants.countsByItemId,
+          countsByItemId: tyrantWins.countsByItemId,
           levels: [1],
         }),
       )
