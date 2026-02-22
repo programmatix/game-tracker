@@ -56,7 +56,15 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
       ? ownedFinalGirls.map((finalGirl) => buildAchievementItem(finalGirl, finalGirlLabelToId))
       : entries.map((e) => buildAchievementItem(e.finalGirl, finalGirlLabelToId))
 
-  const villains = buildCanonicalCounts({
+  const villainPlays = buildCanonicalCounts({
+    preferredItems: villainPreferred,
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.villain, villainLabelToId),
+      amount: e.quantity,
+    })),
+  })
+
+  const villainWins = buildCanonicalCounts({
     preferredItems: villainPreferred,
     observed: entries.map((e) => ({
       item: buildAchievementItem(e.villain, villainLabelToId),
@@ -179,8 +187,66 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
     },
   ]
 
-  if (villains.items.length > 0) {
-    const villainLabelById = new Map(villains.items.map((item) => [item.id, item.label]))
+  if (villainPlays.items.length > 0) {
+    const villainPlayLabelById = new Map(villainPlays.items.map((item) => [item.id, item.label]))
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'villainPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'villain'),
+        verb: 'Play',
+        itemNoun: 'villain',
+        unitSingular: 'time',
+        items: villainPlays.items,
+        countsByItemId: villainPlays.countsByItemId,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'villainPlays',
+        verb: 'Play',
+        itemNoun: 'villain',
+        unitSingular: 'time',
+        items: villainPlays.items,
+        countsByItemId: villainPlays.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? villainPlayLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => normalizeKey(e.villain) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `${entry.finalGirl} at ${entry.location}`)
+          },
+        }
+      }),
+    )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: villainPlays.items,
+      groupByItemLabel: ownedFinalGirlContent.villainSeasonsByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `villainPlaysBySeason:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-villain-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `villain in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: villainPlays.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
+  }
+
+  if (villainWins.items.length > 0) {
+    const villainWinLabelById = new Map(villainWins.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'villainWins',
@@ -188,19 +254,19 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         verb: 'Defeat',
         itemNoun: 'villain',
         unitSingular: 'win',
-        items: villains.items,
-        countsByItemId: villains.countsByItemId,
+        items: villainWins.items,
+        countsByItemId: villainWins.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'villainWins',
         verb: 'Defeat',
         itemNoun: 'villain',
         unitSingular: 'win',
-        items: villains.items,
-        countsByItemId: villains.countsByItemId,
+        items: villainWins.items,
+        countsByItemId: villainWins.countsByItemId,
       }).map((track) => {
         const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
-        const label = itemId ? villainLabelById.get(itemId) : undefined
+        const label = itemId ? villainWinLabelById.get(itemId) : undefined
         if (!label) return track
         const labelKey = normalizeKey(label)
         return {
@@ -219,7 +285,7 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
     )
 
     for (const grouped of groupAchievementItemsByLabel({
-      items: villains.items,
+      items: villainWins.items,
       groupByItemLabel: ownedFinalGirlContent.villainSeasonsByName,
     })) {
       tracks.push(
@@ -230,7 +296,7 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
           itemNoun: `villain in ${grouped.group}`,
           unitSingular: 'win',
           items: grouped.items,
-          countsByItemId: villains.countsByItemId,
+          countsByItemId: villainWins.countsByItemId,
           levels: [1],
         }),
       )

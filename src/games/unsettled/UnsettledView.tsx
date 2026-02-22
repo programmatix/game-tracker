@@ -34,7 +34,6 @@ export default function UnsettledView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [thing] = createResource(
@@ -122,6 +121,16 @@ export default function UnsettledView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      counts[entry.planet] ||= {}
+      incrementCount(counts[entry.planet]!, entry.task, entry.quantity)
+    }
+    return counts
+  })
+
   const planetKeys = createMemo(() =>
     mergeCanonicalKeys(Object.keys(planetCounts()), unsettledContent.planets),
   )
@@ -132,8 +141,8 @@ export default function UnsettledView(props: {
     ),
   )
 
-  const matrixRows = createMemo(() => (flipAxes() ? taskKeys() : planetKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? planetKeys() : taskKeys()))
+  const matrixRows = createMemo(() => planetKeys())
+  const matrixCols = createMemo(() => taskKeys())
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -141,9 +150,7 @@ export default function UnsettledView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes()
-          ? (matrix()[col]?.[row] ?? 0)
-          : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -195,14 +202,6 @@ export default function UnsettledView(props: {
       />
 
       <div class="matrixControls">
-        <label class="checkboxLabel">
-          <input
-            type="checkbox"
-            checked={flipAxes()}
-            onInput={(e) => setFlipAxes(e.currentTarget.checked)}
-          />{' '}
-          Flip axes
-        </label>
         <label class="control">
           <span>Display</span>
           <select
@@ -219,16 +218,15 @@ export default function UnsettledView(props: {
         <HeatmapMatrix
           rows={matrixRows()}
           cols={matrixCols()}
-          rowHeader={flipAxes() ? 'Task' : 'Planet'}
-          colHeader={flipAxes() ? 'Planet' : 'Task'}
+          rowHeader="Planet"
+          colHeader="Task"
           maxCount={matrixMax()}
           hideCounts={matrixDisplayMode() === 'played'}
-          getCount={(row, col) =>
-            flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-          }
+          getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+          getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
           onCellClick={(row, col) => {
-            const planet = flipAxes() ? col : row
-            const task = flipAxes() ? row : col
+            const planet = row
+            const task = col
             const key = pairKey(planet, task)
             props.onOpenPlays({
               title: `Unsettled • ${planet} × ${task}`,

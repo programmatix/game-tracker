@@ -13,81 +13,82 @@
 # - `aliases` are optional; they help resolve variations in spelling.
 
 heroPrecons:
-  # Core box (CORE)
+  # Core box (Core)
   - id: Kurumo Warriors
-    box: core
+    box: Core
     aliases: [KWar]
   - id: Taulot Followers
-    box: core
+    box: Core
     aliases: [TFoll]
   - id: Liothan Shapeshifters
-    box: core
+    box: Core
     aliases: [LShap]
   - id: Nupten Illusionists
-    box: core
+    box: Core
     aliases: [NIllu]
 
   - id: Kurumo Artificers
-    box: monoliths
+    box: Monoliths
     aliases: [KArti]
   - id: Taulot Custodians
-    box: monoliths
+    box: Monoliths
     aliases: [TCust]
   - id: Liothan Enforcers
-    box: monoliths
+    box: Monoliths
     aliases: [LEnfo]
   - id: Nupten Diviners
-    box: monoliths
+    box: Monoliths
     aliases: [NDivi]
+
   - id: Kurumo Disciples
-    box: campaigns
+    box: Campaigns
     aliases: [KDisc]
   - id: Taulot Dwellers
-    box: campaigns
+    box: Campaigns
     aliases: [TDwel]
   - id: Liothan Zealots
-    box: campaigns
+    box: Campaigns
     aliases: [LZeal]
 
 
 enemyPrecons:
   - id: Undead
-    box: core
+    box: Core
     aliases: [Undea]
   - id: Renegade
-    box: core
+    box: Core
     aliases: [Reneg]
   - id: Predator
-    box: core
+    box: Core
     aliases: [Preda]
   - id: Nightmare
-    box: core
+    box: Core
     aliases: [Night]
 
   - id: Sinklings
-    box: monoliths
+    box: Monoliths
     aliases: [Sinkl]
   - id: Slitherers
-    box: monoliths
+    box: Monoliths
     aliases: [Slith]
   - id: Monoliths
-    box: monoliths
+    box: Monoliths
     aliases: [Monol]
   - display: The Brood
     id: Brood
     aliases: [Brood]
-    box: monoliths
+    box: Monoliths
 
   - id: Animerk
-    box: campaigns
+    box: Campaigns
     aliases: [Anim]
   - id: Faefolk
-    box: campaigns
+    box: Campaigns
     aliases: [Faefo]
   - display: Skybooter
     id: Skybooters
-    box: campaigns
+    box: Campaigns
     aliases: [Skybo]
   - id: Scaleson
-    box: campaigns
+    box: Campaigns
     aliases: [Scale]

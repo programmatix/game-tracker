@@ -31,7 +31,6 @@ export default function TooManyBonesView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [thing] = createResource(
@@ -126,6 +125,18 @@ export default function TooManyBonesView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      if (entry.myGearlocs.length === 0) continue
+      counts[entry.tyrant] ||= {}
+      for (const gearloc of entry.myGearlocs)
+        incrementCount(counts[entry.tyrant]!, gearloc, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
@@ -188,16 +199,12 @@ export default function TooManyBonesView(props: {
     ),
   )
 
-  const matrixRows = createMemo(() => (flipAxes() ? gearlocKeysMine() : tyrantKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? tyrantKeys() : gearlocKeysMine()))
+  const matrixRows = createMemo(() => tyrantKeys())
+  const matrixCols = createMemo(() => gearlocKeysMine())
   const rowGroupBy = (row: string) =>
-    flipAxes()
-      ? tooManyBonesContent.gearlocGroupByName.get(row)
-      : tooManyBonesContent.tyrantGroupByName.get(row)
+    tooManyBonesContent.tyrantGroupByName.get(row)
   const colGroupBy = (col: string) =>
-    flipAxes()
-      ? tooManyBonesContent.tyrantGroupByName.get(col)
-      : tooManyBonesContent.gearlocGroupByName.get(col)
+    tooManyBonesContent.gearlocGroupByName.get(col)
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -205,7 +212,7 @@ export default function TooManyBonesView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -315,16 +322,8 @@ export default function TooManyBonesView(props: {
 
         <div class="statsBlock">
           <div class="statsTitleRow">
-            <h3 class="statsTitle">{flipAxes() ? 'Gearloc × Tyrant' : 'Tyrant × Gearloc'}</h3>
+            <h3 class="statsTitle">Tyrant × Gearloc</h3>
             <div class="matrixControls">
-              <label class="controlLabel">
-                <input
-                  type="checkbox"
-                  checked={flipAxes()}
-                  onChange={(e) => setFlipAxes(e.currentTarget.checked)}
-                />{' '}
-                Flip axes
-              </label>
               <label class="control">
                 <span>Display</span>
                 <select
@@ -343,18 +342,17 @@ export default function TooManyBonesView(props: {
           <HeatmapMatrix
             rows={matrixRows()}
             cols={matrixCols()}
-            rowHeader={flipAxes() ? 'Gearloc' : 'Tyrant'}
-            colHeader={flipAxes() ? 'Tyrant' : 'Gearloc'}
+            rowHeader="Tyrant"
+            colHeader="Gearloc"
             rowGroupBy={rowGroupBy}
             colGroupBy={colGroupBy}
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             maxCount={matrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
             onCellClick={(row, col) => {
-              const tyrant = flipAxes() ? col : row
-              const gearloc = flipAxes() ? row : col
+              const tyrant = row
+              const gearloc = col
               const key = `${tyrant}|||${gearloc}`
               props.onOpenPlays({
                 title: `Too Many Bones • ${tyrant} • ${gearloc}`,

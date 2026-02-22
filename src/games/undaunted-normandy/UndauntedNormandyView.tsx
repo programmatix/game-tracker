@@ -31,7 +31,6 @@ export default function UndauntedNormandyView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [thing] = createResource(
@@ -116,6 +115,16 @@ export default function UndauntedNormandyView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      counts[entry.scenario] ||= {}
+      incrementCount(counts[entry.scenario]!, entry.side, entry.quantity)
+    }
+    return counts
+  })
+
   const scenarioKeys = createMemo(() =>
     mergeCanonicalKeys(sortKeysByCountDesc(scenarioCounts()), undauntedNormandyContent.scenarios),
   )
@@ -124,8 +133,8 @@ export default function UndauntedNormandyView(props: {
     mergeCanonicalKeys(sortKeysByCountDesc(sideCounts()), undauntedNormandyContent.sides),
   )
 
-  const matrixRows = createMemo(() => (flipAxes() ? sideKeys() : scenarioKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? scenarioKeys() : sideKeys()))
+  const matrixRows = createMemo(() => scenarioKeys())
+  const matrixCols = createMemo(() => sideKeys())
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -133,7 +142,7 @@ export default function UndauntedNormandyView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -214,16 +223,8 @@ export default function UndauntedNormandyView(props: {
 
         <div class="statsBlock">
           <div class="statsTitleRow">
-            <h3 class="statsTitle">{flipAxes() ? 'Side × Scenario' : 'Scenario × Side'}</h3>
+            <h3 class="statsTitle">Scenario × Side</h3>
             <div class="finalGirlControls">
-              <label class="controlCheckbox">
-                <input
-                  type="checkbox"
-                  checked={flipAxes()}
-                  onChange={(e) => setFlipAxes(e.currentTarget.checked)}
-                />{' '}
-                Flip axes
-              </label>
               <label class="control">
                 <span>Display</span>
                 <select
@@ -242,16 +243,15 @@ export default function UndauntedNormandyView(props: {
           <HeatmapMatrix
             rows={matrixRows()}
             cols={matrixCols()}
-            rowHeader={flipAxes() ? 'Side' : 'Scenario'}
-            colHeader={flipAxes() ? 'Scenario' : 'Side'}
+            rowHeader="Scenario"
+            colHeader="Side"
             maxCount={matrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             onCellClick={(row, col) => {
-              const scenario = flipAxes() ? col : row
-              const side = flipAxes() ? row : col
+              const scenario = row
+              const side = col
               const key = pairKey(scenario, side)
               props.onOpenPlays({
                 title: `Undaunted: Normandy • ${scenario} × ${side}`,

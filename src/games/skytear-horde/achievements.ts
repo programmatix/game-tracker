@@ -29,7 +29,17 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
       .map((entry) => ({ item: buildAchievementItem(entry.heroPrecon), amount: entry.quantity })),
   })
 
-  const enemyPrecons = buildCanonicalCounts({
+  const enemyPreconPlays = buildCanonicalCounts({
+    preferredItems: skytearHordeContent.enemyPrecons.map((enemy) => buildAchievementItem(enemy)),
+    observed: entries
+      .filter((entry) => entry.enemyPrecon !== 'Unknown enemy precon')
+      .map((entry) => ({
+        item: buildAchievementItem(entry.enemyPrecon),
+        amount: entry.quantity,
+      })),
+  })
+
+  const enemyPreconWins = buildCanonicalCounts({
     preferredItems: skytearHordeContent.enemyPrecons.map((enemy) => buildAchievementItem(enemy)),
     observed: entries
       .filter((entry) => entry.enemyPrecon !== 'Unknown enemy precon')
@@ -110,8 +120,67 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
     }
   }
 
-  if (enemyPrecons.items.length > 0) {
-    const enemyLabelById = new Map(enemyPrecons.items.map((item) => [item.id, item.label]))
+  if (enemyPreconPlays.items.length > 0) {
+    const enemyPlayLabelById = new Map(enemyPreconPlays.items.map((item) => [item.id, item.label]))
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'enemyPreconPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'enemy precon'),
+        verb: 'Play',
+        itemNoun: 'enemy precon',
+        unitSingular: 'time',
+        items: enemyPreconPlays.items,
+        countsByItemId: enemyPreconPlays.countsByItemId,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'enemyPreconPlays',
+        verb: 'Play',
+        itemNoun: 'enemy precon',
+        unitSingular: 'time',
+        items: enemyPreconPlays.items,
+        countsByItemId: enemyPreconPlays.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? enemyPlayLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) =>
+                e.enemyPrecon !== 'Unknown enemy precon' && normalizeKey(e.enemyPrecon) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `${entry.heroPrecon} vs ${entry.enemyPrecon}`)
+          },
+        }
+      }),
+    )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: enemyPreconPlays.items,
+      groupByItemLabel: skytearHordeContent.enemyBoxByPrecon,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `enemyPreconPlaysByBox:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-enemy-precon-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `enemy precon in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: enemyPreconPlays.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
+  }
+
+  if (enemyPreconWins.items.length > 0) {
+    const enemyWinLabelById = new Map(enemyPreconWins.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'enemyPreconWins',
@@ -119,19 +188,19 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
         verb: 'Defeat',
         itemNoun: 'enemy precon',
         unitSingular: 'win',
-        items: enemyPrecons.items,
-        countsByItemId: enemyPrecons.countsByItemId,
+        items: enemyPreconWins.items,
+        countsByItemId: enemyPreconWins.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'enemyPreconWins',
         verb: 'Defeat',
         itemNoun: 'enemy precon',
         unitSingular: 'win',
-        items: enemyPrecons.items,
-        countsByItemId: enemyPrecons.countsByItemId,
+        items: enemyPreconWins.items,
+        countsByItemId: enemyPreconWins.countsByItemId,
       }).map((track) => {
         const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
-        const label = itemId ? enemyLabelById.get(itemId) : undefined
+        const label = itemId ? enemyWinLabelById.get(itemId) : undefined
         if (!label) return track
         const labelKey = normalizeKey(label)
         return {
@@ -153,7 +222,7 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
     )
 
     for (const grouped of groupAchievementItemsByLabel({
-      items: enemyPrecons.items,
+      items: enemyPreconWins.items,
       groupByItemLabel: skytearHordeContent.enemyBoxByPrecon,
     })) {
       tracks.push(
@@ -164,7 +233,7 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
           itemNoun: `enemy precon in ${grouped.group}`,
           unitSingular: 'win',
           items: grouped.items,
-          countsByItemId: enemyPrecons.countsByItemId,
+          countsByItemId: enemyPreconWins.countsByItemId,
           levels: [1],
         }),
       )

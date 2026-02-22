@@ -12,10 +12,15 @@ function heatColor(intensity: number): string {
   return `hsl(${hue} ${saturation}% ${lightness}%)`
 }
 
+function lossColor(): string {
+  return 'hsl(3 72% 38%)'
+}
+
 export default function HeatmapMatrix(props: {
   rows: string[]
   cols: string[]
   getCount: (row: string, col: string) => number
+  getWinCount?: (row: string, col: string) => number
   rowHeader: string
   colHeader: string
   maxCount: number
@@ -214,7 +219,11 @@ export default function HeatmapMatrix(props: {
                       }
                       const backgroundColor = () =>
                         props.getCellBackgroundColor?.(row, col, count(), intensity()) ??
-                        (count() === 0 ? 'transparent' : heatColor(intensity()))
+                        (count() === 0
+                          ? 'transparent'
+                          : (props.getWinCount?.(row, col) ?? count()) === 0
+                            ? lossColor()
+                            : heatColor(intensity()))
                       return (
                         <td class="heatmapCellWrap">
                           <button

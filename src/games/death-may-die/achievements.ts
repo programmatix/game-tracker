@@ -20,7 +20,15 @@ export function computeDeathMayDieAchievements(plays: BggPlay[], username: strin
   const totalPlays = sumQuantities(entries)
   const normalizeKey = (value: string) => normalizeAchievementItemLabel(value).toLowerCase()
 
-  const elderOnes = buildCanonicalCounts({
+  const elderOnePlays = buildCanonicalCounts({
+    preferredItems: deathMayDieContent.elderOnes.map((elderOne) => buildAchievementItem(elderOne)),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(e.elderOne),
+      amount: e.quantity,
+    })),
+  })
+
+  const elderOneWins = buildCanonicalCounts({
     preferredItems: deathMayDieContent.elderOnes.map((elderOne) => buildAchievementItem(elderOne)),
     observed: entries.map((e) => ({
       item: buildAchievementItem(e.elderOne),
@@ -55,8 +63,49 @@ export function computeDeathMayDieAchievements(plays: BggPlay[], username: strin
     },
   ]
 
-  if (elderOnes.items.length > 0) {
-    const elderOneLabelById = new Map(elderOnes.items.map((item) => [item.id, item.label]))
+  if (elderOnePlays.items.length > 0) {
+    const elderOnePlayLabelById = new Map(elderOnePlays.items.map((item) => [item.id, item.label]))
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'elderOnePlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'elder one'),
+        verb: 'Play',
+        itemNoun: 'elder one',
+        unitSingular: 'time',
+        items: elderOnePlays.items,
+        countsByItemId: elderOnePlays.countsByItemId,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'elderOnePlays',
+        verb: 'Play',
+        itemNoun: 'elder one',
+        unitSingular: 'time',
+        items: elderOnePlays.items,
+        countsByItemId: elderOnePlays.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? elderOnePlayLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => normalizeKey(e.elderOne) === labelKey,
+            })
+            if (!entry) return undefined
+            const investigator = entry.myInvestigator ? ` • ${entry.myInvestigator}` : ''
+            return buildCompletionFromPlay(entry.play, `${entry.scenario}${investigator}`)
+          },
+        }
+      }),
+    )
+  }
+
+  if (elderOneWins.items.length > 0) {
+    const elderOneWinLabelById = new Map(elderOneWins.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'elderOneWins',
@@ -64,19 +113,19 @@ export function computeDeathMayDieAchievements(plays: BggPlay[], username: strin
         verb: 'Defeat',
         itemNoun: 'elder one',
         unitSingular: 'win',
-        items: elderOnes.items,
-        countsByItemId: elderOnes.countsByItemId,
+        items: elderOneWins.items,
+        countsByItemId: elderOneWins.countsByItemId,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'elderOneWins',
         verb: 'Defeat',
         itemNoun: 'elder one',
         unitSingular: 'win',
-        items: elderOnes.items,
-        countsByItemId: elderOnes.countsByItemId,
+        items: elderOneWins.items,
+        countsByItemId: elderOneWins.countsByItemId,
       }).map((track) => {
         const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
-        const label = itemId ? elderOneLabelById.get(itemId) : undefined
+        const label = itemId ? elderOneWinLabelById.get(itemId) : undefined
         if (!label) return track
         const labelKey = normalizeKey(label)
         return {

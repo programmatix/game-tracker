@@ -124,6 +124,18 @@ export default function SpiritIslandView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      const spirit = entry.spirit
+      const adversary = stripTrailingLevelLabel(entry.adversary)
+      counts[spirit] ||= {}
+      incrementCount(counts[spirit]!, adversary, entry.quantity)
+    }
+    return counts
+  })
+
   const matrixHighestWinLevel = createMemo(() => {
     const byPair: Record<string, Record<string, number>> = {}
     for (const entry of entries()) {
@@ -426,6 +438,7 @@ export default function SpiritIslandView(props: {
             colHeader="Adversary"
             rowGroupBy={spiritGroupingLabel}
             getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             getCellDisplayText={(row, col, count) => {
               if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
               if (matrixDisplayMode() === 'played') return ''

@@ -26,7 +26,6 @@ export default function DeathMayDieView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [deathMayDieThing] = createResource(
@@ -157,6 +156,16 @@ export default function DeathMayDieView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      counts[entry.elderOne] ||= {}
+      incrementCount(counts[entry.elderOne]!, entry.scenario, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
@@ -187,8 +196,8 @@ export default function DeathMayDieView(props: {
     ),
   )
 
-  const matrixRows = createMemo(() => (flipAxes() ? scenarioKeys() : elderOneKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? elderOneKeys() : scenarioKeys()))
+  const matrixRows = createMemo(() => elderOneKeys())
+  const matrixCols = createMemo(() => scenarioKeys())
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -196,9 +205,7 @@ export default function DeathMayDieView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes()
-          ? (matrix()[col]?.[row] ?? 0)
-          : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -316,16 +323,8 @@ export default function DeathMayDieView(props: {
 
         <div class="statsBlock">
           <div class="statsTitleRow">
-            <h3 class="statsTitle">{flipAxes() ? 'Scenario × Elder One' : 'Elder One × Scenario'}</h3>
+            <h3 class="statsTitle">Elder One × Scenario</h3>
             <div class="finalGirlControls">
-              <label class="controlCheckbox">
-                <input
-                  type="checkbox"
-                  checked={flipAxes()}
-                  onChange={(e) => setFlipAxes(e.currentTarget.checked)}
-                />{' '}
-                Flip axes
-              </label>
               <label class="control">
                 <span>Display</span>
                 <select
@@ -344,16 +343,15 @@ export default function DeathMayDieView(props: {
           <HeatmapMatrix
             rows={matrixRows()}
             cols={matrixCols()}
-            rowHeader={flipAxes() ? 'Scenario' : 'Elder One'}
-            colHeader={flipAxes() ? 'Elder One' : 'Scenario'}
+            rowHeader="Elder One"
+            colHeader="Scenario"
             maxCount={matrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             onCellClick={(row, col) => {
-              const elderOne = flipAxes() ? col : row
-              const scenario = flipAxes() ? row : col
+              const elderOne = row
+              const scenario = col
               const key = `${elderOne}|||${scenario}`
               props.onOpenPlays({
                 title: `Cthulhu: Death May Die • ${elderOne} × ${scenario}`,

@@ -61,7 +61,6 @@ export default function SkytearHordeView(props: {
     })
   }
 
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [thing] = createResource(
@@ -133,6 +132,16 @@ export default function SkytearHordeView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      counts[entry.heroPrecon] ||= {}
+      incrementCount(counts[entry.heroPrecon]!, entry.enemyPrecon, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
@@ -163,8 +172,8 @@ export default function SkytearHordeView(props: {
     )
   })
 
-  const matrixRows = createMemo(() => (flipAxes() ? enemyKeys() : heroKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? heroKeys() : enemyKeys()))
+  const matrixRows = createMemo(() => heroKeys())
+  const matrixCols = createMemo(() => enemyKeys())
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -172,23 +181,15 @@ export default function SkytearHordeView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes()
-          ? (matrix()[col]?.[row] ?? 0)
-          : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
     return max
   })
 
-  const rowGroupBy = (row: string) =>
-    flipAxes()
-      ? skytearHordeContent.enemyBoxByPrecon.get(row)
-      : skytearHordeContent.heroBoxByPrecon.get(row)
-  const colGroupBy = (col: string) =>
-    flipAxes()
-      ? skytearHordeContent.heroBoxByPrecon.get(col)
-      : skytearHordeContent.enemyBoxByPrecon.get(col)
+  const rowGroupBy = (row: string) => skytearHordeContent.heroBoxByPrecon.get(row)
+  const colGroupBy = (col: string) => skytearHordeContent.enemyBoxByPrecon.get(col)
 
   function getNextAchievement(trackIdPrefix: string, label: string) {
     const id = slugifyAchievementItemId(label)
@@ -249,14 +250,6 @@ export default function SkytearHordeView(props: {
         }
       >
         <div class="matrixControls">
-          <label class="checkboxLabel">
-            <input
-              type="checkbox"
-              checked={flipAxes()}
-              onInput={(e) => setFlipAxes(e.currentTarget.checked)}
-            />{' '}
-            Flip axes
-          </label>
           <label class="control">
             <span>Display</span>
             <select
@@ -273,18 +266,17 @@ export default function SkytearHordeView(props: {
           <HeatmapMatrix
             rows={matrixRows()}
             cols={matrixCols()}
-            rowHeader={flipAxes() ? 'Enemy precon' : 'Hero precon'}
-            colHeader={flipAxes() ? 'Hero precon' : 'Enemy precon'}
+            rowHeader="Hero precon"
+            colHeader="Enemy precon"
             rowGroupBy={rowGroupBy}
             colGroupBy={colGroupBy}
             maxCount={matrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             onCellClick={(row, col) => {
-              const hero = flipAxes() ? col : row
-              const enemy = flipAxes() ? row : col
+              const hero = row
+              const enemy = col
               const key = `${hero}|||${enemy}`
               props.onOpenPlays({
                 title: `Skytear Horde • ${hero} × ${enemy}`,

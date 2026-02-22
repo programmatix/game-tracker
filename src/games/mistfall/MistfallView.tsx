@@ -123,7 +123,6 @@ export default function MistfallView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [mistfallThing] = createResource(
@@ -272,6 +271,16 @@ export default function MistfallView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      counts[entry.hero] ||= {}
+      incrementCount(counts[entry.hero]!, entry.quest, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
@@ -325,16 +334,12 @@ export default function MistfallView(props: {
     )
   })
 
-  const matrixRows = createMemo(() => (flipAxes() ? questKeys() : heroKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? heroKeys() : questKeys()))
+  const matrixRows = createMemo(() => heroKeys())
+  const matrixCols = createMemo(() => questKeys())
   const rowGroupBy = (row: string) =>
-    flipAxes()
-      ? mappings.questGroupByName.get(row)
-      : mappings.heroGroupByName.get(row)
+    mappings.heroGroupByName.get(row)
   const colGroupBy = (col: string) =>
-    flipAxes()
-      ? mappings.heroGroupByName.get(col)
-      : mappings.questGroupByName.get(col)
+    mappings.questGroupByName.get(col)
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -342,9 +347,7 @@ export default function MistfallView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes()
-          ? (matrix()[col]?.[row] ?? 0)
-          : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -428,16 +431,8 @@ export default function MistfallView(props: {
 
         <div class="statsBlock">
           <div class="statsTitleRow">
-            <h3 class="statsTitle">{flipAxes() ? 'Quest × Hero' : 'Hero × Quest'}</h3>
+            <h3 class="statsTitle">Hero × Quest</h3>
             <div class="finalGirlControls">
-              <label class="control">
-                <input
-                  type="checkbox"
-                  checked={flipAxes()}
-                  onInput={(e) => setFlipAxes(e.currentTarget.checked)}
-                />
-                Flip axes
-              </label>
               <label class="control">
                 <span>Display</span>
                 <select
@@ -457,16 +452,15 @@ export default function MistfallView(props: {
             cols={matrixCols()}
             maxCount={matrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
-            rowHeader={flipAxes() ? 'Quest' : 'Hero'}
-            colHeader={flipAxes() ? 'Hero' : 'Quest'}
+            rowHeader="Hero"
+            colHeader="Quest"
             rowGroupBy={rowGroupBy}
             colGroupBy={colGroupBy}
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             onCellClick={(row, col) => {
-              const hero = flipAxes() ? col : row
-              const quest = flipAxes() ? row : col
+              const hero = row
+              const quest = col
               const key = `${hero}|||${quest}`
               props.onOpenPlays({
                 title: `Mistfall • ${hero} × ${quest}`,

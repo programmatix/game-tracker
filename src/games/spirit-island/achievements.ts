@@ -140,7 +140,15 @@ export function computeSpiritIslandAchievements(
       })),
   })
 
-  const adversariesBase = buildCanonicalCounts({
+  const adversaryPlays = buildCanonicalCounts({
+    preferredItems: itemsFromMap(spiritIslandMappings.adversariesById),
+    observed: entries.map((e) => ({
+      item: buildAchievementItem(stripTrailingLevelLabel(e.adversary), adversaryLabelToId),
+      amount: e.quantity,
+    })),
+  })
+
+  const adversaryWins = buildCanonicalCounts({
     preferredItems: itemsFromMap(spiritIslandMappings.adversariesById),
     observed: entries.map((e) => ({
       item: buildAchievementItem(stripTrailingLevelLabel(e.adversary), adversaryLabelToId),
@@ -219,7 +227,47 @@ export function computeSpiritIslandAchievements(
     )
   }
 
-  if (adversariesBase.items.length > 0) {
+  if (adversaryPlays.items.length > 0) {
+    const adversaryPlayLabelById = new Map(adversaryPlays.items.map((item) => [item.id, item.label]))
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'adversaryPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'adversary'),
+        verb: 'Play',
+        itemNoun: 'adversary',
+        unitSingular: 'time',
+        items: adversaryPlays.items,
+        countsByItemId: adversaryPlays.countsByItemId,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'adversaryPlays',
+        verb: 'Play',
+        itemNoun: 'adversary',
+        unitSingular: 'time',
+        items: adversaryPlays.items,
+        countsByItemId: adversaryPlays.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? adversaryPlayLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => normalizeKey(stripTrailingLevelLabel(e.adversary)) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `With ${entry.spirit}`)
+          },
+        }
+      }),
+    )
+  }
+
+  if (adversaryWins.items.length > 0) {
     const adversaryLevelTracks: AchievementTrack[] = []
     for (const adversary of adversaryLevelBases) {
       const canonical = normalizeAchievementItemLabel(adversary)
@@ -256,7 +304,7 @@ export function computeSpiritIslandAchievements(
       }
     }
 
-    const adversaryLabelById = new Map(adversariesBase.items.map((item) => [item.id, item.label]))
+    const adversaryLabelById = new Map(adversaryWins.items.map((item) => [item.id, item.label]))
     tracks.push(
       buildPerItemTrack({
         trackId: 'adversaryWins',
@@ -264,8 +312,8 @@ export function computeSpiritIslandAchievements(
         verb: 'Defeat',
         itemNoun: 'adversary',
         unitSingular: 'win',
-        items: adversariesBase.items,
-        countsByItemId: adversariesBase.countsByItemId,
+        items: adversaryWins.items,
+        countsByItemId: adversaryWins.countsByItemId,
       }),
       ...adversaryLevelTracks,
       ...buildIndividualItemTracks({
@@ -273,8 +321,8 @@ export function computeSpiritIslandAchievements(
         verb: 'Defeat',
         itemNoun: 'adversary',
         unitSingular: 'win',
-        items: adversariesBase.items,
-        countsByItemId: adversariesBase.countsByItemId,
+        items: adversaryWins.items,
+        countsByItemId: adversaryWins.countsByItemId,
       }).map((track) => {
         const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
         const label = itemId ? adversaryLabelById.get(itemId) : undefined

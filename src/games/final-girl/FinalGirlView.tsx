@@ -57,7 +57,6 @@ export default function FinalGirlView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] =
     createSignal<MatrixDisplayMode>('played')
   const [ownedVillainsOnly, setOwnedVillainsOnly] = createSignal(false)
@@ -212,6 +211,16 @@ export default function FinalGirlView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of displayEntries()) {
+      if (!entry.isWin) continue
+      counts[entry.villain] ||= {}
+      incrementCount(counts[entry.villain]!, entry.location, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of displayEntries()) {
@@ -314,16 +323,6 @@ export default function FinalGirlView(props: {
   )
 
   const matrixRows = createMemo(() => {
-    if (flipAxes()) {
-      return sortBySeasonThenCount(
-        mergeObservedAfterOwned(
-          getOwnedFinalGirlLocations(ownedContent),
-          sortKeysByCountDesc(locationCounts()),
-        ),
-        locationCounts(),
-        ownedContent.locationSeasonsByName,
-      )
-    }
     return sortBySeasonThenCount(
       mergeObservedAfterOwned(
         getOwnedFinalGirlVillains(ownedContent),
@@ -335,16 +334,6 @@ export default function FinalGirlView(props: {
   })
 
   const matrixCols = createMemo(() => {
-    if (flipAxes()) {
-      return sortBySeasonThenCount(
-        mergeObservedAfterOwned(
-          getOwnedFinalGirlVillains(ownedContent),
-          sortKeysByCountDesc(villainCounts()),
-        ),
-        villainCounts(),
-        ownedContent.villainSeasonsByName,
-      )
-    }
     return sortBySeasonThenCount(
       mergeObservedAfterOwned(
         getOwnedFinalGirlLocations(ownedContent),
@@ -361,9 +350,7 @@ export default function FinalGirlView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes()
-          ? (matrix()[col]?.[row] ?? 0)
-          : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -371,13 +358,9 @@ export default function FinalGirlView(props: {
   })
 
   const rowGroupBy = (row: string) =>
-    flipAxes()
-      ? ownedContent.locationSeasonsByName.get(normalizeFinalGirlName(row))
-      : ownedContent.villainSeasonsByName.get(normalizeFinalGirlName(row))
+    ownedContent.villainSeasonsByName.get(normalizeFinalGirlName(row))
   const colGroupBy = (col: string) =>
-    flipAxes()
-      ? ownedContent.villainSeasonsByName.get(normalizeFinalGirlName(col))
-      : ownedContent.locationSeasonsByName.get(normalizeFinalGirlName(col))
+    ownedContent.locationSeasonsByName.get(normalizeFinalGirlName(col))
 
   function getOwnedContentWarningTitle(
     kind: 'Villain' | 'Location',
@@ -478,14 +461,6 @@ export default function FinalGirlView(props: {
                 Owned locations only
               </label>
               <label class="control">
-                <input
-                  type="checkbox"
-                  checked={flipAxes()}
-                  onInput={(e) => setFlipAxes(e.currentTarget.checked)}
-                />
-                Flip axes
-              </label>
-              <label class="control">
                 <span>Display</span>
                 <select
                   value={matrixDisplayMode()}
@@ -504,46 +479,31 @@ export default function FinalGirlView(props: {
             cols={matrixCols()}
             maxCount={matrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
-            rowHeader={flipAxes() ? 'Location' : 'Villain'}
-            colHeader={flipAxes() ? 'Villain' : 'Location'}
+            rowHeader="Villain"
+            colHeader="Location"
             rowGroupBy={rowGroupBy}
             colGroupBy={colGroupBy}
             getRowWarningTitle={(row) =>
-              flipAxes()
-                ? getOwnedContentWarningTitle(
-                    'Location',
-                    row,
-                    isOwnedFinalGirlLocation(ownedContent, row),
-                    locationCounts()[row] ?? 0,
-                  )
-                : getOwnedContentWarningTitle(
-                    'Villain',
-                    row,
-                    isOwnedFinalGirlVillain(ownedContent, row),
-                    villainCounts()[row] ?? 0,
-                  )
+              getOwnedContentWarningTitle(
+                'Villain',
+                row,
+                isOwnedFinalGirlVillain(ownedContent, row),
+                villainCounts()[row] ?? 0,
+              )
             }
             getColWarningTitle={(col) =>
-              flipAxes()
-                ? getOwnedContentWarningTitle(
-                    'Villain',
-                    col,
-                    isOwnedFinalGirlVillain(ownedContent, col),
-                    villainCounts()[col] ?? 0,
-                  )
-                : getOwnedContentWarningTitle(
-                    'Location',
-                    col,
-                    isOwnedFinalGirlLocation(ownedContent, col),
-                    locationCounts()[col] ?? 0,
-                  )
+              getOwnedContentWarningTitle(
+                'Location',
+                col,
+                isOwnedFinalGirlLocation(ownedContent, col),
+                locationCounts()[col] ?? 0,
+              )
             }
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             onCellClick={(row, col) => {
-              const villain = flipAxes() ? col : row
-              const location = flipAxes() ? row : col
+              const villain = row
+              const location = col
               const key = `${villain}|||${location}`
               props.onOpenPlays({
                 title: `Final Girl • ${villain} × ${location}`,

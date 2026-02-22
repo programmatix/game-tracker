@@ -26,7 +26,6 @@ export default function BulletView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [thing] = createResource(
@@ -122,6 +121,17 @@ export default function BulletView(props: {
     return counts
   })
 
+  const matrixWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      if (!entry.myHeroine) continue
+      counts[entry.boss] ||= {}
+      incrementCount(counts[entry.boss]!, entry.myHeroine, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
@@ -189,16 +199,12 @@ export default function BulletView(props: {
     )
   })
 
-  const matrixRows = createMemo(() => (flipAxes() ? heroineKeys() : bossKeys()))
-  const matrixCols = createMemo(() => (flipAxes() ? bossKeys() : heroineKeys()))
+  const matrixRows = createMemo(() => bossKeys())
+  const matrixCols = createMemo(() => heroineKeys())
   const rowGroupBy = (row: string) =>
-    flipAxes()
-      ? bulletContent.heroineSetByName.get(row)
-      : bulletContent.bossSetByName.get(row)
+    bulletContent.bossSetByName.get(row)
   const colGroupBy = (col: string) =>
-    flipAxes()
-      ? bulletContent.bossSetByName.get(col)
-      : bulletContent.heroineSetByName.get(col)
+    bulletContent.heroineSetByName.get(col)
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -206,7 +212,7 @@ export default function BulletView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -314,16 +320,8 @@ export default function BulletView(props: {
 
         <div class="statsBlock">
           <div class="statsTitleRow">
-            <h3 class="statsTitle">{flipAxes() ? 'Heroine × Boss' : 'Boss × Heroine'}</h3>
+            <h3 class="statsTitle">Boss × Heroine</h3>
             <div class="gameControls">
-              <label class="controlCheckbox">
-                <input
-                  type="checkbox"
-                  checked={flipAxes()}
-                  onChange={(e) => setFlipAxes(e.currentTarget.checked)}
-                />{' '}
-                Flip axes
-              </label>
               <label class="control">
                 <span>Display</span>
                 <select
@@ -341,18 +339,17 @@ export default function BulletView(props: {
           <HeatmapMatrix
             rows={matrixRows()}
             cols={matrixCols()}
-            rowHeader={flipAxes() ? 'Heroine' : 'Boss'}
-            colHeader={flipAxes() ? 'Boss' : 'Heroine'}
+            rowHeader="Boss"
+            colHeader="Heroine"
             rowGroupBy={rowGroupBy}
             colGroupBy={colGroupBy}
             maxCount={matrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
             onCellClick={(row, col) => {
-              const boss = flipAxes() ? col : row
-              const heroine = flipAxes() ? row : col
+              const boss = row
+              const heroine = col
               const ids = playIdsByPair().get(`${boss}|||${heroine}`) ?? []
               props.onOpenPlays({ title: `Bullet • ${boss} • ${heroine}`, playIds: ids })
             }}
