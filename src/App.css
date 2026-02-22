@@ -119,6 +119,10 @@
   min-width: 0;
 }
 
+.tabSelectWrap.mobileOnly {
+  display: none;
+}
+
 .tabSelectLabel {
   font-size: 11px;
   color: var(--muted);
@@ -359,6 +363,15 @@
 .control input {
   width: 16px;
   height: 16px;
+}
+
+.control select {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
 }
 
 .matrixControls {
@@ -1072,6 +1085,10 @@
 
   .mobileOnly {
     display: block;
+  }
+
+  .tabSelectWrap.mobileOnly {
+    display: grid;
   }
 
   .app {

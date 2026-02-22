@@ -20,6 +20,14 @@ export default function HeatmapMatrix(props: {
   colHeader: string
   maxCount: number
   hideCounts?: boolean
+  getCellDisplayText?: (row: string, col: string, count: number) => string
+  getCellBackgroundColor?: (
+    row: string,
+    col: string,
+    count: number,
+    intensity: number,
+  ) => string | undefined
+  getCellLabel?: (row: string, col: string, count: number) => string
   rowGroupBy?: (row: string) => string | undefined
   colGroupBy?: (col: string) => string | undefined
   getRowWarningTitle?: (row: string) => string | undefined
@@ -196,8 +204,17 @@ export default function HeatmapMatrix(props: {
                       const count = () => props.getCount(row, col)
                       const intensity = () =>
                         props.maxCount > 0 ? count() / props.maxCount : 0
-                      const label = () => `${row} × ${col}: ${count()}`
+                      const label = () =>
+                        props.getCellLabel?.(row, col, count()) ?? `${row} × ${col}: ${count()}`
                       const isClickable = () => Boolean(props.onCellClick) && count() > 0
+                      const displayText = () => {
+                        if (props.getCellDisplayText) return props.getCellDisplayText(row, col, count())
+                        if (props.hideCounts) return ''
+                        return count() === 0 ? '—' : String(count())
+                      }
+                      const backgroundColor = () =>
+                        props.getCellBackgroundColor?.(row, col, count(), intensity()) ??
+                        (count() === 0 ? 'transparent' : heatColor(intensity()))
                       return (
                         <td class="heatmapCellWrap">
                           <button
@@ -208,8 +225,7 @@ export default function HeatmapMatrix(props: {
                               heatmapCellClickable: isClickable(),
                             }}
                             style={{
-                              'background-color':
-                                count() === 0 ? 'transparent' : heatColor(intensity()),
+                              'background-color': backgroundColor(),
                             }}
                             aria-label={
                               isClickable() ? `${label()}. Click to view plays.` : label()
@@ -218,11 +234,7 @@ export default function HeatmapMatrix(props: {
                             disabled={!isClickable()}
                             onClick={() => props.onCellClick?.(row, col)}
                           >
-                            {props.hideCounts
-                              ? ''
-                              : count() === 0
-                                ? '—'
-                                : String(count())}
+                            {displayText()}
                           </button>
                         </td>
                       )

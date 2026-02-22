@@ -25,8 +25,26 @@ function stripTrailingLevelLabel(value: string): string {
   return value.replace(/\s+L\d+\s*$/i, '').trim()
 }
 
+function parseTrailingLevelLabel(value: string): number | undefined {
+  const match = /\s+L(?<level>\d+)\s*$/i.exec(value)
+  const parsed = Number(match?.groups?.level || '')
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined
+  return parsed
+}
+
+function difficultyColor(level: number): string {
+  const t = Math.min(1, Math.max(0, level / 6))
+  const lightness = 20 + t * 30
+  return `hsl(152 58% ${lightness}%)`
+}
+
+function lossColor(): string {
+  return 'hsl(3 72% 38%)'
+}
+
 const SPIRIT_ISLAND_LEVELS = [1, 2, 3, 4, 5, 6]
 const SPIRIT_COMPLEXITY_ORDER = ['Low', 'Moderate', 'High', 'Very High'] as const
+type MatrixDisplayMode = 'count' | 'difficulty' | 'played'
 
 export default function SpiritIslandView(props: {
   plays: BggPlay[]
@@ -40,8 +58,7 @@ export default function SpiritIslandView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [flipAxes, setFlipAxes] = createSignal(false)
-  const [hideCounts, setHideCounts] = createSignal(true)
+  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [spiritIslandThing] = createResource(
     () => ({ id: SPIRIT_ISLAND_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
@@ -103,6 +120,19 @@ export default function SpiritIslandView(props: {
       incrementCount(counts[spirit]!, adversary, entry.quantity)
     }
     return counts
+  })
+
+  const matrixHighestWinLevel = createMemo(() => {
+    const byPair: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      const spirit = entry.spirit
+      const adversary = stripTrailingLevelLabel(entry.adversary)
+      const level = parseTrailingLevelLabel(entry.adversary) ?? 0
+      byPair[spirit] ||= {}
+      byPair[spirit]![adversary] = Math.max(byPair[spirit]![adversary] ?? 0, level)
+    }
+    return byPair
   })
 
   const spiritComplexityByKey = createMemo(() => {
@@ -272,8 +302,8 @@ export default function SpiritIslandView(props: {
     return pickBestAvailableAchievementForTrackIds(achievements(), trackIds)
   }
 
-  const matrixRows = createMemo(() => (flipAxes() ? adversaryKeys() : spiritKeysByGroup()))
-  const matrixCols = createMemo(() => (flipAxes() ? spiritKeysByGroup() : adversaryKeys()))
+  const matrixRows = createMemo(() => spiritKeysByGroup())
+  const matrixCols = createMemo(() => adversaryKeys())
 
   const matrixMax = createMemo(() => {
     let max = 0
@@ -281,9 +311,7 @@ export default function SpiritIslandView(props: {
     const cols = matrixCols()
     for (const row of rows) {
       for (const col of cols) {
-        const value = flipAxes()
-          ? (matrix()[col]?.[row] ?? 0)
-          : (matrix()[row]?.[col] ?? 0)
+        const value = matrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -378,23 +406,20 @@ export default function SpiritIslandView(props: {
 
         <div class="statsBlock">
           <div class="statsTitleRow">
-            <h3 class="statsTitle">{flipAxes() ? 'Adversary × Spirit' : 'Spirit × Adversary'}</h3>
+            <h3 class="statsTitle">Spirit × Adversary</h3>
             <div class="finalGirlControls">
               <label class="control">
-                <input
-                  type="checkbox"
-                  checked={flipAxes()}
-                  onInput={(e) => setFlipAxes(e.currentTarget.checked)}
-                />
-                Flip axes
-              </label>
-              <label class="control">
-                <input
-                  type="checkbox"
-                  checked={hideCounts()}
-                  onInput={(e) => setHideCounts(e.currentTarget.checked)}
-                />
-                Hide count
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) =>
+                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
+                  }
+                >
+                  <option value="count">Count</option>
+                  <option value="difficulty">Difficulty</option>
+                  <option value="played">Played</option>
+                </select>
               </label>
             </div>
           </div>
@@ -402,14 +427,39 @@ export default function SpiritIslandView(props: {
             rows={matrixRows()}
             cols={matrixCols()}
             maxCount={matrixMax()}
-            hideCounts={hideCounts()}
-            rowHeader={flipAxes() ? 'Adversary' : 'Spirit'}
-            colHeader={flipAxes() ? 'Spirit' : 'Adversary'}
-            rowGroupBy={flipAxes() ? undefined : getSpiritGroup}
-            colGroupBy={flipAxes() ? getSpiritGroup : undefined}
-            getCount={(row, col) =>
-              flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
-            }
+            hideCounts={matrixDisplayMode() === 'played'}
+            rowHeader="Spirit"
+            colHeader="Adversary"
+            rowGroupBy={getSpiritGroup}
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getCellDisplayText={(row, col, count) => {
+              if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
+              if (matrixDisplayMode() === 'played') return ''
+              if (count === 0) return ''
+              const highestWinLevel = matrixHighestWinLevel()[row]?.[col]
+              if ((highestWinLevel ?? -1) > 0) return `L${highestWinLevel}`
+              if (highestWinLevel === 0) return 'W'
+              return ''
+            }}
+            getCellBackgroundColor={(row, col, count, _intensity) => {
+              if (count === 0) return 'transparent'
+              if (matrixDisplayMode() !== 'difficulty') return undefined
+              const highestWinLevel = matrixHighestWinLevel()[row]?.[col]
+              if ((highestWinLevel ?? -1) > 0) return difficultyColor(highestWinLevel!)
+              if (highestWinLevel === 0) return difficultyColor(1)
+              return lossColor()
+            }}
+            getCellLabel={(row, col, count) => {
+              if (matrixDisplayMode() !== 'difficulty')
+                return `${row} × ${col}: ${count}`
+              if (count === 0) return `${row} × ${col}: 0`
+              const highestWinLevel = matrixHighestWinLevel()[row]?.[col]
+              if ((highestWinLevel ?? -1) > 0)
+                return `${row} × ${col}: ${count}, highest win L${highestWinLevel}`
+              if (highestWinLevel === 0)
+                return `${row} × ${col}: ${count}, at least one win`
+              return `${row} × ${col}: ${count}, all losses`
+            }}
           />
         </div>
       </Show>
