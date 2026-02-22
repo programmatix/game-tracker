@@ -92,6 +92,28 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
 ]
 const PLAYS_VIEWS: ReadonlyArray<PlaysView> = ['plays', 'byGame', 'gameDetail', 'drilldown']
 
+const MAIN_TAB_OPTIONS: ReadonlyArray<{ value: MainTab; label: string }> = [
+  { value: 'monthlyChecklist', label: 'This month' },
+  { value: 'finalGirl', label: 'Final Girl' },
+  { value: 'skytearHorde', label: 'Skytear Horde' },
+  { value: 'spiritIsland', label: 'Spirit Island' },
+  { value: 'unsettled', label: 'Unsettled' },
+  { value: 'mistfall', label: 'Mistfall' },
+  { value: 'bullet', label: 'Bullet' },
+  { value: 'tooManyBones', label: 'Too Many Bones' },
+  { value: 'mageKnight', label: 'Mage Knight' },
+  { value: 'undauntedNormandy', label: 'Undaunted: Normandy' },
+  { value: 'deathMayDie', label: 'Death May Die' },
+  { value: 'achievements', label: 'Achievements' },
+  { value: 'plays', label: 'Plays' },
+  { value: 'feedback', label: 'Feedback' },
+]
+
+const PLAYS_VIEW_OPTIONS: ReadonlyArray<{ value: Extract<PlaysView, 'plays' | 'byGame'>; label: string }> = [
+  { value: 'plays', label: 'All plays' },
+  { value: 'byGame', label: 'By game' },
+]
+
 function isMainTab(value: string): value is MainTab {
   return (MAIN_TABS as readonly string[]).includes(value)
 }
@@ -645,6 +667,26 @@ function App() {
     setPageDraft('1')
   }
 
+  const switchMainTab = (nextTab: MainTab) => {
+    if (mainTab() === nextTab) return
+    const next: AppNavState = { ...currentNavState(), mainTab: nextTab }
+    setMainTab(nextTab)
+    pushNavState(next)
+  }
+
+  const switchPlaysView = (nextView: Extract<PlaysView, 'plays' | 'byGame'>) => {
+    if (playsView() === nextView) return
+    setPlaysView(nextView)
+    setSelectedGameKey(null)
+    setPlaysDrilldown(null)
+    resetPage()
+    pushNavState({
+      mainTab: 'plays',
+      playsView: nextView,
+      selectedGameKey: null,
+    })
+  }
+
   type AppHistoryState =
     | { kind: 'app'; nav: AppNavState }
     | { kind: 'drilldown'; navReturn: AppNavState; request: PlaysDrilldownRequest }
@@ -833,16 +875,31 @@ function App() {
           <div class="panelHeader playsHeader">
             <div class="panelHeaderLeft">
               <h2>Views</h2>
-              <div class="tabs" role="tablist" aria-label="Views">
+              <div class="tabSelectWrap mobileOnly">
+                <label class="tabSelectLabel" for="main-tab-select">
+                  View
+                </label>
+                <select
+                  id="main-tab-select"
+                  class="tabSelect"
+                  value={mainTab()}
+                  aria-label="Views"
+                  onChange={(e) => {
+                    const next = e.currentTarget.value
+                    if (!isMainTab(next)) return
+                    switchMainTab(next)
+                  }}
+                >
+                  <For each={MAIN_TAB_OPTIONS}>
+                    {(option) => <option value={option.value}>{option.label}</option>}
+                  </For>
+                </select>
+              </div>
+              <div class="tabs desktopOnly" role="tablist" aria-label="Views">
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'monthlyChecklist' }}
-                  onClick={() => {
-                    if (mainTab() === 'monthlyChecklist') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'monthlyChecklist' }
-                    setMainTab('monthlyChecklist')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('monthlyChecklist')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'monthlyChecklist'}
@@ -852,12 +909,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'finalGirl' }}
-                  onClick={() => {
-                    if (mainTab() === 'finalGirl') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'finalGirl' }
-                    setMainTab('finalGirl')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('finalGirl')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'finalGirl'}
@@ -867,12 +919,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'skytearHorde' }}
-                  onClick={() => {
-                    if (mainTab() === 'skytearHorde') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'skytearHorde' }
-                    setMainTab('skytearHorde')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('skytearHorde')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'skytearHorde'}
@@ -882,12 +929,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
-                  onClick={() => {
-                    if (mainTab() === 'spiritIsland') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'spiritIsland' }
-                    setMainTab('spiritIsland')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('spiritIsland')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'spiritIsland'}
@@ -897,12 +939,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'unsettled' }}
-                  onClick={() => {
-                    if (mainTab() === 'unsettled') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'unsettled' }
-                    setMainTab('unsettled')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('unsettled')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'unsettled'}
@@ -912,12 +949,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'mistfall' }}
-                  onClick={() => {
-                    if (mainTab() === 'mistfall') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'mistfall' }
-                    setMainTab('mistfall')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('mistfall')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'mistfall'}
@@ -927,12 +959,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'bullet' }}
-                  onClick={() => {
-                    if (mainTab() === 'bullet') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'bullet' }
-                    setMainTab('bullet')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('bullet')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'bullet'}
@@ -942,12 +969,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'tooManyBones' }}
-                  onClick={() => {
-                    if (mainTab() === 'tooManyBones') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'tooManyBones' }
-                    setMainTab('tooManyBones')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('tooManyBones')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'tooManyBones'}
@@ -957,12 +979,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'mageKnight' }}
-                  onClick={() => {
-                    if (mainTab() === 'mageKnight') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'mageKnight' }
-                    setMainTab('mageKnight')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('mageKnight')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'mageKnight'}
@@ -972,12 +989,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'undauntedNormandy' }}
-                  onClick={() => {
-                    if (mainTab() === 'undauntedNormandy') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'undauntedNormandy' }
-                    setMainTab('undauntedNormandy')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('undauntedNormandy')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'undauntedNormandy'}
@@ -987,12 +999,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'achievements' }}
-                  onClick={() => {
-                    if (mainTab() === 'achievements') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'achievements' }
-                    setMainTab('achievements')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('achievements')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'achievements'}
@@ -1002,12 +1009,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'plays' }}
-                  onClick={() => {
-                    if (mainTab() === 'plays') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'plays' }
-                    setMainTab('plays')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('plays')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'plays'}
@@ -1017,12 +1019,7 @@ function App() {
                 <button
                   class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'feedback' }}
-                  onClick={() => {
-                    if (mainTab() === 'feedback') return
-                    const next: AppNavState = { ...currentNavState(), mainTab: 'feedback' }
-                    setMainTab('feedback')
-                    pushNavState(next)
-                  }}
+                  onClick={() => switchMainTab('feedback')}
                   type="button"
                   role="tab"
                   aria-selected={mainTab() === 'feedback'}
@@ -1035,50 +1032,50 @@ function App() {
                 <Show
                   when={playsView() === 'gameDetail' || playsView() === 'drilldown'}
                   fallback={
-                    <div class="tabs" role="tablist" aria-label="Plays views">
-                      <button
-                        class="tabButton"
-                        classList={{ tabButtonActive: playsView() === 'plays' }}
-                        onClick={() => {
-                          if (playsView() === 'plays') return
-                          setPlaysView('plays')
-                          setSelectedGameKey(null)
-                          setPlaysDrilldown(null)
-                          resetPage()
-                          pushNavState({
-                            mainTab: 'plays',
-                            playsView: 'plays',
-                            selectedGameKey: null,
-                          })
-                        }}
-                        type="button"
-                        role="tab"
-                        aria-selected={playsView() === 'plays'}
-                      >
-                        All plays
-                      </button>
-                      <button
-                        class="tabButton"
-                        classList={{ tabButtonActive: playsView() === 'byGame' }}
-                        onClick={() => {
-                          if (playsView() === 'byGame') return
-                          setPlaysView('byGame')
-                          setSelectedGameKey(null)
-                          setPlaysDrilldown(null)
-                          resetPage()
-                          pushNavState({
-                            mainTab: 'plays',
-                            playsView: 'byGame',
-                            selectedGameKey: null,
-                          })
-                        }}
-                        type="button"
-                        role="tab"
-                        aria-selected={playsView() === 'byGame'}
-                      >
-                        By game
-                      </button>
-                    </div>
+                    <>
+                      <div class="tabSelectWrap mobileOnly">
+                        <label class="tabSelectLabel" for="plays-view-select">
+                          Plays view
+                        </label>
+                        <select
+                          id="plays-view-select"
+                          class="tabSelect"
+                          value={playsView() === 'byGame' ? 'byGame' : 'plays'}
+                          aria-label="Plays views"
+                          onChange={(e) => {
+                            const next = e.currentTarget.value
+                            if (next !== 'plays' && next !== 'byGame') return
+                            switchPlaysView(next)
+                          }}
+                        >
+                          <For each={PLAYS_VIEW_OPTIONS}>
+                            {(option) => <option value={option.value}>{option.label}</option>}
+                          </For>
+                        </select>
+                      </div>
+                      <div class="tabs desktopOnly" role="tablist" aria-label="Plays views">
+                        <button
+                          class="tabButton"
+                          classList={{ tabButtonActive: playsView() === 'plays' }}
+                          onClick={() => switchPlaysView('plays')}
+                          type="button"
+                          role="tab"
+                          aria-selected={playsView() === 'plays'}
+                        >
+                          All plays
+                        </button>
+                        <button
+                          class="tabButton"
+                          classList={{ tabButtonActive: playsView() === 'byGame' }}
+                          onClick={() => switchPlaysView('byGame')}
+                          type="button"
+                          role="tab"
+                          aria-selected={playsView() === 'byGame'}
+                        >
+                          By game
+                        </button>
+                      </div>
+                    </>
                   }
                 >
                   <div class="gameDetailHeader">
@@ -1290,7 +1287,7 @@ function App() {
               </div>
 
               <div class="tableWrap">
-                <table class="table">
+                <table class="table mobileCardTable">
                   <thead>
                     <tr>
                       <th>Link</th>
@@ -1312,14 +1309,18 @@ function App() {
                     <For each={pagedPlays()}>
                       {(play) => (
                         <tr>
-                          <td class="mono">
+                          <td class="mono" data-label="Link">
                             <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
                               Open
                             </a>
                           </td>
-                          <td class="mono">{play.id}</td>
-                          <td class="mono">{play.attributes.date || ''}</td>
-                          <td>
+                          <td class="mono" data-label="Play">
+                            {play.id}
+                          </td>
+                          <td class="mono" data-label="Date">
+                            {play.attributes.date || ''}
+                          </td>
+                          <td data-label="Game">
                             <button
                               class="gameButtonInline"
                               type="button"
@@ -1342,12 +1343,20 @@ function App() {
                               {play.item?.attributes.objectid || ''}
                             </div>
                           </td>
-                          <td class="mono">{play.attributes.quantity || ''}</td>
-                          <td class="mono">{formatPlayLength(play.attributes.length)}</td>
-                          <td>{play.attributes.location || ''}</td>
-                          <td class="mono">{play.attributes.incomplete || ''}</td>
-                          <td class="mono">{play.attributes.nowinstats || ''}</td>
-                          <td>
+                          <td class="mono" data-label="Qty">
+                            {play.attributes.quantity || ''}
+                          </td>
+                          <td class="mono" data-label="Length">
+                            {formatPlayLength(play.attributes.length)}
+                          </td>
+                          <td data-label="Location">{play.attributes.location || ''}</td>
+                          <td class="mono" data-label="Incomplete">
+                            {play.attributes.incomplete || ''}
+                          </td>
+                          <td class="mono" data-label="Now in Stats">
+                            {play.attributes.nowinstats || ''}
+                          </td>
+                          <td data-label="Players">
                             <div class="players">
                               <For each={play.players}>
                                 {(player) => {
@@ -1371,7 +1380,7 @@ function App() {
                               </For>
                             </div>
                           </td>
-                          <td>
+                          <td data-label="Comments">
                             <Show
                               when={play.comments}
                               fallback={<span class="muted">—</span>}
@@ -1382,7 +1391,7 @@ function App() {
                               </details>
                             </Show>
                           </td>
-                          <td>
+                          <td data-label="User Comment">
                             <Show
                               when={play.usercomment}
                               fallback={<span class="muted">—</span>}
@@ -1393,7 +1402,7 @@ function App() {
                               </details>
                             </Show>
                           </td>
-                          <td>
+                          <td data-label="Raw">
                             <details class="detailsCell">
                               <summary>View</summary>
                               <pre>{JSON.stringify(play.raw, null, 2)}</pre>
@@ -1422,7 +1431,7 @@ function App() {
               </div>
 
               <div class="tableWrap">
-                <table class="table tableCompact">
+                <table class="table tableCompact mobileCardTable">
                   <thead>
                     <tr>
                       <th>Game</th>
@@ -1434,7 +1443,7 @@ function App() {
                     <For each={playsByGame()}>
                       {(row) => (
                         <tr>
-                          <td>
+                          <td data-label="Game">
                             <div class="gameRow">
                               <Show
                                 when={
@@ -1481,8 +1490,12 @@ function App() {
                               </div>
                             </div>
                           </td>
-                          <td class="mono">{row.plays.toLocaleString()}</td>
-                          <td class="mono">{row.mostRecentDate || '—'}</td>
+                          <td class="mono" data-label="Total plays">
+                            {row.plays.toLocaleString()}
+                          </td>
+                          <td class="mono" data-label="Most recent">
+                            {row.mostRecentDate || '—'}
+                          </td>
                         </tr>
                       )}
                     </For>
@@ -1497,7 +1510,7 @@ function App() {
               </div>
 
               <div class="tableWrap">
-                <table class="table">
+                <table class="table mobileCardTable">
                   <thead>
                     <tr>
                       <th>Link</th>
@@ -1510,14 +1523,20 @@ function App() {
                     <For each={drilldownPagedPlays()}>
                       {(play) => (
                         <tr>
-                          <td class="mono">
+                          <td class="mono" data-label="Link">
                             <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
                               Open
                             </a>
                           </td>
-                          <td class="mono">{play.attributes.date || ''}</td>
-                          <td class="mono">{getPlayerColorForUser(play, USERNAME)}</td>
-                          <td>{getOtherPlayersSummary(play, USERNAME)}</td>
+                          <td class="mono" data-label="Date">
+                            {play.attributes.date || ''}
+                          </td>
+                          <td class="mono" data-label={`Color (${USERNAME})`}>
+                            {getPlayerColorForUser(play, USERNAME)}
+                          </td>
+                          <td data-label="Other Players">
+                            {getOtherPlayersSummary(play, USERNAME)}
+                          </td>
                         </tr>
                       )}
                     </For>
@@ -1535,7 +1554,7 @@ function App() {
               </div>
 
               <div class="tableWrap">
-                <table class="table">
+                <table class="table mobileCardTable">
                   <thead>
                     <tr>
                       <th>Link</th>
@@ -1557,26 +1576,38 @@ function App() {
                     <For each={selectedGamePagedPlays()}>
                       {(play) => (
                         <tr>
-                          <td class="mono">
+                          <td class="mono" data-label="Link">
                             <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
                               Open
                             </a>
                           </td>
-                          <td class="mono">{play.id}</td>
-                          <td class="mono">{play.attributes.date || ''}</td>
-                          <td>
+                          <td class="mono" data-label="Play">
+                            {play.id}
+                          </td>
+                          <td class="mono" data-label="Date">
+                            {play.attributes.date || ''}
+                          </td>
+                          <td data-label="Game">
                             <div>{play.item?.attributes.name || ''}</div>
                             <div class="muted mono">
                               {play.item?.attributes.objecttype || 'thing'} #
                               {play.item?.attributes.objectid || ''}
                             </div>
                           </td>
-                          <td class="mono">{play.attributes.quantity || ''}</td>
-                          <td class="mono">{formatPlayLength(play.attributes.length)}</td>
-                          <td>{play.attributes.location || ''}</td>
-                          <td class="mono">{play.attributes.incomplete || ''}</td>
-                          <td class="mono">{play.attributes.nowinstats || ''}</td>
-                          <td>
+                          <td class="mono" data-label="Qty">
+                            {play.attributes.quantity || ''}
+                          </td>
+                          <td class="mono" data-label="Length">
+                            {formatPlayLength(play.attributes.length)}
+                          </td>
+                          <td data-label="Location">{play.attributes.location || ''}</td>
+                          <td class="mono" data-label="Incomplete">
+                            {play.attributes.incomplete || ''}
+                          </td>
+                          <td class="mono" data-label="Now in Stats">
+                            {play.attributes.nowinstats || ''}
+                          </td>
+                          <td data-label="Players">
                             <div class="players">
                               <For each={play.players}>
                                 {(player) => {
@@ -1600,7 +1631,7 @@ function App() {
                               </For>
                             </div>
                           </td>
-                          <td>
+                          <td data-label="Comments">
                             <Show
                               when={play.comments}
                               fallback={<span class="muted">—</span>}
@@ -1611,7 +1642,7 @@ function App() {
                               </details>
                             </Show>
                           </td>
-                          <td>
+                          <td data-label="User Comment">
                             <Show
                               when={play.usercomment}
                               fallback={<span class="muted">—</span>}
@@ -1622,7 +1653,7 @@ function App() {
                               </details>
                             </Show>
                           </td>
-                          <td>
+                          <td data-label="Raw">
                             <details class="detailsCell">
                               <summary>View</summary>
                               <pre>{JSON.stringify(play.raw, null, 2)}</pre>
