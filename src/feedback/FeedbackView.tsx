@@ -2,6 +2,7 @@ import type { User } from 'firebase/auth'
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import {
   createFeedback,
+  deleteFeedback,
   resolveFeedback,
   subscribeAllFeedback,
   subscribeFeedbackForUser,
@@ -26,6 +27,7 @@ export default function FeedbackView(props: Props) {
   const [submitStatus, setSubmitStatus] = createSignal<string | null>(null)
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [isResolvingId, setIsResolvingId] = createSignal<string | null>(null)
+  const [isDeletingId, setIsDeletingId] = createSignal<string | null>(null)
   const [resolveError, setResolveError] = createSignal<string | null>(null)
 
   const canSubmit = createMemo(() => Boolean(props.user && message().trim()))
@@ -90,6 +92,22 @@ export default function FeedbackView(props: Props) {
       setResolveError(errorText || 'Failed to resolve feedback.')
     } finally {
       setIsResolvingId(null)
+    }
+  }
+
+  async function onDeleteFeedback(item: FeedbackItem) {
+    const user = props.user
+    if (!props.isAdmin || !user) return
+
+    setResolveError(null)
+    setIsDeletingId(item.id)
+    try {
+      await deleteFeedback(item.id, user)
+    } catch (error) {
+      const errorText = error instanceof Error ? error.message : String(error)
+      setResolveError(errorText || 'Failed to delete feedback.')
+    } finally {
+      setIsDeletingId(null)
     }
   }
 
@@ -177,7 +195,7 @@ export default function FeedbackView(props: Props) {
                     <th>Message</th>
                     <th>Created</th>
                     <th>Resolved</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,18 +218,24 @@ export default function FeedbackView(props: Props) {
                         <td class="mono">{formatDateTime(item.createdAtMs)}</td>
                         <td class="mono">{formatDateTime(item.resolvedAtMs)}</td>
                         <td>
-                          <Show
-                            when={item.status !== 'resolved'}
-                            fallback={<span class="muted">—</span>}
-                          >
+                          <div class="feedbackActions">
+                            <Show when={item.status !== 'resolved'}>
+                              <button
+                                type="button"
+                                onClick={() => void onResolveFeedback(item)}
+                                disabled={isResolvingId() === item.id || isDeletingId() === item.id}
+                              >
+                                {isResolvingId() === item.id ? 'Resolving…' : 'Mark resolved'}
+                              </button>
+                            </Show>
                             <button
                               type="button"
-                              onClick={() => void onResolveFeedback(item)}
-                              disabled={isResolvingId() === item.id}
+                              onClick={() => void onDeleteFeedback(item)}
+                              disabled={isDeletingId() === item.id || isResolvingId() === item.id}
                             >
-                              {isResolvingId() === item.id ? 'Resolving…' : 'Mark resolved'}
+                              {isDeletingId() === item.id ? 'Deleting…' : 'Delete'}
                             </button>
-                          </Show>
+                          </div>
                         </td>
                       </tr>
                     )}

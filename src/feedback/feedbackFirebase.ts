@@ -2,6 +2,7 @@ import type { User } from 'firebase/auth'
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   query,
@@ -145,4 +146,11 @@ export async function resolveFeedback(feedbackId: string, adminUser: User) {
     resolvedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
+}
+
+export async function deleteFeedback(feedbackId: string, adminUser: User) {
+  if (!isFirebaseConfigured()) throw new Error('Firebase is not configured.')
+  if (!adminUser.email) throw new Error('Admin account email is missing.')
+
+  await deleteDoc(doc(getFirebaseFirestore(), 'feedback', feedbackId))
 }

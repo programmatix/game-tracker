@@ -11,6 +11,7 @@ service cloud.firestore {
 
     match /feedback/{feedbackId} {
       allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid || adminUser());
+      allow delete: if adminUser();
 
       allow create: if signedIn()
                     && request.auth.token.email != null
