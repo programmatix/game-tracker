@@ -10,6 +10,8 @@ import {
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
   buildPlayCountTrack,
+  groupAchievementItemsByLabel,
+  slugifyTrackId,
   sumQuantities,
 } from '../../achievements/gameUtils'
 import { isMeaningfulAchievementItem, normalizeAchievementItemLabel } from '../../achievements/progress'
@@ -215,6 +217,24 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: villains.items,
+      groupByItemLabel: ownedFinalGirlContent.villainSeasonsByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `villainWinsBySeason:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `defeat-each-villain-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Defeat',
+          itemNoun: `villain in ${grouped.group}`,
+          unitSingular: 'win',
+          items: grouped.items,
+          countsByItemId: villains.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (locations.items.length > 0) {
@@ -255,6 +275,24 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: locations.items,
+      groupByItemLabel: ownedFinalGirlContent.locationSeasonsByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `locationPlaysBySeason:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-location-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `location in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: locations.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (finalGirls.items.length > 0) {
@@ -300,6 +338,24 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: finalGirls.items,
+      groupByItemLabel: ownedFinalGirlContent.finalGirlSeasonsByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `finalGirlPlaysBySeason:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-final-girl-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `final girl in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: finalGirls.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (boxes.items.length > 0) {

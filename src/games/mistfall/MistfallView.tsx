@@ -35,6 +35,8 @@ type MistfallEntry = {
   isWin: boolean
 }
 
+type MatrixDisplayMode = 'count' | 'played'
+
 function playQuantity(play: { attributes: Record<string, string> }): number {
   const parsed = Number(play.attributes.quantity || '1')
   if (!Number.isFinite(parsed) || parsed <= 0) return 1
@@ -122,7 +124,7 @@ export default function MistfallView(props: {
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
-  const [hideCounts, setHideCounts] = createSignal(true)
+  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [mistfallThing] = createResource(
     () => ({ id: MISTFALL_BASE_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
@@ -437,12 +439,16 @@ export default function MistfallView(props: {
                 Flip axes
               </label>
               <label class="control">
-                <input
-                  type="checkbox"
-                  checked={hideCounts()}
-                  onInput={(e) => setHideCounts(e.currentTarget.checked)}
-                />
-                Hide count
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) =>
+                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
+                  }
+                >
+                  <option value="count">Count</option>
+                  <option value="played">Played</option>
+                </select>
               </label>
             </div>
           </div>
@@ -450,7 +456,7 @@ export default function MistfallView(props: {
             rows={matrixRows()}
             cols={matrixCols()}
             maxCount={matrixMax()}
-            hideCounts={hideCounts()}
+            hideCounts={matrixDisplayMode() === 'played'}
             rowHeader={flipAxes() ? 'Quest' : 'Hero'}
             colHeader={flipAxes() ? 'Hero' : 'Quest'}
             rowGroupBy={rowGroupBy}

@@ -10,6 +10,8 @@ import {
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
   buildPlayCountTrack,
+  groupAchievementItemsByLabel,
+  slugifyTrackId,
   itemsFromMap,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -95,6 +97,24 @@ export function computeMistfallAchievements(plays: BggPlay[], username: string) 
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: questWins.items,
+      groupByItemLabel: mistfallMappings.questGroupByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `questWinsByGroup:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `defeat-each-quest-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Defeat',
+          itemNoun: `quest in ${grouped.group}`,
+          unitSingular: 'win',
+          items: grouped.items,
+          countsByItemId: questWins.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (quests.items.length > 0) {
@@ -135,6 +155,24 @@ export function computeMistfallAchievements(plays: BggPlay[], username: string) 
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: quests.items,
+      groupByItemLabel: mistfallMappings.questGroupByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `questPlaysByGroup:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-quest-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `quest in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: quests.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (heroes.items.length > 0) {
@@ -175,6 +213,24 @@ export function computeMistfallAchievements(plays: BggPlay[], username: string) 
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: heroes.items,
+      groupByItemLabel: mistfallMappings.heroGroupByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `heroPlaysByGroup:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-hero-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `hero in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: heroes.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   return buildUnlockedAchievementsForGame({ gameId: 'mistfall', gameName: 'Mistfall', tracks })

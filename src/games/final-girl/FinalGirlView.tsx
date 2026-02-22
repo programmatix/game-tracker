@@ -38,6 +38,8 @@ type FinalGirlEntry = {
   isWin: boolean
 }
 
+type MatrixDisplayMode = 'count' | 'played'
+
 const ownedContent = parseOwnedFinalGirlContent(ownedContentText)
 
 function playQuantity(play: BggPlay): number {
@@ -56,7 +58,8 @@ export default function FinalGirlView(props: {
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
-  const [hideCounts, setHideCounts] = createSignal(true)
+  const [matrixDisplayMode, setMatrixDisplayMode] =
+    createSignal<MatrixDisplayMode>('played')
   const [ownedVillainsOnly, setOwnedVillainsOnly] = createSignal(false)
   const [ownedLocationsOnly, setOwnedLocationsOnly] = createSignal(false)
 
@@ -483,12 +486,16 @@ export default function FinalGirlView(props: {
                 Flip axes
               </label>
               <label class="control">
-                <input
-                  type="checkbox"
-                  checked={hideCounts()}
-                  onInput={(e) => setHideCounts(e.currentTarget.checked)}
-                />
-                Hide count
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) =>
+                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
+                  }
+                >
+                  <option value="count">Count</option>
+                  <option value="played">Played</option>
+                </select>
               </label>
             </div>
           </div>
@@ -496,7 +503,7 @@ export default function FinalGirlView(props: {
             rows={matrixRows()}
             cols={matrixCols()}
             maxCount={matrixMax()}
-            hideCounts={hideCounts()}
+            hideCounts={matrixDisplayMode() === 'played'}
             rowHeader={flipAxes() ? 'Location' : 'Villain'}
             colHeader={flipAxes() ? 'Villain' : 'Location'}
             rowGroupBy={rowGroupBy}

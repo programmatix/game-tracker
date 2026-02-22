@@ -9,6 +9,8 @@ import {
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
   buildPlayCountTrack,
+  groupAchievementItemsByLabel,
+  slugifyTrackId,
   sumQuantities,
 } from '../../achievements/gameUtils'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
@@ -88,6 +90,24 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: tyrants.items,
+      groupByItemLabel: tooManyBonesContent.tyrantGroupByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `tyrantWinsByGroup:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `defeat-each-tyrant-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Defeat',
+          itemNoun: `tyrant in ${grouped.group}`,
+          unitSingular: 'win',
+          items: grouped.items,
+          countsByItemId: tyrants.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (gearlocs.items.length > 0) {
@@ -132,6 +152,24 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: gearlocs.items,
+      groupByItemLabel: tooManyBonesContent.gearlocGroupByName,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `gearlocPlaysByGroup:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-gearloc-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `gearloc in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: gearlocs.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   return buildUnlockedAchievementsForGame({

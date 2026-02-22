@@ -20,6 +20,8 @@ function pairKey(scenario: string, side: string): string {
   return `${normalizeLabel(scenario)}|||${normalizeLabel(side)}`
 }
 
+type MatrixDisplayMode = 'count' | 'played'
+
 export default function UndauntedNormandyView(props: {
   plays: BggPlay[]
   username: string
@@ -30,7 +32,7 @@ export default function UndauntedNormandyView(props: {
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
-  const [hideCounts, setHideCounts] = createSignal(true)
+  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [thing] = createResource(
     () => ({ id: UNDAUNTED_NORMANDY_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
@@ -222,13 +224,17 @@ export default function UndauntedNormandyView(props: {
                 />{' '}
                 Flip axes
               </label>
-              <label class="controlCheckbox">
-                <input
-                  type="checkbox"
-                  checked={hideCounts()}
-                  onChange={(e) => setHideCounts(e.currentTarget.checked)}
-                />{' '}
-                Hide counts
+              <label class="control">
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) =>
+                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
+                  }
+                >
+                  <option value="count">Count</option>
+                  <option value="played">Played</option>
+                </select>
               </label>
             </div>
           </div>
@@ -239,7 +245,7 @@ export default function UndauntedNormandyView(props: {
             rowHeader={flipAxes() ? 'Side' : 'Scenario'}
             colHeader={flipAxes() ? 'Scenario' : 'Side'}
             maxCount={matrixMax()}
-            hideCounts={hideCounts()}
+            hideCounts={matrixDisplayMode() === 'played'}
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }

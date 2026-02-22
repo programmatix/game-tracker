@@ -15,6 +15,8 @@ import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { deathMayDieContent } from './content'
 import { DEATH_MAY_DIE_OBJECT_ID, getDeathMayDieEntries } from './deathMayDieEntries'
 
+type MatrixDisplayMode = 'count' | 'played'
+
 export default function DeathMayDieView(props: {
   plays: BggPlay[]
   username: string
@@ -25,7 +27,7 @@ export default function DeathMayDieView(props: {
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [flipAxes, setFlipAxes] = createSignal(false)
-  const [hideCounts, setHideCounts] = createSignal(true)
+  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
 
   const [deathMayDieThing] = createResource(
     () => ({ id: DEATH_MAY_DIE_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
@@ -324,13 +326,17 @@ export default function DeathMayDieView(props: {
                 />{' '}
                 Flip axes
               </label>
-              <label class="controlCheckbox">
-                <input
-                  type="checkbox"
-                  checked={hideCounts()}
-                  onChange={(e) => setHideCounts(e.currentTarget.checked)}
-                />{' '}
-                Hide counts
+              <label class="control">
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) =>
+                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
+                  }
+                >
+                  <option value="count">Count</option>
+                  <option value="played">Played</option>
+                </select>
               </label>
             </div>
           </div>
@@ -341,7 +347,7 @@ export default function DeathMayDieView(props: {
             rowHeader={flipAxes() ? 'Scenario' : 'Elder One'}
             colHeader={flipAxes() ? 'Elder One' : 'Scenario'}
             maxCount={matrixMax()}
-            hideCounts={hideCounts()}
+            hideCounts={matrixDisplayMode() === 'played'}
             getCount={(row, col) =>
               flipAxes() ? (matrix()[col]?.[row] ?? 0) : (matrix()[row]?.[col] ?? 0)
             }

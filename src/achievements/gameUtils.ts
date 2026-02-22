@@ -10,6 +10,8 @@ import {
 
 export type AchievementItem = { id: string; label: string }
 
+export type GroupedAchievementItems = { group: string; items: AchievementItem[] }
+
 export function sumQuantities(entries: Array<{ quantity: number }>): number {
   return entries.reduce((sum, entry) => sum + (entry.quantity || 0), 0)
 }
@@ -126,6 +128,40 @@ export function buildAchievementItem(label: string, labelToId?: Map<string, stri
   return { id, label: normalizedLabel || label }
 }
 
+export function groupAchievementItemsByLabel(input: {
+  items: AchievementItem[]
+  groupByItemLabel: Map<string, string> | ((label: string) => string | undefined)
+}): GroupedAchievementItems[] {
+  const resolveGroup =
+    typeof input.groupByItemLabel === 'function'
+      ? input.groupByItemLabel
+      : (() => {
+          const byNormalizedLabel = new Map<string, string>()
+          for (const [label, group] of input.groupByItemLabel.entries()) {
+            const normalizedLabel = normalizeAchievementItemLabel(label).toLowerCase()
+            const normalizedGroup = normalizeAchievementItemLabel(group)
+            if (!normalizedLabel || !normalizedGroup) continue
+            if (!byNormalizedLabel.has(normalizedLabel)) byNormalizedLabel.set(normalizedLabel, normalizedGroup)
+          }
+          return (label: string) => byNormalizedLabel.get(normalizeAchievementItemLabel(label).toLowerCase())
+        })()
+
+  const grouped = new Map<string, GroupedAchievementItems>()
+  for (const item of input.items) {
+    const groupLabel = resolveGroup(item.label)
+    const normalizedGroup = normalizeAchievementItemLabel(groupLabel || '')
+    if (!normalizedGroup) continue
+    const groupKey = normalizedGroup.toLowerCase()
+    const bucket = grouped.get(groupKey)
+    if (bucket) {
+      bucket.items.push(item)
+      continue
+    }
+    grouped.set(groupKey, { group: normalizedGroup, items: [item] })
+  }
+  return [...grouped.values()]
+}
+
 export function itemsFromMap(map: Map<string, string>): AchievementItem[] {
   return [...map.entries()].map(([id, label]) => ({
     id,
@@ -223,4 +259,3 @@ export function buildPerItemTrack(input: {
 export function stripTrailingLevelLabel(value: string): string {
   return value.replace(/\s+L\d+\s*$/i, '').trim()
 }
-

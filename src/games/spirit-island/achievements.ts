@@ -12,6 +12,7 @@ import {
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
   buildPlayCountTrack,
+  groupAchievementItemsByLabel,
   itemsFromMap,
   slugifyTrackId,
   stripTrailingLevelLabel,
@@ -185,6 +186,13 @@ export function computeSpiritIslandAchievements(
     },
   ]
 
+  const spiritGroupByLabel = new Map<string, string>()
+  const spiritComplexityByLabel = new Map<string, string>()
+  for (const spirit of spiritIslandMappings.spirits) {
+    spiritGroupByLabel.set(spirit.display, spirit.group)
+    spiritComplexityByLabel.set(spirit.display, spirit.complexity)
+  }
+
   if (lowComplexitySpiritPlays.items.length > 0) {
     tracks.push(
       buildPerItemTrack({
@@ -326,6 +334,43 @@ export function computeSpiritIslandAchievements(
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: spirits.items,
+      groupByItemLabel: spiritGroupByLabel,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `spiritPlaysByGroup:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-spirit-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `spirit in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: spirits.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: spirits.items,
+      groupByItemLabel: spiritComplexityByLabel,
+    })) {
+      if (grouped.group.toLowerCase() === 'low') continue
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `spiritPlaysByComplexity:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-${slugifyTrackId(grouped.group)}-complexity-spirit`,
+          verb: 'Play',
+          itemNoun: `${grouped.group} complexity spirit`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: spirits.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (adversarySpiritLevels.items.length > 0) {

@@ -9,6 +9,8 @@ import {
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
   buildPlayCountTrack,
+  groupAchievementItemsByLabel,
+  slugifyTrackId,
   sumQuantities,
 } from '../../achievements/gameUtils'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
@@ -88,6 +90,24 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: heroPrecons.items,
+      groupByItemLabel: skytearHordeContent.heroBoxByPrecon,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `heroPreconPlaysByBox:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `play-each-hero-precon-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Play',
+          itemNoun: `hero precon in ${grouped.group}`,
+          unitSingular: 'time',
+          items: grouped.items,
+          countsByItemId: heroPrecons.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   if (enemyPrecons.items.length > 0) {
@@ -131,6 +151,24 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
         }
       }),
     )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: enemyPrecons.items,
+      groupByItemLabel: skytearHordeContent.enemyBoxByPrecon,
+    })) {
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `enemyPreconWinsByBox:${slugifyTrackId(grouped.group)}`,
+          achievementBaseId: `defeat-each-enemy-precon-in-${slugifyTrackId(grouped.group)}`,
+          verb: 'Defeat',
+          itemNoun: `enemy precon in ${grouped.group}`,
+          unitSingular: 'win',
+          items: grouped.items,
+          countsByItemId: enemyPrecons.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   return buildUnlockedAchievementsForGame({
