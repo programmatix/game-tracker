@@ -323,24 +323,17 @@ export default function FinalGirlView(props: {
   )
 
   const matrixRows = createMemo(() => {
-    return sortBySeasonThenCount(
-      mergeObservedAfterOwned(
-        getOwnedFinalGirlVillains(ownedContent),
-        sortKeysByCountDesc(villainCounts()),
-      ),
-      villainCounts(),
-      ownedContent.villainSeasonsByName,
+    // Not using sortBySeasonThenCount here as we want a nice diagonal
+    return mergeObservedAfterOwned(
+      getOwnedFinalGirlVillains(ownedContent),
+      sortKeysByCountDesc(villainCounts()),
     )
   })
 
   const matrixCols = createMemo(() => {
-    return sortBySeasonThenCount(
-      mergeObservedAfterOwned(
-        getOwnedFinalGirlLocations(ownedContent),
-        sortKeysByCountDesc(locationCounts()),
-      ),
-      locationCounts(),
-      ownedContent.locationSeasonsByName,
+    return mergeObservedAfterOwned(
+      getOwnedFinalGirlLocations(ownedContent),
+      sortKeysByCountDesc(locationCounts()),
     )
   })
 

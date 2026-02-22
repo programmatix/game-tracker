@@ -28,6 +28,7 @@ export default function FeedbackView(props: Props) {
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [isResolvingId, setIsResolvingId] = createSignal<string | null>(null)
   const [isDeletingId, setIsDeletingId] = createSignal<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = createSignal<string | null>(null)
   const [resolveError, setResolveError] = createSignal<string | null>(null)
 
   const canSubmit = createMemo(() => Boolean(props.user && message().trim()))
@@ -84,6 +85,7 @@ export default function FeedbackView(props: Props) {
     if (!props.isAdmin || !user || item.status === 'resolved') return
 
     setResolveError(null)
+    setConfirmDeleteId(null)
     setIsResolvingId(item.id)
     try {
       await resolveFeedback(item.id, user)
@@ -103,6 +105,7 @@ export default function FeedbackView(props: Props) {
     setIsDeletingId(item.id)
     try {
       await deleteFeedback(item.id, user)
+      setConfirmDeleteId(null)
     } catch (error) {
       const errorText = error instanceof Error ? error.message : String(error)
       setResolveError(errorText || 'Failed to delete feedback.')
@@ -228,13 +231,33 @@ export default function FeedbackView(props: Props) {
                                 {isResolvingId() === item.id ? 'Resolving…' : 'Mark resolved'}
                               </button>
                             </Show>
-                            <button
-                              type="button"
-                              onClick={() => void onDeleteFeedback(item)}
-                              disabled={isDeletingId() === item.id || isResolvingId() === item.id}
+                            <Show
+                              when={confirmDeleteId() === item.id}
+                              fallback={
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteId(item.id)}
+                                  disabled={isDeletingId() === item.id || isResolvingId() === item.id}
+                                >
+                                  Delete
+                                </button>
+                              }
                             >
-                              {isDeletingId() === item.id ? 'Deleting…' : 'Delete'}
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => void onDeleteFeedback(item)}
+                                disabled={isDeletingId() === item.id || isResolvingId() === item.id}
+                              >
+                                {isDeletingId() === item.id ? 'Deleting…' : 'Confirm delete'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteId(null)}
+                                disabled={isDeletingId() === item.id}
+                              >
+                                Cancel
+                              </button>
+                            </Show>
                           </div>
                         </td>
                       </tr>
