@@ -55,5 +55,5 @@ costs:
   # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    Core: 99.99
-    Season 2: 109.99
+    # Returned!
+    Core: 0.01

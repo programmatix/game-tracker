@@ -13,14 +13,51 @@ import {
 } from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
-import { totalPlayMinutes } from '../../playDuration'
 import { skytearHordeContent } from './content'
 import {
   getSkytearHordeEntries,
+  type SkytearHordeEntry,
   SKYTEAR_HORDE_OBJECT_ID,
 } from './skytearHordeEntries'
 
 type MatrixDisplayMode = 'count' | 'played'
+
+function playLengthMinutes(attributes: Record<string, string>): number {
+  const parsed = Number(attributes.length || '0')
+  if (!Number.isFinite(parsed) || parsed < 0) return 0
+  return parsed
+}
+
+function thingAssumedPlayTimeMinutes(raw: unknown): number | null {
+  const record = raw as Record<string, unknown> | null
+  const candidates = ['playingtime', 'minplaytime', 'maxplaytime']
+
+  for (const key of candidates) {
+    const node = record?.[key] as Record<string, unknown> | undefined
+    const attrs = (node?.$ as Record<string, unknown> | undefined) || undefined
+    const value = attrs?.value
+    if (typeof value !== 'string') continue
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed <= 0) continue
+    return parsed
+  }
+
+  return null
+}
+
+function entryMinutesWithAssumption(
+  entry: SkytearHordeEntry,
+  assumedMinutesByObjectId: Map<string, number> | undefined,
+): { minutes: number; assumed: boolean } {
+  const actual = playLengthMinutes(entry.play.attributes)
+  if (actual > 0) return { minutes: actual * entry.quantity, assumed: false }
+
+  const objectId = entry.play.item?.attributes.objectid || ''
+  if (!objectId) return { minutes: 0, assumed: false }
+  const assumed = assumedMinutesByObjectId?.get(objectId)
+  if (!assumed) return { minutes: 0, assumed: false }
+  return { minutes: assumed * entry.quantity, assumed: true }
+}
 
 export default function SkytearHordeView(props: {
   plays: BggPlay[]
@@ -71,6 +108,31 @@ export default function SkytearHordeView(props: {
   )
 
   const entries = createMemo(() => getSkytearHordeEntries(props.plays, props.username))
+  const assumedObjectIds = createMemo(() => {
+    const ids = new Set<string>()
+    for (const entry of entries()) {
+      if (playLengthMinutes(entry.play.attributes) > 0) continue
+      const objectId = entry.play.item?.attributes.objectid || ''
+      if (objectId) ids.add(objectId)
+    }
+    return Array.from(ids).sort()
+  })
+  const [assumedMinutesByObjectId] = createResource(
+    () => ({ ids: assumedObjectIds(), authToken: props.authToken?.trim() || '' }),
+    async ({ ids, authToken }) => {
+      const result = new Map<string, number>()
+      for (const objectId of ids) {
+        try {
+          const thing = await fetchThingSummary(objectId, authToken ? { authToken } : undefined)
+          const minutes = thingAssumedPlayTimeMinutes(thing.raw)
+          if (minutes) result.set(objectId, minutes)
+        } catch {
+          // ignore missing/rate-limited assumed play time
+        }
+      }
+      return result
+    },
+  )
   const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
   const achievements = createMemo(() =>
     computeGameAchievements('skytearHorde', props.plays, props.username),
@@ -78,12 +140,21 @@ export default function SkytearHordeView(props: {
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
   const totalHours = createMemo(
-    () =>
-      entries().reduce(
-        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+    () => {
+      const assumed = assumedMinutesByObjectId()
+      return entries().reduce(
+        (sum, entry) => sum + entryMinutesWithAssumption(entry, assumed).minutes / 60,
         0,
-      ),
+      )
+    },
   )
+  const totalHoursHasAssumed = createMemo(() => {
+    const assumed = assumedMinutesByObjectId()
+    for (const entry of entries()) {
+      if (entryMinutesWithAssumption(entry, assumed).assumed) return true
+    }
+    return false
+  })
 
   const heroCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -177,17 +248,23 @@ export default function SkytearHordeView(props: {
 
   const boxPlayHours = createMemo(() => {
     const hoursByBox: Record<string, number> = {}
+    const hasAssumedHoursByBox: Record<string, boolean> = {}
+    const assumed = assumedMinutesByObjectId()
     for (const entry of entries()) {
       const boxes = new Set<string>()
       const heroBox = skytearHordeContent.heroBoxByPrecon.get(entry.heroPrecon)
       const enemyBox = skytearHordeContent.enemyBoxByPrecon.get(entry.enemyPrecon)
       if (heroBox) boxes.add(heroBox)
       if (enemyBox) boxes.add(enemyBox)
-      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      const resolved = entryMinutesWithAssumption(entry, assumed)
+      const hours = resolved.minutes / 60
       if (hours <= 0) continue
-      for (const box of boxes) incrementCount(hoursByBox, box, hours)
+      for (const box of boxes) {
+        incrementCount(hoursByBox, box, hours)
+        if (resolved.assumed) hasAssumedHoursByBox[box] = true
+      }
     }
-    return hoursByBox
+    return { hoursByBox, hasAssumedHoursByBox }
   })
 
   const playIdsByBox = createMemo(() => {
@@ -211,7 +288,8 @@ export default function SkytearHordeView(props: {
         box,
         cost,
         plays: boxPlayCounts()[box] ?? 0,
-        hoursPlayed: boxPlayHours()[box] ?? 0,
+        hoursPlayed: boxPlayHours().hoursByBox[box] ?? 0,
+        hasAssumedHours: boxPlayHours().hasAssumedHoursByBox[box] === true,
       }))
       .sort((a, b) => {
         const byPlays = b.plays - a.plays
@@ -409,6 +487,7 @@ export default function SkytearHordeView(props: {
               currencySymbol={skytearHordeContent.costCurrencySymbol}
               overallPlays={totalPlays()}
               overallHours={totalHours()}
+              overallHoursHasAssumed={totalHoursHasAssumed()}
               onPlaysClick={(box) =>
                 props.onOpenPlays({
                   title: `Skytear Horde • Box: ${box}`,

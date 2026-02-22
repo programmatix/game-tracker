@@ -5,6 +5,7 @@ export type CostPerPlayRow = {
   cost: number
   plays: number
   hoursPlayed: number
+  hasAssumedHours?: boolean
 }
 
 export default function CostPerPlayTable(props: {
@@ -12,6 +13,7 @@ export default function CostPerPlayTable(props: {
   currencySymbol: string
   overallPlays: number
   overallHours?: number
+  overallHoursHasAssumed?: boolean
   overallCost?: number
   title?: string
   onPlaysClick?: (box: string) => void
@@ -26,6 +28,9 @@ export default function CostPerPlayTable(props: {
     typeof props.overallHours === 'number'
       ? props.overallHours
       : rows().reduce((sum, row) => sum + row.hoursPlayed, 0),
+  )
+  const hasAnyAssumedHours = createMemo(
+    () => Boolean(props.overallHoursHasAssumed) || rows().some((row) => row.hasAssumedHours),
   )
 
   const formatMoney = (value: number): string => {
@@ -79,7 +84,10 @@ export default function CostPerPlayTable(props: {
                       </button>
                     </Show>
                   </td>
-                  <td class="mono">{formatHours(row.hoursPlayed)}</td>
+                  <td class="mono">
+                    {formatHours(row.hoursPlayed)}
+                    {row.hasAssumedHours ? '*' : ''}
+                  </td>
                   <td class="mono">{formatCostPerPlay(row.cost, row.plays)}</td>
                   <td class="mono">{formatCostPerHour(row.cost, row.hoursPlayed)}</td>
                 </tr>
@@ -89,13 +97,22 @@ export default function CostPerPlayTable(props: {
               <th>Overall</th>
               <th class="mono">{formatMoney(overallCost())}</th>
               <th class="mono">{props.overallPlays.toLocaleString()}</th>
-              <th class="mono">{formatHours(overallHours())}</th>
+              <th class="mono">
+                {formatHours(overallHours())}
+                {props.overallHoursHasAssumed ? '*' : ''}
+              </th>
               <th class="mono">{formatCostPerPlay(overallCost(), props.overallPlays)}</th>
               <th class="mono">{formatCostPerHour(overallCost(), overallHours())}</th>
             </tr>
           </tbody>
         </table>
       </div>
+      <Show when={hasAnyAssumedHours()}>
+        <div class="muted">
+          <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has
+          no recorded length.
+        </div>
+      </Show>
     </div>
   )
 }

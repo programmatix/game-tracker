@@ -233,5 +233,83 @@ export function computeMistfallAchievements(plays: BggPlay[], username: string) 
     }
   }
 
+  const matchupGroupsByKey = new Map<string, string>()
+  for (const group of mistfallMappings.heroGroupByName.values()) {
+    const key = normalizeKey(group)
+    if (!key || matchupGroupsByKey.has(key)) continue
+    matchupGroupsByKey.set(key, group)
+  }
+
+  for (const [groupKey, groupLabel] of matchupGroupsByKey.entries()) {
+    const groupHeroes = mistfallMappings.allHeroes.filter(
+      (hero) => normalizeKey(mistfallMappings.heroGroupByName.get(hero) || '') === groupKey,
+    )
+    const groupQuests = mistfallMappings.allQuests.filter(
+      (quest) => normalizeKey(mistfallMappings.questGroupByName.get(quest) || '') === groupKey,
+    )
+    if (groupHeroes.length === 0 || groupQuests.length === 0) continue
+
+    const groupHeroKeys = new Set(groupHeroes.map(normalizeKey))
+    const groupQuestKeys = new Set(groupQuests.map(normalizeKey))
+
+    const matchupPlays = buildCanonicalCounts({
+      preferredItems: groupHeroes.flatMap((hero) =>
+        groupQuests.map((quest) => buildAchievementItem(`${hero} vs ${quest}`)),
+      ),
+      observed: entries
+        .filter(
+          (entry) =>
+            groupHeroKeys.has(normalizeKey(entry.hero)) && groupQuestKeys.has(normalizeKey(entry.quest)),
+        )
+        .map((entry) => ({
+          item: buildAchievementItem(`${entry.hero} vs ${entry.quest}`),
+          amount: entry.quantity,
+        })),
+    })
+
+    const matchupWins = buildCanonicalCounts({
+      preferredItems: groupHeroes.flatMap((hero) =>
+        groupQuests.map((quest) => buildAchievementItem(`${hero} vs ${quest}`)),
+      ),
+      observed: entries
+        .filter(
+          (entry) =>
+            entry.isWin &&
+            groupHeroKeys.has(normalizeKey(entry.hero)) &&
+            groupQuestKeys.has(normalizeKey(entry.quest)),
+        )
+        .map((entry) => ({
+          item: buildAchievementItem(`${entry.hero} vs ${entry.quest}`),
+          amount: entry.quantity,
+        })),
+    })
+
+    tracks.push(
+      buildPerItemTrack({
+        trackId: `heroQuestMatchupPlaysByGroup:${slugifyTrackId(groupLabel)}`,
+        achievementBaseId: `play-each-hero-against-each-quest-in-${slugifyTrackId(groupLabel)}`,
+        verb: 'Play',
+        itemNoun: `hero against each quest in ${groupLabel}`,
+        unitSingular: 'time',
+        items: matchupPlays.items,
+        countsByItemId: matchupPlays.countsByItemId,
+      }),
+      {
+        ...buildPerItemTrack({
+          trackId: `heroQuestMatchupWinsByGroup:${slugifyTrackId(groupLabel)}`,
+          achievementBaseId: `defeat-each-hero-against-each-quest-in-${slugifyTrackId(groupLabel)}`,
+          verb: 'Defeat',
+          itemNoun: `hero against each quest in ${groupLabel}`,
+          unitSingular: 'win',
+          items: matchupWins.items,
+          countsByItemId: matchupWins.countsByItemId,
+        }),
+        achievementBaseId: `win-each-hero-against-each-quest-in-${slugifyTrackId(groupLabel)}`,
+        titleForLevel: (level) =>
+          `Win each hero against each quest in ${groupLabel} ${level} ${level === 1 ? 'time' : 'times'}`,
+      },
+    )
+  }
+
   return buildUnlockedAchievementsForGame({ gameId: 'mistfall', gameName: 'Mistfall', tracks })
 }

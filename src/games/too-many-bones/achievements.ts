@@ -238,6 +238,84 @@ export function computeTooManyBonesAchievements(plays: BggPlay[], username: stri
     }
   }
 
+  const matchupGroupsByKey = new Map<string, string>()
+  for (const group of tooManyBonesContent.gearlocGroupByName.values()) {
+    const key = normalizeKey(group)
+    if (!key || matchupGroupsByKey.has(key)) continue
+    matchupGroupsByKey.set(key, group)
+  }
+
+  for (const [groupKey, groupLabel] of matchupGroupsByKey.entries()) {
+    const groupGearlocs = tooManyBonesContent.gearlocs.filter(
+      (gearloc) => normalizeKey(tooManyBonesContent.gearlocGroupByName.get(gearloc) || '') === groupKey,
+    )
+    const groupTyrants = tooManyBonesContent.tyrants.filter(
+      (tyrant) => normalizeKey(tooManyBonesContent.tyrantGroupByName.get(tyrant) || '') === groupKey,
+    )
+    if (groupGearlocs.length === 0 || groupTyrants.length === 0) continue
+
+    const groupGearlocKeys = new Set(groupGearlocs.map(normalizeKey))
+    const groupTyrantKeys = new Set(groupTyrants.map(normalizeKey))
+
+    const matchupPlays = buildCanonicalCounts({
+      preferredItems: groupGearlocs.flatMap((gearloc) =>
+        groupTyrants.map((tyrant) => buildAchievementItem(`${gearloc} vs ${tyrant}`)),
+      ),
+      observed: entries.flatMap((entry) => {
+        if (!groupTyrantKeys.has(normalizeKey(entry.tyrant))) return []
+        const matchedGearlocs = entry.myGearlocs.filter((gearloc) =>
+          groupGearlocKeys.has(normalizeKey(gearloc)),
+        )
+        return matchedGearlocs.map((gearloc) => ({
+          item: buildAchievementItem(`${gearloc} vs ${entry.tyrant}`),
+          amount: entry.quantity,
+        }))
+      }),
+    })
+
+    const matchupWins = buildCanonicalCounts({
+      preferredItems: groupGearlocs.flatMap((gearloc) =>
+        groupTyrants.map((tyrant) => buildAchievementItem(`${gearloc} vs ${tyrant}`)),
+      ),
+      observed: entries.flatMap((entry) => {
+        if (!entry.isWin || !groupTyrantKeys.has(normalizeKey(entry.tyrant))) return []
+        const matchedGearlocs = entry.myGearlocs.filter((gearloc) =>
+          groupGearlocKeys.has(normalizeKey(gearloc)),
+        )
+        return matchedGearlocs.map((gearloc) => ({
+          item: buildAchievementItem(`${gearloc} vs ${entry.tyrant}`),
+          amount: entry.quantity,
+        }))
+      }),
+    })
+
+    tracks.push(
+      buildPerItemTrack({
+        trackId: `gearlocTyrantMatchupPlaysByGroup:${slugifyTrackId(groupLabel)}`,
+        achievementBaseId: `play-each-gearloc-against-each-tyrant-in-${slugifyTrackId(groupLabel)}`,
+        verb: 'Play',
+        itemNoun: `gearloc against each tyrant in ${groupLabel}`,
+        unitSingular: 'time',
+        items: matchupPlays.items,
+        countsByItemId: matchupPlays.countsByItemId,
+      }),
+      {
+        ...buildPerItemTrack({
+          trackId: `gearlocTyrantMatchupWinsByGroup:${slugifyTrackId(groupLabel)}`,
+          achievementBaseId: `defeat-each-gearloc-against-each-tyrant-in-${slugifyTrackId(groupLabel)}`,
+          verb: 'Defeat',
+          itemNoun: `gearloc against each tyrant in ${groupLabel}`,
+          unitSingular: 'win',
+          items: matchupWins.items,
+          countsByItemId: matchupWins.countsByItemId,
+        }),
+        achievementBaseId: `win-each-gearloc-against-each-tyrant-in-${slugifyTrackId(groupLabel)}`,
+        titleForLevel: (level) =>
+          `Win each gearloc against each tyrant in ${groupLabel} ${level} ${level === 1 ? 'time' : 'times'}`,
+      },
+    )
+  }
+
   return buildUnlockedAchievementsForGame({
     gameId: 'tooManyBones',
     gameName: 'Too Many Bones',

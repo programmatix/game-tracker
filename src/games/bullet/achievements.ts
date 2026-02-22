@@ -232,6 +232,87 @@ export function computeBulletAchievements(plays: BggPlay[], username: string) {
     }
   }
 
+  const matchupSetsByKey = new Map<string, string>()
+  for (const set of bulletContent.heroineSetByName.values()) {
+    const key = normalizeKey(set)
+    if (!key || matchupSetsByKey.has(key)) continue
+    matchupSetsByKey.set(key, set)
+  }
+
+  for (const [setKey, setLabel] of matchupSetsByKey.entries()) {
+    const setHeroines = bulletContent.heroines.filter(
+      (heroine) => normalizeKey(bulletContent.heroineSetByName.get(heroine) || '') === setKey,
+    )
+    const setBosses = bulletContent.bosses.filter(
+      (boss) => normalizeKey(bulletContent.bossSetByName.get(boss) || '') === setKey,
+    )
+    if (setHeroines.length === 0 || setBosses.length === 0) continue
+
+    const setHeroineKeys = new Set(setHeroines.map(normalizeKey))
+    const setBossKeys = new Set(setBosses.map(normalizeKey))
+
+    const matchupPlays = buildCanonicalCounts({
+      preferredItems: setHeroines.flatMap((heroine) =>
+        setBosses.map((boss) => buildAchievementItem(`${heroine} vs ${boss}`)),
+      ),
+      observed: entries
+        .filter(
+          (entry) =>
+            Boolean(entry.myHeroine) &&
+            setHeroineKeys.has(normalizeKey(entry.myHeroine!)) &&
+            setBossKeys.has(normalizeKey(entry.boss)),
+        )
+        .map((entry) => ({
+          item: buildAchievementItem(`${entry.myHeroine} vs ${entry.boss}`),
+          amount: entry.quantity,
+        })),
+    })
+
+    const matchupWins = buildCanonicalCounts({
+      preferredItems: setHeroines.flatMap((heroine) =>
+        setBosses.map((boss) => buildAchievementItem(`${heroine} vs ${boss}`)),
+      ),
+      observed: entries
+        .filter(
+          (entry) =>
+            entry.isWin &&
+            Boolean(entry.myHeroine) &&
+            setHeroineKeys.has(normalizeKey(entry.myHeroine!)) &&
+            setBossKeys.has(normalizeKey(entry.boss)),
+        )
+        .map((entry) => ({
+          item: buildAchievementItem(`${entry.myHeroine} vs ${entry.boss}`),
+          amount: entry.quantity,
+        })),
+    })
+
+    tracks.push(
+      buildPerItemTrack({
+        trackId: `heroineBossMatchupPlaysBySet:${slugifyTrackId(setLabel)}`,
+        achievementBaseId: `play-each-heroine-against-each-boss-in-${slugifyTrackId(setLabel)}`,
+        verb: 'Play',
+        itemNoun: `heroine against each boss in ${setLabel}`,
+        unitSingular: 'time',
+        items: matchupPlays.items,
+        countsByItemId: matchupPlays.countsByItemId,
+      }),
+      {
+        ...buildPerItemTrack({
+          trackId: `heroineBossMatchupWinsBySet:${slugifyTrackId(setLabel)}`,
+          achievementBaseId: `defeat-each-heroine-against-each-boss-in-${slugifyTrackId(setLabel)}`,
+          verb: 'Defeat',
+          itemNoun: `heroine against each boss in ${setLabel}`,
+          unitSingular: 'win',
+          items: matchupWins.items,
+          countsByItemId: matchupWins.countsByItemId,
+        }),
+        achievementBaseId: `win-each-heroine-against-each-boss-in-${slugifyTrackId(setLabel)}`,
+        titleForLevel: (level) =>
+          `Win each heroine against each boss in ${setLabel} ${level} ${level === 1 ? 'time' : 'times'}`,
+      },
+    )
+  }
+
   return buildUnlockedAchievementsForGame({
     gameId: 'bullet',
     gameName: 'Bullet',

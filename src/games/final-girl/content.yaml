@@ -96,10 +96,12 @@ costs:
   # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    The Haunting of Creech Manor: 19.99
-    Frightmare on Maple Lane: 19.99
-    Into the Void: 21.99
-    Panic at Station 2891: 21.99
-    A Knock at the Door: 21.99
-    Once Upon a Full Moon: 21.99
-    Madness in the Dark: 21.99
+    The Haunting of Creech Manor: 15
+    Frightmare on Maple Lane: 15
+    Into the Void: 15
+    Panic at Station 2891: 15
+    A Knock at the Door: 15
+    Once Upon a Full Moon: 15
+    Madness in the Dark: 15
+    Bad Times at Buddyland: 20 # Exact
+  

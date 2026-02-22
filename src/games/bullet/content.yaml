@@ -105,8 +105,7 @@ bosses:
     set: Heart
 
 costs:
-  # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    Heart: 39.99
-    Star: 39.99
+    Heart: 48.38
+    Star: 31.99
