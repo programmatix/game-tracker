@@ -92,3 +92,11 @@ enemyPrecons:
   - id: Scaleson
     box: Campaigns
     aliases: [Scale]
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 59.99
+    Campaigns: 49.99
+    Monoliths: 34.99

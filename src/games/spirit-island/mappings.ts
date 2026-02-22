@@ -1,4 +1,5 @@
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 export type SpiritIslandMappings = {
   spirits: SpiritIslandSpirit[]
@@ -7,6 +8,9 @@ export type SpiritIslandMappings = {
   spiritsById: Map<string, string>
   adversariesById: Map<string, string>
   adversaryLevelsById: Map<string, string>
+  adversaryGroupByLabel: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 export type SpiritIslandComplexity = 'Low' | 'Moderate' | 'High' | 'Very High'
@@ -22,6 +26,7 @@ export type SpiritIslandSpirit = {
 export type SpiritIslandAdversary = {
   id: string
   display: string
+  group?: string
   aliases?: string[]
 }
 
@@ -46,6 +51,7 @@ function pushAliases(map: Map<string, string>, display: string, aliases: string[
 export function parseSpiritIslandMappings(text: string): SpiritIslandMappings {
   const yaml = parseYamlValue(text)
   if (isRecord(yaml)) {
+    const costs = parseBoxCostConfig(yaml)
     const spirits = Array.isArray(yaml.spirits)
       ? (yaml.spirits as unknown[])
           .map((spirit) => {
@@ -72,10 +78,11 @@ export function parseSpiritIslandMappings(text: string): SpiritIslandMappings {
             const display =
               (typeof adversary.display === 'string' ? adversary.display : adversary.id).trim()
             if (!id || !display) return null
+            const group = typeof adversary.group === 'string' ? adversary.group.trim() : ''
             const aliases = Array.isArray(adversary.aliases)
               ? adversary.aliases.filter((alias): alias is string => typeof alias === 'string')
               : undefined
-            return { id, display, ...(aliases ? { aliases } : {}) }
+            return { id, display, ...(group ? { group } : {}), ...(aliases ? { aliases } : {}) }
           })
           .filter((adversary): adversary is SpiritIslandAdversary => adversary !== null)
       : null
@@ -99,12 +106,14 @@ export function parseSpiritIslandMappings(text: string): SpiritIslandMappings {
       const spiritsById = new Map<string, string>()
       const adversariesById = new Map<string, string>()
       const adversaryLevelsById = new Map<string, string>()
+      const adversaryGroupByLabel = new Map<string, string>()
 
       for (const spirit of spirits) {
         pushAliases(spiritsById, spirit.display, [spirit.id, spirit.display, ...(spirit.aliases ?? [])])
       }
 
       for (const adversary of adversaries) {
+        if (adversary.group) adversaryGroupByLabel.set(adversary.display, adversary.group)
         pushAliases(adversariesById, adversary.display, [
           adversary.id,
           adversary.display,
@@ -116,7 +125,17 @@ export function parseSpiritIslandMappings(text: string): SpiritIslandMappings {
         pushAliases(adversaryLevelsById, level.display, [level.id, level.display, ...(level.aliases ?? [])])
       }
 
-      return { spirits, adversaries, adversaryLevels, spiritsById, adversariesById, adversaryLevelsById }
+      return {
+        spirits,
+        adversaries,
+        adversaryLevels,
+        spiritsById,
+        adversariesById,
+        adversaryLevelsById,
+        adversaryGroupByLabel,
+        costCurrencySymbol: costs.currencySymbol,
+        boxCostsByName: costs.boxCostsByName,
+      }
     }
   }
 

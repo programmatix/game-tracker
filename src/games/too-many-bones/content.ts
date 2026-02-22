@@ -1,5 +1,6 @@
 import contentText from './content.yaml?raw'
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 export type TooManyBonesContent = {
   difficulties: string[]
@@ -10,6 +11,8 @@ export type TooManyBonesContent = {
   tyrantsById: Map<string, string>
   gearlocGroupByName: Map<string, string>
   tyrantGroupByName: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 type TooManyBonesYamlItem =
@@ -36,6 +39,7 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
     Array.isArray(yaml.gearlocs) &&
     Array.isArray(yaml.tyrants)
   ) {
+    const costs = parseBoxCostConfig(yaml)
     const difficulties: string[] = []
     const gearlocs: string[] = []
     const tyrants: string[] = []
@@ -97,6 +101,8 @@ export function parseTooManyBonesContent(text: string): TooManyBonesContent {
       tyrantsById,
       gearlocGroupByName,
       tyrantGroupByName,
+      costCurrencySymbol: costs.currencySymbol,
+      boxCostsByName: costs.boxCostsByName,
     }
   }
 

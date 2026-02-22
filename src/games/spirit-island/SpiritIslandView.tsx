@@ -2,6 +2,7 @@ import { For, Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
+import CostPerPlayTable from '../../components/CostPerPlayTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import GameThingThumb from '../../components/GameThingThumb'
@@ -13,6 +14,7 @@ import {
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
+import { totalPlayMinutes } from '../../playDuration'
 import type { SpiritIslandSession } from './mindwanderer'
 import {
   getSpiritIslandEntriesFromSessions,
@@ -81,6 +83,13 @@ export default function SpiritIslandView(props: {
   const totalSpiritIslandPlays = createMemo(() =>
     entries().reduce((sum, entry) => sum + entry.quantity, 0),
   )
+  const totalSpiritIslandHours = createMemo(
+    () =>
+      entries().reduce(
+        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        0,
+      ),
+  )
 
   const spiritCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -148,6 +157,73 @@ export default function SpiritIslandView(props: {
     }
     return byPair
   })
+
+  const boxPlayCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const spiritGroup = getSpiritGroup(entry.spirit)
+      const adversaryBase = stripTrailingLevelLabel(entry.adversary)
+      const adversaryGroup = spiritIslandMappings.adversaryGroupByLabel.get(adversaryBase)
+      if (spiritGroup) boxes.add(spiritGroup)
+      if (adversaryGroup) boxes.add(adversaryGroup)
+      for (const box of boxes) incrementCount(counts, box, entry.quantity)
+    }
+    return counts
+  })
+
+  const boxPlayHours = createMemo(() => {
+    const hoursByBox: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const spiritGroup = getSpiritGroup(entry.spirit)
+      const adversaryBase = stripTrailingLevelLabel(entry.adversary)
+      const adversaryGroup = spiritIslandMappings.adversaryGroupByLabel.get(adversaryBase)
+      if (spiritGroup) boxes.add(spiritGroup)
+      if (adversaryGroup) boxes.add(adversaryGroup)
+      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      if (hours <= 0) continue
+      for (const box of boxes) incrementCount(hoursByBox, box, hours)
+    }
+    return hoursByBox
+  })
+
+  const playIdsByBox = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const spiritGroup = getSpiritGroup(entry.spirit)
+      const adversaryBase = stripTrailingLevelLabel(entry.adversary)
+      const adversaryGroup = spiritIslandMappings.adversaryGroupByLabel.get(adversaryBase)
+      if (spiritGroup) boxes.add(spiritGroup)
+      if (adversaryGroup) boxes.add(adversaryGroup)
+      for (const box of boxes) {
+        ;(ids[box] ||= []).push(entry.play.id)
+      }
+    }
+    return ids
+  })
+
+  const costRows = createMemo(() =>
+    [...spiritIslandMappings.boxCostsByName.entries()]
+      .map(([box, cost]) => ({
+        box,
+        cost,
+        plays: boxPlayCounts()[box] ?? 0,
+        hoursPlayed: boxPlayHours()[box] ?? 0,
+      }))
+      .sort((a, b) => {
+        const byPlays = b.plays - a.plays
+        if (byPlays !== 0) return byPlays
+        return a.box.localeCompare(b.box)
+      }),
+  )
+
+  const hasCostTable = createMemo(
+    () =>
+      Boolean(spiritIslandMappings.costCurrencySymbol) &&
+      spiritIslandMappings.boxCostsByName.size > 0,
+  )
 
   const spiritComplexityByKey = createMemo(() => {
     const map = new Map<string, string>()
@@ -396,6 +472,21 @@ export default function SpiritIslandView(props: {
             keys={adversaryKeys()}
             getNextAchievement={getAdversaryNextAchievement}
           />
+          <Show when={hasCostTable()}>
+            <CostPerPlayTable
+              title="Cost per box"
+              rows={costRows()}
+              currencySymbol={spiritIslandMappings.costCurrencySymbol}
+              overallPlays={totalSpiritIslandPlays()}
+              overallHours={totalSpiritIslandHours()}
+              onPlaysClick={(box) =>
+                props.onOpenPlays({
+                  title: `Spirit Island • Box: ${box}`,
+                  playIds: playIdsByBox()[box] ?? [],
+                })
+              }
+            />
+          </Show>
         </div>
 
         <div class="statsBlock">

@@ -8,13 +8,26 @@
 heroes:
   - display: Tovak
     id: Tovak
+    box: Core
   - display: Norowas
     id: Norowas
+    box: Core
   - display: Arythea
     id: Arythea
+    box: Core
   - display: Goldyx
     id: Goldyx
+    box: Core
   - display: Wolfhawk
     id: Wolfhawk
+    box: Lost Legion
   - display: Braevalar
     id: Braevalar
+    box: Lost Legion
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 79.99
+    Lost Legion: 39.99

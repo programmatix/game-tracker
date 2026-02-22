@@ -91,3 +91,15 @@ seasons:
         villains:
           - display: Mort the Teenage Dirtbag
             id: Mort
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    The Haunting of Creech Manor: 19.99
+    Frightmare on Maple Lane: 19.99
+    Into the Void: 21.99
+    Panic at Station 2891: 21.99
+    A Knock at the Door: 21.99
+    Once Upon a Full Moon: 21.99
+    Madness in the Dark: 21.99

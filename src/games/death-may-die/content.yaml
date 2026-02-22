@@ -4,31 +4,56 @@
 # Values here should match the display names produced by the tag parsers.
 
 elderOnes:
-  - Cthulhu
-  - Hastur
+  - display: Cthulhu
+    box: Core
+  - display: Hastur
+    box: Season 2
 scenarios:
-  - "1"
-  - "2"
-  - "3"
-  - "4"
-  - "5"
-  - "6"
+  - display: "1"
+    box: Core
+  - display: "2"
+    box: Core
+  - display: "3"
+    box: Core
+  - display: "4"
+    box: Core
+  - display: "5"
+    box: Core
+  - display: "6"
+    box: Core
 investigators:
   - display: Ahmed Yasin
     id: Ahmed
+    box: Core
   - display: Borden
+    box: Core
   - display: Elizabeth Ives
     id: Eliz
+    box: Core
   - display: Fatima Safar
     id: Fatima
+    box: Core
   - display: John Morgan
     id: John
+    box: Core
   - display: Lord Adam Benchley
     id: LordAdam
+    box: Core
   - display: Rasputin
+    box: Core
   - display: Sergeant Ian Welles
     id: Ian
+    box: Core
   - display: Sister Beth
     id: Beth
+    box: Core
   - display: The Kid
     id: Kid
+    box: Core
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 99.99
+    Season 2: 109.99

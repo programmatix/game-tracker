@@ -4,6 +4,7 @@ import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import { incrementCount, sortKeysByCountDesc } from '../../stats'
 import CountTable from '../../components/CountTable'
+import CostPerPlayTable from '../../components/CostPerPlayTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import GameThingThumb from '../../components/GameThingThumb'
@@ -15,6 +16,7 @@ import {
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
+import { totalPlayMinutes } from '../../playDuration'
 import ownedContentText from './content.yaml?raw'
 import {
   getOwnedFinalGirlFinalGirls,
@@ -132,6 +134,13 @@ export default function FinalGirlView(props: {
   const displayFinalGirlPlays = createMemo(() =>
     displayEntries().reduce((sum, entry) => sum + entry.quantity, 0),
   )
+  const displayTotalHours = createMemo(
+    () =>
+      displayEntries().reduce(
+        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        0,
+      ),
+  )
 
   const villainCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -231,6 +240,57 @@ export default function FinalGirlView(props: {
     }
     return ids
   })
+
+  const boxPlayCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of displayEntries()) {
+      const box = ownedContent.locationBoxesByName.get(normalizeFinalGirlName(entry.location))
+      if (!box) continue
+      incrementCount(counts, box, entry.quantity)
+    }
+    return counts
+  })
+
+  const boxPlayHours = createMemo(() => {
+    const hoursByBox: Record<string, number> = {}
+    for (const entry of displayEntries()) {
+      const box = ownedContent.locationBoxesByName.get(normalizeFinalGirlName(entry.location))
+      if (!box) continue
+      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      if (hours <= 0) continue
+      incrementCount(hoursByBox, box, hours)
+    }
+    return hoursByBox
+  })
+
+  const playIdsByBox = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of displayEntries()) {
+      const box = ownedContent.locationBoxesByName.get(normalizeFinalGirlName(entry.location))
+      if (!box) continue
+      ;(ids[box] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
+  const costRows = createMemo(() =>
+    [...ownedContent.boxCostsByName.entries()]
+      .map(([box, cost]) => ({
+        box,
+        cost,
+        plays: boxPlayCounts()[box] ?? 0,
+        hoursPlayed: boxPlayHours()[box] ?? 0,
+      }))
+      .sort((a, b) => {
+        const byPlays = b.plays - a.plays
+        if (byPlays !== 0) return byPlays
+        return a.box.localeCompare(b.box)
+      }),
+  )
+
+  const hasCostTable = createMemo(
+    () => Boolean(ownedContent.costCurrencySymbol) && ownedContent.boxCostsByName.size > 0,
+  )
 
   function mergeOwnedKeys(played: string[], owned: string[]): string[] {
     const seen = new Set(played.map(normalizeFinalGirlName))
@@ -579,6 +639,21 @@ export default function FinalGirlView(props: {
               })
             }
           />
+          <Show when={hasCostTable()}>
+            <CostPerPlayTable
+              title="Cost per box"
+              rows={costRows()}
+              currencySymbol={ownedContent.costCurrencySymbol}
+              overallPlays={displayFinalGirlPlays()}
+              overallHours={displayTotalHours()}
+              onPlaysClick={(box) =>
+                props.onOpenPlays({
+                  title: `Final Girl • Box: ${box}`,
+                  playIds: playIdsByBox()[box] ?? [],
+                })
+              }
+            />
+          </Show>
         </div>
       </Show>
     </div>

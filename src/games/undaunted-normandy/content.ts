@@ -1,5 +1,6 @@
 import contentText from './content.yaml?raw'
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 type UndauntedYamlItem =
   | string
@@ -7,6 +8,7 @@ type UndauntedYamlItem =
       display: string
       id?: string
       aliases?: string[]
+      box?: string
     }
 
 export type UndauntedNormandyContent = {
@@ -14,6 +16,10 @@ export type UndauntedNormandyContent = {
   sides: string[]
   scenariosById: Map<string, string>
   sidesById: Map<string, string>
+  scenarioBoxByName: Map<string, string>
+  sideBoxByName: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 function normalizeId(value: string): string {
@@ -26,9 +32,11 @@ function normalizeId(value: string): string {
 function parseNamedList(items: UndauntedYamlItem[]): {
   labels: string[]
   byId: Map<string, string>
+  boxByLabel: Map<string, string>
 } {
   const labels: string[] = []
   const byId = new Map<string, string>()
+  const boxByLabel = new Map<string, string>()
 
   const addAliases = (display: string, tokens: string[]) => {
     for (const token of tokens) {
@@ -56,11 +64,13 @@ function parseNamedList(items: UndauntedYamlItem[]): {
     const aliases = Array.isArray(item.aliases)
       ? item.aliases.filter((alias): alias is string => typeof alias === 'string')
       : []
+    const box = typeof item.box === 'string' ? item.box.trim() : ''
+    if (box) boxByLabel.set(display, box)
 
     addAliases(display, [display, ...(id ? [id] : []), ...aliases])
   }
 
-  return { labels, byId }
+  return { labels, byId, boxByLabel }
 }
 
 function addScenarioDerivedAliases(scenarios: string[], byId: Map<string, string>) {
@@ -84,6 +94,7 @@ export function parseUndauntedNormandyContent(text: string): UndauntedNormandyCo
       'Failed to parse Undaunted: Normandy content (expected YAML with `scenarios` and `sides` arrays).',
     )
   }
+  const costs = parseBoxCostConfig(yaml)
 
   const parsedScenarios = parseNamedList(yaml.scenarios as UndauntedYamlItem[])
   const parsedSides = parseNamedList(yaml.sides as UndauntedYamlItem[])
@@ -94,6 +105,10 @@ export function parseUndauntedNormandyContent(text: string): UndauntedNormandyCo
     sides: parsedSides.labels,
     scenariosById: parsedScenarios.byId,
     sidesById: parsedSides.byId,
+    scenarioBoxByName: parsedScenarios.boxByLabel,
+    sideBoxByName: parsedSides.boxByLabel,
+    costCurrencySymbol: costs.currencySymbol,
+    boxCostsByName: costs.boxCostsByName,
   }
 }
 

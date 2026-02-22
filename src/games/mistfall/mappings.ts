@@ -1,4 +1,5 @@
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 export type MistfallMappings = {
   heroesById: Map<string, string>
@@ -7,6 +8,8 @@ export type MistfallMappings = {
   allQuests: string[]
   heroGroupByName: Map<string, string>
   questGroupByName: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 export function normalizeMistfallId(value: string): string {
@@ -29,6 +32,7 @@ type MistfallYamlItem =
 export function parseMistfallMappings(text: string): MistfallMappings {
   const yaml = parseYamlValue(text)
   if (isRecord(yaml) && Array.isArray(yaml.heroes) && Array.isArray(yaml.quests)) {
+    const costs = parseBoxCostConfig(yaml)
     const heroesById = new Map<string, string>()
     const questsById = new Map<string, string>()
     const allHeroes: string[] = []
@@ -97,6 +101,8 @@ export function parseMistfallMappings(text: string): MistfallMappings {
       allQuests,
       heroGroupByName,
       questGroupByName,
+      costCurrencySymbol: costs.currencySymbol,
+      boxCostsByName: costs.boxCostsByName,
     }
   }
 

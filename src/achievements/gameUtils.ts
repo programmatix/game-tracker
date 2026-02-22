@@ -95,6 +95,7 @@ export function buildPlayCountTrack(input: {
   return {
     trackId: input.trackId,
     achievementBaseId: input.achievementBaseId,
+    typeLabel: 'Play count',
     kind: 'counter',
     levels,
     titleForLevel: (level) => `Play ${level} ${pluralize(level, 'time')}`,
@@ -178,6 +179,7 @@ export function buildPerItemAchievementBaseId(verb: 'Play' | 'Defeat', itemNoun:
 export function buildNamedCountTrack(input: {
   trackId: string
   achievementBaseId: string
+  typeLabel?: string
   current: number
   unitSingular: string
   titleForLevel: (level: number) => string
@@ -187,6 +189,7 @@ export function buildNamedCountTrack(input: {
   return {
     trackId: input.trackId,
     achievementBaseId: input.achievementBaseId,
+    typeLabel: input.typeLabel,
     kind: 'counter',
     levels,
     titleForLevel: input.titleForLevel,
@@ -215,6 +218,7 @@ export function buildIndividualItemTracks(input: {
       buildNamedCountTrack({
         trackId: `${input.trackIdPrefix}:${item.id}`,
         achievementBaseId: `${verbKey}-${nounKey}-${item.id}`,
+        typeLabel: `${input.verb} <${input.itemNoun}> by ${pluralize(2, input.unitSingular)}`,
         current,
         unitSingular: input.unitSingular,
         titleForLevel: (level) =>
@@ -242,6 +246,7 @@ export function buildPerItemTrack(input: {
   return {
     trackId: input.trackId,
     achievementBaseId: input.achievementBaseId,
+    typeLabel: `${input.verb} each ${noun} by ${pluralize(2, input.unitSingular)}`,
     kind: 'perItem',
     levels,
     titleForLevel: (level) =>

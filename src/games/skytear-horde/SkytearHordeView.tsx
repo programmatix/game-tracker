@@ -2,6 +2,7 @@ import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
+import CostPerPlayTable from '../../components/CostPerPlayTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
@@ -12,6 +13,7 @@ import {
 } from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
+import { totalPlayMinutes } from '../../playDuration'
 import { skytearHordeContent } from './content'
 import {
   getSkytearHordeEntries,
@@ -75,6 +77,13 @@ export default function SkytearHordeView(props: {
   )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
+  const totalHours = createMemo(
+    () =>
+      entries().reduce(
+        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        0,
+      ),
+  )
 
   const heroCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -152,6 +161,70 @@ export default function SkytearHordeView(props: {
     }
     return ids
   })
+
+  const boxPlayCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const heroBox = skytearHordeContent.heroBoxByPrecon.get(entry.heroPrecon)
+      const enemyBox = skytearHordeContent.enemyBoxByPrecon.get(entry.enemyPrecon)
+      if (heroBox) boxes.add(heroBox)
+      if (enemyBox) boxes.add(enemyBox)
+      for (const box of boxes) incrementCount(counts, box, entry.quantity)
+    }
+    return counts
+  })
+
+  const boxPlayHours = createMemo(() => {
+    const hoursByBox: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const heroBox = skytearHordeContent.heroBoxByPrecon.get(entry.heroPrecon)
+      const enemyBox = skytearHordeContent.enemyBoxByPrecon.get(entry.enemyPrecon)
+      if (heroBox) boxes.add(heroBox)
+      if (enemyBox) boxes.add(enemyBox)
+      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      if (hours <= 0) continue
+      for (const box of boxes) incrementCount(hoursByBox, box, hours)
+    }
+    return hoursByBox
+  })
+
+  const playIdsByBox = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const heroBox = skytearHordeContent.heroBoxByPrecon.get(entry.heroPrecon)
+      const enemyBox = skytearHordeContent.enemyBoxByPrecon.get(entry.enemyPrecon)
+      if (heroBox) boxes.add(heroBox)
+      if (enemyBox) boxes.add(enemyBox)
+      for (const box of boxes) {
+        ;(ids[box] ||= []).push(entry.play.id)
+      }
+    }
+    return ids
+  })
+
+  const costRows = createMemo(() =>
+    [...skytearHordeContent.boxCostsByName.entries()]
+      .map(([box, cost]) => ({
+        box,
+        cost,
+        plays: boxPlayCounts()[box] ?? 0,
+        hoursPlayed: boxPlayHours()[box] ?? 0,
+      }))
+      .sort((a, b) => {
+        const byPlays = b.plays - a.plays
+        if (byPlays !== 0) return byPlays
+        return a.box.localeCompare(b.box)
+      }),
+  )
+
+  const hasCostTable = createMemo(
+    () =>
+      Boolean(skytearHordeContent.costCurrencySymbol) &&
+      skytearHordeContent.boxCostsByName.size > 0,
+  )
 
   const heroKeys = createMemo(() => {
     const merged = mergeCanonicalKeys(sortKeysByCountDesc(heroCounts()), skytearHordeContent.heroPrecons)
@@ -324,6 +397,22 @@ export default function SkytearHordeView(props: {
                 props.onOpenPlays({
                   title: `Skytear Horde • Enemy level: ${level}`,
                   playIds: playIdsByEnemyLevel()[level] ?? [],
+                })
+              }
+            />
+          </Show>
+
+          <Show when={hasCostTable()}>
+            <CostPerPlayTable
+              title="Cost per box"
+              rows={costRows()}
+              currencySymbol={skytearHordeContent.costCurrencySymbol}
+              overallPlays={totalPlays()}
+              overallHours={totalHours()}
+              onPlaysClick={(box) =>
+                props.onOpenPlays({
+                  title: `Skytear Horde • Box: ${box}`,
+                  playIds: playIdsByBox()[box] ?? [],
                 })
               }
             />

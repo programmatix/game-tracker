@@ -76,3 +76,10 @@ quests:
   - display: "Quest 5: Hope's End"
     id: H5
     group: Heart of the Mist
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 49.99
+    Heart of the Mist: 34.99

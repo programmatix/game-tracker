@@ -1,9 +1,13 @@
 import contentText from './content.yaml?raw'
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 export type MageKnightContent = {
   heroes: string[]
   heroesById: Map<string, string>
+  heroBoxByName: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 type MageKnightYamlItem =
@@ -12,6 +16,7 @@ type MageKnightYamlItem =
       display?: string
       id?: string
       aliases?: string[]
+      box?: string
     }
 
 function normalizeId(value: string): string {
@@ -24,8 +29,10 @@ function normalizeId(value: string): string {
 export function parseMageKnightContent(text: string): MageKnightContent {
   const yaml = parseYamlValue(text)
   if (isRecord(yaml) && Array.isArray(yaml.heroes)) {
+    const costs = parseBoxCostConfig(yaml)
     const heroes: string[] = []
     const heroesById = new Map<string, string>()
+    const heroBoxByName = new Map<string, string>()
 
     const applyAliases = (display: string, tokens: string[]) => {
       for (const token of tokens) {
@@ -54,13 +61,21 @@ export function parseMageKnightContent(text: string): MageKnightContent {
       const aliases = Array.isArray(item.aliases)
         ? item.aliases.filter((alias): alias is string => typeof alias === 'string')
         : []
+      const box = typeof item.box === 'string' ? item.box.trim() : ''
+      if (box) heroBoxByName.set(display, box)
 
       applyAliases(display, [display, ...(typeof item.id === 'string' ? [item.id] : []), ...aliases])
     }
 
     for (const item of yaml.heroes as MageKnightYamlItem[]) applyItem(item)
 
-    return { heroes, heroesById }
+    return {
+      heroes,
+      heroesById,
+      heroBoxByName,
+      costCurrencySymbol: costs.currencySymbol,
+      boxCostsByName: costs.boxCostsByName,
+    }
   }
 
   throw new Error('Failed to parse Mage Knight content (expected YAML with a `heroes` array).')

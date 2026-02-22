@@ -1,5 +1,23 @@
 import type { Achievement, AchievementTrack } from './types'
 
+function humanizeTrackFamily(value: string): string {
+  const spaced = value
+    .replace(/[:_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .trim()
+  if (!spaced) return 'Other'
+  return spaced
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+function getTypeLabel(track: AchievementTrack): string {
+  if (track.typeLabel?.trim()) return track.typeLabel.trim()
+  const trackFamily = track.trackId.split(':')[0] || track.trackId
+  return humanizeTrackFamily(trackFamily)
+}
+
 export function buildUnlockedAchievementsForTrack(input: {
   gameId: string
   gameName: string
@@ -21,6 +39,7 @@ export function buildUnlockedAchievementsForTrack(input: {
       gameId: input.gameId,
       gameName: input.gameName,
       trackId: input.track.trackId,
+      typeLabel: getTypeLabel(input.track),
       kind: input.track.kind,
       status,
       title: input.track.titleForLevel(level),

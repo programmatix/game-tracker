@@ -23,6 +23,7 @@ scenarios:
 sides:
   - display: US
     id: US
+    box: Core
     aliases:
       - USA
       - American
@@ -31,7 +32,14 @@ sides:
       - Allies
   - display: Germans
     id: DE
+    box: Core
     aliases:
       - Germany
       - German
       - Axis
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 39.99

@@ -13,6 +13,7 @@ export type Achievement = {
   gameId: string
   gameName: string
   trackId: string
+  typeLabel: string
   kind: AchievementKind
   status: AchievementStatus
   title: string
@@ -37,6 +38,7 @@ export type AchievementProgress = {
 export type AchievementTrack = {
   trackId: string
   achievementBaseId: string
+  typeLabel?: string
   kind: AchievementKind
   titleForLevel: (level: number) => string
   progressForLevel: (level: number) => AchievementProgress

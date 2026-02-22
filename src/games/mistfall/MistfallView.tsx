@@ -3,6 +3,7 @@ import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } from '../../bgstats'
 import CountTable from '../../components/CountTable'
+import CostPerPlayTable from '../../components/CostPerPlayTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import GameThingThumb from '../../components/GameThingThumb'
@@ -15,6 +16,7 @@ import {
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
+import { totalPlayMinutes } from '../../playDuration'
 import mappingsText from './content.yaml?raw'
 import {
   normalizeMistfallName,
@@ -170,6 +172,13 @@ export default function MistfallView(props: {
   )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
+  const totalHours = createMemo(
+    () =>
+      entries().reduce(
+        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        0,
+      ),
+  )
 
   function mergeKnownKeys(played: string[], known: string[]): string[] {
     const seen = new Set(played.map(normalizeMistfallName))
@@ -291,6 +300,68 @@ export default function MistfallView(props: {
     }
     return ids
   })
+
+  const boxPlayCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const heroGroup = mappings.heroGroupByName.get(entry.hero)
+      const questGroup = mappings.questGroupByName.get(entry.quest)
+      if (heroGroup) boxes.add(heroGroup)
+      if (questGroup) boxes.add(questGroup)
+      for (const box of boxes) incrementCount(counts, box, entry.quantity)
+    }
+    return counts
+  })
+
+  const boxPlayHours = createMemo(() => {
+    const hoursByBox: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const heroGroup = mappings.heroGroupByName.get(entry.hero)
+      const questGroup = mappings.questGroupByName.get(entry.quest)
+      if (heroGroup) boxes.add(heroGroup)
+      if (questGroup) boxes.add(questGroup)
+      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      if (hours <= 0) continue
+      for (const box of boxes) incrementCount(hoursByBox, box, hours)
+    }
+    return hoursByBox
+  })
+
+  const playIdsByBox = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const heroGroup = mappings.heroGroupByName.get(entry.hero)
+      const questGroup = mappings.questGroupByName.get(entry.quest)
+      if (heroGroup) boxes.add(heroGroup)
+      if (questGroup) boxes.add(questGroup)
+      for (const box of boxes) {
+        ;(ids[box] ||= []).push(entry.play.id)
+      }
+    }
+    return ids
+  })
+
+  const costRows = createMemo(() =>
+    [...mappings.boxCostsByName.entries()]
+      .map(([box, cost]) => ({
+        box,
+        cost,
+        plays: boxPlayCounts()[box] ?? 0,
+        hoursPlayed: boxPlayHours()[box] ?? 0,
+      }))
+      .sort((a, b) => {
+        const byPlays = b.plays - a.plays
+        if (byPlays !== 0) return byPlays
+        return a.box.localeCompare(b.box)
+      }),
+  )
+
+  const hasCostTable = createMemo(
+    () => Boolean(mappings.costCurrencySymbol) && mappings.boxCostsByName.size > 0,
+  )
 
   const heroLabelToId = createMemo(() =>
     buildLabelToIdLookup([...mappings.heroesById.entries()].map(([id, label]) => ({ id, label }))),
@@ -427,6 +498,21 @@ export default function MistfallView(props: {
               })
             }
           />
+          <Show when={hasCostTable()}>
+            <CostPerPlayTable
+              title="Cost per box"
+              rows={costRows()}
+              currencySymbol={mappings.costCurrencySymbol}
+              overallPlays={totalPlays()}
+              overallHours={totalHours()}
+              onPlaysClick={(box) =>
+                props.onOpenPlays({
+                  title: `Mistfall • Box: ${box}`,
+                  playIds: playIdsByBox()[box] ?? [],
+                })
+              }
+            />
+          </Show>
         </div>
 
         <div class="statsBlock">

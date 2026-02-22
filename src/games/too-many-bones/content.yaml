@@ -109,3 +109,12 @@ tyrants:
   - display: Nexus
     id: Nexus
     group: Unbreakable
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 149.99
+    Undertow: 89.99
+    Unbreakable: 79.99
+    AddOn: 24.99

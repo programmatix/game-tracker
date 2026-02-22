@@ -10,11 +10,23 @@
 
 planets:
   - id: Grakkis
+    box: Core
   - id: Wenora
+    box: Core
   - id: Blackout
+    box: Blackout
   - id: Strannos
+    box: Strannos
 
 tasks:
   - A
   - B
   - C
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 74.99
+    Blackout: 24.99
+    Strannos: 24.99

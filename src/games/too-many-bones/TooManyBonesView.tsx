@@ -2,6 +2,7 @@ import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
+import CostPerPlayTable from '../../components/CostPerPlayTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
@@ -17,6 +18,7 @@ import {
   sortKeysByCountDesc,
   sortKeysByGroupThenCountDesc,
 } from '../../stats'
+import { totalPlayMinutes } from '../../playDuration'
 import { tooManyBonesContent } from './content'
 import { getTooManyBonesEntries, TOO_MANY_BONES_OBJECT_ID } from './tooManyBonesEntries'
 
@@ -46,6 +48,13 @@ export default function TooManyBonesView(props: {
   )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
+  const totalHours = createMemo(
+    () =>
+      entries().reduce(
+        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        0,
+      ),
+  )
 
   const tyrantCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -149,6 +158,76 @@ export default function TooManyBonesView(props: {
     }
     return ids
   })
+
+  const boxPlayCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const tyrantGroup = tooManyBonesContent.tyrantGroupByName.get(entry.tyrant)
+      if (tyrantGroup) boxes.add(tyrantGroup)
+      for (const gearloc of entry.gearlocs) {
+        const gearlocGroup = tooManyBonesContent.gearlocGroupByName.get(gearloc)
+        if (gearlocGroup) boxes.add(gearlocGroup)
+      }
+      for (const box of boxes) incrementCount(counts, box, entry.quantity)
+    }
+    return counts
+  })
+
+  const boxPlayHours = createMemo(() => {
+    const hoursByBox: Record<string, number> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const tyrantGroup = tooManyBonesContent.tyrantGroupByName.get(entry.tyrant)
+      if (tyrantGroup) boxes.add(tyrantGroup)
+      for (const gearloc of entry.gearlocs) {
+        const gearlocGroup = tooManyBonesContent.gearlocGroupByName.get(gearloc)
+        if (gearlocGroup) boxes.add(gearlocGroup)
+      }
+      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      if (hours <= 0) continue
+      for (const box of boxes) incrementCount(hoursByBox, box, hours)
+    }
+    return hoursByBox
+  })
+
+  const playIdsByBox = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      const boxes = new Set<string>()
+      const tyrantGroup = tooManyBonesContent.tyrantGroupByName.get(entry.tyrant)
+      if (tyrantGroup) boxes.add(tyrantGroup)
+      for (const gearloc of entry.gearlocs) {
+        const gearlocGroup = tooManyBonesContent.gearlocGroupByName.get(gearloc)
+        if (gearlocGroup) boxes.add(gearlocGroup)
+      }
+      for (const box of boxes) {
+        ;(ids[box] ||= []).push(entry.play.id)
+      }
+    }
+    return ids
+  })
+
+  const costRows = createMemo(() =>
+    [...tooManyBonesContent.boxCostsByName.entries()]
+      .map(([box, cost]) => ({
+        box,
+        cost,
+        plays: boxPlayCounts()[box] ?? 0,
+        hoursPlayed: boxPlayHours()[box] ?? 0,
+      }))
+      .sort((a, b) => {
+        const byPlays = b.plays - a.plays
+        if (byPlays !== 0) return byPlays
+        return a.box.localeCompare(b.box)
+      }),
+  )
+
+  const hasCostTable = createMemo(
+    () =>
+      Boolean(tooManyBonesContent.costCurrencySymbol) &&
+      tooManyBonesContent.boxCostsByName.size > 0,
+  )
 
   const gearlocGroupOrder = createMemo(() => {
     const order: string[] = []
@@ -318,6 +397,21 @@ export default function TooManyBonesView(props: {
               })
             }
           />
+          <Show when={hasCostTable()}>
+            <CostPerPlayTable
+              title="Cost per box"
+              rows={costRows()}
+              currencySymbol={tooManyBonesContent.costCurrencySymbol}
+              overallPlays={totalPlays()}
+              overallHours={totalHours()}
+              onPlaysClick={(box) =>
+                props.onOpenPlays({
+                  title: `Too Many Bones • Box: ${box}`,
+                  playIds: playIdsByBox()[box] ?? [],
+                })
+              }
+            />
+          </Show>
         </div>
 
         <div class="statsBlock">

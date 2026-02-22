@@ -1,5 +1,6 @@
 import contentText from './content.yaml?raw'
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 export type SkytearHordeContent = {
   heroPrecons: string[]
@@ -8,6 +9,8 @@ export type SkytearHordeContent = {
   enemyPreconsById: Map<string, string>
   heroBoxByPrecon: Map<string, string>
   enemyBoxByPrecon: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 type SkytearHordeYamlItem =
@@ -80,6 +83,7 @@ export function parseSkytearHordeContent(text: string): SkytearHordeContent {
     Array.isArray(yaml.heroPrecons) &&
     Array.isArray(yaml.enemyPrecons)
   ) {
+    const costs = parseBoxCostConfig(yaml)
     const heroes = parsePreconList(yaml.heroPrecons as SkytearHordeYamlItem[])
     const enemies = parsePreconList(yaml.enemyPrecons as SkytearHordeYamlItem[])
 
@@ -90,6 +94,8 @@ export function parseSkytearHordeContent(text: string): SkytearHordeContent {
       enemyPreconsById: enemies.byId,
       heroBoxByPrecon: heroes.boxByLabel,
       enemyBoxByPrecon: enemies.boxByLabel,
+      costCurrencySymbol: costs.currencySymbol,
+      boxCostsByName: costs.boxCostsByName,
     }
   }
 

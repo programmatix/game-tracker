@@ -1,5 +1,6 @@
 import contentText from './content.yaml?raw'
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 export type BulletContent = {
   heroines: string[]
@@ -8,6 +9,8 @@ export type BulletContent = {
   bossesById: Map<string, string>
   heroineSetByName: Map<string, string>
   bossSetByName: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 type BulletYamlItem =
@@ -29,6 +32,7 @@ function normalizeId(value: string): string {
 export function parseBulletContent(text: string): BulletContent {
   const yaml = parseYamlValue(text)
   if (isRecord(yaml) && Array.isArray(yaml.heroines) && Array.isArray(yaml.bosses)) {
+    const costs = parseBoxCostConfig(yaml)
     const heroines: string[] = []
     const bosses: string[] = []
     const heroinesById = new Map<string, string>()
@@ -77,7 +81,16 @@ export function parseBulletContent(text: string): BulletContent {
     for (const item of yaml.bosses as BulletYamlItem[])
       applyItem(item, bosses, bossesById, bossSetByName)
 
-    return { heroines, bosses, heroinesById, bossesById, heroineSetByName, bossSetByName }
+    return {
+      heroines,
+      bosses,
+      heroinesById,
+      bossesById,
+      heroineSetByName,
+      bossSetByName,
+      costCurrencySymbol: costs.currencySymbol,
+      boxCostsByName: costs.boxCostsByName,
+    }
   }
 
   throw new Error(

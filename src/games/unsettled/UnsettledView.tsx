@@ -2,6 +2,7 @@ import { createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
+import CostPerPlayTable from '../../components/CostPerPlayTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
@@ -12,6 +13,7 @@ import {
 } from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys } from '../../stats'
+import { totalPlayMinutes } from '../../playDuration'
 import { unsettledContent } from './content'
 import { getUnsettledEntries, UNSETTLED_OBJECT_ID } from './unsettledEntries'
 
@@ -48,6 +50,13 @@ export default function UnsettledView(props: {
   )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
+  const totalHours = createMemo(
+    () =>
+      entries().reduce(
+        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        0,
+      ),
+  )
 
   const planetCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -111,6 +120,59 @@ export default function UnsettledView(props: {
     }
     return ids
   })
+
+  const boxPlayCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      const box = unsettledContent.planetBoxByName.get(entry.planet)
+      if (!box) continue
+      incrementCount(counts, box, entry.quantity)
+    }
+    return counts
+  })
+
+  const boxPlayHours = createMemo(() => {
+    const hoursByBox: Record<string, number> = {}
+    for (const entry of entries()) {
+      const box = unsettledContent.planetBoxByName.get(entry.planet)
+      if (!box) continue
+      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      if (hours <= 0) continue
+      incrementCount(hoursByBox, box, hours)
+    }
+    return hoursByBox
+  })
+
+  const playIdsByBox = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      const box = unsettledContent.planetBoxByName.get(entry.planet)
+      if (!box) continue
+      ;(ids[box] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
+  const costRows = createMemo(() =>
+    [...unsettledContent.boxCostsByName.entries()]
+      .map(([box, cost]) => ({
+        box,
+        cost,
+        plays: boxPlayCounts()[box] ?? 0,
+        hoursPlayed: boxPlayHours()[box] ?? 0,
+      }))
+      .sort((a, b) => {
+        const byPlays = b.plays - a.plays
+        if (byPlays !== 0) return byPlays
+        return a.box.localeCompare(b.box)
+      }),
+  )
+
+  const hasCostTable = createMemo(
+    () =>
+      Boolean(unsettledContent.costCurrencySymbol) &&
+      unsettledContent.boxCostsByName.size > 0,
+  )
 
   const matrix = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
@@ -263,6 +325,21 @@ export default function UnsettledView(props: {
             })
           }
         />
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={unsettledContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Unsettled • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
       </div>
     </div>
   )

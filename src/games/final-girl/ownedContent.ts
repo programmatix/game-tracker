@@ -1,4 +1,5 @@
 import { isRecord, parseYamlValue } from '../../yaml'
+import { parseBoxCostConfig } from '../../contentCosts'
 
 export type OwnedFinalGirlContent = {
   ownedVillains: Map<string, string>
@@ -13,6 +14,8 @@ export type OwnedFinalGirlContent = {
   villainsById: Map<string, { display: string; location?: string }>
   locationsById: Map<string, string>
   finalGirlsById: Map<string, string>
+  costCurrencySymbol: string
+  boxCostsByName: Map<string, number>
 }
 
 export function normalizeFinalGirlName(value: string): string {
@@ -69,6 +72,8 @@ function collectFinalGirlSets(yaml: unknown): FinalGirlYamlSetWithSeason[] {
 }
 
 export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent {
+  const yaml = parseYamlValue(text)
+  const costs = parseBoxCostConfig(yaml)
   const ownedVillains = new Map<string, string>()
   const ownedLocations = new Map<string, string>()
   const ownedFinalGirls = new Map<string, string>()
@@ -83,7 +88,6 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
   const locationsById = new Map<string, string>()
   const finalGirlsById = new Map<string, string>()
 
-  const yaml = parseYamlValue(text)
   const sets = collectFinalGirlSets(yaml)
   if (sets.length > 0) {
     const applyAliases = <T>(
@@ -193,6 +197,8 @@ export function parseOwnedFinalGirlContent(text: string): OwnedFinalGirlContent 
       villainsById,
       locationsById,
       finalGirlsById,
+      costCurrencySymbol: costs.currencySymbol,
+      boxCostsByName: costs.boxCostsByName,
     }
   }
 

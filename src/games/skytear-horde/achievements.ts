@@ -49,6 +49,53 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
       })),
   })
 
+  const isMonolithsGroup = (value: string | undefined) => normalizeKey(value || '') === 'monoliths'
+  const monolithHeroPrecons = skytearHordeContent.heroPrecons.filter((hero) =>
+    isMonolithsGroup(skytearHordeContent.heroBoxByPrecon.get(hero)),
+  )
+  const monolithEnemyPrecons = skytearHordeContent.enemyPrecons.filter((enemy) =>
+    isMonolithsGroup(skytearHordeContent.enemyBoxByPrecon.get(enemy)),
+  )
+  const monolithHeroKeys = new Set(monolithHeroPrecons.map(normalizeKey))
+  const monolithEnemyKeys = new Set(monolithEnemyPrecons.map(normalizeKey))
+
+  const monolithPreconMatchupPlays = buildCanonicalCounts({
+    preferredItems: monolithHeroPrecons.flatMap((hero) =>
+      monolithEnemyPrecons.map((enemy) => buildAchievementItem(`${hero} vs ${enemy}`)),
+    ),
+    observed: entries
+      .filter(
+        (entry) =>
+          entry.heroPrecon !== 'Unknown hero precon' &&
+          entry.enemyPrecon !== 'Unknown enemy precon' &&
+          monolithHeroKeys.has(normalizeKey(entry.heroPrecon)) &&
+          monolithEnemyKeys.has(normalizeKey(entry.enemyPrecon)),
+      )
+      .map((entry) => ({
+        item: buildAchievementItem(`${entry.heroPrecon} vs ${entry.enemyPrecon}`),
+        amount: entry.quantity,
+      })),
+  })
+
+  const monolithPreconMatchupWins = buildCanonicalCounts({
+    preferredItems: monolithHeroPrecons.flatMap((hero) =>
+      monolithEnemyPrecons.map((enemy) => buildAchievementItem(`${hero} vs ${enemy}`)),
+    ),
+    observed: entries
+      .filter(
+        (entry) =>
+          entry.isWin &&
+          entry.heroPrecon !== 'Unknown hero precon' &&
+          entry.enemyPrecon !== 'Unknown enemy precon' &&
+          monolithHeroKeys.has(normalizeKey(entry.heroPrecon)) &&
+          monolithEnemyKeys.has(normalizeKey(entry.enemyPrecon)),
+      )
+      .map((entry) => ({
+        item: buildAchievementItem(`${entry.heroPrecon} vs ${entry.enemyPrecon}`),
+        amount: entry.quantity,
+      })),
+  })
+
   const tracks: AchievementTrack[] = [
     {
       ...buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
@@ -238,6 +285,34 @@ export function computeSkytearHordeAchievements(plays: BggPlay[], username: stri
         }),
       )
     }
+  }
+
+  if (monolithPreconMatchupPlays.items.length > 0) {
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'monolithPreconMatchupPlays',
+        achievementBaseId: 'play-each-hero-precon-against-each-enemy-precon-in-monoliths',
+        verb: 'Play',
+        itemNoun: 'hero precon against each enemy precon in Monoliths',
+        unitSingular: 'time',
+        items: monolithPreconMatchupPlays.items,
+        countsByItemId: monolithPreconMatchupPlays.countsByItemId,
+      }),
+      {
+        ...buildPerItemTrack({
+          trackId: 'monolithPreconMatchupWins',
+          achievementBaseId: 'defeat-each-hero-precon-against-each-enemy-precon-in-monoliths',
+          verb: 'Defeat',
+          itemNoun: 'hero precon against each enemy precon in Monoliths',
+          unitSingular: 'win',
+          items: monolithPreconMatchupWins.items,
+          countsByItemId: monolithPreconMatchupWins.countsByItemId,
+        }),
+        achievementBaseId: 'win-each-hero-precon-against-each-enemy-precon-in-monoliths',
+        titleForLevel: (level) =>
+          `Win each hero precon against each enemy precon in Monoliths ${level} ${level === 1 ? 'time' : 'times'}`,
+      },
+    )
   }
 
   return buildUnlockedAchievementsForGame({

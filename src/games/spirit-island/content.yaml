@@ -207,3 +207,14 @@ adversaryLevels:
     display: Brandenburg-Prussia L3
     aliases:
       - PrussiaL3
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 89.99
+    Branch & Claw: 34.99
+    Jagged Earth: 69.99
+    Horizons: 29.99
+    Promo Pack 1: 12.99
+    Promo Pack 2: 12.99

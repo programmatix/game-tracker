@@ -63,6 +63,7 @@ function buildPerItemWinTrack(input: {
   return {
     trackId: input.trackId,
     achievementBaseId: input.achievementBaseId,
+    typeLabel: `Win with each ${input.noun} by wins`,
     kind: 'perItem',
     levels: input.levels ?? defaultAchievementLevels(),
     titleForLevel: (level) =>
@@ -277,12 +278,13 @@ export function computeSpiritIslandAchievements(
         adversaryLevelTracks.push(
           {
             ...buildNamedCountTrack({
-            trackId: `adversaryLevelWin:${slugifyTrackId(adversary)}-l${difficulty}`,
-            achievementBaseId: `spirit-island-adversary-level-win-${slugifyTrackId(adversary)}-l${difficulty}`,
-            current: adversaryLevelWinsByLabel.get(label) ?? 0,
-            unitSingular: 'win',
-            levels: [1],
-            titleForLevel: (_winsTarget) => `Defeat ${adversary} on Level ${difficulty}`,
+              trackId: `adversaryLevelWin:${slugifyTrackId(adversary)}-l${difficulty}`,
+              achievementBaseId: `spirit-island-adversary-level-win-${slugifyTrackId(adversary)}-l${difficulty}`,
+              typeLabel: 'Defeat <adversary> on level',
+              current: adversaryLevelWinsByLabel.get(label) ?? 0,
+              unitSingular: 'win',
+              levels: [1],
+              titleForLevel: (_winsTarget) => `Defeat ${adversary} on Level ${difficulty}`,
             }),
             completionForLevel: (_winsTarget) => {
               const adversaryKey = normalizeKey(adversary)
@@ -429,12 +431,13 @@ export function computeSpiritIslandAchievements(
         const adversaryKey = normalizeKey(adversary || '')
         return {
           ...buildNamedCountTrack({
-          trackId: `spiritAdversaryLevels:${slugifyTrackId(pair)}`,
-          achievementBaseId: `spirit-island-spirit-adversary-levels-${slugifyTrackId(pair)}`,
-          current: adversarySpiritLevels.countsByItem[pair] ?? 0,
-          unitSingular: 'level',
-          titleForLevel: (level) => `Defeat ${pair} at level ${level}`,
-          levels: SPIRIT_ISLAND_LEVELS,
+            trackId: `spiritAdversaryLevels:${slugifyTrackId(pair)}`,
+            achievementBaseId: `spirit-island-spirit-adversary-levels-${slugifyTrackId(pair)}`,
+            typeLabel: 'Defeat <spirit × adversary> by level',
+            current: adversarySpiritLevels.countsByItem[pair] ?? 0,
+            unitSingular: 'level',
+            titleForLevel: (level) => `Defeat ${pair} at level ${level}`,
+            levels: SPIRIT_ISLAND_LEVELS,
           }),
           completionForLevel: (targetLevel: number) => {
             const entry = findCompletionEntryForCounter({

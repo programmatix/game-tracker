@@ -103,3 +103,10 @@ bosses:
   - display: 3 - That Which Points
     id: ThatWhichPoints
     set: Heart
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Heart: 39.99
+    Star: 39.99
