@@ -45,6 +45,7 @@ function lossColor(): string {
 const SPIRIT_ISLAND_LEVELS = [1, 2, 3, 4, 5, 6]
 const SPIRIT_COMPLEXITY_ORDER = ['Low', 'Moderate', 'High', 'Very High'] as const
 type MatrixDisplayMode = 'count' | 'difficulty' | 'played'
+type SpiritGroupingMode = 'group' | 'complexity'
 
 export default function SpiritIslandView(props: {
   plays: BggPlay[]
@@ -59,6 +60,7 @@ export default function SpiritIslandView(props: {
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
+  const [spiritGroupingMode, setSpiritGroupingMode] = createSignal<SpiritGroupingMode>('group')
 
   const [spiritIslandThing] = createResource(
     () => ({ id: SPIRIT_ISLAND_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
@@ -218,39 +220,6 @@ export default function SpiritIslandView(props: {
     return ordered
   })
 
-  const spiritKeysByComplexityLevel = createMemo(() => {
-    const counts = spiritCounts()
-    const sortWithinGroup = (a: string, b: string) => {
-      const aGroup = (getSpiritGroup(a) || '').trim().toLowerCase()
-      const bGroup = (getSpiritGroup(b) || '').trim().toLowerCase()
-      const byGroup = (spiritGroupOrder().get(aGroup) ?? Number.MAX_SAFE_INTEGER) - (spiritGroupOrder().get(bGroup) ?? Number.MAX_SAFE_INTEGER)
-      if (byGroup !== 0) return byGroup
-
-      const delta = (counts[b] ?? 0) - (counts[a] ?? 0)
-      if (delta !== 0) return delta
-      return a.localeCompare(b)
-    }
-
-    const grouped: Record<(typeof SPIRIT_COMPLEXITY_ORDER)[number], string[]> = {
-      Low: [],
-      Moderate: [],
-      High: [],
-      'Very High': [],
-    }
-    const other: string[] = []
-
-    for (const spirit of spiritKeysByComplexity()) {
-      const complexity = getSpiritComplexity(spirit)
-      if (complexity && complexity in grouped)
-        grouped[complexity as keyof typeof grouped].push(spirit)
-      else other.push(spirit)
-    }
-
-    for (const complexity of SPIRIT_COMPLEXITY_ORDER) grouped[complexity].sort(sortWithinGroup)
-    other.sort(sortWithinGroup)
-    return { grouped, other }
-  })
-
   const spiritKeysByGroup = createMemo(() => {
     const all = spiritKeysByComplexity()
     const counts = spiritCounts()
@@ -302,7 +271,15 @@ export default function SpiritIslandView(props: {
     return pickBestAvailableAchievementForTrackIds(achievements(), trackIds)
   }
 
-  const matrixRows = createMemo(() => spiritKeysByGroup())
+  const spiritKeysByGrouping = createMemo(() =>
+    spiritGroupingMode() === 'group' ? spiritKeysByGroup() : spiritKeysByComplexity(),
+  )
+  const spiritGroupingLabel = (spirit: string) =>
+    spiritGroupingMode() === 'group'
+      ? (getSpiritGroup(spirit) ?? 'Other')
+      : (getSpiritComplexity(spirit) ?? 'Other')
+
+  const matrixRows = createMemo(() => spiritKeysByGrouping())
   const matrixCols = createMemo(() => adversaryKeys())
 
   const matrixMax = createMemo(() => {
@@ -372,29 +349,34 @@ export default function SpiritIslandView(props: {
           </div>
         }
       >
+        <div class="statsTitleRow">
+          <h3 class="statsTitle">Tables</h3>
+          <div class="finalGirlControls">
+            <label class="control">
+              <span>Spirit grouping</span>
+              <select
+                value={spiritGroupingMode()}
+                onInput={(e) =>
+                  setSpiritGroupingMode(e.currentTarget.value as SpiritGroupingMode)
+                }
+              >
+                <option value="group">Group</option>
+                <option value="complexity">Complexity</option>
+              </select>
+            </label>
+          </div>
+        </div>
         <div class="statsGrid">
-          <For each={SPIRIT_COMPLEXITY_ORDER}>
-            {(complexity) => (
-              <CountTable
-                title={`Spirits (${complexity})`}
-                plays={spiritCounts()}
-                wins={spiritWins()}
-                keys={spiritKeysByComplexityLevel().grouped[complexity]}
-                groupBy={getSpiritGroup}
-                getNextAchievement={getSpiritNextAchievement}
-              />
-            )}
-          </For>
-          <Show when={spiritKeysByComplexityLevel().other.length > 0}>
-            <CountTable
-              title="Spirits (Other)"
-              plays={spiritCounts()}
-              wins={spiritWins()}
-              keys={spiritKeysByComplexityLevel().other}
-              groupBy={getSpiritGroup}
-              getNextAchievement={getSpiritNextAchievement}
-            />
-          </Show>
+          <CountTable
+            title={
+              spiritGroupingMode() === 'group' ? 'Spirits (By Group)' : 'Spirits (By Complexity)'
+            }
+            plays={spiritCounts()}
+            wins={spiritWins()}
+            keys={spiritKeysByGrouping()}
+            groupBy={spiritGroupingLabel}
+            getNextAchievement={getSpiritNextAchievement}
+          />
           <CountTable
             title="Adversaries"
             plays={adversaryCounts()}
@@ -408,6 +390,18 @@ export default function SpiritIslandView(props: {
           <div class="statsTitleRow">
             <h3 class="statsTitle">Spirit × Adversary</h3>
             <div class="finalGirlControls">
+              <label class="control">
+                <span>Spirit grouping</span>
+                <select
+                  value={spiritGroupingMode()}
+                  onInput={(e) =>
+                    setSpiritGroupingMode(e.currentTarget.value as SpiritGroupingMode)
+                  }
+                >
+                  <option value="group">Group</option>
+                  <option value="complexity">Complexity</option>
+                </select>
+              </label>
               <label class="control">
                 <span>Display</span>
                 <select
@@ -430,7 +424,7 @@ export default function SpiritIslandView(props: {
             hideCounts={matrixDisplayMode() === 'played'}
             rowHeader="Spirit"
             colHeader="Adversary"
-            rowGroupBy={getSpiritGroup}
+            rowGroupBy={spiritGroupingLabel}
             getCount={(row, col) => matrix()[row]?.[col] ?? 0}
             getCellDisplayText={(row, col, count) => {
               if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
@@ -457,10 +451,37 @@ export default function SpiritIslandView(props: {
               if ((highestWinLevel ?? -1) > 0)
                 return `${row} × ${col}: ${count}, highest win L${highestWinLevel}`
               if (highestWinLevel === 0)
-                return `${row} × ${col}: ${count}, at least one win`
+                return `${row} × ${col}: ${count}, win with no level`
               return `${row} × ${col}: ${count}, all losses`
             }}
           />
+          <Show when={matrixDisplayMode() === 'difficulty'}>
+            <div class="difficultyLegend">
+              <span class="difficultyLegendTitle">Difficulty legend:</span>
+              <span class="difficultyLegendItem">
+                <span class="difficultyLegendSwatch" style={{ 'background-color': lossColor() }} />
+                Losses only
+              </span>
+              <span class="difficultyLegendItem">
+                <span
+                  class="difficultyLegendSwatch"
+                  style={{ 'background-color': difficultyColor(1) }}
+                />
+                W = win with no level
+              </span>
+              <For each={SPIRIT_ISLAND_LEVELS}>
+                {(level) => (
+                  <span class="difficultyLegendItem">
+                    <span
+                      class="difficultyLegendSwatch"
+                      style={{ 'background-color': difficultyColor(level) }}
+                    />
+                    L{level} highest win
+                  </span>
+                )}
+              </For>
+            </div>
+          </Show>
         </div>
       </Show>
     </div>

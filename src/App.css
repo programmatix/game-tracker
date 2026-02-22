@@ -374,6 +374,36 @@
   font-size: 12px;
 }
 
+.difficultyLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.difficultyLegendTitle {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 650;
+}
+
+.difficultyLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.difficultyLegendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  flex: 0 0 auto;
+}
+
 .matrixControls {
   display: flex;
   flex-wrap: wrap;
