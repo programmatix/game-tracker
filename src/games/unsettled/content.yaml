@@ -9,18 +9,10 @@
 #   P: Grakkis／T: A
 
 planets:
-  - display: Grakkis
-    id: G
-    aliases:
-      - Grakkis
-  - display: Wenora
-    id: W
-    aliases:
-      - Wenora
-  - display: Blackout
-    id: B
-  - display: Strannos
-    id: S
+  - id: Grakkis
+  - id: Wenora
+  - id: Blackout
+  - id: Strannos
 
 tasks:
   - A
