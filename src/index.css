@@ -22,6 +22,12 @@
   --focus: rgba(122, 162, 255, 0.45);
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 a {
   font-weight: 500;
   color: #7aa2ff;

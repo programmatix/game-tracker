@@ -1,4 +1,7 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "functions": {
     "source": "functions",
     "predeploy": ["pnpm --dir functions install --frozen-lockfile"]

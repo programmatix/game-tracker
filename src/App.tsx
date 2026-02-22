@@ -22,6 +22,7 @@ import UnsettledView from './games/unsettled/UnsettledView'
 import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
 import AchievementsView from './AchievementsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
+import FeedbackView from './feedback/FeedbackView'
 import { authUser, signOutUser } from './auth/auth'
 import {
   fetchPinnedAchievementIds,
@@ -48,6 +49,7 @@ import { formatPlayLength } from './formatPlayLength'
 import './App.css'
 
 const USERNAME = 'stony82'
+const FEEDBACK_ADMIN_EMAIL = 'grahampople@gmail.com'
 const PLAYS_PER_PAGE = 25
 type MainTab =
   | 'monthlyChecklist'
@@ -62,6 +64,7 @@ type MainTab =
   | 'mageKnight'
   | 'undauntedNormandy'
   | 'achievements'
+  | 'feedback'
   | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail' | 'drilldown'
 
@@ -84,6 +87,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'mageKnight',
   'undauntedNormandy',
   'achievements',
+  'feedback',
   'plays',
 ]
 const PLAYS_VIEWS: ReadonlyArray<PlaysView> = ['plays', 'byGame', 'gameDetail', 'drilldown']
@@ -306,6 +310,9 @@ function App() {
   const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(new Set<string>())
   const [seenCompletedAchievementIds, setSeenCompletedAchievementIds] = createSignal(
     readSeenCompletedAchievementIds(),
+  )
+  const isFeedbackAdmin = createMemo(
+    () => authUser()?.email?.toLowerCase() === FEEDBACK_ADMIN_EMAIL,
   )
 
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
@@ -1007,6 +1014,21 @@ function App() {
                 >
                   Plays
                 </button>
+                <button
+                  class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'feedback' }}
+                  onClick={() => {
+                    if (mainTab() === 'feedback') return
+                    const next: AppNavState = { ...currentNavState(), mainTab: 'feedback' }
+                    setMainTab('feedback')
+                    pushNavState(next)
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'feedback'}
+                >
+                  Feedback
+                </button>
               </div>
 
               <Show when={mainTab() === 'plays'}>
@@ -1613,6 +1635,10 @@ function App() {
                 </table>
               </div>
             </Show>
+          </Show>
+
+          <Show when={mainTab() === 'feedback'}>
+            <FeedbackView user={authUser()} isAdmin={isFeedbackAdmin()} />
           </Show>
         </section>
       </main>

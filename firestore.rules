@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function adminUser() {
+      return signedIn() && request.auth.token.email == 'grahampople@gmail.com';
+    }
+
+    match /feedback/{feedbackId} {
+      allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid || adminUser());
+
+      allow create: if signedIn()
+                    && request.auth.token.email != null
+                    && request.resource.data.keys().hasOnly([
+                      'message',
+                      'status',
+                      'ownerUid',
+                      'ownerEmail',
+                      'ownerDisplayName',
+                      'resolvedByUid',
+                      'resolvedByEmail',
+                      'createdAt',
+                      'updatedAt',
+                      'resolvedAt',
+                    ])
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() > 0
+                    && request.resource.data.message.size() <= 2000
+                    && request.resource.data.status == 'open'
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.ownerEmail == request.auth.token.email
+                    && request.resource.data.ownerDisplayName is string
+                    && request.resource.data.ownerDisplayName.size() > 0
+                    && request.resource.data.resolvedByUid == null
+                    && request.resource.data.resolvedByEmail == null
+                    && request.resource.data.resolvedAt == null
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.updatedAt == request.time;
+
+      allow update: if adminUser()
+                    && resource.data.status == 'open'
+                    && request.auth.token.email != null
+                    && request.resource.data.keys().hasOnly([
+                      'message',
+                      'status',
+                      'ownerUid',
+                      'ownerEmail',
+                      'ownerDisplayName',
+                      'resolvedByUid',
+                      'resolvedByEmail',
+                      'createdAt',
+                      'updatedAt',
+                      'resolvedAt',
+                    ])
+                    && request.resource.data.message == resource.data.message
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && request.resource.data.ownerEmail == resource.data.ownerEmail
+                    && request.resource.data.ownerDisplayName == resource.data.ownerDisplayName
+                    && request.resource.data.createdAt == resource.data.createdAt
+                    && request.resource.data.status == 'resolved'
+                    && request.resource.data.resolvedByUid == request.auth.uid
+                    && request.resource.data.resolvedByEmail == request.auth.token.email
+                    && request.resource.data.updatedAt == request.time
+                    && request.resource.data.resolvedAt == request.time;
+    }
+  }
+}

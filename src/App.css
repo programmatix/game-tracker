@@ -1,14 +1,14 @@
 .app {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: clamp(14px, 2.2vw, 24px);
 }
 
 .header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: start;
+  gap: 14px 20px;
   margin-bottom: 20px;
 }
 
@@ -18,16 +18,26 @@
   letter-spacing: -0.02em;
 }
 
+.title p {
+  margin: 10px 0 0;
+}
+
 .headerActions {
-  display: flex;
+  display: grid;
+  justify-items: end;
   gap: 10px;
-  flex-wrap: wrap;
+}
+
+.headerActions > * {
+  min-width: 0;
 }
 
 .tokenRow {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .tokenInput {
@@ -46,7 +56,7 @@
 .main {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 14px;
   align-items: start;
 }
 
@@ -60,7 +70,7 @@
 
 .panelHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
@@ -71,6 +81,8 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .panelHeader h2 {
@@ -85,22 +97,28 @@
 }
 
 .tabs {
-  display: inline-flex;
+  display: flex;
   gap: 6px;
   padding: 4px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 
 .tabButton {
   border: 0;
   border-radius: 10px;
-  padding: 6px 10px;
+  padding: 7px 11px;
   font-size: 12px;
   color: var(--muted);
   background: transparent;
   cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .tabButton:hover {
@@ -114,13 +132,15 @@
 }
 
 .gameDetailHeader {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 4px 8px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
+  max-width: 100%;
 }
 
 .linkButton {
@@ -130,6 +150,7 @@
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 8px;
+  white-space: nowrap;
 }
 
 .linkButton:hover {
@@ -178,6 +199,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .gameThumb {
@@ -205,6 +227,34 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.finalGirlMeta,
+.gameMeta {
+  min-width: 0;
+  flex: 1 1 320px;
+  display: grid;
+  gap: 8px;
+}
+
+.metaTitleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.metaTitle {
+  margin: 0;
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.metaPlays {
+  color: var(--muted);
+  min-width: 0;
 }
 
 .finalGirlMetaRow .meta,
@@ -277,6 +327,31 @@
   height: 16px;
 }
 
+.matrixControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.controlCheckbox,
+.checkboxLabel,
+.controlLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.controlCheckbox input,
+.checkboxLabel input,
+.controlLabel input {
+  width: 16px;
+  height: 16px;
+}
+
 .dimRow td {
   color: var(--muted);
 }
@@ -289,6 +364,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
   font-size: 0.95em;
+  overflow-wrap: anywhere;
 }
 
 .error {
@@ -465,11 +541,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .pagerCenter {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -480,12 +558,16 @@
 .meta {
   margin-bottom: 10px;
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .tableWrap {
   overflow: auto;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tableWrap.compact {
@@ -716,11 +798,11 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1200px;
+  min-width: 780px;
 }
 
 .table.compactTable {
-  min-width: 0;
+  min-width: 560px;
 }
 
 .matrixTable {
@@ -750,7 +832,7 @@
 }
 
 .tableCompact {
-  min-width: 520px;
+  min-width: 560px;
 }
 
 .table th,
@@ -759,12 +841,15 @@
   padding: 10px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .progressInline {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+  max-width: 100%;
 }
 
 .progressBar {
@@ -792,7 +877,7 @@
 .progressLabel {
   font-size: 11px;
   color: var(--muted);
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .table th {
@@ -829,6 +914,74 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.feedbackView {
+  display: grid;
+  gap: 14px;
+}
+
+.feedbackBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.feedbackForm {
+  display: grid;
+  gap: 10px;
+}
+
+.feedbackField {
+  display: grid;
+  gap: 6px;
+}
+
+.feedbackTextarea {
+  resize: vertical;
+  min-height: 110px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  padding: 0.65em 0.75em;
+  font: inherit;
+}
+
+.feedbackTextarea:focus,
+.feedbackTextarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.feedbackActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feedbackTable {
+  min-width: 760px;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 192, 86, 0.42);
+  background: rgba(255, 192, 86, 0.14);
+  color: #ffd9a0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.statusResolved {
+  border-color: rgba(85, 222, 153, 0.42);
+  background: rgba(85, 222, 153, 0.15);
+  color: #b9f0d2;
+}
+
 @media (max-width: 1000px) {
   .main {
     grid-template-columns: 1fr;
@@ -841,7 +994,110 @@
   }
 }
 
+@media (max-width: 1200px) {
+  .header {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .headerActions {
+    justify-items: start;
+  }
+}
+
+@media (max-width: 900px) {
+  .panel {
+    padding: 12px;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .headerActions > * {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .tokenRow {
+    justify-content: space-between;
+  }
+
+  .tokenRow > .mono {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 700px) {
+  .app {
+    padding: 12px;
+  }
+
+  .panel {
+    padding: 10px;
+  }
+
+  .panelHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .panelHeaderLeft {
+    display: grid;
+    gap: 8px;
+  }
+
+  .pager {
+    justify-content: space-between;
+  }
+
+  .pagerCenter {
+    width: 100%;
+  }
+
+  .finalGirlMetaRow,
+  .gameMetaRow {
+    flex-direction: column;
+  }
+
+  .finalGirlThumb,
+  .gameThingThumb {
+    width: 60px;
+    height: 60px;
+  }
+
+  .metaTitle {
+    font-size: 18px;
+  }
+
+  .table {
+    min-width: 640px;
+  }
+
+  .table.compactTable,
+  .tableCompact {
+    min-width: 0;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px;
+  }
+
+  .progressInline {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+  }
+
+  .progressBar {
+    width: min(var(--progress-width, 140px), 100%);
+  }
+
   .hideOnMobile {
     display: none;
   }
