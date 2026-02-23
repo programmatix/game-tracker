@@ -1,0 +1,48 @@
+# Cloudspire
+#
+# Compact ids/aliases are used to parse BG Stats player-color tags.
+# Recommended tag format:
+#   F: Brawnen／O: Narora／M: Solo
+# Or shorthand tags:
+#   Braw／Naro／Solo
+
+factions:
+  - display: Brawnen
+    id: Braw
+    group: Core
+  - display: Narora
+    id: Naro
+    group: Core
+  - display: The Heirs
+    id: Heirs
+    group: Core
+    aliases: [Heir]
+  - display: Grovetenders
+    id: Grove
+    group: Core
+    aliases: [Grov]
+  - display: Horizon's Wrath
+    id: HWrath
+    group: Horizon's Wrath
+    aliases: [HorizonsWrath, HorizonWrath]
+  - display: The Uprising
+    id: Upris
+    group: The Uprising
+    aliases: [Uprising]
+
+modes:
+  - display: Solo
+    id: Solo
+  - display: Co-op
+    id: Coop
+    aliases: [CoOp]
+  - display: PvP
+    id: PvP
+    aliases: [Versus, Vs]
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 169.99
+    Horizon's Wrath: 34.99
+    The Uprising: 34.99

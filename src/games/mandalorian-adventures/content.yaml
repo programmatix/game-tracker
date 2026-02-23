@@ -1,0 +1,90 @@
+# The Mandalorian: Adventures
+#
+# BG Stats player color tags (examples):
+#   Mission 1／Mandalorian／IG-11
+#   Mission 3／Migs／Burg
+#   M: M2／C: Paz
+#   Mission 1／Greef／Cara／ArmorMen
+
+missions:
+  - display: Mission 1
+    id: M1
+    group: Story
+    box: Core
+    aliases: [Mission One]
+  - display: Mission 2
+    id: M2
+    group: Story
+    box: Core
+  - display: Mission 3
+    id: M3
+    group: Story
+    box: Core
+  - display: Mission 4
+    id: M4
+    group: Story
+    box: Core
+  - display: Control by Bananza
+    id: Bananza
+    group: Mercenary
+    box: Clan of Two
+    aliases: [Control by Bananza, Bananza]
+
+characters:
+  - display: The Mandalorian
+    id: Mandalorian
+    group: Core Crew
+    box: Core
+    aliases: [Mando]
+  - display: IG-11
+    id: IG11
+    group: Core Crew
+    box: Core
+    aliases: [IG-11]
+  - display: Greef Karga
+    id: Greef
+    group: Core Crew
+    box: Core
+    aliases: [Greef]
+  - display: Cara Dune
+    id: Cara
+    group: Core Crew
+    box: Core
+    aliases: [Cara]
+  - display: Kuiil
+    id: Kuiil
+    group: Core Crew
+    box: Core
+  - display: Paz Vizsla
+    id: Paz
+    group: Mercenary
+    box: Clan of Two
+    aliases: [Paz Vizsla]
+  - display: Migs Mayfeld
+    id: Migs
+    group: Mercenary
+    box: Clan of Two
+    aliases: [Mayfeld, Migs]
+  - display: Burg
+    id: Burg
+    group: Mercenary
+    box: Clan of Two
+
+encounters:
+  - display: Armored Men
+    id: ArmorMen
+    group: Mercenary
+    box: Clan of Two
+    aliases: [Armor Men, Armormen]
+  - display: Control by Bananza
+    id: Bananza
+    group: Mercenary
+    box: Clan of Two
+    aliases: [Bananza]
+
+costs:
+  # Placeholder values: replace with your real costs.
+  currency: "£"
+  boxes:
+    Core: 44.99
+    Clan of Two: 24.99

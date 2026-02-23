@@ -101,6 +101,12 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     label: 'Sky Tear Horde',
     titleIncludes: ['skytear horde', 'sky tear horde'],
   },
+  {
+    key: 'cloudspire',
+    label: 'Cloudspire',
+    objectIds: ['262211'],
+    titleIncludes: ['cloudspire'],
+  },
   { key: 'deckers', label: 'Deckers', titleIncludes: ['deckers'] },
   {
     key: 'mandalorianAdventures',

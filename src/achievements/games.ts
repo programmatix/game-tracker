@@ -9,6 +9,8 @@ import { computeTooManyBonesAchievements } from '../games/too-many-bones/achieve
 import { computeSkytearHordeAchievements } from '../games/skytear-horde/achievements'
 import { computeUnsettledAchievements } from '../games/unsettled/achievements'
 import { computeMageKnightAchievements } from '../games/mage-knight/achievements'
+import { computeMandalorianAdventuresAchievements } from '../games/mandalorian-adventures/achievements'
+import { computeCloudspireAchievements } from '../games/cloudspire/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -19,8 +21,10 @@ export type GameId =
   | 'bullet'
   | 'tooManyBones'
   | 'skytearHorde'
+  | 'cloudspire'
   | 'unsettled'
   | 'mageKnight'
+  | 'mandalorianAdventures'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -46,8 +50,11 @@ export function computeGameAchievements(
   if (gameId === 'bullet') return computeBulletAchievements(plays, username)
   if (gameId === 'tooManyBones') return computeTooManyBonesAchievements(plays, username)
   if (gameId === 'skytearHorde') return computeSkytearHordeAchievements(plays, username)
+  if (gameId === 'cloudspire') return computeCloudspireAchievements(plays, username)
   if (gameId === 'unsettled') return computeUnsettledAchievements(plays, username)
   if (gameId === 'mageKnight') return computeMageKnightAchievements(plays, username)
+  if (gameId === 'mandalorianAdventures')
+    return computeMandalorianAdventuresAchievements(plays, username)
   return []
 }
 
@@ -64,8 +71,14 @@ export function computeAllGameAchievementSummaries(
     { gameId: 'bullet', gameName: 'Bullet', achievements: computeBulletAchievements(plays, username) },
     { gameId: 'tooManyBones', gameName: 'Too Many Bones', achievements: computeTooManyBonesAchievements(plays, username) },
     { gameId: 'skytearHorde', gameName: 'Skytear Horde', achievements: computeSkytearHordeAchievements(plays, username) },
+    { gameId: 'cloudspire', gameName: 'Cloudspire', achievements: computeCloudspireAchievements(plays, username) },
     { gameId: 'unsettled', gameName: 'Unsettled', achievements: computeUnsettledAchievements(plays, username) },
     { gameId: 'mageKnight', gameName: 'Mage Knight', achievements: computeMageKnightAchievements(plays, username) },
+    {
+      gameId: 'mandalorianAdventures',
+      gameName: 'The Mandalorian: Adventures',
+      achievements: computeMandalorianAdventuresAchievements(plays, username),
+    },
   ]
 
   return summaries

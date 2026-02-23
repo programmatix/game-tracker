@@ -20,6 +20,8 @@ import MageKnightView from './games/mage-knight/MageKnightView'
 import UndauntedNormandyView from './games/undaunted-normandy/UndauntedNormandyView'
 import UnsettledView from './games/unsettled/UnsettledView'
 import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
+import CloudspireView from './games/cloudspire/CloudspireView'
+import MandalorianAdventuresView from './games/mandalorian-adventures/MandalorianAdventuresView'
 import AchievementsView from './AchievementsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
 import FeedbackView from './feedback/FeedbackView'
@@ -55,6 +57,7 @@ type MainTab =
   | 'monthlyChecklist'
   | 'finalGirl'
   | 'skytearHorde'
+  | 'cloudspire'
   | 'unsettled'
   | 'spiritIsland'
   | 'mistfall'
@@ -62,6 +65,7 @@ type MainTab =
   | 'bullet'
   | 'tooManyBones'
   | 'mageKnight'
+  | 'mandalorianAdventures'
   | 'undauntedNormandy'
   | 'achievements'
   | 'feedback'
@@ -78,6 +82,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
   'finalGirl',
   'skytearHorde',
+  'cloudspire',
   'unsettled',
   'spiritIsland',
   'mistfall',
@@ -85,6 +90,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'bullet',
   'tooManyBones',
   'mageKnight',
+  'mandalorianAdventures',
   'undauntedNormandy',
   'achievements',
   'feedback',
@@ -96,12 +102,14 @@ const MAIN_TAB_OPTIONS: ReadonlyArray<{ value: MainTab; label: string }> = [
   { value: 'monthlyChecklist', label: 'This month' },
   { value: 'finalGirl', label: 'Final Girl' },
   { value: 'skytearHorde', label: 'Skytear Horde' },
+  { value: 'cloudspire', label: 'Cloudspire' },
   { value: 'spiritIsland', label: 'Spirit Island' },
   { value: 'unsettled', label: 'Unsettled' },
   { value: 'mistfall', label: 'Mistfall' },
   { value: 'bullet', label: 'Bullet' },
   { value: 'tooManyBones', label: 'Too Many Bones' },
   { value: 'mageKnight', label: 'Mage Knight' },
+  { value: 'mandalorianAdventures', label: 'Mandalorian Adventures' },
   { value: 'undauntedNormandy', label: 'Undaunted: Normandy' },
   { value: 'deathMayDie', label: 'Death May Die' },
   { value: 'achievements', label: 'Achievements' },
@@ -928,6 +936,16 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'cloudspire' }}
+                  onClick={() => switchMainTab('cloudspire')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'cloudspire'}
+                >
+                  Cloudspire
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
                   onClick={() => switchMainTab('spiritIsland')}
                   type="button"
@@ -985,6 +1003,16 @@ function App() {
                   aria-selected={mainTab() === 'mageKnight'}
                 >
                   Mage Knight
+                </button>
+                <button
+                  class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'mandalorianAdventures' }}
+                  onClick={() => switchMainTab('mandalorianAdventures')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'mandalorianAdventures'}
+                >
+                  Mandalorian Adventures
                 </button>
                 <button
                   class="tabButton"
@@ -1170,6 +1198,18 @@ function App() {
             />
           </Show>
 
+          <Show when={mainTab() === 'cloudspire'}>
+            <CloudspireView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
           <Show when={mainTab() === 'spiritIsland'}>
             <SpiritIslandView
               plays={allPlays().plays}
@@ -1247,6 +1287,18 @@ function App() {
 
           <Show when={mainTab() === 'mageKnight'}>
             <MageKnightView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'mandalorianAdventures'}>
+            <MandalorianAdventuresView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
