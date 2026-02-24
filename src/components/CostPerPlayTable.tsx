@@ -1,4 +1,5 @@
 import { For, Show, createMemo } from 'solid-js'
+import ProgressBar from './ProgressBar'
 
 export type CostPerPlayRow = {
   box: string
@@ -13,6 +14,7 @@ export default function CostPerPlayTable(props: {
   currencySymbol: string
   overallPlays: number
   overallHours?: number
+  averageHoursPerPlay?: number
   overallHoursHasAssumed?: boolean
   overallCost?: number
   title?: string
@@ -47,6 +49,38 @@ export default function CostPerPlayTable(props: {
     hours > 0 ? formatMoney(cost / hours) : '—'
   const formatHours = (hours: number): string =>
     hours.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+  const costPerHourTargets = [10, 5, 3, 2, 1] as const
+  const overallCostPerHour = createMemo(() => {
+    const hours = overallHours()
+    if (hours <= 0) return undefined
+    return overallCost() / hours
+  })
+  const averageHoursPerPlay = createMemo(() => {
+    if (typeof props.averageHoursPerPlay === 'number' && props.averageHoursPerPlay > 0) {
+      return props.averageHoursPerPlay
+    }
+    if (props.overallPlays <= 0) return undefined
+    const hours = overallHours()
+    if (hours <= 0) return undefined
+    return hours / props.overallPlays
+  })
+  const playsRemainingForTarget = (targetCostPerHour: number): number | undefined => {
+    const current = overallCostPerHour()
+    const plays = props.overallPlays
+    if (!current || current <= 0 || plays <= 0 || targetCostPerHour <= 0) return undefined
+    if (current <= targetCostPerHour) return 0
+    return Math.ceil(plays * (current / targetCostPerHour - 1))
+  }
+  const totalPlaysForTarget = (targetCostPerHour: number): number | undefined => {
+    const remaining = playsRemainingForTarget(targetCostPerHour)
+    if (typeof remaining !== 'number') return undefined
+    return props.overallPlays + remaining
+  }
+  const formatTargetValue = (value: number): string =>
+    `${props.currencySymbol}${value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
 
   return (
     <div class="statsBlock">
@@ -113,6 +147,65 @@ export default function CostPerPlayTable(props: {
           no recorded length.
         </div>
       </Show>
+      <div class="tableWrap compact">
+        <table class="table compactTable">
+          <thead>
+            <tr>
+              <th>Cost/hour achievement</th>
+              <th class="mono">Target</th>
+              <th class="mono">Progress</th>
+              <th class="mono">Status</th>
+              <th class="mono">Plays remaining</th>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={costPerHourTargets}>
+              {(target) => {
+                const current = overallCostPerHour()
+                const completed = typeof current === 'number' && current <= target
+                const remaining = playsRemainingForTarget(target)
+                const totalTargetPlays = totalPlaysForTarget(target)
+                const avgHours = averageHoursPerPlay()
+                const tooltip =
+                  typeof totalTargetPlays === 'number' &&
+                  typeof current === 'number' &&
+                  typeof avgHours === 'number'
+                    ? [
+                        `${props.overallPlays.toLocaleString()}/${totalTargetPlays.toLocaleString()} plays`,
+                        `Current cost/hour: ${formatMoney(current)}`,
+                        `Target cost/hour: ${formatTargetValue(target)}`,
+                        `Assumption: ${avgHours.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}h per play (same as current average)`,
+                      ].join(' • ')
+                    : undefined
+                return (
+                  <tr>
+                    <td>Bring cost/hour to {formatTargetValue(target)}</td>
+                    <td class="mono">{formatTargetValue(target)}</td>
+                    <td class="mono">
+                      <Show when={typeof totalTargetPlays === 'number'} fallback="—">
+                        <ProgressBar
+                          value={props.overallPlays}
+                          target={totalTargetPlays!}
+                          widthPx={120}
+                          label={tooltip}
+                          showLabel={false}
+                        />
+                      </Show>
+                    </td>
+                    <td>{completed ? 'Unlocked' : 'In progress'}</td>
+                    <td class="mono">
+                      {typeof remaining === 'number' ? remaining.toLocaleString() : '—'}
+                    </td>
+                  </tr>
+                )
+              }}
+            </For>
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

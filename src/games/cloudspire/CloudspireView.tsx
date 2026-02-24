@@ -18,7 +18,10 @@ import {
   sortKeysByCountDesc,
   sortKeysByGroupThenCountDesc,
 } from '../../stats'
-import { totalPlayMinutes } from '../../playDuration'
+import {
+  thingAssumedPlayTimeMinutes,
+  totalPlayMinutesWithAssumption,
+} from '../../playDuration'
 import { cloudspireContent } from './content'
 import { CLOUDSPIRE_OBJECT_ID, getCloudspireEntries } from './cloudspireEntries'
 
@@ -46,15 +49,36 @@ export default function CloudspireView(props: {
   const achievements = createMemo(() =>
     computeGameAchievements('cloudspire', props.plays, props.username),
   )
+  const assumedMinutesPerPlay = createMemo(() => thingAssumedPlayTimeMinutes(thing()?.raw) ?? undefined)
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
   const totalHours = createMemo(
     () =>
       entries().reduce(
-        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        (sum, entry) =>
+          sum +
+          totalPlayMinutesWithAssumption({
+            attributes: entry.play.attributes,
+            quantity: entry.quantity,
+            assumedMinutesPerPlay: assumedMinutesPerPlay(),
+          }).minutes /
+            60,
         0,
       ),
   )
+  const totalHoursHasAssumed = createMemo(() => {
+    for (const entry of entries()) {
+      if (
+        totalPlayMinutesWithAssumption({
+          attributes: entry.play.attributes,
+          quantity: entry.quantity,
+          assumedMinutesPerPlay: assumedMinutesPerPlay(),
+        }).assumed
+      )
+        return true
+    }
+    return false
+  })
 
   const myFactionCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -159,8 +183,14 @@ export default function CloudspireView(props: {
 
   const boxPlayHours = createMemo(() => {
     const hoursByBox: Record<string, number> = {}
+    const hasAssumedHoursByBox: Record<string, boolean> = {}
     for (const entry of entries()) {
-      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      const hours = resolved.minutes / 60
       if (hours <= 0) continue
 
       const boxes = new Set<string>()
@@ -170,8 +200,11 @@ export default function CloudspireView(props: {
       if (opponentBox) boxes.add(opponentBox)
 
       for (const box of boxes) incrementCount(hoursByBox, box, hours)
+      if (resolved.assumed) {
+        for (const box of boxes) hasAssumedHoursByBox[box] = true
+      }
     }
-    return hoursByBox
+    return { hoursByBox, hasAssumedHoursByBox }
   })
 
   const playIdsByBox = createMemo(() => {
@@ -191,7 +224,8 @@ export default function CloudspireView(props: {
         box,
         cost,
         plays: boxPlayCounts()[box] ?? 0,
-        hoursPlayed: boxPlayHours()[box] ?? 0,
+        hoursPlayed: boxPlayHours().hoursByBox[box] ?? 0,
+        hasAssumedHours: boxPlayHours().hasAssumedHoursByBox[box] === true,
       }))
       .sort((a, b) => {
         const byPlays = b.plays - a.plays
@@ -362,6 +396,7 @@ export default function CloudspireView(props: {
               currencySymbol={cloudspireContent.costCurrencySymbol}
               overallPlays={totalPlays()}
               overallHours={totalHours()}
+              overallHoursHasAssumed={totalHoursHasAssumed()}
               onPlaysClick={(box) =>
                 props.onOpenPlays({
                   title: `Cloudspire • Box: ${box}`,

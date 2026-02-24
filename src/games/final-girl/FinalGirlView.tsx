@@ -16,7 +16,10 @@ import {
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import { totalPlayMinutes } from '../../playDuration'
+import {
+  thingAssumedPlayTimeMinutes,
+  totalPlayMinutesWithAssumption,
+} from '../../playDuration'
 import ownedContentText from './content.yaml?raw'
 import {
   getOwnedFinalGirlFinalGirls,
@@ -117,6 +120,9 @@ export default function FinalGirlView(props: {
   const totalFinalGirlPlays = createMemo(() =>
     entries().reduce((sum, entry) => sum + entry.quantity, 0),
   )
+  const assumedMinutesPerPlay = createMemo(
+    () => thingAssumedPlayTimeMinutes(finalGirlThing()?.raw) ?? undefined,
+  )
 
   const displayEntries = createMemo(() => {
     const filterVillains = ownedVillainsOnly() && ownedContent.ownedVillains.size > 0
@@ -137,10 +143,35 @@ export default function FinalGirlView(props: {
   const displayTotalHours = createMemo(
     () =>
       displayEntries().reduce(
-        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        (sum, entry) =>
+          sum +
+          totalPlayMinutesWithAssumption({
+            attributes: entry.play.attributes,
+            quantity: entry.quantity,
+            assumedMinutesPerPlay: assumedMinutesPerPlay(),
+          }).minutes /
+            60,
         0,
       ),
   )
+  const displayTotalHoursHasAssumed = createMemo(() => {
+    for (const entry of displayEntries()) {
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      if (resolved.assumed) return true
+    }
+    return false
+  })
+  const displayAverageHoursPerPlay = createMemo(() => {
+    const plays = displayFinalGirlPlays()
+    if (plays <= 0) return undefined
+    const hours = displayTotalHours()
+    if (hours <= 0) return undefined
+    return hours / plays
+  })
 
   const villainCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -253,14 +284,21 @@ export default function FinalGirlView(props: {
 
   const boxPlayHours = createMemo(() => {
     const hoursByBox: Record<string, number> = {}
+    const hasAssumedHoursByBox: Record<string, boolean> = {}
     for (const entry of displayEntries()) {
       const box = ownedContent.locationBoxesByName.get(normalizeFinalGirlName(entry.location))
       if (!box) continue
-      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      const hours = resolved.minutes / 60
       if (hours <= 0) continue
       incrementCount(hoursByBox, box, hours)
+      if (resolved.assumed) hasAssumedHoursByBox[box] = true
     }
-    return hoursByBox
+    return { hoursByBox, hasAssumedHoursByBox }
   })
 
   const playIdsByBox = createMemo(() => {
@@ -279,7 +317,8 @@ export default function FinalGirlView(props: {
         box,
         cost,
         plays: boxPlayCounts()[box] ?? 0,
-        hoursPlayed: boxPlayHours()[box] ?? 0,
+        hoursPlayed: boxPlayHours().hoursByBox[box] ?? 0,
+        hasAssumedHours: boxPlayHours().hasAssumedHoursByBox[box] === true,
       }))
       .sort((a, b) => {
         const byPlays = b.plays - a.plays
@@ -457,8 +496,6 @@ export default function FinalGirlView(props: {
           Final Girl plays in dataset:{' '}
           <span class="mono">{totalFinalGirlPlays().toLocaleString()}</span>
           {' • '}Showing: <span class="mono">{displayFinalGirlPlays().toLocaleString()}</span>
-          {' • '}Owned villains: <span class="mono">{ownedContent.ownedVillains.size}</span>
-          {' • '}Owned locations: <span class="mono">{ownedContent.ownedLocations.size}</span>
           {' • '}
           <button
             class="linkButton"
@@ -495,24 +532,6 @@ export default function FinalGirlView(props: {
           <div class="statsTitleRow">
             <h3 class="statsTitle">Villain × Location</h3>
             <div class="finalGirlControls">
-              <label class="control">
-                <input
-                  type="checkbox"
-                  checked={ownedVillainsOnly()}
-                  disabled={ownedContent.ownedVillains.size === 0}
-                  onInput={(e) => setOwnedVillainsOnly(e.currentTarget.checked)}
-                />
-                Owned villains only
-              </label>
-              <label class="control">
-                <input
-                  type="checkbox"
-                  checked={ownedLocationsOnly()}
-                  disabled={ownedContent.ownedLocations.size === 0}
-                  onInput={(e) => setOwnedLocationsOnly(e.currentTarget.checked)}
-                />
-                Owned locations only
-              </label>
               <label class="control">
                 <span>Display</span>
                 <select
@@ -646,6 +665,8 @@ export default function FinalGirlView(props: {
               currencySymbol={ownedContent.costCurrencySymbol}
               overallPlays={displayFinalGirlPlays()}
               overallHours={displayTotalHours()}
+              averageHoursPerPlay={displayAverageHoursPerPlay()}
+              overallHoursHasAssumed={displayTotalHoursHasAssumed()}
               onPlaysClick={(box) =>
                 props.onOpenPlays({
                   title: `Final Girl • Box: ${box}`,

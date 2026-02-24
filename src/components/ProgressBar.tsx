@@ -5,6 +5,7 @@ export default function ProgressBar(props: {
   target: number
   widthPx?: number
   label?: string
+  showLabel?: boolean
 }) {
   const clampedTarget = createMemo(() => (props.target > 0 ? props.target : 1))
   const clampedValue = createMemo(() => Math.max(0, props.value))
@@ -41,7 +42,12 @@ export default function ProgressBar(props: {
           }}
         />
       </span>
-      <span class="progressLabel mono">{title()}</span>
+      <span
+        class="progressLabel mono"
+        style={{ display: props.showLabel === false ? 'none' : undefined }}
+      >
+        {title()}
+      </span>
     </span>
   )
 }

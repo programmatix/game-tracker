@@ -18,7 +18,8 @@ Other rules to follow:
 - Where we have groups, use them in all tables and matrix grids.
 - Add achievements.
 - Include the costs in the content.yaml (approximate), and a costs table.
-- ADd to monthly checklist.
+- Add to monthly checklist.
+- If we don't have an actual time played figure for a play, use the BGG estimate and display a (*) somewhere.
 
 Use the CLI tool (`node scripts/bgg-plays.js --username stony82 --all --stdout`) to pull the BGG data and to see how that game's data is structured.  The color= field particularly.
 But note that it may not be suitable. If there are two axes we only have 15 characters for each axis. If 3, only 10. So you may need to define your compact tokens/ids directly in `content.yaml`, and ask me to change the BGG data manually to follow it.

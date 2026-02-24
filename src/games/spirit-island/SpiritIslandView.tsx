@@ -14,7 +14,10 @@ import {
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
-import { totalPlayMinutes } from '../../playDuration'
+import {
+  thingAssumedPlayTimeMinutes,
+  totalPlayMinutesWithAssumption,
+} from '../../playDuration'
 import type { SpiritIslandSession } from './mindwanderer'
 import {
   getSpiritIslandEntriesFromSessions,
@@ -79,6 +82,9 @@ export default function SpiritIslandView(props: {
       spiritIslandSessions: props.spiritIslandSessions,
     }),
   )
+  const assumedMinutesPerPlay = createMemo(
+    () => thingAssumedPlayTimeMinutes(spiritIslandThing()?.raw) ?? undefined,
+  )
 
   const totalSpiritIslandPlays = createMemo(() =>
     entries().reduce((sum, entry) => sum + entry.quantity, 0),
@@ -86,10 +92,30 @@ export default function SpiritIslandView(props: {
   const totalSpiritIslandHours = createMemo(
     () =>
       entries().reduce(
-        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        (sum, entry) =>
+          sum +
+          totalPlayMinutesWithAssumption({
+            attributes: entry.play.attributes,
+            quantity: entry.quantity,
+            assumedMinutesPerPlay: assumedMinutesPerPlay(),
+          }).minutes /
+            60,
         0,
       ),
   )
+  const totalSpiritIslandHoursHasAssumed = createMemo(() => {
+    for (const entry of entries()) {
+      if (
+        totalPlayMinutesWithAssumption({
+          attributes: entry.play.attributes,
+          quantity: entry.quantity,
+          assumedMinutesPerPlay: assumedMinutesPerPlay(),
+        }).assumed
+      )
+        return true
+    }
+    return false
+  })
 
   const spiritCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -174,6 +200,7 @@ export default function SpiritIslandView(props: {
 
   const boxPlayHours = createMemo(() => {
     const hoursByBox: Record<string, number> = {}
+    const hasAssumedHoursByBox: Record<string, boolean> = {}
     for (const entry of entries()) {
       const boxes = new Set<string>()
       const spiritGroup = getSpiritGroup(entry.spirit)
@@ -181,11 +208,19 @@ export default function SpiritIslandView(props: {
       const adversaryGroup = spiritIslandMappings.adversaryGroupByLabel.get(adversaryBase)
       if (spiritGroup) boxes.add(spiritGroup)
       if (adversaryGroup) boxes.add(adversaryGroup)
-      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      const hours = resolved.minutes / 60
       if (hours <= 0) continue
       for (const box of boxes) incrementCount(hoursByBox, box, hours)
+      if (resolved.assumed) {
+        for (const box of boxes) hasAssumedHoursByBox[box] = true
+      }
     }
-    return hoursByBox
+    return { hoursByBox, hasAssumedHoursByBox }
   })
 
   const playIdsByBox = createMemo(() => {
@@ -210,7 +245,8 @@ export default function SpiritIslandView(props: {
         box,
         cost,
         plays: boxPlayCounts()[box] ?? 0,
-        hoursPlayed: boxPlayHours()[box] ?? 0,
+        hoursPlayed: boxPlayHours().hoursByBox[box] ?? 0,
+        hasAssumedHours: boxPlayHours().hasAssumedHoursByBox[box] === true,
       }))
       .sort((a, b) => {
         const byPlays = b.plays - a.plays
@@ -479,6 +515,7 @@ export default function SpiritIslandView(props: {
               currencySymbol={spiritIslandMappings.costCurrencySymbol}
               overallPlays={totalSpiritIslandPlays()}
               overallHours={totalSpiritIslandHours()}
+              overallHoursHasAssumed={totalSpiritIslandHoursHasAssumed()}
               onPlaysClick={(box) =>
                 props.onOpenPlays({
                   title: `Spirit Island • Box: ${box}`,

@@ -16,7 +16,10 @@ import {
 } from '../../achievements/nextAchievement'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import { totalPlayMinutes } from '../../playDuration'
+import {
+  thingAssumedPlayTimeMinutes,
+  totalPlayMinutesWithAssumption,
+} from '../../playDuration'
 import mappingsText from './content.yaml?raw'
 import {
   normalizeMistfallName,
@@ -170,15 +173,38 @@ export default function MistfallView(props: {
   const achievements = createMemo(() =>
     computeGameAchievements('mistfall', props.plays, props.username),
   )
+  const assumedMinutesPerPlay = createMemo(
+    () => thingAssumedPlayTimeMinutes(mistfallThing()?.raw) ?? undefined,
+  )
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
   const totalHours = createMemo(
     () =>
       entries().reduce(
-        (sum, entry) => sum + totalPlayMinutes(entry.play.attributes, entry.quantity) / 60,
+        (sum, entry) =>
+          sum +
+          totalPlayMinutesWithAssumption({
+            attributes: entry.play.attributes,
+            quantity: entry.quantity,
+            assumedMinutesPerPlay: assumedMinutesPerPlay(),
+          }).minutes /
+            60,
         0,
       ),
   )
+  const totalHoursHasAssumed = createMemo(() => {
+    for (const entry of entries()) {
+      if (
+        totalPlayMinutesWithAssumption({
+          attributes: entry.play.attributes,
+          quantity: entry.quantity,
+          assumedMinutesPerPlay: assumedMinutesPerPlay(),
+        }).assumed
+      )
+        return true
+    }
+    return false
+  })
 
   function mergeKnownKeys(played: string[], known: string[]): string[] {
     const seen = new Set(played.map(normalizeMistfallName))
@@ -316,17 +342,26 @@ export default function MistfallView(props: {
 
   const boxPlayHours = createMemo(() => {
     const hoursByBox: Record<string, number> = {}
+    const hasAssumedHoursByBox: Record<string, boolean> = {}
     for (const entry of entries()) {
       const boxes = new Set<string>()
       const heroGroup = mappings.heroGroupByName.get(entry.hero)
       const questGroup = mappings.questGroupByName.get(entry.quest)
       if (heroGroup) boxes.add(heroGroup)
       if (questGroup) boxes.add(questGroup)
-      const hours = totalPlayMinutes(entry.play.attributes, entry.quantity) / 60
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      const hours = resolved.minutes / 60
       if (hours <= 0) continue
       for (const box of boxes) incrementCount(hoursByBox, box, hours)
+      if (resolved.assumed) {
+        for (const box of boxes) hasAssumedHoursByBox[box] = true
+      }
     }
-    return hoursByBox
+    return { hoursByBox, hasAssumedHoursByBox }
   })
 
   const playIdsByBox = createMemo(() => {
@@ -350,7 +385,8 @@ export default function MistfallView(props: {
         box,
         cost,
         plays: boxPlayCounts()[box] ?? 0,
-        hoursPlayed: boxPlayHours()[box] ?? 0,
+        hoursPlayed: boxPlayHours().hoursByBox[box] ?? 0,
+        hasAssumedHours: boxPlayHours().hasAssumedHoursByBox[box] === true,
       }))
       .sort((a, b) => {
         const byPlays = b.plays - a.plays
@@ -505,6 +541,7 @@ export default function MistfallView(props: {
               currencySymbol={mappings.costCurrencySymbol}
               overallPlays={totalPlays()}
               overallHours={totalHours()}
+              overallHoursHasAssumed={totalHoursHasAssumed()}
               onPlaysClick={(box) =>
                 props.onOpenPlays({
                   title: `Mistfall • Box: ${box}`,
