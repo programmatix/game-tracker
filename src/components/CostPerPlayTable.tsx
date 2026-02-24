@@ -81,6 +81,31 @@ export default function CostPerPlayTable(props: {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`
+  const costPerHourAchievementRows = createMemo(() =>
+    costPerHourTargets.map((target) => {
+      const current = overallCostPerHour()
+      const completed = typeof current === 'number' && current <= target
+      const remaining = playsRemainingForTarget(target)
+      const totalTargetPlays = totalPlaysForTarget(target)
+      const avgHours = averageHoursPerPlay()
+      const tooltip =
+        typeof totalTargetPlays === 'number' &&
+        typeof current === 'number' &&
+        typeof avgHours === 'number'
+          ? [
+              `${props.overallPlays.toLocaleString()}/${totalTargetPlays.toLocaleString()} plays`,
+              `Current cost/hour: ${formatMoney(current)}`,
+              `Target cost/hour: ${formatTargetValue(target)}`,
+              `Assumption: ${avgHours.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}h per play (same as current average)`,
+            ].join(' • ')
+          : undefined
+
+      return { target, completed, remaining, totalTargetPlays, tooltip }
+    }),
+  )
 
   return (
     <div class="statsBlock">
@@ -159,45 +184,26 @@ export default function CostPerPlayTable(props: {
             </tr>
           </thead>
           <tbody>
-            <For each={costPerHourTargets}>
-              {(target) => {
-                const current = overallCostPerHour()
-                const completed = typeof current === 'number' && current <= target
-                const remaining = playsRemainingForTarget(target)
-                const totalTargetPlays = totalPlaysForTarget(target)
-                const avgHours = averageHoursPerPlay()
-                const tooltip =
-                  typeof totalTargetPlays === 'number' &&
-                  typeof current === 'number' &&
-                  typeof avgHours === 'number'
-                    ? [
-                        `${props.overallPlays.toLocaleString()}/${totalTargetPlays.toLocaleString()} plays`,
-                        `Current cost/hour: ${formatMoney(current)}`,
-                        `Target cost/hour: ${formatTargetValue(target)}`,
-                        `Assumption: ${avgHours.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}h per play (same as current average)`,
-                      ].join(' • ')
-                    : undefined
+            <For each={costPerHourAchievementRows()}>
+              {(row) => {
                 return (
                   <tr>
-                    <td>Bring cost/hour to {formatTargetValue(target)}</td>
-                    <td class="mono">{formatTargetValue(target)}</td>
+                    <td>Bring cost/hour to {formatTargetValue(row.target)}</td>
+                    <td class="mono">{formatTargetValue(row.target)}</td>
                     <td class="mono">
-                      <Show when={typeof totalTargetPlays === 'number'} fallback="—">
+                      <Show when={typeof row.totalTargetPlays === 'number'} fallback="—">
                         <ProgressBar
                           value={props.overallPlays}
-                          target={totalTargetPlays!}
+                          target={row.totalTargetPlays!}
                           widthPx={120}
-                          label={tooltip}
+                          label={row.tooltip}
                           showLabel={false}
                         />
                       </Show>
                     </td>
-                    <td>{completed ? 'Unlocked' : 'In progress'}</td>
+                    <td>{row.completed ? 'Unlocked' : 'In progress'}</td>
                     <td class="mono">
-                      {typeof remaining === 'number' ? remaining.toLocaleString() : '—'}
+                      {typeof row.remaining === 'number' ? row.remaining.toLocaleString() : '—'}
                     </td>
                   </tr>
                 )
