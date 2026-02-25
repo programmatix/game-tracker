@@ -107,6 +107,7 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     objectIds: ['262211'],
     titleIncludes: ['cloudspire'],
   },
+  { key: 'burncycle', label: 'burncycle', objectIds: ['322656'], titleIncludes: ['burncycle'] },
   { key: 'deckers', label: 'Deckers', titleIncludes: ['deckers'] },
   {
     key: 'mandalorianAdventures',

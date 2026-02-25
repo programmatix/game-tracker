@@ -6,7 +6,7 @@ import CostPerPlayTable from '../../components/CostPerPlayTable'
 import HeatmapMatrix from '../../components/HeatmapMatrix'
 import GameThingThumb from '../../components/GameThingThumb'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
+import { incrementCount, mergeCanonicalKeys } from '../../stats'
 import {
   thingAssumedPlayTimeMinutes,
   totalPlayMinutesWithAssumption,
@@ -232,12 +232,19 @@ export default function UndauntedNormandyView(props: {
     return counts
   })
 
+  const sortAlphabetical = (a: string, b: string) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+
   const scenarioKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(scenarioCounts()), undauntedNormandyContent.scenarios),
+    mergeCanonicalKeys(Object.keys(scenarioCounts()), undauntedNormandyContent.scenarios).sort(
+      sortAlphabetical,
+    ),
   )
 
   const sideKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(sideCounts()), undauntedNormandyContent.sides),
+    mergeCanonicalKeys(Object.keys(sideCounts()), undauntedNormandyContent.sides).sort(
+      sortAlphabetical,
+    ),
   )
 
   const matrixRows = createMemo(() => scenarioKeys())

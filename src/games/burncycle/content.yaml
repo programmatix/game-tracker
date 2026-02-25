@@ -1,0 +1,147 @@
+# burncycle
+#
+# Compact ids/aliases are used to parse BG Stats player-color tags.
+# Recommended tag format:
+#   B: Exe／C: NeedChain／CP: Chrak
+# Or shorthand tags:
+#   Exe／NeedChain／Chrak
+
+bots:
+  - display: Access
+    id: Access
+    group: Core
+  - display: Bit
+    id: Bit
+    group: Core
+  - display: Byte
+    id: Byte
+    group: Core
+  - display: Casing
+    id: Casing
+    group: Core
+  - display: Crash
+    id: Crash
+    group: Core
+  - display: Exe
+    id: Exe
+    aliases: [EXE]
+    group: Core
+  - display: Interface
+    id: Interface
+    aliases: [IF]
+    group: Core
+  - display: Memory
+    id: Memory
+    group: Core
+  - display: Processor
+    id: Processor
+    aliases: [Proc]
+    group: Core
+  - display: Transmitter
+    id: Transmitter
+    aliases: [Tx]
+    group: Core
+
+  - display: Gyro
+    id: Gyro
+    group: The Specialists
+  - display: Subroutine
+    id: Subroutine
+    aliases: [Sub]
+    group: The Specialists
+  - display: Servo
+    id: Servo
+    group: The Specialists
+  - display: Firewall
+    id: Firewall
+    aliases: [FW]
+    group: The Specialists
+
+  - display: Packet
+    id: Packet
+    group: The Renegades
+  - display: Lithium
+    id: Lithium
+    group: The Renegades
+  - display: Cathode
+    id: Cathode
+    group: The Renegades
+  - display: Torrent
+    id: Torrent
+    group: The Renegades
+
+  - display: Nano
+    id: Nano
+    group: Robophobia
+
+corporations:
+  - display: NeedChain
+    id: NeedChain
+    aliases: [Need]
+    group: Core
+  - display: Ocularity
+    id: Ocularity
+    aliases: [Ocu]
+    group: Core
+  - display: Salida
+    id: Salida
+    aliases: [Sal]
+    group: Core
+  - display: BioDefend
+    id: BioDefend
+    aliases: [Bio]
+    group: BioDefend
+  - display: Ebbwall
+    id: Ebbwall
+    aliases: [Ebb]
+    group: Ebbwall
+
+captains:
+  - display: Brigade
+    id: Brigade
+    group: Core
+  - display: Chrak
+    id: Chrak
+    group: Core
+  - display: Crucible
+    id: Crucible
+    group: Core
+  - display: Grimms
+    id: Grimms
+    group: Core
+  - display: Leer
+    id: Leer
+    group: Core
+  - display: Zuk
+    id: Zuk
+    group: Core
+
+  - display: iBoss
+    id: iBoss
+    aliases: [IBoss]
+    group: BioDefend
+  - display: Tendril
+    id: Tendril
+    group: BioDefend
+
+  - display: Fauxbia
+    id: Fauxbia
+    group: Ebbwall
+  - display: Latticewerk
+    id: Latticewerk
+    aliases: [Lattice]
+    group: Ebbwall
+
+  - display: Stamp
+    id: Stamp
+    group: Robophobia
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 139.99
+    BioDefend: 29.99
+    Ebbwall: 29.99
+    The Specialists: 14.99
+    The Renegades: 14.99
+    Robophobia: 14.99

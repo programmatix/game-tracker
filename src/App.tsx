@@ -21,6 +21,7 @@ import UndauntedNormandyView from './games/undaunted-normandy/UndauntedNormandyV
 import UnsettledView from './games/unsettled/UnsettledView'
 import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
 import CloudspireView from './games/cloudspire/CloudspireView'
+import BurncycleView from './games/burncycle/BurncycleView'
 import MandalorianAdventuresView from './games/mandalorian-adventures/MandalorianAdventuresView'
 import AchievementsView from './AchievementsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
@@ -58,6 +59,7 @@ type MainTab =
   | 'finalGirl'
   | 'skytearHorde'
   | 'cloudspire'
+  | 'burncycle'
   | 'unsettled'
   | 'spiritIsland'
   | 'mistfall'
@@ -83,6 +85,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'finalGirl',
   'skytearHorde',
   'cloudspire',
+  'burncycle',
   'unsettled',
   'spiritIsland',
   'mistfall',
@@ -103,6 +106,7 @@ const MAIN_TAB_OPTIONS: ReadonlyArray<{ value: MainTab; label: string }> = [
   { value: 'finalGirl', label: 'Final Girl' },
   { value: 'skytearHorde', label: 'Skytear Horde' },
   { value: 'cloudspire', label: 'Cloudspire' },
+  { value: 'burncycle', label: 'burncycle' },
   { value: 'spiritIsland', label: 'Spirit Island' },
   { value: 'unsettled', label: 'Unsettled' },
   { value: 'mistfall', label: 'Mistfall' },
@@ -946,6 +950,16 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'burncycle' }}
+                  onClick={() => switchMainTab('burncycle')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'burncycle'}
+                >
+                  burncycle
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
                   onClick={() => switchMainTab('spiritIsland')}
                   type="button"
@@ -1200,6 +1214,18 @@ function App() {
 
           <Show when={mainTab() === 'cloudspire'}>
             <CloudspireView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'burncycle'}>
+            <BurncycleView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}
