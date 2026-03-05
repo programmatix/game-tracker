@@ -67,6 +67,15 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
     const normalized = normalizeToken(tag)
     if (!normalized) continue
 
+    if (!captain && /^c[a-z0-9]/i.test(normalized)) {
+      const compactCaptain = normalized.slice(1)
+      if (compactCaptain && isKnownCaptainToken(compactCaptain)) {
+        captain = resolveCaptain(compactCaptain)
+        used.add(normalized)
+        continue
+      }
+    }
+
     if (!corporation && isKnownCorporationToken(normalized)) {
       corporation = resolveCorporation(normalized)
       used.add(normalized)

@@ -1,0 +1,76 @@
+# Paleo
+#
+# Compact ids/aliases are used to parse BG Stats player-color tags.
+# Recommended tag format:
+#   M1: ModA／S: Scen1／M2: ModB
+# Or shorthand tags:
+#   ModA／Scen1／ModB
+
+modules:
+  - display: Module A
+    id: ModA
+    aliases: [A]
+    group: Core
+  - display: Module B
+    id: ModB
+    aliases: [B]
+    group: Core
+  - display: Module C
+    id: ModC
+    aliases: [C]
+    group: Core
+  - display: Module D
+    id: ModD
+    aliases: [D]
+    group: Core
+  - display: Module E
+    id: ModE
+    aliases: [E]
+    group: Core
+  - display: Module F
+    id: ModF
+    aliases: [F]
+    group: Core
+  - display: Module G
+    id: ModG
+    aliases: [G]
+    group: Core
+  - display: Module H
+    id: ModH
+    aliases: [H]
+    group: Core
+  - display: Module I
+    id: ModI
+    aliases: [I]
+    group: Core
+  - display: Module J
+    id: ModJ
+    aliases: [J]
+    group: Core
+
+scenarios:
+  - display: Scenario 1
+    id: Scen1
+    aliases: [S1, Scenario1, 1]
+    group: Core
+  - display: Scenario 2
+    id: Scen2
+    aliases: [S2, Scenario2, 2]
+    group: Core
+  - display: Scenario 3
+    id: Scen3
+    aliases: [S3, Scenario3, 3]
+    group: Core
+  - display: Scenario 4
+    id: Scen4
+    aliases: [S4, Scenario4, 4]
+    group: Core
+  - display: Scenario 5
+    id: Scen5
+    aliases: [S5, Scenario5, 5]
+    group: Core
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 39.99

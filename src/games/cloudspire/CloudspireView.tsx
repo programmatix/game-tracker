@@ -116,6 +116,37 @@ export default function CloudspireView(props: {
     return counts
   })
 
+  const soloEntries = createMemo(() => entries().filter((entry) => entry.mode === 'Solo'))
+
+  const soloScenarioCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of soloEntries()) incrementCount(counts, entry.soloScenario, entry.quantity)
+    return counts
+  })
+
+  const soloScenarioWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of soloEntries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.soloScenario, entry.quantity)
+    }
+    return counts
+  })
+
+  const soloFactionCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of soloEntries()) incrementCount(counts, entry.myFaction, entry.quantity)
+    return counts
+  })
+
+  const unknownTagCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      for (const tag of entry.unknownTags) incrementCount(counts, tag, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByMyFaction = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
@@ -140,32 +171,48 @@ export default function CloudspireView(props: {
     return ids
   })
 
-  const matrix = createMemo(() => {
+  const playIdsBySoloScenario = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of soloEntries()) {
+      ;(ids[entry.soloScenario] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
+  const soloMatrix = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
+    for (const entry of soloEntries()) {
       counts[entry.myFaction] ||= {}
-      incrementCount(counts[entry.myFaction]!, entry.opponentFaction, entry.quantity)
+      incrementCount(counts[entry.myFaction]!, entry.soloScenario, entry.quantity)
     }
     return counts
   })
 
-  const matrixWins = createMemo(() => {
+  const soloMatrixWins = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
+    for (const entry of soloEntries()) {
       if (!entry.isWin) continue
       counts[entry.myFaction] ||= {}
-      incrementCount(counts[entry.myFaction]!, entry.opponentFaction, entry.quantity)
+      incrementCount(counts[entry.myFaction]!, entry.soloScenario, entry.quantity)
     }
     return counts
   })
 
-  const playIdsByPair = createMemo(() => {
+  const playIdsBySoloFactionScenario = createMemo(() => {
     const ids = new Map<string, number[]>()
-    for (const entry of entries()) {
-      const key = `${entry.myFaction}|||${entry.opponentFaction}`
+    for (const entry of soloEntries()) {
+      const key = `${entry.myFaction}|||${entry.soloScenario}`
       const existing = ids.get(key)
       if (existing) existing.push(entry.play.id)
       else ids.set(key, [entry.play.id])
+    }
+    return ids
+  })
+
+  const playIdsByUnknownTag = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      for (const tag of entry.unknownTags) (ids[tag] ||= []).push(entry.play.id)
     }
     return ids
   })
@@ -261,6 +308,15 @@ export default function CloudspireView(props: {
     ),
   )
 
+  const soloFactionKeys = createMemo(() =>
+    sortKeysByGroupThenCountDesc(
+      mergeCanonicalKeys(sortKeysByCountDesc(soloFactionCounts()), cloudspireContent.factions),
+      soloFactionCounts(),
+      (faction) => cloudspireContent.factionGroupByName.get(faction),
+      factionGroupOrder(),
+    ),
+  )
+
   const opponentKeys = createMemo(() =>
     sortKeysByGroupThenCountDesc(
       mergeCanonicalKeys(sortKeysByCountDesc(opponentCounts()), cloudspireContent.factions),
@@ -273,17 +329,14 @@ export default function CloudspireView(props: {
   const modeKeys = createMemo(() =>
     mergeCanonicalKeys(sortKeysByCountDesc(modeCounts()), cloudspireContent.modes),
   )
+  const soloScenarioKeys = createMemo(() => sortKeysByCountDesc(soloScenarioCounts()))
 
-  const matrixRows = createMemo(() => myFactionKeys())
-  const matrixCols = createMemo(() => opponentKeys())
-
-  const matrixMax = createMemo(() => {
+  const unknownTagKeys = createMemo(() => sortKeysByCountDesc(unknownTagCounts()))
+  const soloMatrixMax = createMemo(() => {
     let max = 0
-    const rows = matrixRows()
-    const cols = matrixCols()
-    for (const row of rows) {
-      for (const col of cols) {
-        const value = matrix()[row]?.[col] ?? 0
+    for (const row of soloFactionKeys()) {
+      for (const col of soloScenarioKeys()) {
+        const value = soloMatrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
     }
@@ -325,7 +378,7 @@ export default function CloudspireView(props: {
               View all plays
             </button>
           </div>
-          <div class="muted">Faction showdown: my faction × opposing faction</div>
+          <div class="muted">Solo progression: which scenarios you have finished.</div>
         </div>
       </div>
 
@@ -343,12 +396,24 @@ export default function CloudspireView(props: {
         fallback={
           <div class="muted">
             No Cloudspire plays found. Use BG Stats player <span class="mono">color</span> tags like{' '}
-            <span class="mono">F: Braw／O: Naro／M: Solo</span> or{' '}
-            <span class="mono">Braw／Naro／Solo</span>.
+            <span class="mono">F: Braw／O: Naro／M: Solo／S: Scenario 1</span> or{' '}
+            <span class="mono">Braw／Naro／Solo／S1</span>.
           </div>
         }
       >
         <div class="statsGrid">
+          <CountTable
+            title="Solo scenarios"
+            plays={soloScenarioCounts()}
+            wins={soloScenarioWins()}
+            keys={soloScenarioKeys()}
+            onPlaysClick={(scenario) =>
+              props.onOpenPlays({
+                title: `Cloudspire • Solo scenario: ${scenario}`,
+                playIds: playIdsBySoloScenario()[scenario] ?? [],
+              })
+            }
+          />
           <CountTable
             title="My faction"
             plays={myFactionCounts()}
@@ -389,6 +454,19 @@ export default function CloudspireView(props: {
               })
             }
           />
+          <Show when={unknownTagKeys().length > 0}>
+            <CountTable
+              title="Unknown tags"
+              plays={unknownTagCounts()}
+              keys={unknownTagKeys()}
+              onPlaysClick={(tag) =>
+                props.onOpenPlays({
+                  title: `Cloudspire • Unknown tag: ${tag}`,
+                  playIds: playIdsByUnknownTag()[tag] ?? [],
+                })
+              }
+            />
+          </Show>
           <Show when={hasCostTable()}>
             <CostPerPlayTable
               title="Cost per box"
@@ -409,7 +487,7 @@ export default function CloudspireView(props: {
 
         <div class="statsBlock">
           <div class="statsTitleRow">
-            <h3 class="statsTitle">My faction × Opposing faction</h3>
+            <h3 class="statsTitle">My faction × Solo scenario</h3>
             <div class="matrixControls">
               <label class="control">
                 <span>Display</span>
@@ -425,21 +503,20 @@ export default function CloudspireView(props: {
           </div>
 
           <HeatmapMatrix
-            rows={matrixRows()}
-            cols={matrixCols()}
+            rows={soloFactionKeys()}
+            cols={soloScenarioKeys()}
             rowHeader="My faction"
-            colHeader="Opposing faction"
+            colHeader="Solo scenario"
             rowGroupBy={(row) => cloudspireContent.factionGroupByName.get(row)}
-            colGroupBy={(col) => cloudspireContent.factionGroupByName.get(col)}
-            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
-            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
-            maxCount={matrixMax()}
+            getCount={(row, col) => soloMatrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => soloMatrixWins()[row]?.[col] ?? 0}
+            maxCount={soloMatrixMax()}
             hideCounts={matrixDisplayMode() === 'played'}
             onCellClick={(row, col) => {
               const key = `${row}|||${col}`
               props.onOpenPlays({
-                title: `Cloudspire • ${row} vs ${col}`,
-                playIds: playIdsByPair().get(key) ?? [],
+                title: `Cloudspire • ${row} • ${col}`,
+                playIds: playIdsBySoloFactionScenario().get(key) ?? [],
               })
             }}
           />

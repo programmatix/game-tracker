@@ -1,0 +1,64 @@
+# Star Trek: Captain's Chair
+#
+# BG Stats player color tags (examples):
+#   Picard／Basic
+#   Picard／Adv
+#   Sela／Ensi
+#   C: Picard／S: Advanced
+
+scenarios:
+  - display: Basic
+    id: Basic
+    group: Core
+    box: Core
+    aliases: [B]
+  - display: Advanced
+    id: Adv
+    group: Core
+    box: Core
+    aliases: [Advanced]
+  - display: Ensign
+    id: Ensi
+    group: Difficulty
+    box: Core
+    aliases: [Ensign]
+  - display: Captain
+    id: Capt
+    group: Difficulty
+    box: Core
+    aliases: [Cap]
+  - display: Admiral
+    id: Adm
+    group: Difficulty
+    box: Core
+    aliases: [Admiral]
+
+captains:
+  - display: Jean-Luc Picard
+    id: Picard
+    group: The Next Generation
+    box: Core
+    aliases: [JL Picard, Jean Luc Picard]
+  - display: Benjamin Sisko
+    id: Sisko
+    group: Deep Space Nine
+    box: Core
+    aliases: [Ben Sisko]
+  - display: Kathryn Janeway
+    id: Janeway
+    group: Voyager
+    box: Core
+  - display: Michael Burnham
+    id: Burnham
+    group: Discovery
+    box: Core
+  - display: Sela
+    id: Sela
+    group: Opposition
+    box: Core
+
+costs:
+  # Placeholder values: replace with your actual cost(s).
+  currency: "£"
+  boxes:
+    Core: 49.99

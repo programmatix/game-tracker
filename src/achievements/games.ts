@@ -12,6 +12,8 @@ import { computeMageKnightAchievements } from '../games/mage-knight/achievements
 import { computeMandalorianAdventuresAchievements } from '../games/mandalorian-adventures/achievements'
 import { computeCloudspireAchievements } from '../games/cloudspire/achievements'
 import { computeBurncycleAchievements } from '../games/burncycle/achievements'
+import { computePaleoAchievements } from '../games/paleo/achievements'
+import { computeStarTrekCaptainsChairAchievements } from '../games/star-trek-captains-chair/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -24,6 +26,8 @@ export type GameId =
   | 'skytearHorde'
   | 'cloudspire'
   | 'burncycle'
+  | 'paleo'
+  | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'mageKnight'
   | 'mandalorianAdventures'
@@ -54,6 +58,8 @@ export function computeGameAchievements(
   if (gameId === 'skytearHorde') return computeSkytearHordeAchievements(plays, username)
   if (gameId === 'cloudspire') return computeCloudspireAchievements(plays, username)
   if (gameId === 'burncycle') return computeBurncycleAchievements(plays, username)
+  if (gameId === 'paleo') return computePaleoAchievements(plays, username)
+  if (gameId === 'starTrekCaptainsChair') return computeStarTrekCaptainsChairAchievements(plays, username)
   if (gameId === 'unsettled') return computeUnsettledAchievements(plays, username)
   if (gameId === 'mageKnight') return computeMageKnightAchievements(plays, username)
   if (gameId === 'mandalorianAdventures')
@@ -76,6 +82,12 @@ export function computeAllGameAchievementSummaries(
     { gameId: 'skytearHorde', gameName: 'Skytear Horde', achievements: computeSkytearHordeAchievements(plays, username) },
     { gameId: 'cloudspire', gameName: 'Cloudspire', achievements: computeCloudspireAchievements(plays, username) },
     { gameId: 'burncycle', gameName: 'burncycle', achievements: computeBurncycleAchievements(plays, username) },
+    { gameId: 'paleo', gameName: 'Paleo', achievements: computePaleoAchievements(plays, username) },
+    {
+      gameId: 'starTrekCaptainsChair',
+      gameName: "Star Trek: Captain's Chair",
+      achievements: computeStarTrekCaptainsChairAchievements(plays, username),
+    },
     { gameId: 'unsettled', gameName: 'Unsettled', achievements: computeUnsettledAchievements(plays, username) },
     { gameId: 'mageKnight', gameName: 'Mage Knight', achievements: computeMageKnightAchievements(plays, username) },
     {

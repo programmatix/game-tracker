@@ -15,6 +15,7 @@ bots:
     group: Core
   - display: Byte
     id: Byte
+    aliases: [Byt]
     group: Core
   - display: Casing
     id: Casing
@@ -35,7 +36,7 @@ bots:
     group: Core
   - display: Processor
     id: Processor
-    aliases: [Proc]
+    aliases: [Proc, Pro]
     group: Core
   - display: Transmitter
     id: Transmitter
@@ -65,6 +66,7 @@ bots:
     group: The Renegades
   - display: Cathode
     id: Cathode
+    aliases: [Cat]
     group: The Renegades
   - display: Torrent
     id: Torrent
@@ -77,11 +79,11 @@ bots:
 corporations:
   - display: NeedChain
     id: NeedChain
-    aliases: [Need]
+    aliases: [Need, NC, NCTV]
     group: Core
   - display: Ocularity
     id: Ocularity
-    aliases: [Ocu]
+    aliases: [Ocu, OBF]
     group: Core
   - display: Salida
     id: Salida
@@ -105,6 +107,7 @@ captains:
     group: Core
   - display: Crucible
     id: Crucible
+    aliases: [Cr, CCr]
     group: Core
   - display: Grimms
     id: Grimms

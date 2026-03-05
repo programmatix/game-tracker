@@ -158,7 +158,7 @@ export default function CostPerPlayTable(props: {
               <th class="mono">{props.overallPlays.toLocaleString()}</th>
               <th class="mono">
                 {formatHours(overallHours())}
-                {props.overallHoursHasAssumed ? '*' : ''}
+                {hasAnyAssumedHours() ? '*' : ''}
               </th>
               <th class="mono">{formatCostPerPlay(overallCost(), props.overallPlays)}</th>
               <th class="mono">{formatCostPerHour(overallCost(), overallHours())}</th>

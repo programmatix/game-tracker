@@ -1,5 +1,6 @@
 import { For, Show, createMemo, createResource } from 'solid-js'
 import { fetchThingSummary, type BggPlay } from './bgg'
+import { thingAssumedPlayTimeMinutes } from './playDuration'
 
 type ChecklistItem = {
   key: string
@@ -16,6 +17,7 @@ type MonthlyChecklistRow = {
   totalMinutes: number
   hasAssumedMinutes: boolean
   dateMinutes: Array<{ date: string; minutes: number; assumed: boolean }>
+  monthDots: Array<{ monthKey: string; label: string; played: boolean }>
 }
 
 function normalizeTitle(value: string): string {
@@ -47,23 +49,6 @@ function formatMinutes(minutes: number): string {
   return `${hours}h${String(mins).padStart(2, '0')}m`
 }
 
-function thingAssumedPlayTimeMinutes(raw: unknown): number | null {
-  const record = raw as Record<string, unknown> | null
-  const candidates = ['playingtime', 'minplaytime', 'maxplaytime']
-
-  for (const key of candidates) {
-    const node = record?.[key] as Record<string, unknown> | undefined
-    const attrs = (node?.$ as Record<string, unknown> | undefined) || undefined
-    const value = attrs?.value
-    if (typeof value !== 'string') continue
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed) || parsed <= 0) continue
-    return parsed
-  }
-
-  return null
-}
-
 function playMinutesWithAssumption(
   play: BggPlay,
   assumedMinutesByObjectId: Map<string, number> | undefined,
@@ -80,11 +65,12 @@ function playMinutesWithAssumption(
 
 const CHECKLIST: ReadonlyArray<ChecklistItem> = [
   { key: 'vantage', label: 'Vantage', titleIncludes: ['vantage'] },
-  // {
-  //   key: 'starTrekCaptainsChair',
-  //   label: "Star Trek Captain's Chair",
-  //   titleIncludes: ["star trek: captain's chair", "star trek captain's chair"],
-  // },
+  {
+    key: 'starTrekCaptainsChair',
+    label: "Star Trek Captain's Chair",
+    objectIds: ['422541'],
+    titleIncludes: ["star trek: captain's chair", "star trek captain's chair"],
+  },
   // {
   //   key: 'marvelChampions',
   //   label: 'Marvel Champions',
@@ -108,6 +94,7 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     titleIncludes: ['cloudspire'],
   },
   { key: 'burncycle', label: 'burncycle', objectIds: ['322656'], titleIncludes: ['burncycle'] },
+  { key: 'paleo', label: 'Paleo', objectIds: ['300531'], titleIncludes: ['paleo'] },
   { key: 'deckers', label: 'Deckers', titleIncludes: ['deckers'] },
   {
     key: 'mandalorianAdventures',
@@ -174,6 +161,60 @@ function currentMonthPrefix(now: Date): { prefix: string; label: string } {
   return { prefix, label }
 }
 
+function monthKeyFromDate(value: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+  return value.slice(0, 7)
+}
+
+function monthIndexFromKey(monthKey: string): number | null {
+  const parts = monthKey.split('-')
+  if (parts.length !== 2) return null
+  const year = Number(parts[0])
+  const month = Number(parts[1])
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return null
+  return year * 12 + (month - 1)
+}
+
+function monthKeyFromIndex(index: number): string {
+  const year = Math.floor(index / 12)
+  const month = (index % 12) + 1
+  return `${year}-${String(month).padStart(2, '0')}`
+}
+
+function formatMonthKey(monthKey: string): string {
+  const index = monthIndexFromKey(monthKey)
+  if (index === null) return monthKey
+  const year = Math.floor(index / 12)
+  const month = index % 12
+  return new Date(year, month, 1).toLocaleString(undefined, { month: 'short', year: 'numeric' })
+}
+
+function buildMonthDots(
+  firstMonthKey: string | null,
+  monthStatsByKey: Map<string, { count: number; minutes: number }>,
+  now: Date,
+  maxMonths = 24,
+): Array<{ monthKey: string; label: string; played: boolean }> {
+  if (!firstMonthKey) return []
+  const firstIndex = monthIndexFromKey(firstMonthKey)
+  if (firstIndex === null) return []
+
+  const currentIndex = now.getFullYear() * 12 + now.getMonth()
+  const startIndex = Math.max(firstIndex, currentIndex - (maxMonths - 1))
+  const dots: Array<{ monthKey: string; label: string; played: boolean }> = []
+  for (let index = startIndex; index <= currentIndex; index += 1) {
+    const monthKey = monthKeyFromIndex(index)
+    const stats = monthStatsByKey.get(monthKey) || { count: 0, minutes: 0 }
+    const played = stats.count > 0
+    dots.push({
+      monthKey,
+      played,
+      label: `${formatMonthKey(monthKey)}: ${stats.count} play${stats.count === 1 ? '' : 's'}, ${formatMinutes(stats.minutes)}`,
+    })
+  }
+  return dots
+}
+
 export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToken?: string }) {
   const month = createMemo(() => currentMonthPrefix(new Date()))
   const monthPlays = createMemo(() => {
@@ -206,7 +247,8 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
   })
 
   const rows = createMemo<MonthlyChecklistRow[]>(() => {
-    const plays = monthPlays()
+    const monthPrefix = month().prefix
+    const plays = props.plays
     const assumed = assumedMinutesByObjectId()
 
     return CHECKLIST.map((item) => {
@@ -215,15 +257,27 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
       const minutesByDate = new Map<string, number>()
       const assumedByDate = new Map<string, boolean>()
       let hasAssumedMinutes = false
+      const monthStatsByKey = new Map<string, { count: number; minutes: number }>()
+      let firstMonthKey: string | null = null
 
       for (const play of plays) {
         if (!isPlayForItem(play, item)) continue
+        const date = play.attributes.date || ''
+        const playMonthKey = monthKeyFromDate(date)
         const qty = playQuantity(play)
+        if (playMonthKey) {
+          const existingStats = monthStatsByKey.get(playMonthKey) || { count: 0, minutes: 0 }
+          existingStats.count += qty
+          existingStats.minutes += playLengthMinutes(play) * qty
+          monthStatsByKey.set(playMonthKey, existingStats)
+          if (!firstMonthKey || playMonthKey < firstMonthKey) firstMonthKey = playMonthKey
+        }
+        if (!date.startsWith(monthPrefix)) continue
+
         const resolved = playMinutesWithAssumption(play, assumed)
         const minutes = resolved.minutes * qty
         playCount += qty
         totalMinutes += minutes
-        const date = play.attributes.date || ''
         if (date) {
           minutesByDate.set(date, (minutesByDate.get(date) || 0) + minutes)
           if (resolved.assumed) {
@@ -243,23 +297,28 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
         dateMinutes: Array.from(minutesByDate.entries())
           .map(([date, minutes]) => ({ date, minutes, assumed: assumedByDate.get(date) === true }))
           .sort((a, b) => a.date.localeCompare(b.date)),
+        monthDots: buildMonthDots(firstMonthKey, monthStatsByKey, new Date(), 24),
       }
     })
   })
 
   const otherRows = createMemo(() => {
-    const plays = monthPlays().filter((p) => !isPlayInChecklist(p))
+    const monthPrefix = month().prefix
+    const plays = props.plays.filter((p) => !isPlayInChecklist(p))
     const assumed = assumedMinutesByObjectId()
 
     const byGame = new Map<
       string,
       {
+        key: string
         label: string
         playCount: number
         totalMinutes: number
         minutesByDate: Map<string, number>
         assumedByDate: Map<string, boolean>
         hasAssumedMinutes: boolean
+        monthStatsByKey: Map<string, { count: number; minutes: number }>
+        firstMonthKey: string | null
       }
     >()
 
@@ -267,20 +326,39 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
       const label = play.item?.attributes.name || 'Unknown game'
       const objectId = play.item?.attributes.objectid || ''
       const key = `${label}|||${objectId}`
-
-      const qty = playQuantity(play)
-      const resolved = playMinutesWithAssumption(play, assumed)
-      const minutes = resolved.minutes * qty
       const date = play.attributes.date || ''
+      const playMonthKey = monthKeyFromDate(date)
+      const qty = playQuantity(play)
 
       const existing = byGame.get(key) || {
+        key,
         label,
         playCount: 0,
         totalMinutes: 0,
         minutesByDate: new Map<string, number>(),
         assumedByDate: new Map<string, boolean>(),
         hasAssumedMinutes: false,
+        monthStatsByKey: new Map<string, { count: number; minutes: number }>(),
+        firstMonthKey: null,
       }
+
+      if (playMonthKey) {
+        const existingStats = existing.monthStatsByKey.get(playMonthKey) || { count: 0, minutes: 0 }
+        existingStats.count += qty
+        existingStats.minutes += playLengthMinutes(play) * qty
+        existing.monthStatsByKey.set(playMonthKey, existingStats)
+        if (!existing.firstMonthKey || playMonthKey < existing.firstMonthKey) {
+          existing.firstMonthKey = playMonthKey
+        }
+      }
+
+      if (!date.startsWith(monthPrefix)) {
+        byGame.set(key, existing)
+        continue
+      }
+
+      const resolved = playMinutesWithAssumption(play, assumed)
+      const minutes = resolved.minutes * qty
 
       existing.playCount += qty
       existing.totalMinutes += minutes
@@ -295,8 +373,9 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
     }
 
     return Array.from(byGame.values())
+      .filter((row) => row.playCount > 0)
       .map((row) => ({
-        key: row.label,
+        key: row.key,
         label: row.label,
         played: true,
         playCount: row.playCount,
@@ -305,6 +384,7 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
         dateMinutes: Array.from(row.minutesByDate.entries())
           .map(([date, minutes]) => ({ date, minutes, assumed: row.assumedByDate.get(date) === true }))
           .sort((a, b) => a.date.localeCompare(b.date)),
+        monthDots: buildMonthDots(row.firstMonthKey, row.monthStatsByKey, new Date(), 24),
       }))
       .sort((a, b) => a.label.localeCompare(b.label))
   })
@@ -386,7 +466,22 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
             <For each={rows()}>
               {(row) => (
                 <tr>
-                  <td>{row.label}</td>
+                  <td>
+                    <div>{row.label}</div>
+                    <Show when={row.monthDots.length > 0}>
+                      <div class="monthDots" aria-label={`${row.label} monthly play history`}>
+                        <For each={row.monthDots}>
+                          {(dot) => (
+                            <span
+                              classList={{ monthDot: true, monthDotPlayed: dot.played, monthDotMissed: !dot.played }}
+                              title={dot.label}
+                              aria-label={dot.label}
+                            />
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </td>
                   <td class="mono">{row.played ? '✓' : ''}</td>
                   <td class="mono">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
                   <td class="mono">
@@ -436,7 +531,22 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
             <For each={otherRows()}>
               {(row) => (
                 <tr>
-                  <td>{row.label}</td>
+                  <td>
+                    <div>{row.label}</div>
+                    <Show when={row.monthDots.length > 0}>
+                      <div class="monthDots" aria-label={`${row.label} monthly play history`}>
+                        <For each={row.monthDots}>
+                          {(dot) => (
+                            <span
+                              classList={{ monthDot: true, monthDotPlayed: dot.played, monthDotMissed: !dot.played }}
+                              title={dot.label}
+                              aria-label={dot.label}
+                            />
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </td>
                   <td class="mono">{row.played ? '✓' : ''}</td>
                   <td class="mono">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
                   <td class="mono">

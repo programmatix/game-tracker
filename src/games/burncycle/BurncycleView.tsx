@@ -337,17 +337,38 @@ export default function BurncycleView(props: {
   }
 
   return (
-    <section class="stack">
-      <Show when={thing()}>
-        {(resolved) => (
-          <GameThingThumb
-            objectId={BURNCYCLE_OBJECT_ID}
-            image={resolved().image}
-            thumbnail={resolved().thumbnail}
-            alt="burncycle"
-          />
-        )}
-      </Show>
+    <div class="gameView">
+      <div class="gameMetaRow">
+        <GameThingThumb
+          objectId={BURNCYCLE_OBJECT_ID}
+          image={thing()?.image}
+          thumbnail={thing()?.thumbnail}
+          alt="burncycle thumbnail"
+        />
+
+        <div class="gameMeta">
+          <div class="metaTitleRow">
+            <div class="metaTitle">burncycle</div>
+            <div class="metaPlays">
+              Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
+            </div>
+            <button
+              class="linkButton"
+              type="button"
+              disabled={allPlayIds().length === 0}
+              onClick={() =>
+                props.onOpenPlays({
+                  title: 'burncycle • All plays',
+                  playIds: allPlayIds(),
+                })
+              }
+            >
+              View all plays
+            </button>
+          </div>
+          <div class="muted">Corp mode: corporation × bot</div>
+        </div>
+      </div>
 
       <AchievementsPanel
         achievements={achievements()}
@@ -469,6 +490,6 @@ export default function BurncycleView(props: {
       <Show when={allPlayIds().length === 0}>
         <p class="muted">No burncycle plays found yet.</p>
       </Show>
-    </section>
+    </div>
   )
 }

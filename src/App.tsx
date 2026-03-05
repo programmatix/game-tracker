@@ -23,6 +23,8 @@ import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
 import CloudspireView from './games/cloudspire/CloudspireView'
 import BurncycleView from './games/burncycle/BurncycleView'
 import MandalorianAdventuresView from './games/mandalorian-adventures/MandalorianAdventuresView'
+import PaleoView from './games/paleo/PaleoView'
+import StarTrekCaptainsChairView from './games/star-trek-captains-chair/StarTrekCaptainsChairView'
 import AchievementsView from './AchievementsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
 import FeedbackView from './feedback/FeedbackView'
@@ -49,6 +51,10 @@ import {
   SPIRIT_ISLAND_MINDWANDERER_UID,
 } from './games/spirit-island/mindwanderer'
 import { formatPlayLength } from './formatPlayLength'
+import {
+  thingAssumedPlayTimeMinutes,
+  totalPlayMinutesWithAssumption,
+} from './playDuration'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -60,6 +66,8 @@ type MainTab =
   | 'skytearHorde'
   | 'cloudspire'
   | 'burncycle'
+  | 'paleo'
+  | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'spiritIsland'
   | 'mistfall'
@@ -86,6 +94,8 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'skytearHorde',
   'cloudspire',
   'burncycle',
+  'paleo',
+  'starTrekCaptainsChair',
   'unsettled',
   'spiritIsland',
   'mistfall',
@@ -107,6 +117,8 @@ const MAIN_TAB_OPTIONS: ReadonlyArray<{ value: MainTab; label: string }> = [
   { value: 'skytearHorde', label: 'Skytear Horde' },
   { value: 'cloudspire', label: 'Cloudspire' },
   { value: 'burncycle', label: 'burncycle' },
+  { value: 'paleo', label: 'Paleo' },
+  { value: 'starTrekCaptainsChair', label: "Star Trek: Captain's Chair" },
   { value: 'spiritIsland', label: 'Spirit Island' },
   { value: 'unsettled', label: 'Unsettled' },
   { value: 'mistfall', label: 'Mistfall' },
@@ -297,6 +309,11 @@ function bggPlayUrl(playId: number): string {
   return `https://boardgamegeek.com/play/details/${playId}`
 }
 
+function hasRecordedPlayLength(attributes: Record<string, string>): boolean {
+  const parsed = Number(attributes.length || '0')
+  return Number.isFinite(parsed) && parsed > 0
+}
+
 function App() {
   const parsedHash =
     typeof window === 'undefined' ? null : parseNavStateFromHash(window.location.hash)
@@ -352,10 +369,14 @@ function App() {
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
     new Map<string, string>(),
   )
-  const objectIdsInFlight = new Set<string>()
-  const objectIdsFailed = new Set<string>()
-  const queuedObjectIds = new Set<string>()
-  let isThumbnailPumpRunning = false
+  const [assumedMinutesByObjectId, setAssumedMinutesByObjectId] = createSignal(
+    new Map<string, number>(),
+  )
+  const thingSummaryInFlight = new Set<string>()
+  const thingSummaryFailed = new Set<string>()
+  const thingSummaryResolved = new Set<string>()
+  const queuedThingSummaryObjectIds = new Set<string>()
+  let isThingSummaryPumpRunning = false
   let thumbnailsEnabled = true
 
   createEffect(() => setPageDraft(String(page())))
@@ -602,21 +623,31 @@ function App() {
     })
   }
 
-  async function pumpThumbnailsQueue() {
-    if (isThumbnailPumpRunning) return
-    isThumbnailPumpRunning = true
+  function noteAssumedMinutes(objectid: string, minutes?: number) {
+    if (!minutes || minutes <= 0) return
+    if (assumedMinutesByObjectId().get(objectid) === minutes) return
+    setAssumedMinutesByObjectId((prev) => {
+      const next = new Map(prev)
+      next.set(objectid, minutes)
+      return next
+    })
+  }
+
+  async function pumpThingSummaryQueue() {
+    if (isThingSummaryPumpRunning) return
+    isThingSummaryPumpRunning = true
 
     const MAX_CONCURRENT = 4
     try {
-      while (queuedObjectIds.size > 0) {
-        if (!thumbnailsEnabled) break
+      while (queuedThingSummaryObjectIds.size > 0) {
+        const shouldSkipThumbnailUpdates = !thumbnailsEnabled
 
         const batch: string[] = []
-        for (const objectid of queuedObjectIds) {
-          queuedObjectIds.delete(objectid)
-          if (thumbnailsByObjectId().has(objectid)) continue
-          if (objectIdsInFlight.has(objectid)) continue
-          if (objectIdsFailed.has(objectid)) continue
+        for (const objectid of queuedThingSummaryObjectIds) {
+          queuedThingSummaryObjectIds.delete(objectid)
+          if (thingSummaryResolved.has(objectid)) continue
+          if (thingSummaryInFlight.has(objectid)) continue
+          if (thingSummaryFailed.has(objectid)) continue
           batch.push(objectid)
           if (batch.length >= MAX_CONCURRENT) break
         }
@@ -625,45 +656,90 @@ function App() {
 
         await Promise.allSettled(
           batch.map(async (objectid) => {
-            objectIdsInFlight.add(objectid)
+            thingSummaryInFlight.add(objectid)
             try {
-              const authToken = bggAuthToken()
-              if (!authToken) return
+              const authToken = bggAuthToken() || undefined
               const thing = await fetchThingSummary(objectid, { authToken })
-              noteThumbnail(objectid, thing.image || thing.thumbnail)
+              thingSummaryResolved.add(objectid)
+              if (!shouldSkipThumbnailUpdates) {
+                noteThumbnail(objectid, thing.image || thing.thumbnail)
+              }
+              noteAssumedMinutes(objectid, thingAssumedPlayTimeMinutes(thing.raw) ?? undefined)
             } catch {
-              objectIdsFailed.add(objectid)
+              thingSummaryFailed.add(objectid)
             } finally {
-              objectIdsInFlight.delete(objectid)
+              thingSummaryInFlight.delete(objectid)
             }
           }),
         )
       }
     } finally {
-      isThumbnailPumpRunning = false
+      isThingSummaryPumpRunning = false
     }
   }
 
-  function enqueueThumbnails(objectids: string[]) {
+  function enqueueThingSummaries(objectids: string[]) {
     for (const objectid of objectids) {
       if (!objectid) continue
-      if (thumbnailsByObjectId().has(objectid)) continue
-      if (objectIdsFailed.has(objectid)) continue
-      queuedObjectIds.add(objectid)
+      if (thingSummaryResolved.has(objectid)) continue
+      if (thingSummaryInFlight.has(objectid)) continue
+      if (thingSummaryFailed.has(objectid)) continue
+      queuedThingSummaryObjectIds.add(objectid)
     }
-    void pumpThumbnailsQueue()
+    void pumpThingSummaryQueue()
   }
 
   createEffect(() => {
     thumbnailsEnabled = playsView() === 'byGame' && Boolean(bggAuthToken())
+
     if (!thumbnailsEnabled) return
 
     const ids = playsByGame()
       .map((row) => row.objectid)
       .filter((id): id is string => Boolean(id))
 
-    enqueueThumbnails(ids)
+    enqueueThingSummaries(ids)
   })
+
+  const visiblePlaysMissingLength = createMemo(() => {
+    const source =
+      playsView() === 'gameDetail'
+        ? selectedGamePagedPlays()
+        : playsView() === 'drilldown'
+          ? drilldownPagedPlays()
+          : pagedPlays()
+
+    return source.filter((play) => {
+      if (hasRecordedPlayLength(play.attributes)) return false
+      return Boolean(play.item?.attributes.objectid)
+    })
+  })
+
+  createEffect(() => {
+    const objectids = visiblePlaysMissingLength()
+      .map((play) => play.item?.attributes.objectid || '')
+      .filter((id) => Boolean(id))
+    enqueueThingSummaries(objectids)
+  })
+
+  function playTimeDisplay(play: {
+    attributes: Record<string, string>
+    item?: { attributes: Record<string, string> }
+  }): string {
+    const objectid = play.item?.attributes.objectid || ''
+    const assumedMinutesPerPlay = objectid
+      ? assumedMinutesByObjectId().get(objectid)
+      : undefined
+    const resolved = totalPlayMinutesWithAssumption({
+      attributes: play.attributes,
+      quantity: playQuantity(play),
+      assumedMinutesPerPlay,
+    })
+
+    if (resolved.minutes <= 0) return hasRecordedPlayLength(play.attributes) ? '' : '*'
+    const formatted = formatPlayLength(String(resolved.minutes))
+    return resolved.assumed ? `*${formatted}` : formatted
+  }
 
   const currentTotalPages = createMemo(() =>
     playsView() === 'gameDetail'
@@ -960,6 +1036,26 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'paleo' }}
+                  onClick={() => switchMainTab('paleo')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'paleo'}
+                >
+                  Paleo
+                </button>
+                <button
+                  class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'starTrekCaptainsChair' }}
+                  onClick={() => switchMainTab('starTrekCaptainsChair')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'starTrekCaptainsChair'}
+                >
+                  Star Trek: Captain's Chair
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
                   onClick={() => switchMainTab('spiritIsland')}
                   type="button"
@@ -1236,6 +1332,30 @@ function App() {
             />
           </Show>
 
+          <Show when={mainTab() === 'paleo'}>
+            <PaleoView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'starTrekCaptainsChair'}>
+            <StarTrekCaptainsChairView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
           <Show when={mainTab() === 'spiritIsland'}>
             <SpiritIslandView
               plays={allPlays().plays}
@@ -1359,6 +1479,13 @@ function App() {
           </Show>
 
           <Show when={mainTab() === 'plays'}>
+            <Show when={playsView() !== 'byGame'}>
+              <div class="muted">
+                <span class="mono">*</span> Estimated from BGG average play time when length is
+                missing.
+              </div>
+            </Show>
+
             <Show when={playsView() === 'plays'}>
               <div class="meta">
                 Total plays: <span class="mono">{totalPlayCount().toLocaleString()}</span>
@@ -1373,7 +1500,7 @@ function App() {
                       <th>Date</th>
                       <th>Game</th>
                       <th>Qty</th>
-                      <th>Length</th>
+                      <th>Play time</th>
                       <th>Location</th>
                       <th>Incomplete</th>
                       <th>Now in Stats</th>
@@ -1424,8 +1551,8 @@ function App() {
                           <td class="mono" data-label="Qty">
                             {play.attributes.quantity || ''}
                           </td>
-                          <td class="mono" data-label="Length">
-                            {formatPlayLength(play.attributes.length)}
+                          <td class="mono" data-label="Play time">
+                            {playTimeDisplay(play)}
                           </td>
                           <td data-label="Location">{play.attributes.location || ''}</td>
                           <td class="mono" data-label="Incomplete">
@@ -1593,6 +1720,7 @@ function App() {
                     <tr>
                       <th>Link</th>
                       <th>Date</th>
+                      <th>Play time</th>
                       <th>{`Color (${USERNAME})`}</th>
                       <th>Other Players</th>
                     </tr>
@@ -1608,6 +1736,9 @@ function App() {
                           </td>
                           <td class="mono" data-label="Date">
                             {play.attributes.date || ''}
+                          </td>
+                          <td class="mono" data-label="Play time">
+                            {playTimeDisplay(play)}
                           </td>
                           <td class="mono" data-label={`Color (${USERNAME})`}>
                             {getPlayerColorForUser(play, USERNAME)}
@@ -1640,7 +1771,7 @@ function App() {
                       <th>Date</th>
                       <th>Game</th>
                       <th>Qty</th>
-                      <th>Length</th>
+                      <th>Play time</th>
                       <th>Location</th>
                       <th>Incomplete</th>
                       <th>Now in Stats</th>
@@ -1675,8 +1806,8 @@ function App() {
                           <td class="mono" data-label="Qty">
                             {play.attributes.quantity || ''}
                           </td>
-                          <td class="mono" data-label="Length">
-                            {formatPlayLength(play.attributes.length)}
+                          <td class="mono" data-label="Play time">
+                            {playTimeDisplay(play)}
                           </td>
                           <td data-label="Location">{play.attributes.location || ''}</td>
                           <td class="mono" data-label="Incomplete">

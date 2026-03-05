@@ -11,6 +11,7 @@ import {
   pickBestAvailableAchievementForTrackIds,
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
+import { thingAssumedPlayTimeMinutes, totalPlayMinutes } from '../../playDuration'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { skytearHordeContent } from './content'
@@ -22,35 +23,12 @@ import {
 
 type MatrixDisplayMode = 'count' | 'played'
 
-function playLengthMinutes(attributes: Record<string, string>): number {
-  const parsed = Number(attributes.length || '0')
-  if (!Number.isFinite(parsed) || parsed < 0) return 0
-  return parsed
-}
-
-function thingAssumedPlayTimeMinutes(raw: unknown): number | null {
-  const record = raw as Record<string, unknown> | null
-  const candidates = ['playingtime', 'minplaytime', 'maxplaytime']
-
-  for (const key of candidates) {
-    const node = record?.[key] as Record<string, unknown> | undefined
-    const attrs = (node?.$ as Record<string, unknown> | undefined) || undefined
-    const value = attrs?.value
-    if (typeof value !== 'string') continue
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed) || parsed <= 0) continue
-    return parsed
-  }
-
-  return null
-}
-
 function entryMinutesWithAssumption(
   entry: SkytearHordeEntry,
   assumedMinutesByObjectId: Map<string, number> | undefined,
 ): { minutes: number; assumed: boolean } {
-  const actual = playLengthMinutes(entry.play.attributes)
-  if (actual > 0) return { minutes: actual * entry.quantity, assumed: false }
+  const actualMinutes = totalPlayMinutes(entry.play.attributes, entry.quantity)
+  if (actualMinutes > 0) return { minutes: actualMinutes, assumed: false }
 
   const objectId = entry.play.item?.attributes.objectid || ''
   if (!objectId) return { minutes: 0, assumed: false }
@@ -111,7 +89,7 @@ export default function SkytearHordeView(props: {
   const assumedObjectIds = createMemo(() => {
     const ids = new Set<string>()
     for (const entry of entries()) {
-      if (playLengthMinutes(entry.play.attributes) > 0) continue
+      if (totalPlayMinutes(entry.play.attributes, 1) > 0) continue
       const objectId = entry.play.item?.attributes.objectid || ''
       if (objectId) ids.add(objectId)
     }

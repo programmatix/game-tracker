@@ -10,18 +10,22 @@ export function totalPlayMinutes(
 
 export function thingAssumedPlayTimeMinutes(raw: unknown): number | null {
   const record = raw as Record<string, unknown> | null
-  const candidates = ['playingtime', 'minplaytime', 'maxplaytime']
-
-  for (const key of candidates) {
+  const readMinutes = (key: string): number | null => {
     const node = record?.[key] as Record<string, unknown> | undefined
     const attrs = (node?.$ as Record<string, unknown> | undefined) || undefined
-    const value = attrs?.value
-    if (typeof value !== 'string') continue
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed) || parsed <= 0) continue
+    const parsed = Number(attrs?.value)
+    if (!Number.isFinite(parsed) || parsed <= 0) return null
     return parsed
   }
 
+  const playingTime = readMinutes('playingtime')
+  if (playingTime !== null) return playingTime
+
+  const minPlayTime = readMinutes('minplaytime')
+  const maxPlayTime = readMinutes('maxplaytime')
+  if (minPlayTime !== null && maxPlayTime !== null) return (minPlayTime + maxPlayTime) / 2
+  if (minPlayTime !== null) return minPlayTime
+  if (maxPlayTime !== null) return maxPlayTime
   return null
 }
 
