@@ -2,7 +2,7 @@ import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } f
 import { burncycleContent } from './content'
 
 export type BurncyclePlayerTags = {
-  bot?: string
+  bots: string[]
   corporation?: string
   captain?: string
   extraTags: string[]
@@ -49,6 +49,20 @@ function isKnownCaptainToken(value: string): boolean {
   return burncycleContent.captainsById.has(normalizeId(value))
 }
 
+function tryResolveBotToken(value: string): string | undefined {
+  const token = normalizeToken(value)
+  if (!token) return undefined
+
+  if (isKnownBotToken(token)) return resolveBot(token)
+
+  const compactMatch = normalizeId(token).match(/^cm(.+)$/i)
+  if (compactMatch && isKnownBotToken(compactMatch[1])) {
+    return resolveBot(compactMatch[1])
+  }
+
+  return undefined
+}
+
 export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
   const parsedKv = parseBgStatsKeyValueSegments(color)
   const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
@@ -57,7 +71,14 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
   const corporationKv = getBgStatsValue(parsedKv, ['C', 'Corp', 'Corporation'])
   const captainKv = getBgStatsValue(parsedKv, ['CP', 'Cap', 'Captain'])
 
-  let bot = botKv ? resolveBot(botKv) : undefined
+  const bots: string[] = []
+  const addBot = (value: string | undefined) => {
+    const resolved = value ? tryResolveBotToken(value) : undefined
+    if (!resolved || bots.includes(resolved)) return
+    bots.push(resolved)
+  }
+
+  addBot(botKv)
   let corporation = corporationKv ? resolveCorporation(corporationKv) : undefined
   let captain = captainKv ? resolveCaptain(captainKv) : undefined
 
@@ -82,8 +103,9 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
       continue
     }
 
-    if (!bot && isKnownBotToken(normalized)) {
-      bot = resolveBot(normalized)
+    const resolvedBot = tryResolveBotToken(normalized)
+    if (resolvedBot) {
+      addBot(normalized)
       used.add(normalized)
       continue
     }
@@ -100,5 +122,5 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
     .filter(Boolean)
     .filter((tag) => !used.has(tag))
 
-  return { bot, corporation, captain, extraTags }
+  return { bots, corporation, captain, extraTags }
 }

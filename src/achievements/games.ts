@@ -14,6 +14,7 @@ import { computeCloudspireAchievements } from '../games/cloudspire/achievements'
 import { computeBurncycleAchievements } from '../games/burncycle/achievements'
 import { computePaleoAchievements } from '../games/paleo/achievements'
 import { computeStarTrekCaptainsChairAchievements } from '../games/star-trek-captains-chair/achievements'
+import { computeRobinsonCrusoeAchievements } from '../games/robinson-crusoe/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -27,6 +28,7 @@ export type GameId =
   | 'cloudspire'
   | 'burncycle'
   | 'paleo'
+  | 'robinsonCrusoe'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'mageKnight'
@@ -59,6 +61,7 @@ export function computeGameAchievements(
   if (gameId === 'cloudspire') return computeCloudspireAchievements(plays, username)
   if (gameId === 'burncycle') return computeBurncycleAchievements(plays, username)
   if (gameId === 'paleo') return computePaleoAchievements(plays, username)
+  if (gameId === 'robinsonCrusoe') return computeRobinsonCrusoeAchievements(plays, username)
   if (gameId === 'starTrekCaptainsChair') return computeStarTrekCaptainsChairAchievements(plays, username)
   if (gameId === 'unsettled') return computeUnsettledAchievements(plays, username)
   if (gameId === 'mageKnight') return computeMageKnightAchievements(plays, username)
@@ -83,6 +86,11 @@ export function computeAllGameAchievementSummaries(
     { gameId: 'cloudspire', gameName: 'Cloudspire', achievements: computeCloudspireAchievements(plays, username) },
     { gameId: 'burncycle', gameName: 'burncycle', achievements: computeBurncycleAchievements(plays, username) },
     { gameId: 'paleo', gameName: 'Paleo', achievements: computePaleoAchievements(plays, username) },
+    {
+      gameId: 'robinsonCrusoe',
+      gameName: 'Robinson Crusoe',
+      achievements: computeRobinsonCrusoeAchievements(plays, username),
+    },
     {
       gameId: 'starTrekCaptainsChair',
       gameName: "Star Trek: Captain's Chair",

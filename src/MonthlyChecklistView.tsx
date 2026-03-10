@@ -76,11 +76,12 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
   //   label: 'Marvel Champions',
   //   titleIncludes: ['marvel champions'],
   // },
-  // {
-  //   key: 'robinsonCrusoe',
-  //   label: 'Robinson Crusoe',
-  //   titleIncludes: ['robinson crusoe'],
-  // },
+  {
+    key: 'robinsonCrusoe',
+    label: 'Robinson Crusoe',
+    objectIds: ['121921'],
+    titleIncludes: ['robinson crusoe'],
+  },
   { key: 'mageKnight', label: 'Mage Knight', titleIncludes: ['mage knight'] },
   {
     key: 'skytearHorde',

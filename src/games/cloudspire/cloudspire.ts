@@ -61,6 +61,37 @@ function resolveSoloScenario(value: string): string | undefined {
   return token
 }
 
+function parseFactionScenarioToken(
+  value: string,
+): { faction: string; soloScenario: string } | undefined {
+  const token = normalizeToken(value)
+  if (!token) return undefined
+  const normalized = normalizeId(token)
+  if (!normalized) return undefined
+
+  const explicitScenario = normalized.match(/^(.+?)scenario0*([0-9]{1,2})$/i)
+  if (explicitScenario) {
+    const faction = cloudspireContent.factionsById.get(explicitScenario[1])
+    if (!faction) return undefined
+    return {
+      faction,
+      soloScenario: `Scenario ${Number(explicitScenario[2])}`,
+    }
+  }
+
+  const shortScenario = normalized.match(/^(.+?)s0*([0-9]{1,2})$/i)
+  if (shortScenario) {
+    const faction = cloudspireContent.factionsById.get(shortScenario[1])
+    if (!faction) return undefined
+    return {
+      faction,
+      soloScenario: `Scenario ${Number(shortScenario[2])}`,
+    }
+  }
+
+  return undefined
+}
+
 function isKnownFactionToken(value: string): boolean {
   return cloudspireContent.factionsById.has(normalizeId(value))
 }
@@ -129,6 +160,15 @@ export function parseCloudspirePlayerColor(color: string): CloudspirePlayerTags 
     const normalized = normalizeToken(tag)
     if (!normalized) continue
 
+    const factionScenario = parseFactionScenarioToken(normalized)
+    if (factionScenario) {
+      if (!myFaction) myFaction = factionScenario.faction
+      if (!soloScenario) soloScenario = factionScenario.soloScenario
+      if (!mode) mode = 'Solo'
+      used.add(normalized)
+      continue
+    }
+
     if (!mode && isKnownModeToken(normalized)) {
       mode = resolveMode(normalized)
       used.add(normalized)
@@ -139,6 +179,14 @@ export function parseCloudspirePlayerColor(color: string): CloudspirePlayerTags 
       myFaction = resolveFaction(normalized)
       used.add(normalized)
       continue
+    }
+
+    if (myFaction && isKnownFactionToken(normalized)) {
+      const resolved = resolveFaction(normalized)
+      if (resolved && normalizeId(resolved) === normalizeId(myFaction)) {
+        used.add(normalized)
+        continue
+      }
     }
 
     if (!myFaction) {

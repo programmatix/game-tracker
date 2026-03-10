@@ -1,0 +1,60 @@
+# Robinson Crusoe: Adventures on the Cursed Island
+#
+# Compact ids/aliases are used to parse BG Stats player-color tags.
+# Current observed format:
+#   Tutorial1
+# Also supports key/value style such as:
+#   S: Tutorial1
+
+scenarios:
+  - display: Tutorial 1
+    id: Tutorial1
+    aliases: [T1, Tutorial 1]
+    group: Tutorials
+    box: Core
+  - display: Tutorial 2
+    id: Tutorial2
+    aliases: [T2, Tutorial 2]
+    group: Tutorials
+    box: Core
+  - display: Tutorial 3
+    id: Tutorial3
+    aliases: [T3, Tutorial 3]
+    group: Tutorials
+    box: Core
+
+  - display: Castaways
+    id: Castaways
+    aliases: [Scenario1, Scenario 1, S1, 1]
+    group: Core
+    box: Core
+  - display: Cursed Island
+    id: CursedIsland
+    aliases: [Scenario2, Scenario 2, S2, 2]
+    group: Core
+    box: Core
+  - display: Jenny Needs Help
+    id: JennyNeedsHelp
+    aliases: [Jenny, Scenario3, Scenario 3, S3, 3]
+    group: Core
+    box: Core
+  - display: Volcano Island
+    id: VolcanoIsland
+    aliases: [Volcano, Scenario4, Scenario 4, S4, 4]
+    group: Core
+    box: Core
+  - display: Cannibal Island
+    id: CannibalIsland
+    aliases: [Cannibal, Scenario5, Scenario 5, S5, 5]
+    group: Core
+    box: Core
+  - display: Robinson Family
+    id: RobinsonFamily
+    aliases: [Family, Scenario6, Scenario 6, S6, 6]
+    group: Core
+    box: Core
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 44.99

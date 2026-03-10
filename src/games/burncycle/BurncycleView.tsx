@@ -27,6 +27,10 @@ import { BURNCYCLE_OBJECT_ID, getBurncycleEntries } from './burncycleEntries'
 
 type MatrixDisplayMode = 'count' | 'played'
 
+function knownBots(entry: ReturnType<typeof getBurncycleEntries>[number]): string[] {
+  return [...new Set(entry.bots.filter((bot) => bot !== 'Unknown bot'))]
+}
+
 export default function BurncycleView(props: {
   plays: BggPlay[]
   username: string
@@ -82,7 +86,9 @@ export default function BurncycleView(props: {
 
   const botCounts = createMemo(() => {
     const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.bot, entry.quantity)
+    for (const entry of entries()) {
+      for (const bot of knownBots(entry)) incrementCount(counts, bot, entry.quantity)
+    }
     return counts
   })
 
@@ -90,7 +96,7 @@ export default function BurncycleView(props: {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
       if (!entry.isWin) continue
-      incrementCount(counts, entry.bot, entry.quantity)
+      for (const bot of knownBots(entry)) incrementCount(counts, bot, entry.quantity)
     }
     return counts
   })
@@ -128,7 +134,9 @@ export default function BurncycleView(props: {
   const playIdsByBot = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
-      ;(ids[entry.bot] ||= []).push(entry.play.id)
+      for (const bot of knownBots(entry)) {
+        ;(ids[bot] ||= []).push(entry.play.id)
+      }
     }
     return ids
   })
@@ -153,7 +161,9 @@ export default function BurncycleView(props: {
     const counts: Record<string, Record<string, number>> = {}
     for (const entry of entries()) {
       counts[entry.corporation] ||= {}
-      incrementCount(counts[entry.corporation]!, entry.bot, entry.quantity)
+      for (const bot of knownBots(entry)) {
+        incrementCount(counts[entry.corporation]!, bot, entry.quantity)
+      }
     }
     return counts
   })
@@ -163,7 +173,9 @@ export default function BurncycleView(props: {
     for (const entry of entries()) {
       if (!entry.isWin) continue
       counts[entry.corporation] ||= {}
-      incrementCount(counts[entry.corporation]!, entry.bot, entry.quantity)
+      for (const bot of knownBots(entry)) {
+        incrementCount(counts[entry.corporation]!, bot, entry.quantity)
+      }
     }
     return counts
   })
@@ -171,10 +183,12 @@ export default function BurncycleView(props: {
   const playIdsByPair = createMemo(() => {
     const ids = new Map<string, number[]>()
     for (const entry of entries()) {
-      const key = `${entry.corporation}|||${entry.bot}`
-      const existing = ids.get(key)
-      if (existing) existing.push(entry.play.id)
-      else ids.set(key, [entry.play.id])
+      for (const bot of knownBots(entry)) {
+        const key = `${entry.corporation}|||${bot}`
+        const existing = ids.get(key)
+        if (existing) existing.push(entry.play.id)
+        else ids.set(key, [entry.play.id])
+      }
     }
     return ids
   })
@@ -183,8 +197,10 @@ export default function BurncycleView(props: {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
       const boxes = new Set<string>()
-      const botBox = burncycleContent.botGroupByName.get(entry.bot)
-      if (botBox) boxes.add(botBox)
+      for (const bot of knownBots(entry)) {
+        const botBox = burncycleContent.botGroupByName.get(bot)
+        if (botBox) boxes.add(botBox)
+      }
       const corporationBox = burncycleContent.corporationGroupByName.get(entry.corporation)
       if (corporationBox) boxes.add(corporationBox)
       const captainBox = burncycleContent.captainGroupByName.get(entry.captain)
@@ -199,8 +215,10 @@ export default function BurncycleView(props: {
     const hasAssumedHoursByBox: Record<string, boolean> = {}
     for (const entry of entries()) {
       const boxes = new Set<string>()
-      const botBox = burncycleContent.botGroupByName.get(entry.bot)
-      if (botBox) boxes.add(botBox)
+      for (const bot of knownBots(entry)) {
+        const botBox = burncycleContent.botGroupByName.get(bot)
+        if (botBox) boxes.add(botBox)
+      }
       const corporationBox = burncycleContent.corporationGroupByName.get(entry.corporation)
       if (corporationBox) boxes.add(corporationBox)
       const captainBox = burncycleContent.captainGroupByName.get(entry.captain)
@@ -225,8 +243,10 @@ export default function BurncycleView(props: {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
       const boxes = new Set<string>()
-      const botBox = burncycleContent.botGroupByName.get(entry.bot)
-      if (botBox) boxes.add(botBox)
+      for (const bot of knownBots(entry)) {
+        const botBox = burncycleContent.botGroupByName.get(bot)
+        if (botBox) boxes.add(botBox)
+      }
       const corporationBox = burncycleContent.corporationGroupByName.get(entry.corporation)
       if (corporationBox) boxes.add(corporationBox)
       const captainBox = burncycleContent.captainGroupByName.get(entry.captain)

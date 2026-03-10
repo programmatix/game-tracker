@@ -24,6 +24,7 @@ import CloudspireView from './games/cloudspire/CloudspireView'
 import BurncycleView from './games/burncycle/BurncycleView'
 import MandalorianAdventuresView from './games/mandalorian-adventures/MandalorianAdventuresView'
 import PaleoView from './games/paleo/PaleoView'
+import RobinsonCrusoeView from './games/robinson-crusoe/RobinsonCrusoeView'
 import StarTrekCaptainsChairView from './games/star-trek-captains-chair/StarTrekCaptainsChairView'
 import AchievementsView from './AchievementsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
@@ -67,6 +68,7 @@ type MainTab =
   | 'cloudspire'
   | 'burncycle'
   | 'paleo'
+  | 'robinsonCrusoe'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'spiritIsland'
@@ -95,6 +97,7 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'cloudspire',
   'burncycle',
   'paleo',
+  'robinsonCrusoe',
   'starTrekCaptainsChair',
   'unsettled',
   'spiritIsland',
@@ -118,6 +121,7 @@ const MAIN_TAB_OPTIONS: ReadonlyArray<{ value: MainTab; label: string }> = [
   { value: 'cloudspire', label: 'Cloudspire' },
   { value: 'burncycle', label: 'burncycle' },
   { value: 'paleo', label: 'Paleo' },
+  { value: 'robinsonCrusoe', label: 'Robinson Crusoe' },
   { value: 'starTrekCaptainsChair', label: "Star Trek: Captain's Chair" },
   { value: 'spiritIsland', label: 'Spirit Island' },
   { value: 'unsettled', label: 'Unsettled' },
@@ -1046,6 +1050,16 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'robinsonCrusoe' }}
+                  onClick={() => switchMainTab('robinsonCrusoe')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'robinsonCrusoe'}
+                >
+                  Robinson Crusoe
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'starTrekCaptainsChair' }}
                   onClick={() => switchMainTab('starTrekCaptainsChair')}
                   type="button"
@@ -1334,6 +1348,18 @@ function App() {
 
           <Show when={mainTab() === 'paleo'}>
             <PaleoView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'robinsonCrusoe'}>
+            <RobinsonCrusoeView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}

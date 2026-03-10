@@ -17,6 +17,10 @@ import { normalizeAchievementItemLabel } from '../../achievements/progress'
 import { burncycleContent } from './content'
 import { getBurncycleEntries } from './burncycleEntries'
 
+function knownBotsForEntry(entry: ReturnType<typeof getBurncycleEntries>[number]): string[] {
+  return [...new Set(entry.bots.filter((bot) => bot !== 'Unknown bot'))]
+}
+
 export function computeBurncycleAchievements(plays: BggPlay[], username: string) {
   const entries = getBurncycleEntries(plays, username)
   const totalPlays = sumQuantities(entries)
@@ -24,16 +28,19 @@ export function computeBurncycleAchievements(plays: BggPlay[], username: string)
 
   const botPlays = buildCanonicalCounts({
     preferredItems: burncycleContent.bots.map((bot) => buildAchievementItem(bot)),
-    observed: entries
-      .filter((e) => e.bot !== 'Unknown bot')
-      .map((e) => ({ item: buildAchievementItem(e.bot), amount: e.quantity })),
+    observed: entries.flatMap((e) =>
+      knownBotsForEntry(e).map((bot) => ({ item: buildAchievementItem(bot), amount: e.quantity })),
+    ),
   })
 
   const botWins = buildCanonicalCounts({
     preferredItems: burncycleContent.bots.map((bot) => buildAchievementItem(bot)),
-    observed: entries
-      .filter((e) => e.bot !== 'Unknown bot')
-      .map((e) => ({ item: buildAchievementItem(e.bot), amount: e.isWin ? e.quantity : 0 })),
+    observed: entries.flatMap((e) =>
+      knownBotsForEntry(e).map((bot) => ({
+        item: buildAchievementItem(bot),
+        amount: e.isWin ? e.quantity : 0,
+      })),
+    ),
   })
 
   const corporationPlays = buildCanonicalCounts({
@@ -73,11 +80,10 @@ export function computeBurncycleAchievements(plays: BggPlay[], username: string)
       buildAchievementItem(box),
     ),
     observed: entries
-      .filter((e) => e.bot !== 'Unknown bot')
-      .map((e) => {
-        const box = burncycleContent.botGroupByName.get(e.bot)
-        return box ? { item: buildAchievementItem(box), amount: e.quantity } : null
-      })
+      .flatMap((e) =>
+        [...new Set(knownBotsForEntry(e).map((bot) => burncycleContent.botGroupByName.get(bot)).filter(Boolean))]
+          .map((box) => ({ item: buildAchievementItem(box!), amount: e.quantity })),
+      )
       .filter((row): row is { item: { id: string; label: string }; amount: number } => Boolean(row)),
   })
 
@@ -85,18 +91,28 @@ export function computeBurncycleAchievements(plays: BggPlay[], username: string)
     preferredItems: burncycleContent.corporations.flatMap((corporation) =>
       burncycleContent.bots.map((bot) => buildAchievementItem(`${corporation} vs ${bot}`)),
     ),
-    observed: entries
-      .filter((e) => e.bot !== 'Unknown bot' && e.corporation !== 'Unknown corporation')
-      .map((e) => ({ item: buildAchievementItem(`${e.corporation} vs ${e.bot}`), amount: e.quantity })),
+    observed: entries.flatMap((e) =>
+      e.corporation === 'Unknown corporation'
+        ? []
+        : knownBotsForEntry(e).map((bot) => ({
+            item: buildAchievementItem(`${e.corporation} vs ${bot}`),
+            amount: e.quantity,
+          })),
+    ),
   })
 
   const botCorpMatchupWins = buildCanonicalCounts({
     preferredItems: burncycleContent.corporations.flatMap((corporation) =>
       burncycleContent.bots.map((bot) => buildAchievementItem(`${corporation} vs ${bot}`)),
     ),
-    observed: entries
-      .filter((e) => e.isWin && e.bot !== 'Unknown bot' && e.corporation !== 'Unknown corporation')
-      .map((e) => ({ item: buildAchievementItem(`${e.corporation} vs ${e.bot}`), amount: e.quantity })),
+    observed: entries.flatMap((e) =>
+      !e.isWin || e.corporation === 'Unknown corporation'
+        ? []
+        : knownBotsForEntry(e).map((bot) => ({
+            item: buildAchievementItem(`${e.corporation} vs ${bot}`),
+            amount: e.quantity,
+          })),
+    ),
   })
 
   const tracks: AchievementTrack[] = [
@@ -107,7 +123,7 @@ export function computeBurncycleAchievements(plays: BggPlay[], username: string)
         if (!entry) return undefined
         return buildCompletionFromPlay(
           entry.play,
-          `${entry.bot} at ${entry.corporation} (${entry.captain})`,
+          `${entry.bots.join(', ')} at ${entry.corporation} (${entry.captain})`,
         )
       },
     },
@@ -143,10 +159,13 @@ export function computeBurncycleAchievements(plays: BggPlay[], username: string)
             const entry = findCompletionEntryForCounter({
               entries,
               target: targetPlays,
-              predicate: (e) => normalizeKey(e.bot) === labelKey,
+              predicate: (e) => knownBotsForEntry(e).some((bot) => normalizeKey(bot) === labelKey),
             })
             if (!entry) return undefined
-            return buildCompletionFromPlay(entry.play, `${entry.bot} at ${entry.corporation}`)
+            return buildCompletionFromPlay(
+              entry.play,
+              `${entry.bots.join(', ')} at ${entry.corporation}`,
+            )
           },
         }
       }),
