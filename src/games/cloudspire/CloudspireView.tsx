@@ -179,9 +179,13 @@ export default function CloudspireView(props: {
     return ids
   })
 
+  const soloMatrixEntries = createMemo(
+    () => soloEntries().filter((entry) => entry.soloScenario !== 'Tutorial'),
+  )
+
   const soloMatrix = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
-    for (const entry of soloEntries()) {
+    for (const entry of soloMatrixEntries()) {
       counts[entry.myFaction] ||= {}
       incrementCount(counts[entry.myFaction]!, entry.soloScenario, entry.quantity)
     }
@@ -190,7 +194,7 @@ export default function CloudspireView(props: {
 
   const soloMatrixWins = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
-    for (const entry of soloEntries()) {
+    for (const entry of soloMatrixEntries()) {
       if (!entry.isWin) continue
       counts[entry.myFaction] ||= {}
       incrementCount(counts[entry.myFaction]!, entry.soloScenario, entry.quantity)
@@ -200,7 +204,7 @@ export default function CloudspireView(props: {
 
   const playIdsBySoloFactionScenario = createMemo(() => {
     const ids = new Map<string, number[]>()
-    for (const entry of soloEntries()) {
+    for (const entry of soloMatrixEntries()) {
       const key = `${entry.myFaction}|||${entry.soloScenario}`
       const existing = ids.get(key)
       if (existing) existing.push(entry.play.id)
@@ -330,12 +334,15 @@ export default function CloudspireView(props: {
     mergeCanonicalKeys(sortKeysByCountDesc(modeCounts()), cloudspireContent.modes),
   )
   const soloScenarioKeys = createMemo(() => sortKeysByCountDesc(soloScenarioCounts()))
+  const soloMatrixScenarioKeys = createMemo(() =>
+    soloScenarioKeys().filter((scenario) => scenario !== 'Tutorial'),
+  )
 
   const unknownTagKeys = createMemo(() => sortKeysByCountDesc(unknownTagCounts()))
   const soloMatrixMax = createMemo(() => {
     let max = 0
     for (const row of soloFactionKeys()) {
-      for (const col of soloScenarioKeys()) {
+      for (const col of soloMatrixScenarioKeys()) {
         const value = soloMatrix()[row]?.[col] ?? 0
         if (value > max) max = value
       }
@@ -504,7 +511,7 @@ export default function CloudspireView(props: {
 
           <HeatmapMatrix
             rows={soloFactionKeys()}
-            cols={soloScenarioKeys()}
+            cols={soloMatrixScenarioKeys()}
             rowHeader="My faction"
             colHeader="Solo scenario"
             rowGroupBy={(row) => cloudspireContent.factionGroupByName.get(row)}

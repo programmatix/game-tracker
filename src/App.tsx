@@ -31,14 +31,14 @@ import MonthlyChecklistView from './MonthlyChecklistView'
 import FeedbackView from './feedback/FeedbackView'
 import { authUser, signOutUser } from './auth/auth'
 import {
+  fetchAchievementStore,
+  saveAchievementsSnapshot,
+  saveSeenCompletedAchievementIds,
+} from './achievements/achievementsFirebase'
+import {
   fetchPinnedAchievementIds,
   savePinnedAchievementIds,
 } from './achievements/pinsFirebase'
-import {
-  maybeWriteAchievementsSnapshot,
-  readSeenCompletedAchievementIds,
-  writeSeenCompletedAchievementIds,
-} from './achievements/localStore'
 import {
   computeNewlyUnlockedAchievements,
   computeTrackIdsForAchievements,
@@ -293,6 +293,21 @@ function getBggPlayerDisplayName(attributes: Record<string, string>): string {
   return 'Unknown player'
 }
 
+function getBggPlayerResult(attributes: Record<string, string>): string {
+  if (attributes.win === '1') return 'Win'
+  if (attributes.win === '0') return 'Loss'
+  return ''
+}
+
+function getPlayerResultForUser(
+  play: { players: Array<{ attributes: Record<string, string> }> },
+  username: string,
+): string {
+  const user = username.toLowerCase()
+  const player = play.players.find((p) => (p.attributes.username || '').toLowerCase() === user)
+  return player ? getBggPlayerResult(player.attributes) : ''
+}
+
 function getOtherPlayersSummary(
   play: { players: Array<{ attributes: Record<string, string> }> },
   username: string,
@@ -304,7 +319,9 @@ function getOtherPlayersSummary(
     .map((player) => {
       const who = getBggPlayerDisplayName(player.attributes)
       const color = (player.attributes.color || '').trim()
-      return color ? `${who}: ${color}` : `${who}: —`
+      const result = getBggPlayerResult(player.attributes)
+      const details = [color || '—', result].filter(Boolean).join(' • ')
+      return `${who}: ${details}`
     })
     .join(' | ')
 }
@@ -364,11 +381,12 @@ function App() {
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
   const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(new Set<string>())
   const [seenCompletedAchievementIds, setSeenCompletedAchievementIds] = createSignal(
-    readSeenCompletedAchievementIds(),
+    new Set<string>(),
   )
   const isFeedbackAdmin = createMemo(
     () => authUser()?.email?.toLowerCase() === FEEDBACK_ADMIN_EMAIL,
   )
+  let lastAchievementsSnapshotSavedAtMs = 0
 
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(
     new Map<string, string>(),
@@ -386,13 +404,25 @@ function App() {
   createEffect(() => setPageDraft(String(page())))
   createEffect(() => {
     const user = authUser()
-    if (!user) return
+    lastAchievementsSnapshotSavedAtMs = 0
+    if (!user) {
+      batch(() => {
+        setPinnedAchievementIds(new Set<string>())
+        setSeenCompletedAchievementIds(new Set<string>())
+      })
+      return
+    }
 
     let cancelled = false
-    void fetchPinnedAchievementIds(user).then((remoteIds) => {
-      if (cancelled) return
-      setPinnedAchievementIds(remoteIds)
-    })
+    void Promise.all([fetchPinnedAchievementIds(user), fetchAchievementStore(user)]).then(
+      ([remotePinnedIds, store]) => {
+        if (cancelled) return
+        batch(() => {
+          setPinnedAchievementIds(remotePinnedIds)
+          setSeenCompletedAchievementIds(store.seenCompletedAchievementIds)
+        })
+      },
+    )
 
     onCleanup(() => {
       cancelled = true
@@ -490,14 +520,27 @@ function App() {
     const nextSeen = new Set(seenCompletedAchievementIds())
     for (const achievement of newlyUnlockedAchievements()) nextSeen.add(achievement.id)
     setSeenCompletedAchievementIds(nextSeen)
-    writeSeenCompletedAchievementIds(nextSeen)
+    const user = authUser()
+    if (user) {
+      void saveSeenCompletedAchievementIds(user, nextSeen).catch(() => {
+        // ignore sync failures
+      })
+    }
   }
 
   createEffect(() => {
+    const user = authUser()
+    if (!user) return
+
     // Persist a snapshot in the background while navigating (at most every ~10 minutes).
     mainTab()
     playsView()
-    maybeWriteAchievementsSnapshot(allAchievements())
+    const now = Date.now()
+    if (now - lastAchievementsSnapshotSavedAtMs < 10 * 60 * 1000) return
+    lastAchievementsSnapshotSavedAtMs = now
+    void saveAchievementsSnapshot(user, allAchievements()).catch(() => {
+      lastAchievementsSnapshotSavedAtMs = 0
+    })
   })
 
   const totalPages = createMemo(() =>
@@ -1598,13 +1641,13 @@ function App() {
                                   const score = player.attributes.score
                                     ? ` score:${player.attributes.score}`
                                     : ''
-                                  const win =
-                                    player.attributes.win === '1' ? ' win' : ''
+                                  const result = getBggPlayerResult(player.attributes)
+                                  const winLoss = result ? ` ${result.toLowerCase()}` : ''
                                   return (
                                     <div class="mono">
                                       {name}
                                       {score}
-                                      {win}
+                                      {winLoss}
                                     </div>
                                   )
                                 }}
@@ -1747,6 +1790,7 @@ function App() {
                       <th>Link</th>
                       <th>Date</th>
                       <th>Play time</th>
+                      <th>{`Result (${USERNAME})`}</th>
                       <th>{`Color (${USERNAME})`}</th>
                       <th>Other Players</th>
                     </tr>
@@ -1766,8 +1810,11 @@ function App() {
                           <td class="mono" data-label="Play time">
                             {playTimeDisplay(play)}
                           </td>
+                          <td class="mono" data-label={`Result (${USERNAME})`}>
+                            {getPlayerResultForUser(play, USERNAME) || '—'}
+                          </td>
                           <td class="mono" data-label={`Color (${USERNAME})`}>
-                            {getPlayerColorForUser(play, USERNAME)}
+                            {getPlayerColorForUser(play, USERNAME) || '—'}
                           </td>
                           <td data-label="Other Players">
                             {getOtherPlayersSummary(play, USERNAME)}
@@ -1853,13 +1900,13 @@ function App() {
                                   const score = player.attributes.score
                                     ? ` score:${player.attributes.score}`
                                     : ''
-                                  const win =
-                                    player.attributes.win === '1' ? ' win' : ''
+                                  const result = getBggPlayerResult(player.attributes)
+                                  const winLoss = result ? ` ${result.toLowerCase()}` : ''
                                   return (
                                     <div class="mono">
                                       {name}
                                       {score}
-                                      {win}
+                                      {winLoss}
                                     </div>
                                   )
                                 }}
