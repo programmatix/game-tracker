@@ -425,30 +425,60 @@ export default function MonthlyChecklistView(props: { plays: BggPlay[]; authToke
     }
   })
 
+  const checklistCompletion = createMemo(() => {
+    const checklistRows = rows()
+    const total = checklistRows.length
+    let completed = 0
+    for (const row of checklistRows) {
+      if (row.played) completed += 1
+    }
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0
+    return { completed, total, percent }
+  })
+
   return (
     <div class="finalGirl">
       <div class="meta">
         Month: <span class="mono">{month().label}</span>
       </div>
 
-      <div class="meta">
-        Total time:{' '}
-        <span class="mono">
-          {formatMinutes(totals().totalMinutes)}
-          {totals().totalAssumed ? '*' : ''}
-        </span>
-        {' • '}
-        Checklist:{' '}
-        <span class="mono">
-          {formatMinutes(totals().checklistMinutes)}
-          {totals().checklistAssumed ? '*' : ''}
-        </span>
-        {' • '}
-        Other:{' '}
-        <span class="mono">
-          {formatMinutes(totals().otherMinutes)}
-          {totals().otherAssumed ? '*' : ''}
-        </span>
+      <div class="monthlySummaryGrid">
+        <section class="monthlySummaryCard monthlySummaryCardProgress">
+          <div class="monthlySummaryLabel">Monthly checklist</div>
+          <div class="monthlyProgressRing" style={{ '--progress': `${checklistCompletion().percent}%` }}>
+            <div class="monthlyProgressInner">
+              <span class="monthlyProgressValue mono">{checklistCompletion().percent}%</span>
+            </div>
+          </div>
+          <div class="monthlySummarySubtext">
+            <span class="mono">{checklistCompletion().completed.toLocaleString()}</span> of{' '}
+            <span class="mono">{checklistCompletion().total.toLocaleString()}</span> checklist games played
+          </div>
+        </section>
+
+        <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">Total time</div>
+          <div class="monthlySummaryValue mono">
+            {formatMinutes(totals().totalMinutes)}
+            {totals().totalAssumed ? '*' : ''}
+          </div>
+        </section>
+
+        <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">Checklist time</div>
+          <div class="monthlySummaryValue mono">
+            {formatMinutes(totals().checklistMinutes)}
+            {totals().checklistAssumed ? '*' : ''}
+          </div>
+        </section>
+
+        <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">Other time</div>
+          <div class="monthlySummaryValue mono">
+            {formatMinutes(totals().otherMinutes)}
+            {totals().otherAssumed ? '*' : ''}
+          </div>
+        </section>
       </div>
 
       <div class="tableWrap">

@@ -10,8 +10,9 @@
     "bgg:plays:xml": "node scripts/bgg-plays.js",
     "bgg:plays:json": "node scripts/bgg-plays-json.js",
     "firebase:emulators": "firebase emulators:start",
-    "firebase:deploy": "firebase deploy",
-    "firebase:deploy:hosting": "pnpm build && firebase deploy --only hosting"
+    "firebase:deploy": "pnpm build && firebase deploy",
+    "build:hosting": "vite build",
+    "firebase:deploy:hosting": "pnpm build:hosting && firebase deploy --only hosting"
   },
   "dependencies": {
     "firebase": "^12.8.0",
