@@ -18,18 +18,33 @@ function achievementsDoc(user: User) {
 
 export async function fetchAchievementStore(user: User): Promise<AchievementStore> {
   if (!isFirebaseConfigured()) {
+    console.log('fetchAchievementStore', 'firebase not configured')
     return { seenCompletedAchievementIds: new Set() }
   }
 
   try {
-    const snapshot = await getDoc(achievementsDoc(user))
+    const achievementStoreDoc = achievementsDoc(user)
+    console.log('fetchAchievementStore:start', achievementStoreDoc.path, user.uid)
+    const snapshot = await getDoc(achievementStoreDoc)
     if (!snapshot.exists()) {
+      console.log('fetchAchievementStore:no snapshot', achievementStoreDoc.path, user.uid)
       return { seenCompletedAchievementIds: new Set() }
     }
 
     const data = snapshot.data() as { seenCompletedAchievementIds?: unknown } | undefined
+    const normalizedIds = normalizeIds(data?.seenCompletedAchievementIds)
+    console.log(
+      'fetchAchievementStore:success',
+      achievementStoreDoc.path,
+      user.uid,
+      'seenCompletedAchievementIds',
+      normalizedIds.size,
+      [...normalizedIds],
+      'raw',
+      data,
+    )
     return {
-      seenCompletedAchievementIds: normalizeIds(data?.seenCompletedAchievementIds),
+      seenCompletedAchievementIds: normalizedIds,
     }
   } catch (error) {
     console.error('fetchAchievementStore', error)
@@ -43,13 +58,28 @@ export async function saveSeenCompletedAchievementIds(
 ): Promise<void> {
   if (!isFirebaseConfigured()) return
 
+  const normalizedIds = [...new Set(ids)]
+  const achievementStoreDoc = achievementsDoc(user)
+  console.log(
+    'saveSeenCompletedAchievementIds:start',
+    achievementStoreDoc.path,
+    user.uid,
+    normalizedIds.length,
+    normalizedIds,
+  )
   await setDoc(
-    achievementsDoc(user),
+    achievementStoreDoc,
     {
-      seenCompletedAchievementIds: [...ids],
+      seenCompletedAchievementIds: normalizedIds,
       seenCompletedAchievementIdsUpdatedAt: serverTimestamp(),
     },
     { merge: true },
+  )
+  console.log(
+    'saveSeenCompletedAchievementIds:success',
+    achievementStoreDoc.path,
+    user.uid,
+    normalizedIds.length,
   )
 }
 
@@ -59,8 +89,15 @@ export async function saveAchievementsSnapshot(
 ): Promise<void> {
   if (!isFirebaseConfigured()) return
 
+  const achievementStoreDoc = achievementsDoc(user)
+  console.log(
+    'saveAchievementsSnapshot:start',
+    achievementStoreDoc.path,
+    user.uid,
+    achievements.length,
+  )
   await setDoc(
-    achievementsDoc(user),
+    achievementStoreDoc,
     {
       achievementsSnapshot: {
         version: 1,
@@ -77,5 +114,11 @@ export async function saveAchievementsSnapshot(
       },
     },
     { merge: true },
+  )
+  console.log(
+    'saveAchievementsSnapshot:success',
+    achievementStoreDoc.path,
+    user.uid,
+    achievements.length,
   )
 }

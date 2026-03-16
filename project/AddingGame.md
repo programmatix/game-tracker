@@ -27,4 +27,3 @@ Use the CLI tool (`node scripts/bgg-plays.js --username stony82 --all --stdout`)
 But note that it may not be suitable. If there are two axes we only have 15 characters for each axis. If 3, only 10. So you may need to define your compact tokens/ids directly in `content.yaml`, and ask me to change the BGG data manually to follow it.
 You will need a content.yaml anyway, that will contain all content for the game.
 
-

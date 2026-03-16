@@ -451,18 +451,34 @@ function App() {
   createEffect(() => {
     const user = authUser()
     lastAchievementsSnapshotSavedAtMs = 0
+    console.log('achievements auth effect', user ? { uid: user.uid, email: user.email } : null)
     if (!user) {
       batch(() => {
         setPinnedAchievementIds(new Set<string>())
         setSeenCompletedAchievementIds(new Set<string>())
       })
+      console.log('achievements auth effect cleared local state because user is signed out')
       return
     }
 
     let cancelled = false
+    console.log('achievements auth effect loading remote state', user.uid)
     void Promise.all([fetchPinnedAchievementIds(user), fetchAchievementStore(user)]).then(
       ([remotePinnedIds, store]) => {
-        if (cancelled) return
+        if (cancelled) {
+          console.log('achievements auth effect ignored remote state because effect was cancelled')
+          return
+        }
+        console.log(
+          'achievements auth effect loaded remote state',
+          user.uid,
+          'pinned',
+          remotePinnedIds.size,
+          [...remotePinnedIds],
+          'seenCompleted',
+          store.seenCompletedAchievementIds.size,
+          [...store.seenCompletedAchievementIds],
+        )
         batch(() => {
           setPinnedAchievementIds(remotePinnedIds)
           setSeenCompletedAchievementIds(store.seenCompletedAchievementIds)
@@ -563,8 +579,22 @@ function App() {
   )
 
   function dismissNewlyUnlockedAchievements() {
+    console.log(
+      'dismissNewlyUnlockedAchievements:before',
+      'newlyUnlocked',
+      newlyUnlockedAchievements().length,
+      newlyUnlockedAchievements().map((achievement) => achievement.id),
+      'seenCompleted',
+      seenCompletedAchievementIds().size,
+      [...seenCompletedAchievementIds()],
+    )
     const nextSeen = new Set(seenCompletedAchievementIds())
     for (const achievement of newlyUnlockedAchievements()) nextSeen.add(achievement.id)
+    console.log(
+      'dismissNewlyUnlockedAchievements:after merge',
+      nextSeen.size,
+      [...nextSeen],
+    )
     setSeenCompletedAchievementIds(nextSeen)
     const user = authUser()
     if (user) {
@@ -590,6 +620,20 @@ function App() {
       lastAchievementsSnapshotSavedAtMs = 0
       showFirebaseSaveErrorToast('Failed to save achievement snapshot to Firebase.')
     })
+  })
+
+  createEffect(() => {
+    const seenIds = seenCompletedAchievementIds()
+    console.log('seenCompletedAchievementIds changed', seenIds.size, [...seenIds])
+  })
+
+  createEffect(() => {
+    const unlocked = newlyUnlockedAchievements()
+    console.log(
+      'newlyUnlockedAchievements changed',
+      unlocked.length,
+      unlocked.map((achievement) => achievement.id),
+    )
   })
 
   const totalPages = createMemo(() =>
@@ -816,6 +860,17 @@ function App() {
     const objectids = visiblePlaysMissingLength()
       .map((play) => play.item?.attributes.objectid || '')
       .filter((id) => Boolean(id))
+    enqueueThingSummaries(objectids)
+  })
+
+  createEffect(() => {
+    if (mainTab() !== 'costs') return
+
+    const objectids = allPlays()
+      .plays.filter((play) => !hasRecordedPlayLength(play.attributes))
+      .map((play) => play.item?.attributes.objectid || '')
+      .filter((id) => Boolean(id))
+
     enqueueThingSummaries(objectids)
   })
 
