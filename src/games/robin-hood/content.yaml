@@ -1,0 +1,70 @@
+# The Adventures of Robin Hood
+#
+# BG Stats player color tag examples:
+#   Mari／Robi／Will／John／1
+#   Robi／2／Mari
+#   ContPrev
+
+adventures:
+  - display: Adventure 1
+    id: A1
+    group: Base Game
+    box: Core
+    aliases: [1, Adventure One]
+  - display: Adventure 2
+    id: A2
+    group: Base Game
+    box: Core
+    aliases: [2, Adventure Two]
+  - display: Adventure 3
+    id: A3
+    group: Base Game
+    box: Core
+    aliases: [3, Adventure Three]
+  - display: Adventure 4
+    id: A4
+    group: Base Game
+    box: Core
+    aliases: [4, Adventure Four]
+  - display: Adventure 5
+    id: A5
+    group: Base Game
+    box: Core
+    aliases: [5, Adventure Five]
+  - display: Adventure 6
+    id: A6
+    group: Base Game
+    box: Core
+    aliases: [6, Adventure Six]
+  - display: Adventure 7
+    id: A7
+    group: Base Game
+    box: Core
+    aliases: [7, Adventure Seven]
+
+characters:
+  - display: Robin Hood
+    id: Robin
+    group: Heroes
+    box: Core
+    aliases: [Robi, Robin Hood, Robin]
+  - display: Maid Marian
+    id: Marian
+    group: Heroes
+    box: Core
+    aliases: [Mari, Marian]
+  - display: Will Scarlet
+    id: Will
+    group: Heroes
+    box: Core
+    aliases: [Scarlet]
+  - display: Little John
+    id: John
+    group: Heroes
+    box: Core
+    aliases: [LittleJohn, Little John]
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 39.99

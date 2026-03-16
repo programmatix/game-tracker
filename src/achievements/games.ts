@@ -15,6 +15,8 @@ import { computeBurncycleAchievements } from '../games/burncycle/achievements'
 import { computePaleoAchievements } from '../games/paleo/achievements'
 import { computeStarTrekCaptainsChairAchievements } from '../games/star-trek-captains-chair/achievements'
 import { computeRobinsonCrusoeAchievements } from '../games/robinson-crusoe/achievements'
+import { computeRobinHoodAchievements } from '../games/robin-hood/achievements'
+import { computeEarthborneRangersAchievements } from '../games/earthborne-rangers/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -29,6 +31,8 @@ export type GameId =
   | 'burncycle'
   | 'paleo'
   | 'robinsonCrusoe'
+  | 'robinHood'
+  | 'earthborneRangers'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'mageKnight'
@@ -62,6 +66,8 @@ export function computeGameAchievements(
   if (gameId === 'burncycle') return computeBurncycleAchievements(plays, username)
   if (gameId === 'paleo') return computePaleoAchievements(plays, username)
   if (gameId === 'robinsonCrusoe') return computeRobinsonCrusoeAchievements(plays, username)
+  if (gameId === 'robinHood') return computeRobinHoodAchievements(plays, username)
+  if (gameId === 'earthborneRangers') return computeEarthborneRangersAchievements(plays, username)
   if (gameId === 'starTrekCaptainsChair') return computeStarTrekCaptainsChairAchievements(plays, username)
   if (gameId === 'unsettled') return computeUnsettledAchievements(plays, username)
   if (gameId === 'mageKnight') return computeMageKnightAchievements(plays, username)
@@ -90,6 +96,16 @@ export function computeAllGameAchievementSummaries(
       gameId: 'robinsonCrusoe',
       gameName: 'Robinson Crusoe',
       achievements: computeRobinsonCrusoeAchievements(plays, username),
+    },
+    {
+      gameId: 'robinHood',
+      gameName: 'The Adventures of Robin Hood',
+      achievements: computeRobinHoodAchievements(plays, username),
+    },
+    {
+      gameId: 'earthborneRangers',
+      gameName: 'Earthborne Rangers',
+      achievements: computeEarthborneRangersAchievements(plays, username),
     },
     {
       gameId: 'starTrekCaptainsChair',

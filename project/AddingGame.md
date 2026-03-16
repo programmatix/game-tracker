@@ -17,6 +17,8 @@ Basically, follow the convention of other games e.g. src/games/death-may-die.
 Other rules to follow:
 - Where we have groups, use them in all tables and matrix grids.
 - Add achievements.
+- Add the played tables - what heroes/villains/locations etc. I've played.
+- Add the heroes vs villains matrix, where that makes sense.
 - Include the costs in the content.yaml (approximate), and a costs table.
 - Add to monthly checklist.
 - If we don't have an actual time played figure for a play, use the BGG estimate and display a (*) somewhere.

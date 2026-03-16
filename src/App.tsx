@@ -25,6 +25,8 @@ import BurncycleView from './games/burncycle/BurncycleView'
 import MandalorianAdventuresView from './games/mandalorian-adventures/MandalorianAdventuresView'
 import PaleoView from './games/paleo/PaleoView'
 import RobinsonCrusoeView from './games/robinson-crusoe/RobinsonCrusoeView'
+import RobinHoodView from './games/robin-hood/RobinHoodView'
+import EarthborneRangersView from './games/earthborne-rangers/EarthborneRangersView'
 import StarTrekCaptainsChairView from './games/star-trek-captains-chair/StarTrekCaptainsChairView'
 import AchievementsView from './AchievementsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
@@ -69,6 +71,8 @@ type MainTab =
   | 'burncycle'
   | 'paleo'
   | 'robinsonCrusoe'
+  | 'robinHood'
+  | 'earthborneRangers'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'spiritIsland'
@@ -98,6 +102,8 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'burncycle',
   'paleo',
   'robinsonCrusoe',
+  'robinHood',
+  'earthborneRangers',
   'starTrekCaptainsChair',
   'unsettled',
   'spiritIsland',
@@ -122,6 +128,8 @@ const MAIN_TAB_OPTIONS: ReadonlyArray<{ value: MainTab; label: string }> = [
   { value: 'burncycle', label: 'burncycle' },
   { value: 'paleo', label: 'Paleo' },
   { value: 'robinsonCrusoe', label: 'Robinson Crusoe' },
+  { value: 'robinHood', label: 'Robin Hood' },
+  { value: 'earthborneRangers', label: 'Earthborne Rangers' },
   { value: 'starTrekCaptainsChair', label: "Star Trek: Captain's Chair" },
   { value: 'spiritIsland', label: 'Spirit Island' },
   { value: 'unsettled', label: 'Unsettled' },
@@ -1103,6 +1111,26 @@ function App() {
                 </button>
                 <button
                   class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'robinHood' }}
+                  onClick={() => switchMainTab('robinHood')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'robinHood'}
+                >
+                  Robin Hood
+                </button>
+                <button
+                  class="tabButton"
+                  classList={{ tabButtonActive: mainTab() === 'earthborneRangers' }}
+                  onClick={() => switchMainTab('earthborneRangers')}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === 'earthborneRangers'}
+                >
+                  Earthborne Rangers
+                </button>
+                <button
+                  class="tabButton"
                   classList={{ tabButtonActive: mainTab() === 'starTrekCaptainsChair' }}
                   onClick={() => switchMainTab('starTrekCaptainsChair')}
                   type="button"
@@ -1403,6 +1431,30 @@ function App() {
 
           <Show when={mainTab() === 'robinsonCrusoe'}>
             <RobinsonCrusoeView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'robinHood'}>
+            <RobinHoodView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'earthborneRangers'}>
+            <EarthborneRangersView
               plays={allPlays().plays}
               username={USERNAME}
               authToken={bggAuthToken()}

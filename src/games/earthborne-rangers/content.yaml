@@ -1,0 +1,136 @@
+# Earthborne Rangers
+#
+# BG Stats compact tags currently observed:
+#   D1
+#   D2
+#   D3
+# Also supports key/value style such as:
+#   D: 1
+#   Day: 1
+
+days:
+  - display: Day 1
+    id: D1
+    aliases: [1, Day1]
+    box: Core Set
+  - display: Day 2
+    id: D2
+    aliases: [2, Day2]
+    box: Core Set
+  - display: Day 3
+    id: D3
+    aliases: [3, Day3]
+    box: Core Set
+  - display: Day 4
+    id: D4
+    aliases: [4, Day4]
+    box: Core Set
+  - display: Day 5
+    id: D5
+    aliases: [5, Day5]
+    box: Core Set
+  - display: Day 6
+    id: D6
+    aliases: [6, Day6]
+    box: Core Set
+  - display: Day 7
+    id: D7
+    aliases: [7, Day7]
+    box: Core Set
+  - display: Day 8
+    id: D8
+    aliases: [8, Day8]
+    box: Core Set
+  - display: Day 9
+    id: D9
+    aliases: [9, Day9]
+    box: Core Set
+  - display: Day 10
+    id: D10
+    aliases: [10, Day10]
+    box: Core Set
+  - display: Day 11
+    id: D11
+    aliases: [11, Day11]
+    box: Core Set
+  - display: Day 12
+    id: D12
+    aliases: [12, Day12]
+    box: Core Set
+  - display: Day 13
+    id: D13
+    aliases: [13, Day13]
+    box: Core Set
+  - display: Day 14
+    id: D14
+    aliases: [14, Day14]
+    box: Core Set
+  - display: Day 15
+    id: D15
+    aliases: [15, Day15]
+    box: Core Set
+  - display: Day 16
+    id: D16
+    aliases: [16, Day16]
+    box: Core Set
+  - display: Day 17
+    id: D17
+    aliases: [17, Day17]
+    box: Core Set
+  - display: Day 18
+    id: D18
+    aliases: [18, Day18]
+    box: Core Set
+  - display: Day 19
+    id: D19
+    aliases: [19, Day19]
+    box: Core Set
+  - display: Day 20
+    id: D20
+    aliases: [20, Day20]
+    box: Core Set
+  - display: Day 21
+    id: D21
+    aliases: [21, Day21]
+    box: Core Set
+  - display: Day 22
+    id: D22
+    aliases: [22, Day22]
+    box: Core Set
+  - display: Day 23
+    id: D23
+    aliases: [23, Day23]
+    box: Core Set
+  - display: Day 24
+    id: D24
+    aliases: [24, Day24]
+    box: Core Set
+  - display: Day 25
+    id: D25
+    aliases: [25, Day25]
+    box: Core Set
+  - display: Day 26
+    id: D26
+    aliases: [26, Day26]
+    box: Core Set
+  - display: Day 27
+    id: D27
+    aliases: [27, Day27]
+    box: Core Set
+  - display: Day 28
+    id: D28
+    aliases: [28, Day28]
+    box: Core Set
+  - display: Day 29
+    id: D29
+    aliases: [29, Day29]
+    box: Core Set
+  - display: Day 30
+    id: D30
+    aliases: [30, Day30]
+    box: Core Set
+
+costs:
+  currency: "£"
+  boxes:
+    Core Set: 99.99

@@ -82,6 +82,18 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     objectIds: ['121921'],
     titleIncludes: ['robinson crusoe'],
   },
+  {
+    key: 'earthborneRangers',
+    label: 'Earthborne Rangers',
+    objectIds: ['342900'],
+    titleIncludes: ['earthborne rangers'],
+  },
+  {
+    key: 'robinHood',
+    label: 'Robin Hood',
+    objectIds: ['326494'],
+    titleIncludes: ['the adventures of robin hood', 'adventures of robin hood', 'robin hood'],
+  },
   { key: 'mageKnight', label: 'Mage Knight', titleIncludes: ['mage knight'] },
   {
     key: 'skytearHorde',
@@ -103,7 +115,6 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     titleIncludes: ['mandalorian adventures', 'the mandalorian: adventures', 'the mandalorian adventures'],
   },
   { key: 'undaunted', label: 'Undaunted', titleIncludes: ['undaunted'] },
-  { key: 'mistfall', label: 'Mistfall', titleIncludes: ['mistfall'] },
   { key: 'unsettled', label: 'Unsettled', objectIds: ['290484'], titleIncludes: ['unsettled'] },
   { key: 'finalGirl', label: 'Final Girl', objectIds: ['277659'], titleIncludes: ['final girl'] },
   {
