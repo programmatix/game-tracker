@@ -1014,10 +1014,32 @@ function App() {
       </Show>
 
       <main class="main">
-        <section class="panel">
+        <aside class="panel sidebarNav desktopOnly">
+          <div class="sidebarNavHeader">
+            <h2>Views</h2>
+          </div>
+          <div class="sidebarTabs" role="tablist" aria-label="Views">
+            <For each={MAIN_TAB_OPTIONS}>
+              {(option) => (
+                <button
+                  class="tabButton sidebarTabButton"
+                  classList={{ tabButtonActive: mainTab() === option.value }}
+                  onClick={() => switchMainTab(option.value)}
+                  type="button"
+                  role="tab"
+                  aria-selected={mainTab() === option.value}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </aside>
+
+        <section class="panel contentPanel">
           <div class="panelHeader playsHeader">
             <div class="panelHeaderLeft">
-              <h2>Views</h2>
+              <h2 class="mobileOnly">Views</h2>
               <div class="tabSelectWrap mobileOnly">
                 <label class="tabSelectLabel" for="main-tab-select">
                   View
@@ -1037,218 +1059,6 @@ function App() {
                     {(option) => <option value={option.value}>{option.label}</option>}
                   </For>
                 </select>
-              </div>
-              <div class="tabs desktopOnly" role="tablist" aria-label="Views">
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'monthlyChecklist' }}
-                  onClick={() => switchMainTab('monthlyChecklist')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'monthlyChecklist'}
-                >
-                  This month
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'finalGirl' }}
-                  onClick={() => switchMainTab('finalGirl')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'finalGirl'}
-                >
-                  Final Girl
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'skytearHorde' }}
-                  onClick={() => switchMainTab('skytearHorde')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'skytearHorde'}
-                >
-                  Skytear Horde
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'cloudspire' }}
-                  onClick={() => switchMainTab('cloudspire')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'cloudspire'}
-                >
-                  Cloudspire
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'burncycle' }}
-                  onClick={() => switchMainTab('burncycle')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'burncycle'}
-                >
-                  burncycle
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'paleo' }}
-                  onClick={() => switchMainTab('paleo')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'paleo'}
-                >
-                  Paleo
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'robinsonCrusoe' }}
-                  onClick={() => switchMainTab('robinsonCrusoe')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'robinsonCrusoe'}
-                >
-                  Robinson Crusoe
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'robinHood' }}
-                  onClick={() => switchMainTab('robinHood')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'robinHood'}
-                >
-                  Robin Hood
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'earthborneRangers' }}
-                  onClick={() => switchMainTab('earthborneRangers')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'earthborneRangers'}
-                >
-                  Earthborne Rangers
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'starTrekCaptainsChair' }}
-                  onClick={() => switchMainTab('starTrekCaptainsChair')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'starTrekCaptainsChair'}
-                >
-                  Star Trek: Captain's Chair
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'spiritIsland' }}
-                  onClick={() => switchMainTab('spiritIsland')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'spiritIsland'}
-                >
-                  Spirit Island
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'unsettled' }}
-                  onClick={() => switchMainTab('unsettled')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'unsettled'}
-                >
-                  Unsettled
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'mistfall' }}
-                  onClick={() => switchMainTab('mistfall')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'mistfall'}
-                >
-                  Mistfall
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'bullet' }}
-                  onClick={() => switchMainTab('bullet')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'bullet'}
-                >
-                  Bullet
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'tooManyBones' }}
-                  onClick={() => switchMainTab('tooManyBones')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'tooManyBones'}
-                >
-                  Too Many Bones
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'mageKnight' }}
-                  onClick={() => switchMainTab('mageKnight')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'mageKnight'}
-                >
-                  Mage Knight
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'mandalorianAdventures' }}
-                  onClick={() => switchMainTab('mandalorianAdventures')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'mandalorianAdventures'}
-                >
-                  Mandalorian Adventures
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'undauntedNormandy' }}
-                  onClick={() => switchMainTab('undauntedNormandy')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'undauntedNormandy'}
-                >
-                  Undaunted: Normandy
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'achievements' }}
-                  onClick={() => switchMainTab('achievements')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'achievements'}
-                >
-                  Achievements
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'plays' }}
-                  onClick={() => switchMainTab('plays')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'plays'}
-                >
-                  Plays
-                </button>
-                <button
-                  class="tabButton"
-                  classList={{ tabButtonActive: mainTab() === 'feedback' }}
-                  onClick={() => switchMainTab('feedback')}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === 'feedback'}
-                >
-                  Feedback
-                </button>
               </div>
 
               <Show when={mainTab() === 'plays'}>
