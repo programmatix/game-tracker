@@ -28,7 +28,10 @@ import RobinsonCrusoeView from './games/robinson-crusoe/RobinsonCrusoeView'
 import RobinHoodView from './games/robin-hood/RobinHoodView'
 import EarthborneRangersView from './games/earthborne-rangers/EarthborneRangersView'
 import StarTrekCaptainsChairView from './games/star-trek-captains-chair/StarTrekCaptainsChairView'
+import DeckersView from './games/deckers/DeckersView'
+import OathswornView from './games/oathsworn/OathswornView'
 import AchievementsView from './AchievementsView'
+import CostsView from './CostsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
 import FeedbackView from './feedback/FeedbackView'
 import { authUser, signOutUser } from './auth/auth'
@@ -73,6 +76,8 @@ type MainTab =
   | 'robinsonCrusoe'
   | 'robinHood'
   | 'earthborneRangers'
+  | 'deckers'
+  | 'oathsworn'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'spiritIsland'
@@ -84,6 +89,7 @@ type MainTab =
   | 'mandalorianAdventures'
   | 'undauntedNormandy'
   | 'achievements'
+  | 'costs'
   | 'feedback'
   | 'plays'
 type PlaysView = 'plays' | 'byGame' | 'gameDetail' | 'drilldown'
@@ -104,6 +110,8 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'robinsonCrusoe',
   'robinHood',
   'earthborneRangers',
+  'deckers',
+  'oathsworn',
   'starTrekCaptainsChair',
   'unsettled',
   'spiritIsland',
@@ -115,34 +123,46 @@ const MAIN_TABS: ReadonlyArray<MainTab> = [
   'mandalorianAdventures',
   'undauntedNormandy',
   'achievements',
+  'costs',
   'feedback',
   'plays',
 ]
 const PLAYS_VIEWS: ReadonlyArray<PlaysView> = ['plays', 'byGame', 'gameDetail', 'drilldown']
 
-const MAIN_TAB_OPTIONS: ReadonlyArray<{ value: MainTab; label: string }> = [
-  { value: 'monthlyChecklist', label: 'This month' },
-  { value: 'finalGirl', label: 'Final Girl' },
-  { value: 'skytearHorde', label: 'Skytear Horde' },
-  { value: 'cloudspire', label: 'Cloudspire' },
-  { value: 'burncycle', label: 'burncycle' },
-  { value: 'paleo', label: 'Paleo' },
-  { value: 'robinsonCrusoe', label: 'Robinson Crusoe' },
-  { value: 'robinHood', label: 'Robin Hood' },
-  { value: 'earthborneRangers', label: 'Earthborne Rangers' },
-  { value: 'starTrekCaptainsChair', label: "Star Trek: Captain's Chair" },
-  { value: 'spiritIsland', label: 'Spirit Island' },
-  { value: 'unsettled', label: 'Unsettled' },
-  { value: 'mistfall', label: 'Mistfall' },
-  { value: 'bullet', label: 'Bullet' },
-  { value: 'tooManyBones', label: 'Too Many Bones' },
-  { value: 'mageKnight', label: 'Mage Knight' },
-  { value: 'mandalorianAdventures', label: 'Mandalorian Adventures' },
-  { value: 'undauntedNormandy', label: 'Undaunted: Normandy' },
-  { value: 'deathMayDie', label: 'Death May Die' },
-  { value: 'achievements', label: 'Achievements' },
-  { value: 'plays', label: 'Plays' },
-  { value: 'feedback', label: 'Feedback' },
+type MainTabGroup = 'games' | 'other'
+type MainTabOption = { value: string; label: string; group: MainTabGroup }
+
+const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
+  { value: 'bullet', label: 'Bullet', group: 'games' },
+  { value: 'burncycle', label: 'burncycle', group: 'games' },
+  { value: 'cloudspire', label: 'Cloudspire', group: 'games' },
+  { value: 'deathMayDie', label: 'Death May Die', group: 'games' },
+  { value: 'earthborneRangers', label: 'Earthborne Rangers', group: 'games' },
+  { value: 'deckers', label: 'Deckers', group: 'games' },
+  { value: 'finalGirl', label: 'Final Girl', group: 'games' },
+  { value: 'mageKnight', label: 'Mage Knight', group: 'games' },
+  { value: 'mandalorianAdventures', label: 'Mandalorian Adventures', group: 'games' },
+  { value: 'mistfall', label: 'Mistfall', group: 'games' },
+  { value: 'oathsworn', label: 'Oathsworn', group: 'games' },
+  { value: 'paleo', label: 'Paleo', group: 'games' },
+  { value: 'robinHood', label: 'Robin Hood', group: 'games' },
+  { value: 'robinsonCrusoe', label: 'Robinson Crusoe', group: 'games' },
+  { value: 'skytearHorde', label: 'Skytear Horde', group: 'games' },
+  { value: 'spiritIsland', label: 'Spirit Island', group: 'games' },
+  { value: 'starTrekCaptainsChair', label: "Star Trek: Captain's Chair", group: 'games' },
+  { value: 'tooManyBones', label: 'Too Many Bones', group: 'games' },
+  { value: 'undauntedNormandy', label: 'Undaunted: Normandy', group: 'games' },
+  { value: 'unsettled', label: 'Unsettled', group: 'games' },
+  { value: 'achievements', label: 'Achievements', group: 'other' },
+  { value: 'costs', label: 'Costs', group: 'other' },
+  { value: 'feedback', label: 'Feedback', group: 'other' },
+  { value: 'plays', label: 'Plays', group: 'other' },
+  { value: 'monthlyChecklist', label: 'This month', group: 'other' },
+]
+
+const MAIN_TAB_GROUPS: ReadonlyArray<{ id: MainTabGroup; label: string }> = [
+  { id: 'games', label: 'Games' },
+  { id: 'other', label: 'Other' },
 ]
 
 const PLAYS_VIEW_OPTIONS: ReadonlyArray<{ value: Extract<PlaysView, 'plays' | 'byGame'>; label: string }> = [
@@ -387,6 +407,7 @@ function App() {
   const [playsCache, setPlaysCache] = createSignal<PlaysCacheV1 | null>(readPlaysCache())
   const [playsError, setPlaysError] = createSignal<string | null>(null)
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
+  const [firebaseSaveErrorToast, setFirebaseSaveErrorToast] = createSignal<string | null>(null)
   const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(new Set<string>())
   const [seenCompletedAchievementIds, setSeenCompletedAchievementIds] = createSignal(
     new Set<string>(),
@@ -408,8 +429,25 @@ function App() {
   const queuedThingSummaryObjectIds = new Set<string>()
   let isThingSummaryPumpRunning = false
   let thumbnailsEnabled = true
+  let firebaseSaveErrorToastTimeoutId: number | undefined
+
+  function showFirebaseSaveErrorToast(message: string) {
+    setFirebaseSaveErrorToast(message)
+    if (firebaseSaveErrorToastTimeoutId) {
+      window.clearTimeout(firebaseSaveErrorToastTimeoutId)
+    }
+    firebaseSaveErrorToastTimeoutId = window.setTimeout(() => {
+      setFirebaseSaveErrorToast(null)
+      firebaseSaveErrorToastTimeoutId = undefined
+    }, 5000)
+  }
 
   createEffect(() => setPageDraft(String(page())))
+  onCleanup(() => {
+    if (firebaseSaveErrorToastTimeoutId) {
+      window.clearTimeout(firebaseSaveErrorToastTimeoutId)
+    }
+  })
   createEffect(() => {
     const user = authUser()
     lastAchievementsSnapshotSavedAtMs = 0
@@ -530,8 +568,9 @@ function App() {
     setSeenCompletedAchievementIds(nextSeen)
     const user = authUser()
     if (user) {
-      void saveSeenCompletedAchievementIds(user, nextSeen).catch(() => {
-        // ignore sync failures
+      void saveSeenCompletedAchievementIds(user, nextSeen).catch((error) => {
+        console.error('saveSeenCompletedAchievementIds', error)
+        showFirebaseSaveErrorToast('Failed to save dismissed achievements to Firebase.')
       })
     }
   }
@@ -546,8 +585,10 @@ function App() {
     const now = Date.now()
     if (now - lastAchievementsSnapshotSavedAtMs < 10 * 60 * 1000) return
     lastAchievementsSnapshotSavedAtMs = now
-    void saveAchievementsSnapshot(user, allAchievements()).catch(() => {
+    void saveAchievementsSnapshot(user, allAchievements()).catch((error) => {
+      console.error('saveAchievementsSnapshot', error)
       lastAchievementsSnapshotSavedAtMs = 0
+      showFirebaseSaveErrorToast('Failed to save achievement snapshot to Firebase.')
     })
   })
 
@@ -565,8 +606,9 @@ function App() {
     setPinnedAchievementIds(next)
     const user = authUser()
     if (user) {
-      void savePinnedAchievementIds(user, next).catch(() => {
-        // ignore sync failures
+      void savePinnedAchievementIds(user, next).catch((error) => {
+        console.error('savePinnedAchievementIds', error)
+        showFirebaseSaveErrorToast('Failed to save pinned achievements to Firebase.')
       })
     }
   }
@@ -949,6 +991,16 @@ function App() {
 
   return (
     <div class="app">
+      <Show when={firebaseSaveErrorToast()}>
+        {(message) => (
+          <div class="toastStack" aria-live="polite" aria-atomic="true">
+            <div class="toast toastError" role="status">
+              {message()}
+            </div>
+          </div>
+        )}
+      </Show>
+
       <header class="header">
         <div class="title">
           <h1>Game Tracker</h1>
@@ -1018,19 +1070,28 @@ function App() {
           <div class="sidebarNavHeader">
             <h2>Views</h2>
           </div>
-          <div class="sidebarTabs" role="tablist" aria-label="Views">
-            <For each={MAIN_TAB_OPTIONS}>
-              {(option) => (
-                <button
-                  class="tabButton sidebarTabButton"
-                  classList={{ tabButtonActive: mainTab() === option.value }}
-                  onClick={() => switchMainTab(option.value)}
-                  type="button"
-                  role="tab"
-                  aria-selected={mainTab() === option.value}
-                >
-                  {option.label}
-                </button>
+          <div class="sidebarTabs">
+            <For each={MAIN_TAB_GROUPS}>
+              {(group) => (
+                <section class="sidebarSection">
+                  <div class="sidebarSectionLabel">{group.label}</div>
+                  <div role="tablist" aria-label={`${group.label} views`}>
+                    <For each={MAIN_TAB_OPTIONS.filter((option) => option.group === group.id)}>
+                      {(option) => (
+                        <button
+                          class="tabButton sidebarTabButton"
+                          classList={{ tabButtonActive: mainTab() === option.value }}
+                          onClick={() => isMainTab(option.value) && switchMainTab(option.value)}
+                          type="button"
+                          role="tab"
+                          aria-selected={mainTab() === option.value}
+                        >
+                          {option.label}
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </section>
               )}
             </For>
           </div>
@@ -1055,8 +1116,14 @@ function App() {
                     switchMainTab(next)
                   }}
                 >
-                  <For each={MAIN_TAB_OPTIONS}>
-                    {(option) => <option value={option.value}>{option.label}</option>}
+                  <For each={MAIN_TAB_GROUPS}>
+                    {(group) => (
+                      <optgroup label={group.label}>
+                        <For each={MAIN_TAB_OPTIONS.filter((option) => option.group === group.id)}>
+                          {(option) => <option value={option.value}>{option.label}</option>}
+                        </For>
+                      </optgroup>
+                    )}
                   </For>
                 </select>
               </div>
@@ -1386,6 +1453,30 @@ function App() {
             />
           </Show>
 
+          <Show when={mainTab() === 'deckers'}>
+            <DeckersView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'oathsworn'}>
+            <OathswornView
+              plays={allPlays().plays}
+              username={USERNAME}
+              authToken={bggAuthToken()}
+              pinnedAchievementIds={pinnedAchievementIds()}
+              suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
+              onTogglePin={toggleAchievementPin}
+              onOpenPlays={openPlaysDrilldown}
+            />
+          </Show>
+
           <Show when={mainTab() === 'undauntedNormandy'}>
             <UndauntedNormandyView
               plays={allPlays().plays}
@@ -1406,6 +1497,13 @@ function App() {
               pinnedAchievementIds={pinnedAchievementIds()}
               suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
               onTogglePin={toggleAchievementPin}
+            />
+          </Show>
+
+          <Show when={mainTab() === 'costs'}>
+            <CostsView
+              plays={allPlays().plays}
+              assumedMinutesByObjectId={assumedMinutesByObjectId()}
             />
           </Show>
 

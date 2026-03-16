@@ -17,6 +17,8 @@ import { computeStarTrekCaptainsChairAchievements } from '../games/star-trek-cap
 import { computeRobinsonCrusoeAchievements } from '../games/robinson-crusoe/achievements'
 import { computeRobinHoodAchievements } from '../games/robin-hood/achievements'
 import { computeEarthborneRangersAchievements } from '../games/earthborne-rangers/achievements'
+import { computeDeckersAchievements } from '../games/deckers/achievements'
+import { computeOathswornAchievements } from '../games/oathsworn/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -33,10 +35,12 @@ export type GameId =
   | 'robinsonCrusoe'
   | 'robinHood'
   | 'earthborneRangers'
+  | 'deckers'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'mageKnight'
   | 'mandalorianAdventures'
+  | 'oathsworn'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -68,11 +72,13 @@ export function computeGameAchievements(
   if (gameId === 'robinsonCrusoe') return computeRobinsonCrusoeAchievements(plays, username)
   if (gameId === 'robinHood') return computeRobinHoodAchievements(plays, username)
   if (gameId === 'earthborneRangers') return computeEarthborneRangersAchievements(plays, username)
+  if (gameId === 'deckers') return computeDeckersAchievements(plays, username)
   if (gameId === 'starTrekCaptainsChair') return computeStarTrekCaptainsChairAchievements(plays, username)
   if (gameId === 'unsettled') return computeUnsettledAchievements(plays, username)
   if (gameId === 'mageKnight') return computeMageKnightAchievements(plays, username)
   if (gameId === 'mandalorianAdventures')
     return computeMandalorianAdventuresAchievements(plays, username)
+  if (gameId === 'oathsworn') return computeOathswornAchievements(plays, username)
   return []
 }
 
@@ -107,6 +113,7 @@ export function computeAllGameAchievementSummaries(
       gameName: 'Earthborne Rangers',
       achievements: computeEarthborneRangersAchievements(plays, username),
     },
+    { gameId: 'deckers', gameName: 'Deckers', achievements: computeDeckersAchievements(plays, username) },
     {
       gameId: 'starTrekCaptainsChair',
       gameName: "Star Trek: Captain's Chair",
@@ -118,6 +125,11 @@ export function computeAllGameAchievementSummaries(
       gameId: 'mandalorianAdventures',
       gameName: 'The Mandalorian: Adventures',
       achievements: computeMandalorianAdventuresAchievements(plays, username),
+    },
+    {
+      gameId: 'oathsworn',
+      gameName: 'Oathsworn: Into the Deepwood',
+      achievements: computeOathswornAchievements(plays, username),
     },
   ]
 

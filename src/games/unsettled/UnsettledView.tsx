@@ -1,4 +1,4 @@
-import { createMemo, createResource, createSignal } from 'solid-js'
+import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'

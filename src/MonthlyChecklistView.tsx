@@ -89,6 +89,12 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     titleIncludes: ['earthborne rangers'],
   },
   {
+    key: 'oathsworn',
+    label: 'Oathsworn',
+    objectIds: ['251661'],
+    titleIncludes: ['oathsworn', 'oathsworn into the deepwood', 'oathsworn: into the deepwood'],
+  },
+  {
     key: 'robinHood',
     label: 'Robin Hood',
     objectIds: ['326494'],

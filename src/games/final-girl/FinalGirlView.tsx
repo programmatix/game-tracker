@@ -64,8 +64,8 @@ export default function FinalGirlView(props: {
 }) {
   const [matrixDisplayMode, setMatrixDisplayMode] =
     createSignal<MatrixDisplayMode>('played')
-  const [ownedVillainsOnly, setOwnedVillainsOnly] = createSignal(false)
-  const [ownedLocationsOnly, setOwnedLocationsOnly] = createSignal(false)
+  const [ownedVillainsOnly] = createSignal(false)
+  const [ownedLocationsOnly] = createSignal(false)
 
   const [finalGirlThing] = createResource(
     () => ({ id: FINAL_GIRL_OBJECT_ID, authToken: props.authToken?.trim() || '' }),

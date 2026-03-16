@@ -1,0 +1,87 @@
+# Deckers
+#
+# BG Stats player color tag examples seen so far:
+#   Oshin／Hetti／Spider
+#   Tilda Sweet／SMC: Alpha-moby (1)
+#   SMC: Alpha-moby (1)
+
+deckers:
+  - display: Hettie Magnetic
+    id: Hettie
+    group: Blue
+    box: Core
+    aliases: [Hetti, Hettie]
+  - display: Tokyo Black
+    id: Tokyo
+    group: Blue
+    box: Core
+    aliases: [Tokyo]
+  - display: Monty Quantum
+    id: Monty
+    group: Green
+    box: Core
+    aliases: [Mont, Monty]
+  - display: Kelly Nexus
+    id: Kelly
+    group: Green
+    box: Core
+    aliases: [Kell, Kelly]
+  - display: Tilda Sweet
+    id: Tilda
+    group: Yellow
+    box: Core
+    aliases: [Tild, Tilda]
+  - display: Angel Nitrate
+    id: Angel
+    group: Yellow
+    box: Core
+    aliases: [Angel]
+  - display: Oshin Noro
+    id: Oshin
+    group: Red
+    box: Core
+    aliases: [Oshin]
+  - display: The Techno Twins
+    id: Twins
+    group: Red
+    box: Core
+    aliases: [Techno Twins, TechnoTwins, Twins]
+  - display: Leiko Mori
+    id: Leiko
+    group: Purple
+    box: Core
+    aliases: [Leiko]
+  - display: Rupert Stanz
+    id: Rupert
+    group: Purple
+    box: Core
+    aliases: [Rupert]
+
+smcs:
+  - display: Alpha-Moby
+    id: AlphaMoby
+    box: Core
+    aliases: [Alpha Moby, Alphamoby, Moby]
+  - display: Viking
+    id: Viking
+    box: Core
+  - display: Spider
+    id: Spider
+    box: Core
+  - display: Sentinel
+    id: Sentinel
+    box: Core
+  - display: Glom
+    id: Glom
+    box: Core
+  - display: Mother
+    id: Mother
+    box: Core
+  - display: Logi
+    id: Logi
+    box: Core
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 34.99

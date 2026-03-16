@@ -1,0 +1,243 @@
+# Oathsworn: Into the Deepwood
+#
+# BG Stats player color tags, e.g.:
+#   Urs／Har／Pri／Ran／S1／E1
+#   C: Urs,Har,Pri,Ran／S: 1／E: 1
+
+characters:
+  - display: A'Dendri Ranger
+    id: Ranger
+    group: Core
+    box: Core
+    aliases: [Ran, RD]
+  - display: Avi Harbinger
+    id: Harbinger
+    group: Core
+    box: Core
+    aliases: [Har, AH]
+  - display: Cur
+    id: Cur
+    group: Core
+    box: Core
+  - display: Grove Maiden
+    id: Grove
+    group: Core
+    box: Core
+    aliases: [Maiden, GM]
+  - display: Huntress
+    id: Huntress
+    group: Core
+    box: Core
+    aliases: [Hun]
+  - display: Penitent
+    id: Penitent
+    group: Core
+    box: Core
+    aliases: [Pen]
+  - display: Priest
+    id: Priest
+    group: Core
+    box: Core
+    aliases: [Pri]
+  - display: Scar Tribe Exile
+    id: Exile
+    group: Core
+    box: Core
+    aliases: [Exi, Scar, ScarTribe]
+  - display: Thracian Blade
+    id: Blade
+    group: Core
+    box: Core
+    aliases: [Bla, Sword, Swordmaster]
+  - display: Ursus Warbear
+    id: Ursus
+    group: Core
+    box: Core
+    aliases: [Urs, Bear, Warbear]
+  - display: Warden
+    id: Warden
+    group: Core
+    box: Core
+    aliases: [Ward]
+  - display: Witch
+    id: Witch
+    group: Core
+    box: Core
+    aliases: [Wit, Witchcurser]
+
+stories:
+  - display: Story 1
+    id: S1
+    group: Core
+    box: Core
+  - display: Story 2
+    id: S2
+    group: Core
+    box: Core
+  - display: Story 3
+    id: S3
+    group: Core
+    box: Core
+  - display: Story 4
+    id: S4
+    group: Core
+    box: Core
+  - display: Story 5
+    id: S5
+    group: Core
+    box: Core
+  - display: Story 6
+    id: S6
+    group: Core
+    box: Core
+  - display: Story 7
+    id: S7
+    group: Core
+    box: Core
+  - display: Story 8
+    id: S8
+    group: Core
+    box: Core
+  - display: Story 9
+    id: S9
+    group: Core
+    box: Core
+  - display: Story 10
+    id: S10
+    group: Core
+    box: Core
+  - display: Story 11
+    id: S11
+    group: Core
+    box: Core
+  - display: Story 12
+    id: S12
+    group: Core
+    box: Core
+  - display: Story 13
+    id: S13
+    group: Core
+    box: Core
+  - display: Story 14
+    id: S14
+    group: Core
+    box: Core
+  - display: Story 15
+    id: S15
+    group: Core
+    box: Core
+  - display: Story 16
+    id: S16
+    group: Core
+    box: Core
+  - display: Story 17
+    id: S17
+    group: Core
+    box: Core
+  - display: Story 18
+    id: S18
+    group: Core
+    box: Core
+  - display: Story 19
+    id: S19
+    group: Core
+    box: Core
+  - display: Story 20
+    id: S20
+    group: Core
+    box: Core
+  - display: Story 21
+    id: S21
+    group: Core
+    box: Core
+
+encounters:
+  - display: Encounter 1
+    id: E1
+    group: Core
+    box: Core
+  - display: Encounter 2
+    id: E2
+    group: Core
+    box: Core
+  - display: Encounter 3
+    id: E3
+    group: Core
+    box: Core
+  - display: Encounter 4
+    id: E4
+    group: Core
+    box: Core
+  - display: Encounter 5
+    id: E5
+    group: Core
+    box: Core
+  - display: Encounter 6
+    id: E6
+    group: Core
+    box: Core
+  - display: Encounter 7
+    id: E7
+    group: Core
+    box: Core
+  - display: Encounter 8
+    id: E8
+    group: Core
+    box: Core
+  - display: Encounter 9
+    id: E9
+    group: Core
+    box: Core
+  - display: Encounter 10
+    id: E10
+    group: Core
+    box: Core
+  - display: Encounter 11
+    id: E11
+    group: Core
+    box: Core
+  - display: Encounter 12
+    id: E12
+    group: Core
+    box: Core
+  - display: Encounter 13
+    id: E13
+    group: Core
+    box: Core
+  - display: Encounter 14
+    id: E14
+    group: Core
+    box: Core
+  - display: Encounter 15
+    id: E15
+    group: Core
+    box: Core
+  - display: Encounter 16
+    id: E16
+    group: Core
+    box: Core
+  - display: Encounter 17
+    id: E17
+    group: Core
+    box: Core
+  - display: Encounter 18
+    id: E18
+    group: Core
+    box: Core
+  - display: Encounter 19
+    id: E19
+    group: Core
+    box: Core
+  - display: Encounter 20
+    id: E20
+    group: Core
+    box: Core
+  - display: Encounter 21
+    id: E21
+    group: Core
+    box: Core
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 120
