@@ -9,6 +9,14 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email == 'grahampople@gmail.com';
     }
 
+    match /userAchievements/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    match /userPreferences/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
     match /feedback/{feedbackId} {
       allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid || adminUser());
       allow delete: if adminUser();
