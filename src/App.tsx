@@ -56,7 +56,6 @@ import {
   type PlaysCacheV1,
   writePlaysCache,
 } from './playsHelpers'
-import { loadPurchaseSpreadsheet } from './purchaseSpreadsheet'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -604,10 +603,6 @@ function App() {
   }
 
   onMount(() => {
-    void loadPurchaseSpreadsheet().catch((error) => {
-      console.error('Failed to load purchase spreadsheet.', error)
-    })
-
     const onPopState = (event: PopStateEvent) => {
       const state = event.state as AppHistoryState | null
 

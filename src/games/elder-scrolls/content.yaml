@@ -125,6 +125,9 @@ classes:
     box: Core
 
 costs:
-  currency: "$"
+  currency: "£"
   boxes:
-    Core: 224.95
+    Core: C39
+    Valenwood: C34
+    Future: C33
+    Bags: C35
