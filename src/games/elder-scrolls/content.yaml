@@ -1,0 +1,130 @@
+# The Elder Scrolls: Betrayal of the Second Era
+#
+# Recommended BG Stats player color tags:
+#   P: BM／C: Necro／R: Arg
+# Or shorthand:
+#   BM／Necro／Arg
+
+provinces:
+  - display: Black Marsh
+    id: BM
+    box: Core
+  - display: Cyrodiil
+    id: CY
+    box: Core
+  - display: High Rock
+    id: HR
+    box: Core
+  - display: Morrowind
+    id: MW
+    box: Core
+  - display: Skyrim
+    id: SK
+    box: Core
+
+races:
+  - display: Argonian
+    id: Arg
+    aliases: [Argonian]
+    group: Beastfolk
+    box: Core
+  - display: Breton
+    id: Bre
+    aliases: [Breton]
+    group: Human
+    box: Core
+  - display: Dark Elf
+    id: DElf
+    aliases: [Dunmer]
+    group: Mer
+    box: Core
+  - display: High Elf
+    id: HElf
+    aliases: [Altmer]
+    group: Mer
+    box: Core
+  - display: Imperial
+    id: Imp
+    aliases: [Imperial]
+    group: Human
+    box: Core
+  - display: Khajiit
+    id: Kha
+    aliases: [Khajiit]
+    group: Beastfolk
+    box: Core
+  - display: Nord
+    id: Nord
+    aliases: [Nord]
+    group: Human
+    box: Core
+  - display: Orc
+    id: Orc
+    aliases: [Orsimer]
+    group: Mer
+    box: Core
+  - display: Redguard
+    id: Red
+    aliases: [Redguard]
+    group: Human
+    box: Core
+  - display: Wood Elf
+    id: WElf
+    aliases: [Bosmer]
+    group: Mer
+    box: Core
+
+classes:
+  - display: Acrobat
+    id: Acro
+    box: Core
+  - display: Archer
+    id: Arch
+    box: Core
+  - display: Bard
+    id: Bard
+    box: Core
+  - display: Dragonknight
+    id: DK
+    aliases: [Dragon Knight]
+    box: Core
+  - display: Healer
+    id: Heal
+    box: Core
+  - display: Knight
+    id: Knig
+    box: Core
+  - display: Necromancer
+    id: Necro
+    box: Core
+  - display: Nightblade
+    id: NBlade
+    aliases: [NB]
+    box: Core
+  - display: Pilgrim
+    id: Pilg
+    box: Core
+  - display: Rogue
+    id: Rogue
+    box: Core
+  - display: Scout
+    id: Scout
+    box: Core
+  - display: Sorcerer
+    id: Sorc
+    box: Core
+  - display: Spellsword
+    id: Spell
+    aliases: [SpellSword]
+    box: Core
+  - display: Templar
+    id: Temp
+    box: Core
+  - display: Warden
+    id: Ward
+    box: Core
+
+costs:
+  currency: "$"
+  boxes:
+    Core: 224.95

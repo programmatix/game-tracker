@@ -28,6 +28,7 @@ import PaleoView from './games/paleo/PaleoView'
 import RobinsonCrusoeView from './games/robinson-crusoe/RobinsonCrusoeView'
 import RobinHoodView from './games/robin-hood/RobinHoodView'
 import EarthborneRangersView from './games/earthborne-rangers/EarthborneRangersView'
+import ElderScrollsView from './games/elder-scrolls/ElderScrollsView'
 import StarTrekCaptainsChairView from './games/star-trek-captains-chair/StarTrekCaptainsChairView'
 import DeckersView from './games/deckers/DeckersView'
 import OathswornView from './games/oathsworn/OathswornView'
@@ -126,6 +127,8 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
       return <DeckersView {...props} />
     case 'oathsworn':
       return <OathswornView {...props} />
+    case 'elderScrolls':
+      return <ElderScrollsView {...props} />
     case 'undauntedNormandy':
       return <UndauntedNormandyView {...props} />
     default:

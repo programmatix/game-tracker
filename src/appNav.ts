@@ -10,6 +10,7 @@ export type MainTab =
   | 'earthborneRangers'
   | 'deckers'
   | 'oathsworn'
+  | 'elderScrolls'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'spiritIsland'
@@ -48,6 +49,7 @@ export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'earthborneRangers',
   'deckers',
   'oathsworn',
+  'elderScrolls',
   'starTrekCaptainsChair',
   'unsettled',
   'spiritIsland',
@@ -78,6 +80,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
   { value: 'mandalorianAdventures', label: 'Mandalorian Adventures', group: 'games' },
   { value: 'mistfall', label: 'Mistfall', group: 'games' },
   { value: 'oathsworn', label: 'Oathsworn', group: 'games' },
+  { value: 'elderScrolls', label: 'Elder Scrolls', group: 'games' },
   { value: 'paleo', label: 'Paleo', group: 'games' },
   { value: 'robinHood', label: 'Robin Hood', group: 'games' },
   { value: 'robinsonCrusoe', label: 'Robinson Crusoe', group: 'games' },

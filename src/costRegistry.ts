@@ -4,6 +4,7 @@ import { burncycleContent } from './games/burncycle/content'
 import { cloudspireContent } from './games/cloudspire/content'
 import { deckersContent } from './games/deckers/content'
 import { deathMayDieContent } from './games/death-may-die/content'
+import { elderScrollsContent } from './games/elder-scrolls/content'
 import { earthborneRangersContent } from './games/earthborne-rangers/content'
 import rawFinalGirlContentText from './games/final-girl/content.yaml?raw'
 import { parseOwnedFinalGirlContent } from './games/final-girl/ownedContent'
@@ -98,6 +99,12 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
     label: 'Deckers',
     aliases: ['Deckers'],
     costs: toBoxCostConfig(deckersContent),
+  },
+  {
+    id: 'elderScrolls',
+    label: 'Elder Scrolls',
+    aliases: ['Elder Scrolls', 'The Elder Scrolls: Betrayal of the Second Era'],
+    costs: toBoxCostConfig(elderScrollsContent),
   },
   {
     id: 'starTrekCaptainsChair',

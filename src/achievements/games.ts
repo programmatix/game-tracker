@@ -18,6 +18,7 @@ import { computeRobinsonCrusoeAchievements } from '../games/robinson-crusoe/achi
 import { computeRobinHoodAchievements } from '../games/robin-hood/achievements'
 import { computeEarthborneRangersAchievements } from '../games/earthborne-rangers/achievements'
 import { computeDeckersAchievements } from '../games/deckers/achievements'
+import { computeElderScrollsAchievements } from '../games/elder-scrolls/achievements'
 import { computeOathswornAchievements } from '../games/oathsworn/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
@@ -36,6 +37,7 @@ export type GameId =
   | 'robinHood'
   | 'earthborneRangers'
   | 'deckers'
+  | 'elderScrolls'
   | 'starTrekCaptainsChair'
   | 'unsettled'
   | 'mageKnight'
@@ -73,6 +75,7 @@ export function computeGameAchievements(
   if (gameId === 'robinHood') return computeRobinHoodAchievements(plays, username)
   if (gameId === 'earthborneRangers') return computeEarthborneRangersAchievements(plays, username)
   if (gameId === 'deckers') return computeDeckersAchievements(plays, username)
+  if (gameId === 'elderScrolls') return computeElderScrollsAchievements(plays, username)
   if (gameId === 'starTrekCaptainsChair') return computeStarTrekCaptainsChairAchievements(plays, username)
   if (gameId === 'unsettled') return computeUnsettledAchievements(plays, username)
   if (gameId === 'mageKnight') return computeMageKnightAchievements(plays, username)
@@ -114,6 +117,11 @@ export function computeAllGameAchievementSummaries(
       achievements: computeEarthborneRangersAchievements(plays, username),
     },
     { gameId: 'deckers', gameName: 'Deckers', achievements: computeDeckersAchievements(plays, username) },
+    {
+      gameId: 'elderScrolls',
+      gameName: 'The Elder Scrolls: Betrayal of the Second Era',
+      achievements: computeElderScrollsAchievements(plays, username),
+    },
     {
       gameId: 'starTrekCaptainsChair',
       gameName: "Star Trek: Captain's Chair",
