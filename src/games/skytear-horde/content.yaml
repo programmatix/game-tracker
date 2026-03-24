@@ -97,11 +97,4 @@ costs:
   currency: "£"
   boxes:
     Core:
-      spreadsheetCell: C108
-      multiplier: 0.333333333333
-    Campaigns:
-      spreadsheetCell: C108
-      multiplier: 0.333333333333
-    Monoliths:
-      spreadsheetCell: C108
-      multiplier: 0.333333333333
+      spreadsheetCell: C105

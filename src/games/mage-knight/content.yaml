@@ -320,11 +320,4 @@ costs:
   currency: "£"
   boxes:
     Core:
-      spreadsheetCell: C112
-      multiplier: 0.428591841109
-    Lost Legion:
-      spreadsheetCell: C112
-      multiplier: 0.285704079446
-    Shades of Tezla:
-      spreadsheetCell: C112
-      multiplier: 0.285704079446
+      spreadsheetCell: C109

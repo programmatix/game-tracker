@@ -41,4 +41,6 @@ sides:
 costs:
   currency: "£"
   boxes:
-    Core: C73
+    Core: C70
+    Reinforcements: C68
+    NorthAfrica: C69

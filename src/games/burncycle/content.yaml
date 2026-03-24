@@ -143,20 +143,4 @@ costs:
   currency: "£"
   boxes:
     Core:
-      spreadsheetCell: C20
-      multiplier: 0.571527721075
-    BioDefend:
-      spreadsheetCell: C20
-      multiplier: 0.122438148118
-    Ebbwall:
-      spreadsheetCell: C20
-      multiplier: 0.122438148118
-    The Specialists:
-      spreadsheetCell: C20
-      multiplier: 0.061198660897
-    The Renegades:
-      spreadsheetCell: C20
-      multiplier: 0.061198660897
-    Robophobia:
-      spreadsheetCell: C20
-      multiplier: 0.061198660897
+      spreadsheetCell: C17

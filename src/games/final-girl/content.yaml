@@ -95,15 +95,15 @@ seasons:
 costs:
   currency: "£"
   boxes:
-    The Haunting of Creech Manor: C52
+    The Haunting of Creech Manor: C49
     Frightmare on Maple Lane: C47
-    Into the Void: C46
-    Panic at Station 2891: C55
-    A Knock at the Door: C53
+    Into the Void: C46 # Includes core
+    Panic at Station 2891: C52
+    A Knock at the Door: C50
     Once Upon a Full Moon: C51
     Madness in the Dark: C50
     The Falconwood Files: C49
     The Marrek Murders: C48
     Bad Times at Buddyland: C29
-    Shriek: C34
+    Shriek: C31
   

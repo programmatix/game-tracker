@@ -86,8 +86,8 @@ costs:
   currency: "£"
   boxes:
     Core:
-      spreadsheetCell: C74
+      spreadsheetCell: C71
       multiplier: 0.642897970849
     Clan of Two:
-      spreadsheetCell: C74
+      spreadsheetCell: C71
       multiplier: 0.357102029151

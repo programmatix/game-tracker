@@ -27,11 +27,10 @@ costs:
   currency: "£"
   boxes:
     Core:
-      spreadsheetCell: C56
-      multiplier: 0.600064015364
+      spreadsheetCell: C53
     Blackout:
-      spreadsheetCell: C56
-      multiplier: 0.199967992318
+      spreadsheetCell: C155
+      multiplier: 0.5
     Strannos:
-      spreadsheetCell: C56
-      multiplier: 0.199967992318
+      spreadsheetCell: C155
+      multiplier: 0.5

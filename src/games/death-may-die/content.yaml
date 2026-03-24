@@ -55,4 +55,4 @@ costs:
   # Refers to the net column in the purchase sheet; this was returned.
   currency: "£"
   boxes:
-    Core: F45
+    Core: 0.01 # Returned
