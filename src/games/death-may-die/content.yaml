@@ -52,8 +52,7 @@ investigators:
     box: Core
 
 costs:
-  # Placeholder values: replace with your real costs.
+  # Refers to the net column in the purchase sheet; this was returned.
   currency: "£"
   boxes:
-    # Returned!
-    Core: 0.01
+    Core: F45

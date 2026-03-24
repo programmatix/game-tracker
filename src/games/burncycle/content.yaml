@@ -142,9 +142,21 @@ captains:
 costs:
   currency: "£"
   boxes:
-    Core: 139.99
-    BioDefend: 29.99
-    Ebbwall: 29.99
-    The Specialists: 14.99
-    The Renegades: 14.99
-    Robophobia: 14.99
+    Core:
+      spreadsheetCell: C20
+      multiplier: 0.571527721075
+    BioDefend:
+      spreadsheetCell: C20
+      multiplier: 0.122438148118
+    Ebbwall:
+      spreadsheetCell: C20
+      multiplier: 0.122438148118
+    The Specialists:
+      spreadsheetCell: C20
+      multiplier: 0.061198660897
+    The Renegades:
+      spreadsheetCell: C20
+      multiplier: 0.061198660897
+    Robophobia:
+      spreadsheetCell: C20
+      multiplier: 0.061198660897

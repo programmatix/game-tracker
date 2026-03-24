@@ -107,5 +107,5 @@ bosses:
 costs:
   currency: "£"
   boxes:
-    Heart: C117
-    Star: C116
+    Heart: C114
+    Star: C113

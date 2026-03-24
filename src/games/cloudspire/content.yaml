@@ -43,6 +43,12 @@ modes:
 costs:
   currency: "£"
   boxes:
-    Core: 169.99
-    Horizon's Wrath: 34.99
-    The Uprising: 34.99
+    Core:
+      spreadsheetCell: C21
+      multiplier: 0.708380214193
+    Horizon's Wrath:
+      spreadsheetCell: C21
+      multiplier: 0.145809892903
+    The Uprising:
+      spreadsheetCell: C21
+      multiplier: 0.145809892903

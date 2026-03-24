@@ -93,15 +93,17 @@ seasons:
             id: Mort
 
 costs:
-  # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    The Haunting of Creech Manor: 15
-    Frightmare on Maple Lane: 15
-    Into the Void: 15
-    Panic at Station 2891: 15
-    A Knock at the Door: 15
-    Once Upon a Full Moon: 15
-    Madness in the Dark: 15
-    Bad Times at Buddyland: 20 # Exact
+    The Haunting of Creech Manor: C52
+    Frightmare on Maple Lane: C47
+    Into the Void: C46
+    Panic at Station 2891: C55
+    A Knock at the Door: C53
+    Once Upon a Full Moon: C51
+    Madness in the Dark: C50
+    The Falconwood Files: C49
+    The Marrek Murders: C48
+    Bad Times at Buddyland: C29
+    Shriek: C34
   

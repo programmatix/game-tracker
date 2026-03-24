@@ -94,9 +94,14 @@ enemyPrecons:
     aliases: [Scale]
 
 costs:
-  # Paid about 200, so amoritising
   currency: "£"
   boxes:
-    Core: 66.66
-    Campaigns: 66.66
-    Monoliths: 66.66
+    Core:
+      spreadsheetCell: C108
+      multiplier: 0.333333333333
+    Campaigns:
+      spreadsheetCell: C108
+      multiplier: 0.333333333333
+    Monoliths:
+      spreadsheetCell: C108
+      multiplier: 0.333333333333

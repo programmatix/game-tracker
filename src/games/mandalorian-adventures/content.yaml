@@ -83,8 +83,11 @@ encounters:
     aliases: [Bananza]
 
 costs:
-  # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    Core: 44.99
-    Clan of Two: 24.99
+    Core:
+      spreadsheetCell: C74
+      multiplier: 0.642897970849
+    Clan of Two:
+      spreadsheetCell: C74
+      multiplier: 0.357102029151

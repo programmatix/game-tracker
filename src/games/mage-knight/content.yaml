@@ -319,6 +319,12 @@ scenarios:
 costs:
   currency: "£"
   boxes:
-    Core: 59.99
-    Lost Legion: 39.99
-    Shades of Tezla: 39.99
+    Core:
+      spreadsheetCell: C112
+      multiplier: 0.428591841109
+    Lost Legion:
+      spreadsheetCell: C112
+      multiplier: 0.285704079446
+    Shades of Tezla:
+      spreadsheetCell: C112
+      multiplier: 0.285704079446

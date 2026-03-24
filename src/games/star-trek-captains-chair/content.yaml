@@ -58,7 +58,6 @@ captains:
     box: Core
 
 costs:
-  # Placeholder values: replace with your actual cost(s).
   currency: "£"
   boxes:
-    Core: 49.99
+    Core: C119

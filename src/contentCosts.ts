@@ -23,7 +23,22 @@ function resolveRawCostValue(value: RawCostValue): unknown {
 
   const referenceCandidates = [value.spreadsheetCell, value.sheetCell, value.cell]
   const reference = referenceCandidates.find((candidate) => typeof candidate === 'string')
-  if (typeof reference === 'string') return resolveSpreadsheetCellValue(reference)
+  if (typeof reference === 'string') {
+    const baseCost = coerceCost(resolveSpreadsheetCellValue(reference))
+    if (baseCost === undefined) return undefined
+
+    let resolved = baseCost
+
+    if (typeof value.multiplier === 'number' && Number.isFinite(value.multiplier)) {
+      resolved *= value.multiplier
+    }
+
+    if (typeof value.divideBy === 'number' && Number.isFinite(value.divideBy) && value.divideBy !== 0) {
+      resolved /= value.divideBy
+    }
+
+    return resolved
+  }
 
   return value.cost ?? value.price ?? value.value ?? value
 }

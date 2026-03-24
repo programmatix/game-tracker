@@ -24,9 +24,14 @@ tasks:
   - C
 
 costs:
-  # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    Core: 74.99
-    Blackout: 24.99
-    Strannos: 24.99
+    Core:
+      spreadsheetCell: C56
+      multiplier: 0.600064015364
+    Blackout:
+      spreadsheetCell: C56
+      multiplier: 0.199967992318
+    Strannos:
+      spreadsheetCell: C56
+      multiplier: 0.199967992318

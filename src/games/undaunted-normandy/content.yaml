@@ -39,7 +39,6 @@ sides:
       - Axis
 
 costs:
-  # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    Core: 39.99
+    Core: C73
