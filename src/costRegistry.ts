@@ -79,7 +79,7 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
   {
     id: 'robinsonCrusoe',
     label: 'Robinson Crusoe',
-    aliases: ['Robinson Crusoe'],
+    aliases: ['Robinson Crusoe', 'Robinson Crusoe: Adventures on the Cursed Island'],
     costs: toBoxCostConfig(robinsonCrusoeContent),
   },
   {
@@ -145,7 +145,7 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
   {
     id: 'bullet',
     label: 'Bullet',
-    aliases: ['Bullet', 'Bullet Heart', 'Bullet Star'],
+    aliases: ['Bullet', 'Bullet Heart', 'Bullet Star', 'Bullet♥︎'],
     costs: toBoxCostConfig(bulletContent),
   },
   {
@@ -157,7 +157,7 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
   {
     id: 'mageKnight',
     label: 'Mage Knight',
-    aliases: ['Mage Knight', 'Mage Knight Board Game'],
+    aliases: ['Mage Knight', 'Mage Knight Board Game', 'Mage Knight: Ultimate Edition'],
     costs: toBoxCostConfig(mageKnightContent),
   },
   {
