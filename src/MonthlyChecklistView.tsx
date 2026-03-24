@@ -120,7 +120,6 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     label: 'Mandalorian Adventures',
     titleIncludes: ['mandalorian adventures', 'the mandalorian: adventures', 'the mandalorian adventures'],
   },
-  { key: 'undaunted', label: 'Undaunted', titleIncludes: ['undaunted'] },
   { key: 'unsettled', label: 'Unsettled', objectIds: ['290484'], titleIncludes: ['unsettled'] },
   { key: 'finalGirl', label: 'Final Girl', objectIds: ['277659'], titleIncludes: ['final girl'] },
   {
