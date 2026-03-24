@@ -6,6 +6,13 @@ export type MageKnightContent = {
   heroes: string[]
   heroesById: Map<string, string>
   heroBoxByName: Map<string, string>
+  scenarios: string[]
+  scenariosById: Map<string, string>
+  scenarioRoundsByName: Map<string, number>
+  scenarioGroupByName: Map<string, string>
+  scenarioExpansionByName: Map<string, string>
+  scenarioRecommendedByName: Map<string, boolean>
+  scenarioBoxByName: Map<string, string>
   costCurrencySymbol: string
   boxCostsByName: Map<string, number>
 }
@@ -17,6 +24,9 @@ type MageKnightYamlItem =
       id?: string
       aliases?: string[]
       box?: string
+      rounds?: number
+      expansion?: string
+      recommended?: boolean
     }
 
 function normalizeId(value: string): string {
@@ -28,17 +38,24 @@ function normalizeId(value: string): string {
 
 export function parseMageKnightContent(text: string): MageKnightContent {
   const yaml = parseYamlValue(text)
-  if (isRecord(yaml) && Array.isArray(yaml.heroes)) {
+  if (isRecord(yaml) && Array.isArray(yaml.heroes) && Array.isArray(yaml.scenarios)) {
     const costs = parseBoxCostConfig(yaml)
     const heroes: string[] = []
     const heroesById = new Map<string, string>()
     const heroBoxByName = new Map<string, string>()
+    const scenarios: string[] = []
+    const scenariosById = new Map<string, string>()
+    const scenarioRoundsByName = new Map<string, number>()
+    const scenarioGroupByName = new Map<string, string>()
+    const scenarioExpansionByName = new Map<string, string>()
+    const scenarioRecommendedByName = new Map<string, boolean>()
+    const scenarioBoxByName = new Map<string, string>()
 
-    const applyAliases = (display: string, tokens: string[]) => {
+    const applyAliases = (map: Map<string, string>, display: string, tokens: string[]) => {
       for (const token of tokens) {
         const normalized = normalizeId(token)
         if (!normalized) continue
-        heroesById.set(normalized, display)
+        map.set(normalized, display)
       }
     }
 
@@ -47,7 +64,7 @@ export function parseMageKnightContent(text: string): MageKnightContent {
         const display = item.trim()
         if (!display) return
         heroes.push(display)
-        applyAliases(display, [display])
+        applyAliases(heroesById, display, [display])
         return
       }
 
@@ -64,21 +81,73 @@ export function parseMageKnightContent(text: string): MageKnightContent {
       const box = typeof item.box === 'string' ? item.box.trim() : ''
       if (box) heroBoxByName.set(display, box)
 
-      applyAliases(display, [display, ...(typeof item.id === 'string' ? [item.id] : []), ...aliases])
+      applyAliases(heroesById, display, [
+        display,
+        ...(typeof item.id === 'string' ? [item.id] : []),
+        ...aliases,
+      ])
     }
 
     for (const item of yaml.heroes as MageKnightYamlItem[]) applyItem(item)
+
+    for (const item of yaml.scenarios as MageKnightYamlItem[]) {
+      if (typeof item === 'string') {
+        const display = item.trim()
+        if (!display) continue
+        scenarios.push(display)
+        applyAliases(scenariosById, display, [display])
+        continue
+      }
+
+      if (!isRecord(item)) continue
+      const display =
+        (typeof item.display === 'string' ? item.display : typeof item.id === 'string' ? item.id : '')
+          .trim()
+      if (!display) continue
+
+      scenarios.push(display)
+      const aliases = Array.isArray(item.aliases)
+        ? item.aliases.filter((alias): alias is string => typeof alias === 'string')
+        : []
+      applyAliases(scenariosById, display, [
+        display,
+        ...(typeof item.id === 'string' ? [item.id] : []),
+        ...aliases,
+      ])
+
+      const box = typeof item.box === 'string' ? item.box.trim() : ''
+      if (box) scenarioBoxByName.set(display, box)
+
+      const rounds = typeof item.rounds === 'number' && Number.isFinite(item.rounds) ? item.rounds : undefined
+      if (rounds !== undefined) {
+        scenarioRoundsByName.set(display, rounds)
+        scenarioGroupByName.set(display, rounds === 1 ? '1 round' : `${rounds} rounds`)
+      }
+
+      const expansion = typeof item.expansion === 'string' ? item.expansion.trim() : ''
+      if (expansion) scenarioExpansionByName.set(display, expansion)
+      if (item.recommended === true) scenarioRecommendedByName.set(display, true)
+    }
 
     return {
       heroes,
       heroesById,
       heroBoxByName,
+      scenarios,
+      scenariosById,
+      scenarioRoundsByName,
+      scenarioGroupByName,
+      scenarioExpansionByName,
+      scenarioRecommendedByName,
+      scenarioBoxByName,
       costCurrencySymbol: costs.currencySymbol,
       boxCostsByName: costs.boxCostsByName,
     }
   }
 
-  throw new Error('Failed to parse Mage Knight content (expected YAML with a `heroes` array).')
+  throw new Error(
+    'Failed to parse Mage Knight content (expected YAML with `heroes` and `scenarios` arrays).',
+  )
 }
 
 export const mageKnightContent = parseMageKnightContent(contentText)

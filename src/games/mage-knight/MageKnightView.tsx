@@ -1,9 +1,10 @@
-import { Show, createMemo, createResource } from 'solid-js'
+import { For, Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
+import HeatmapMatrix from '../../components/HeatmapMatrix'
 import GameThingThumb from '../../components/GameThingThumb'
 import { computeGameAchievements } from '../../achievements/games'
 import {
@@ -11,7 +12,12 @@ import {
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
+import {
+  incrementCount,
+  mergeCanonicalKeys,
+  sortKeysByCountDesc,
+  sortKeysByGroupThenCountDesc,
+} from '../../stats'
 import {
   thingAssumedPlayTimeMinutes,
   totalPlayMinutesWithAssumption,
@@ -116,9 +122,106 @@ export default function MageKnightView(props: {
     return wins
   })
 
+  const scenarioCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.scenario) continue
+      incrementCount(counts, entry.scenario, entry.quantity)
+    }
+    return counts
+  })
+
+  const scenarioWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.scenario || !entry.isWin) continue
+      incrementCount(counts, entry.scenario, entry.quantity)
+    }
+    return counts
+  })
+
+  const playIdsByScenario = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      if (!entry.scenario) continue
+      ;(ids[entry.scenario] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
+  const heroGroupOrder = createMemo(() => {
+    const order: string[] = []
+    const seen = new Set<string>()
+    for (const hero of mageKnightContent.heroes) {
+      const group = mageKnightContent.heroBoxByName.get(hero)?.trim()
+      if (!group || seen.has(group)) continue
+      seen.add(group)
+      order.push(group)
+    }
+    return order
+  })
+
+  const scenarioGroupOrder = createMemo(() => {
+    const order: string[] = []
+    const seen = new Set<string>()
+    for (const scenario of mageKnightContent.scenarios) {
+      const group = mageKnightContent.scenarioGroupByName.get(scenario)?.trim()
+      if (!group || seen.has(group)) continue
+      seen.add(group)
+      order.push(group)
+    }
+    return order
+  })
+
   const heroKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(heroCountsMine()), mageKnightContent.heroes),
+    sortKeysByGroupThenCountDesc(
+      mergeCanonicalKeys(sortKeysByCountDesc(heroCountsMine()), mageKnightContent.heroes),
+      heroCountsMine(),
+      (hero) => mageKnightContent.heroBoxByName.get(hero),
+      heroGroupOrder(),
+    ),
   )
+
+  const scenarioKeys = createMemo(() =>
+    sortKeysByGroupThenCountDesc(
+      mergeCanonicalKeys(sortKeysByCountDesc(scenarioCounts()), mageKnightContent.scenarios),
+      scenarioCounts(),
+      (scenario) => mageKnightContent.scenarioGroupByName.get(scenario),
+      scenarioGroupOrder(),
+    ),
+  )
+
+  const heroScenarioMatrix = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.myHero || !entry.scenario) continue
+      counts[entry.myHero] ||= {}
+      incrementCount(counts[entry.myHero]!, entry.scenario, entry.quantity)
+    }
+    return counts
+  })
+
+  const heroScenarioWins = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    for (const entry of entries()) {
+      if (!entry.myHero || !entry.scenario || !entry.isWin) continue
+      counts[entry.myHero] ||= {}
+      incrementCount(counts[entry.myHero]!, entry.scenario, entry.quantity)
+    }
+    return counts
+  })
+
+  const playIdsByHeroScenario = createMemo(() => {
+    const ids = new Map<string, number[]>()
+    for (const entry of entries()) {
+      if (!entry.myHero || !entry.scenario) continue
+      const key = `${entry.myHero}|||${entry.scenario}`
+      const existing = ids.get(key)
+      if (existing) existing.push(entry.play.id)
+      else ids.set(key, [entry.play.id])
+    }
+    return ids
+  })
 
   const boxPlayCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -128,6 +231,8 @@ export default function MageKnightView(props: {
         const box = mageKnightContent.heroBoxByName.get(hero)
         if (box) boxes.add(box)
       }
+      const scenarioBox = entry.scenario ? mageKnightContent.scenarioBoxByName.get(entry.scenario) : undefined
+      if (scenarioBox) boxes.add(scenarioBox)
       for (const box of boxes) incrementCount(counts, box, entry.quantity)
     }
     return counts
@@ -142,6 +247,8 @@ export default function MageKnightView(props: {
         const box = mageKnightContent.heroBoxByName.get(hero)
         if (box) boxes.add(box)
       }
+      const scenarioBox = entry.scenario ? mageKnightContent.scenarioBoxByName.get(entry.scenario) : undefined
+      if (scenarioBox) boxes.add(scenarioBox)
       const resolved = totalPlayMinutesWithAssumption({
         attributes: entry.play.attributes,
         quantity: entry.quantity,
@@ -165,6 +272,8 @@ export default function MageKnightView(props: {
         const box = mageKnightContent.heroBoxByName.get(hero)
         if (box) boxes.add(box)
       }
+      const scenarioBox = entry.scenario ? mageKnightContent.scenarioBoxByName.get(entry.scenario) : undefined
+      if (scenarioBox) boxes.add(scenarioBox)
       for (const box of boxes) {
         ;(ids[box] ||= []).push(entry.play.id)
       }
@@ -199,6 +308,16 @@ export default function MageKnightView(props: {
     return pickBestAvailableAchievementForTrackIds(achievements(), [`${trackIdPrefix}:${id}`])
   }
 
+  const maxMatrixCount = createMemo(() => {
+    let max = 0
+    for (const row of Object.values(heroScenarioMatrix())) {
+      for (const count of Object.values(row)) {
+        if (count > max) max = count
+      }
+    }
+    return max
+  })
+
   return (
     <div class="finalGirl">
       <div class="finalGirlMetaRow">
@@ -226,7 +345,11 @@ export default function MageKnightView(props: {
               View all plays
             </button>
           </div>
-          <div class="muted">Hero tracker: which heroes you have played.</div>
+          <div class="muted">
+            Solo tracker for heroes and recommended scenarios. Use BG Stats tags like{' '}
+            <span class="mono">Goldyx／SoloConquest</span> or{' '}
+            <span class="mono">H: Goldyx／S: SoloConquest</span>.
+          </div>
         </div>
       </div>
 
@@ -255,6 +378,7 @@ export default function MageKnightView(props: {
             plays={heroCountsMine()}
             wins={heroWinsMine()}
             keys={heroKeys()}
+            groupBy={(hero) => mageKnightContent.heroBoxByName.get(hero)}
             getNextAchievement={(hero) =>
               pickBestAvailableAchievementForTrackIds(achievements(), [
                 `heroPlays:${slugifyAchievementItemId(hero)}`,
@@ -272,6 +396,7 @@ export default function MageKnightView(props: {
             title="All heroes"
             plays={heroCountsAll()}
             keys={heroKeys()}
+            groupBy={(hero) => mageKnightContent.heroBoxByName.get(hero)}
             getNextAchievement={(hero) => getNextAchievement('heroPlays', hero)}
             onPlaysClick={(hero) =>
               props.onOpenPlays({
@@ -280,6 +405,74 @@ export default function MageKnightView(props: {
               })
             }
           />
+          <CountTable
+            title="Scenarios"
+            plays={scenarioCounts()}
+            wins={scenarioWins()}
+            keys={scenarioKeys()}
+            groupBy={(scenario) => mageKnightContent.scenarioGroupByName.get(scenario)}
+            getNextAchievement={(scenario) =>
+              pickBestAvailableAchievementForTrackIds(achievements(), [
+                `scenarioPlays:${slugifyAchievementItemId(scenario)}`,
+                `scenarioWins:${slugifyAchievementItemId(scenario)}`,
+              ])
+            }
+            onPlaysClick={(scenario) =>
+              props.onOpenPlays({
+                title: `Mage Knight • Scenario: ${scenario}`,
+                playIds: playIdsByScenario()[scenario] ?? [],
+              })
+            }
+          />
+          <div class="statsBlock">
+            <h3 class="statsTitle">Scenario guide</h3>
+            <div class="tableWrap compact">
+              <table class="table compactTable">
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th class="mono">Rounds</th>
+                    <th>Expansion</th>
+                    <th>Recommended</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <For each={scenarioKeys()}>
+                    {(scenario) => (
+                      <tr>
+                        <td>{scenario}</td>
+                        <td class="mono">
+                          {mageKnightContent.scenarioRoundsByName.get(scenario)?.toLocaleString() ?? '—'}
+                        </td>
+                        <td>{mageKnightContent.scenarioExpansionByName.get(scenario) ?? 'Core'}</td>
+                        <td>{mageKnightContent.scenarioRecommendedByName.get(scenario) ? 'Yes' : '—'}</td>
+                      </tr>
+                    )}
+                  </For>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="statsBlock">
+            <h3 class="statsTitle">My heroes × scenarios</h3>
+            <HeatmapMatrix
+              rows={heroKeys()}
+              cols={scenarioKeys()}
+              rowHeader="Hero"
+              colHeader="Scenario"
+              rowGroupBy={(hero) => mageKnightContent.heroBoxByName.get(hero)}
+              colGroupBy={(scenario) => mageKnightContent.scenarioGroupByName.get(scenario)}
+              getCount={(hero, scenario) => heroScenarioMatrix()[hero]?.[scenario] ?? 0}
+              getWinCount={(hero, scenario) => heroScenarioWins()[hero]?.[scenario] ?? 0}
+              maxCount={maxMatrixCount()}
+              onCellClick={(hero, scenario) =>
+                props.onOpenPlays({
+                  title: `Mage Knight • ${hero} × ${scenario}`,
+                  playIds: playIdsByHeroScenario().get(`${hero}|||${scenario}`) ?? [],
+                })
+              }
+            />
+          </div>
           <Show when={hasCostTable()}>
             <CostPerPlayTable
               title="Cost per box"

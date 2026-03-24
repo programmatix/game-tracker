@@ -3,7 +3,9 @@
 # This list drives the UI (including 0-play rows) and token resolution.
 # Use the player `color` field in BG Stats with either:
 # - just the hero token/name (e.g. `Goldyx`)
-# - or key/value (e.g. `H: Goldyx`)
+# - a scenario token/name (e.g. `SoloConquest`)
+# - both as separate tags (e.g. `Goldyx／SoloConquest`)
+# - or key/value (e.g. `H: Goldyx／S: SoloConquest`)
 
 heroes:
   - display: Tovak
@@ -23,10 +25,300 @@ heroes:
     box: Lost Legion
   - display: Braevalar
     id: Braevalar
+    box: Shades of Tezla
+
+scenarios:
+  - display: Lost Relic
+    id: LostRelic
+    aliases: [Lost Relic]
+    rounds: 2
+    box: Core
+    recommended: true
+  - display: Solo Conquest Blitz - 1 City
+    id: SoloConquestBlitz1City
+    aliases:
+      [Solo Conquest Blitz 1 City, Solo Blitz Conquest 1 City, Solo Blitz Conquest]
+    rounds: 4
+    box: Core
+    recommended: true
+  - display: Solo Conquest Blitz - 2 Cities
+    id: SoloConquestBlitz2Cities
+    aliases:
+      [Solo Conquest Blitz 2 Cities, Solo Blitz Conquest 2 Cities, Solo Blitz Conquest 2 City]
+    rounds: 4
+    box: Core
+    recommended: true
+  - display: Volkare's Return Blitz
+    id: VolkareReturnBlitz
+    aliases: [Volkares Return Blitz, Volkare Return Blitz]
+    rounds: 4
+    expansion: Lost Legion
+    box: Lost Legion
+    recommended: true
+  - display: Hidden Valley
+    id: HiddenValley
+    aliases: [The Hidden Valley]
+    rounds: 4
+    expansion: Shades of Tezla
+    box: Shades of Tezla
+    recommended: true
+  - display: Realm of the Dead
+    id: RealmOfTheDead
+    aliases: [The Realm of the Dead]
+    rounds: 4
+    expansion: Shades of Tezla
+    box: Shades of Tezla
+    recommended: true
+  - display: Mines Liberation
+    id: MinesLiberation
+    aliases: [Mines Liberation Very Hard Solo]
+    rounds: 4
+    box: Core
+    recommended: true
+  - display: Dungeon Lords
+    id: DungeonLords
+    aliases: [Dungeon Lords]
+    rounds: 5
+    box: Core
+    recommended: true
+  - display: Solo Conquest
+    id: SoloConquest
+    aliases: [Solo Full Conquest, Full Conquest]
+    rounds: 6
+    box: Core
+    recommended: true
+  - display: Volkare's Quest
+    id: VolkareQuest
+    aliases: [Volkares Quest, Volkare Quest]
+    rounds: 6
+    expansion: Lost Legion
+    box: Lost Legion
+    recommended: true
+  - display: Volkare's Return
+    id: VolkareReturn
+    aliases: [Volkares Return, Volkare Return]
+    rounds: 6
+    expansion: Lost Legion
+    box: Lost Legion
+    recommended: true
+  - display: Life and Death
+    id: LifeAndDeath
+    aliases: [Life and Death]
+    rounds: 6
+    expansion: Shades of Tezla
+    box: Shades of Tezla
+    recommended: true
+  - display: The Lost Golden City
+    id: TheLostGoldenCity
+    aliases: [Lost Golden City]
+    rounds: 2
+    box: Core
+  - display: Druid Nights
+    id: DruidNights
+    aliases: [Druid Nights]
+    rounds: 4
+    box: Core
+  - display: "Solo Conquest: Spellbound"
+    id: SoloConquestSpellbound
+    aliases: [Solo Conquest Spellbound, Spellbound]
+    rounds: 4
+    box: Core
+  - display: The Raven of Iraden
+    id: TheRavenOfIraden
+    aliases: [Raven of Iraden]
+    rounds: 4
+    box: Core
+  - display: Return to the Void
+    id: ReturnToTheVoid
+    aliases: [Return to Void]
+    rounds: 4
+    box: Core
+  - display: Abhorsen
+    id: Abhorsen
+    aliases: [Abhorsen]
+    rounds: 4
+    expansion: Ultimate Edition
+    box: Core
+  - display: The Apprentice
+    id: TheApprentice
+    aliases: [Apprentice]
+    rounds: 4
+    box: Core
+  - display: Traversing the Range
+    id: TraversingTheRange
+    aliases: [Traversing Range]
+    rounds: 4
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Sack the Iron Citadel
+    id: SackTheIronCitadel
+    aliases: [Sack Iron Citadel]
+    rounds: 4
+    box: Core
+  - display: Flee the City!
+    id: FleeTheCity
+    aliases: [Flee the City, Flee City]
+    rounds: 4
+    box: Core
+  - display: Dragonslayer
+    id: Dragonslayer
+    aliases: [Dragon Slayer]
+    rounds: 5
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Volkare's Endless Maze
+    id: VolkaresEndlessMaze
+    aliases: [Volkare Endless Maze, Volkares Endless Maze]
+    rounds: 5
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Hunting for the Rogue Knight
+    id: HuntingForTheRogueKnight
+    aliases: [Rogue Knight]
+    rounds: 5
+    box: Core
+  - display: Ça Ira
+    id: CaIra
+    aliases: [Ca Ira]
+    rounds: 5
+    box: Core
+  - display: Grand Conqueror
+    id: GrandConqueror
+    aliases: [Grand Conqueror]
+    rounds: 6
+    box: Core
+  - display: The Gauntlet
+    id: TheGauntlet
+    aliases: [Gauntlet]
+    rounds: 6
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: The Coast
+    id: TheCoast
+    aliases: [Coast]
+    rounds: 6
+    box: Core
+  - display: Ring of Fire
+    id: RingOfFire
+    aliases: [Ring of Fire]
+    rounds: 6
+    box: Core
+  - display: A World Without Magic?
+    id: AWorldWithoutMagic
+    aliases: [A World Without Magic, World Without Magic]
+    rounds: 6
+    box: Core
+  - display: "Solo Conquest: Rags to Riches"
+    id: SoloConquestRagsToRiches
+    aliases: [Solo Conquest Rags to Riches, Rags to Riches]
+    rounds: 6
+    box: Core
+  - display: The Devastation
+    id: TheDevastation
+    aliases: [Devastation]
+    rounds: 6
+    expansion: Shades of Tezla
+    box: Shades of Tezla
+  - display: Dragon Infestation
+    id: DragonInfestation
+    aliases: [Dragon Infestation]
+    rounds: 6
+    box: Core
+  - display: Quest for the Golden Grail
+    id: QuestForTheGoldenGrail
+    aliases: [Golden Grail]
+    rounds: 6
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: City Defense
+    id: CityDefense
+    aliases: [City Defence]
+    rounds: 6
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Volkare's Allies
+    id: VolkaresAllies
+    aliases: [Volkare Allies, Volkares Allies]
+    rounds: 6
+    expansion: Ultimate Edition
+    box: Core
+  - display: Atlantean Summer Bloodlust
+    id: AtlanteanSummerBloodlust
+    aliases: [Summer Bloodlust]
+    rounds: 6
+    box: Core
+  - display: Balance of Power
+    id: BalanceOfPower
+    aliases: [Balance of Power]
+    rounds: 6
+    expansion: Ultimate Edition
+    box: Core
+  - display: Evil God in the Sapphire Kingdom
+    id: EvilGodInTheSapphireKingdom
+    aliases: [Sapphire Kingdom]
+    rounds: 6
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Strolling in the Deep
+    id: StrollingInTheDeep
+    aliases: [Strolling Deep]
+    rounds: 6
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Search for the Sorceress
+    id: SearchForTheSorceress
+    aliases: [Sorceress]
+    rounds: 6
+    expansion: Shades of Tezla
+    box: Shades of Tezla
+  - display: The Liberator of the Doomed Land
+    id: TheLiberatorOfTheDoomedLand
+    aliases: [Liberator of the Doomed Land]
+    rounds: 7
+    box: Core
+  - display: Long Night of the Dragon Rider
+    id: LongNightOfTheDragonRider
+    aliases: [Dragon Rider]
+    rounds: 7
+    box: Core
+  - display: Revenge of the Dragon Lords
+    id: RevengeOfTheDragonLords
+    aliases: [Dragon Lords]
+    rounds: 8
+    box: Core
+  - display: The Gathering Storm
+    id: TheGatheringStorm
+    aliases: [Gathering Storm]
+    rounds: 8
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Wars of the Sun and the Moon
+    id: WarsOfTheSunAndTheMoon
+    aliases: [Sun and the Moon]
+    rounds: 8
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Onslaught
+    id: Onslaught
+    aliases: [Onslaught]
+    rounds: 8
+    box: Core
+  - display: Mega Conquest
+    id: MegaConquest
+    aliases: [Mega Conquest]
+    rounds: 12
+    expansion: Lost Legion
+    box: Lost Legion
+  - display: Super Epic Conquest
+    id: SuperEpicConquest
+    aliases: [Super Epic Conquest]
+    rounds: 18
+    expansion: Lost Legion
     box: Lost Legion
 
 costs:
-  # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    Core: 149.99
+    Core: 59.99
+    Lost Legion: 39.99
+    Shades of Tezla: 39.99

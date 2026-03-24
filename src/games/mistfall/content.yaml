@@ -78,8 +78,7 @@ quests:
     group: Heart of the Mist
 
 costs:
-  # Placeholder values: replace with your real costs.
   currency: "£"
   boxes:
-    Core: 49.99
-    Heart of the Mist: 34.99
+    Core: C54
+    Heart of the Mist: C67

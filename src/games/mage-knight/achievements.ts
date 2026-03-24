@@ -37,6 +37,23 @@ export function computeMageKnightAchievements(plays: BggPlay[], username: string
       })),
   })
 
+  const scenarios = buildCanonicalCounts({
+    preferredItems: mageKnightContent.scenarios.map((scenario) => buildAchievementItem(scenario)),
+    observed: entries
+      .filter((entry) => Boolean(entry.scenario))
+      .map((entry) => ({ item: buildAchievementItem(entry.scenario!), amount: entry.quantity })),
+  })
+
+  const scenarioWins = buildCanonicalCounts({
+    preferredItems: mageKnightContent.scenarios.map((scenario) => buildAchievementItem(scenario)),
+    observed: entries
+      .filter((entry) => Boolean(entry.scenario))
+      .map((entry) => ({
+        item: buildAchievementItem(entry.scenario!),
+        amount: entry.isWin ? entry.quantity : 0,
+      })),
+  })
+
   const tracks: AchievementTrack[] = [
     {
       ...buildPlayCountTrack({ trackId: 'plays', achievementBaseId: 'plays', currentPlays: totalPlays }),
@@ -114,6 +131,77 @@ export function computeMageKnightAchievements(plays: BggPlay[], username: string
             })
             if (!entry) return undefined
             return buildCompletionFromPlay(entry.play, `${entry.myHero} win`)
+          },
+        }
+      }),
+    )
+  }
+
+  if (scenarios.items.length > 0) {
+    const scenarioLabelById = new Map(scenarios.items.map((item) => [item.id, item.label]))
+    tracks.push(
+      buildPerItemTrack({
+        trackId: 'scenarioPlays',
+        achievementBaseId: buildPerItemAchievementBaseId('Play', 'scenario'),
+        verb: 'Play',
+        itemNoun: 'scenario',
+        unitSingular: 'time',
+        items: scenarios.items,
+        countsByItemId: scenarios.countsByItemId,
+      }),
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'scenarioPlays',
+        verb: 'Play',
+        itemNoun: 'scenario',
+        unitSingular: 'time',
+        items: scenarios.items,
+        countsByItemId: scenarios.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? scenarioLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (targetPlays: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: targetPlays,
+              predicate: (e) => Boolean(e.scenario) && normalizeKey(e.scenario!) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, entry.scenario || 'Scenario')
+          },
+        }
+      }),
+    )
+  }
+
+  if (scenarioWins.items.length > 0) {
+    const scenarioWinLabelById = new Map(scenarioWins.items.map((item) => [item.id, item.label]))
+    tracks.push(
+      ...buildIndividualItemTracks({
+        trackIdPrefix: 'scenarioWins',
+        verb: 'Defeat',
+        itemNoun: 'scenario',
+        unitSingular: 'win',
+        items: scenarioWins.items,
+        countsByItemId: scenarioWins.countsByItemId,
+      }).map((track) => {
+        const itemId = /:([^:]+)$/.exec(track.trackId)?.[1]
+        const label = itemId ? scenarioWinLabelById.get(itemId) : undefined
+        if (!label) return track
+        const labelKey = normalizeKey(label)
+        return {
+          ...track,
+          completionForLevel: (winsTarget: number) => {
+            const entry = findCompletionEntryForCounter({
+              entries,
+              target: winsTarget,
+              predicate: (e) => e.isWin && Boolean(e.scenario) && normalizeKey(e.scenario!) === labelKey,
+            })
+            if (!entry) return undefined
+            return buildCompletionFromPlay(entry.play, `${entry.scenario} win`)
           },
         }
       }),

@@ -56,6 +56,7 @@ import {
   type PlaysCacheV1,
   writePlaysCache,
 } from './playsHelpers'
+import { loadPurchaseSpreadsheet } from './purchaseSpreadsheet'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -77,7 +78,7 @@ type AppHistoryState =
 function App() {
   const parsedHash =
     typeof window === 'undefined' ? null : parseNavStateFromHash(window.location.hash)
-  const initialMainTab: MainTab = parsedHash?.mainTab ?? 'finalGirl'
+  const initialMainTab: MainTab = parsedHash?.mainTab ?? 'monthlyChecklist'
   const initialPlaysView: PlaysView =
     initialMainTab === 'plays' ? (parsedHash?.playsView ?? 'plays') : 'plays'
   const initialSelectedGameKey: string | null =
@@ -603,6 +604,10 @@ function App() {
   }
 
   onMount(() => {
+    void loadPurchaseSpreadsheet().catch((error) => {
+      console.error('Failed to load purchase spreadsheet.', error)
+    })
+
     const onPopState = (event: PopStateEvent) => {
       const state = event.state as AppHistoryState | null
 

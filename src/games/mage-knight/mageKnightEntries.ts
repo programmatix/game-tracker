@@ -1,5 +1,9 @@
 import type { BggPlay } from '../../bgg'
-import { isMageKnightHeroToken, parseMageKnightPlayerColor } from './mageKnight'
+import {
+  isMageKnightHeroToken,
+  isMageKnightScenarioToken,
+  parseMageKnightPlayerColor,
+} from './mageKnight'
 
 export const MAGE_KNIGHT_OBJECT_IDS = new Set(['248562', '96848'])
 
@@ -7,6 +11,7 @@ export type MageKnightEntry = {
   play: BggPlay
   heroes: string[]
   myHero?: string
+  scenario?: string
   quantity: number
   isWin: boolean
 }
@@ -35,10 +40,11 @@ export function getMageKnightEntries(plays: BggPlay[], username: string): MageKn
           username: (player.attributes.username || '').toLowerCase(),
           win: player.attributes.win === '1',
           hero: parsed.hero,
+          scenario: parsed.scenario,
           extraTags: parsed.extraTags,
         }
       })
-      .filter((player) => Boolean(player.hero || player.extraTags.length > 0))
+      .filter((player) => Boolean(player.hero || player.scenario || player.extraTags.length > 0))
 
     const heroesSet = new Map<string, string>()
     for (const player of parsedPlayers) {
@@ -54,11 +60,16 @@ export function getMageKnightEntries(plays: BggPlay[], username: string): MageKn
     const heroes = [...heroesSet.values()]
     const myPlayer = parsedPlayers.find((player) => player.username === user)
     const myHero = myPlayer?.hero && isMageKnightHeroToken(myPlayer.hero) ? myPlayer.hero : undefined
+    const scenario =
+      myPlayer?.scenario && isMageKnightScenarioToken(myPlayer.scenario)
+        ? myPlayer.scenario
+        : undefined
 
     result.push({
       play,
       heroes,
       myHero,
+      scenario,
       quantity: playQuantity(play),
       isWin: myPlayer?.win === true,
     })
