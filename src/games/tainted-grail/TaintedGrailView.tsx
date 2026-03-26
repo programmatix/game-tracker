@@ -1,21 +1,15 @@
 import { Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
-import CountTable from '../../components/CountTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
 import { computeGameAchievements } from '../../achievements/games'
-import {
-  pickBestAvailableAchievementForTrackIds,
-  slugifyAchievementItemId,
-} from '../../achievements/nextAchievement'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import {
   incrementCount,
   mergeCanonicalKeys,
   sortKeysByCountDesc,
-  sortKeysByGroupThenCountDesc,
 } from '../../stats'
 import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from '../../playDuration'
 import { taintedGrailContent } from './content'
@@ -99,6 +93,14 @@ export default function TaintedGrailView(props: {
     return ids
   })
 
+  const continuationCount = createMemo(() =>
+    entries().reduce(
+      (sum, entry) =>
+        sum + (entry.continuedFromPrevious || entry.continuedToNext ? entry.quantity : 0),
+      0,
+    ),
+  )
+
   const taggedPlays = createMemo(() =>
     entries().reduce((sum, entry) => sum + (entry.chapter === 'Unknown chapter' ? 0 : entry.quantity), 0),
   )
@@ -133,6 +135,21 @@ export default function TaintedGrailView(props: {
     return { hoursByBox, hasAssumedHoursByBox }
   })
 
+  const chapterPlayHours = createMemo(() => {
+    const hoursByChapter: Record<string, number> = {}
+    const hasAssumedHoursByChapter: Record<string, boolean> = {}
+    for (const entry of entries()) {
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      incrementCount(hoursByChapter, entry.chapter, resolved.minutes / 60)
+      if (resolved.assumed) hasAssumedHoursByChapter[entry.chapter] = true
+    }
+    return { hoursByChapter, hasAssumedHoursByChapter }
+  })
+
   const playIdsByBox = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
@@ -163,31 +180,9 @@ export default function TaintedGrailView(props: {
     () => Boolean(taintedGrailContent.costCurrencySymbol) && taintedGrailContent.boxCostsByName.size > 0,
   )
 
-  const chapterGroupOrder = createMemo(() => {
-    const order: string[] = []
-    const seen = new Set<string>()
-    for (const chapter of taintedGrailContent.chapters) {
-      const group = taintedGrailContent.chapterGroupByName.get(chapter)?.trim()
-      if (!group || seen.has(group)) continue
-      seen.add(group)
-      order.push(group)
-    }
-    return order
-  })
-
   const chapterKeys = createMemo(() =>
-    sortKeysByGroupThenCountDesc(
-      mergeCanonicalKeys(sortKeysByCountDesc(chapterCounts()), taintedGrailContent.chapters),
-      chapterCounts(),
-      (chapter) => taintedGrailContent.chapterGroupByName.get(chapter),
-      chapterGroupOrder(),
-    ),
+    mergeCanonicalKeys(taintedGrailContent.chapters, sortKeysByCountDesc(chapterCounts())),
   )
-
-  function getNextAchievement(trackIdPrefix: string, label: string) {
-    const id = slugifyAchievementItemId(label)
-    return pickBestAvailableAchievementForTrackIds(achievements(), [`${trackIdPrefix}:${id}`])
-  }
 
   return (
     <div class="finalGirl">
@@ -219,7 +214,9 @@ export default function TaintedGrailView(props: {
               View all plays
             </button>
           </div>
-          <div class="muted">Track chapter progress through The Fall of Avalon campaign.</div>
+          <div class="muted">
+            Track chapter progress through The Fall of Avalon campaign.
+          </div>
         </div>
       </div>
 
@@ -260,6 +257,10 @@ export default function TaintedGrailView(props: {
           <div class="metaLabel">Untagged plays</div>
           <div class="metaValue mono">{untaggedPlays().toLocaleString()}</div>
         </div>
+        <div class="meta">
+          <div class="metaLabel">Continuations</div>
+          <div class="metaValue mono">{continuationCount().toLocaleString()}</div>
+        </div>
       </div>
 
       <Show when={totalHoursHasAssumed()}>
@@ -269,22 +270,88 @@ export default function TaintedGrailView(props: {
         </div>
       </Show>
 
-      <CountTable
-        title="Chapters"
-        plays={chapterCounts()}
-        wins={chapterWins()}
-        keys={chapterKeys()}
-        groupBy={(chapter) => taintedGrailContent.chapterGroupByName.get(chapter)}
-        getNextAchievement={(chapter) => getNextAchievement('chapterPlays', chapter)}
-        onPlaysClick={(chapter) => {
-          const ids = playIdsByChapter()[chapter] ?? []
-          if (ids.length === 0) return
-          props.onOpenPlays({
-            title: `Tainted Grail • ${chapter}`,
-            playIds: ids,
-          })
-        }}
-      />
+      <div class="statsBlock">
+        <h3 class="statsTitle">Chapters</h3>
+        <div class="tableWrap compact">
+          <table class="table compactTable">
+            <thead>
+              <tr>
+                <th>Chapter</th>
+                <th class="mono">Played</th>
+                <th class="mono">Plays</th>
+                <th class="mono">Wins</th>
+                <th class="mono">Hours</th>
+                <th class="mono">Avg / play</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chapterKeys().map((chapter) => {
+                const plays = chapterCounts()[chapter] ?? 0
+                const wins = chapterWins()[chapter] ?? 0
+                const hours = chapterPlayHours().hoursByChapter[chapter] ?? 0
+                const avgHours = plays > 0 ? hours / plays : 0
+                const hasAssumed = chapterPlayHours().hasAssumedHoursByChapter[chapter] === true
+                const groupLabel = taintedGrailContent.chapterGroupByName.get(chapter)?.trim() ?? ''
+                const previousChapter = chapterKeys()[Math.max(0, chapterKeys().indexOf(chapter) - 1)]
+                const previousGroupLabel =
+                  taintedGrailContent.chapterGroupByName.get(previousChapter)?.trim() ?? ''
+                const shouldRenderGroupHeader =
+                  groupLabel.length > 0 && groupLabel !== previousGroupLabel
+
+                return (
+                  <>
+                    <Show when={shouldRenderGroupHeader}>
+                      <tr>
+                        <th class="heatmapRowGroupHead" colSpan={6}>
+                          {groupLabel}
+                        </th>
+                      </tr>
+                    </Show>
+                    <tr>
+                      <td>{chapter}</td>
+                      <td class="mono">{plays > 0 ? '✓' : ''}</td>
+                      <td class="mono">
+                        <Show when={plays > 0} fallback="0">
+                          <button
+                            type="button"
+                            class="countLink"
+                            onClick={() =>
+                              props.onOpenPlays({
+                                title: `Tainted Grail • ${chapter}`,
+                                playIds: playIdsByChapter()[chapter] ?? [],
+                              })
+                            }
+                            title="View plays"
+                          >
+                            {plays.toLocaleString()}
+                          </button>
+                        </Show>
+                      </td>
+                      <td class="mono">{wins.toLocaleString()}</td>
+                      <td class="mono">
+                        {hours.toLocaleString(undefined, {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        })}
+                        {hasAssumed ? '*' : ''}
+                      </td>
+                      <td class="mono">
+                        <Show when={plays > 0} fallback="—">
+                          {avgHours.toLocaleString(undefined, {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          })}
+                          {hasAssumed ? '*' : ''}
+                        </Show>
+                      </td>
+                    </tr>
+                  </>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <Show when={hasCostTable()}>
         <CostPerPlayTable
