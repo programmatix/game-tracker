@@ -1,5 +1,6 @@
 export type MainTab =
   | 'monthlyChecklist'
+  | 'taintedGrail'
   | 'finalGirl'
   | 'skytearHorde'
   | 'cloudspire'
@@ -39,6 +40,7 @@ export type MainTabOption = { value: MainTab; label: string; group: MainTabGroup
 
 export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
+  'taintedGrail',
   'finalGirl',
   'skytearHorde',
   'cloudspire',
@@ -87,6 +89,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
   { value: 'skytearHorde', label: 'Skytear Horde', group: 'games' },
   { value: 'spiritIsland', label: 'Spirit Island', group: 'games' },
   { value: 'starTrekCaptainsChair', label: "Star Trek: Captain's Chair", group: 'games' },
+  { value: 'taintedGrail', label: 'Tainted Grail', group: 'games' },
   { value: 'tooManyBones', label: 'Too Many Bones', group: 'games' },
   { value: 'undauntedNormandy', label: 'Undaunted: Normandy', group: 'games' },
   { value: 'unsettled', label: 'Unsettled', group: 'games' },

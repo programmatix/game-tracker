@@ -32,6 +32,7 @@ import ElderScrollsView from './games/elder-scrolls/ElderScrollsView'
 import StarTrekCaptainsChairView from './games/star-trek-captains-chair/StarTrekCaptainsChairView'
 import DeckersView from './games/deckers/DeckersView'
 import OathswornView from './games/oathsworn/OathswornView'
+import TaintedGrailView from './games/tainted-grail/TaintedGrailView'
 import AchievementsView from './AchievementsView'
 import CostsView from './CostsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
@@ -127,6 +128,8 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
       return <DeckersView {...props} />
     case 'oathsworn':
       return <OathswornView {...props} />
+    case 'taintedGrail':
+      return <TaintedGrailView {...props} />
     case 'elderScrolls':
       return <ElderScrollsView {...props} />
     case 'undauntedNormandy':

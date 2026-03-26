@@ -20,6 +20,7 @@ import { skytearHordeContent } from './games/skytear-horde/content'
 import rawSpiritIslandContentText from './games/spirit-island/content.yaml?raw'
 import { parseSpiritIslandMappings } from './games/spirit-island/mappings'
 import { starTrekCaptainsChairContent } from './games/star-trek-captains-chair/content'
+import { taintedGrailContent } from './games/tainted-grail/content'
 import { tooManyBonesContent } from './games/too-many-bones/content'
 import { undauntedNormandyContent } from './games/undaunted-normandy/content'
 import { unsettledContent } from './games/unsettled/content'
@@ -111,6 +112,12 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
     label: "Star Trek: Captain's Chair",
     aliases: ["Star Trek: Captain's Chair"],
     costs: toBoxCostConfig(starTrekCaptainsChairContent),
+  },
+  {
+    id: 'taintedGrail',
+    label: 'Tainted Grail',
+    aliases: ['Tainted Grail', 'Tainted Grail: The Fall of Avalon'],
+    costs: toBoxCostConfig(taintedGrailContent),
   },
   {
     id: 'spiritIsland',

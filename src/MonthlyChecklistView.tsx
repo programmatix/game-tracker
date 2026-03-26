@@ -140,6 +140,12 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     titleIncludes: ['spirit island'],
   },
   {
+    key: 'taintedGrail',
+    label: 'Tainted Grail',
+    objectIds: ['264220'],
+    titleIncludes: ['tainted grail', 'tainted grail the fall of avalon', 'tainted grail: the fall of avalon'],
+  },
+  {
     key: 'swordAndSorcery',
     label: 'Sword & Sorcery',
     titleIncludes: ['sword & sorcery', 'sword and sorcery'],

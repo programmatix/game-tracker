@@ -1,0 +1,91 @@
+# Tainted Grail: The Fall of Avalon
+#
+# Compact ids/aliases are used to parse BG Stats player-color tags.
+# Current observed format:
+#   C1
+# Also supports key/value style such as:
+#   C: 1
+#   Chapter: 1
+
+chapters:
+  - display: Chapter 1
+    id: C1
+    aliases: [1, Chapter1, Chapter 1]
+    group: Core
+    box: Core
+  - display: Chapter 2
+    id: C2
+    aliases: [2, Chapter2, Chapter 2]
+    group: Core
+    box: Core
+  - display: Chapter 3
+    id: C3
+    aliases: [3, Chapter3, Chapter 3]
+    group: Core
+    box: Core
+  - display: Chapter 4
+    id: C4
+    aliases: [4, Chapter4, Chapter 4]
+    group: Core
+    box: Core
+  - display: Chapter 5
+    id: C5
+    aliases: [5, Chapter5, Chapter 5]
+    group: Core
+    box: Core
+  - display: Chapter 6
+    id: C6
+    aliases: [6, Chapter6, Chapter 6]
+    group: Core
+    box: Core
+  - display: Chapter 7
+    id: C7
+    aliases: [7, Chapter7, Chapter 7]
+    group: Core
+    box: Core
+  - display: Chapter 8
+    id: C8
+    aliases: [8, Chapter8, Chapter 8]
+    group: Core
+    box: Core
+  - display: Chapter 9
+    id: C9
+    aliases: [9, Chapter9, Chapter 9]
+    group: Core
+    box: Core
+  - display: Chapter 10
+    id: C10
+    aliases: [10, Chapter10, Chapter 10]
+    group: Core
+    box: Core
+  - display: Chapter 11
+    id: C11
+    aliases: [11, Chapter11, Chapter 11]
+    group: Core
+    box: Core
+  - display: Chapter 12
+    id: C12
+    aliases: [12, Chapter12, Chapter 12]
+    group: Core
+    box: Core
+  - display: Chapter 13
+    id: C13
+    aliases: [13, Chapter13, Chapter 13]
+    group: Core
+    box: Core
+  - display: Chapter 14
+    id: C14
+    aliases: [14, Chapter14, Chapter 14]
+    group: Core
+    box: Core
+  - display: Chapter 15
+    id: C15
+    aliases: [15, Chapter15, Chapter 15]
+    group: Core
+    box: Core
+
+costs:
+  currency: "£"
+  boxes:
+    Core: C97
+    Expansions: C157

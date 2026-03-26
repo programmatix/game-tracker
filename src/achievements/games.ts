@@ -20,6 +20,7 @@ import { computeEarthborneRangersAchievements } from '../games/earthborne-ranger
 import { computeDeckersAchievements } from '../games/deckers/achievements'
 import { computeElderScrollsAchievements } from '../games/elder-scrolls/achievements'
 import { computeOathswornAchievements } from '../games/oathsworn/achievements'
+import { computeTaintedGrailAchievements } from '../games/tainted-grail/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -43,6 +44,7 @@ export type GameId =
   | 'mageKnight'
   | 'mandalorianAdventures'
   | 'oathsworn'
+  | 'taintedGrail'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -82,6 +84,7 @@ export function computeGameAchievements(
   if (gameId === 'mandalorianAdventures')
     return computeMandalorianAdventuresAchievements(plays, username)
   if (gameId === 'oathsworn') return computeOathswornAchievements(plays, username)
+  if (gameId === 'taintedGrail') return computeTaintedGrailAchievements(plays, username)
   return []
 }
 
@@ -138,6 +141,11 @@ export function computeAllGameAchievementSummaries(
       gameId: 'oathsworn',
       gameName: 'Oathsworn: Into the Deepwood',
       achievements: computeOathswornAchievements(plays, username),
+    },
+    {
+      gameId: 'taintedGrail',
+      gameName: 'Tainted Grail: The Fall of Avalon',
+      achievements: computeTaintedGrailAchievements(plays, username),
     },
   ]
 
