@@ -1,0 +1,549 @@
+# Arkham Horror: The Card Game
+#
+# Current observed BG Stats compact tags:
+#   Dunwich／Easy／S1／Mark／Ursula
+#   Dunwich／Easy／S1b／Mark／Ursula
+#   Dunwich／Easy／S2／Mark／Ursula
+#   Drowned City
+#
+# Key/value tags are also supported:
+#   C: Dunwich／D: Easy／S: S1／I: Mark／I: Ursula
+
+campaigns:
+  - display: The Dunwich Legacy
+    id: Dunwich
+    aliases: [Dunwich Legacy]
+    group: Campaigns
+    box: The Dunwich Legacy Campaign Expansion
+  - display: The Path to Carcosa
+    id: Carcosa
+    aliases: [Path to Carcosa]
+    group: Campaigns
+    box: The Path to Carcosa Campaign Expansion
+  - display: The Forgotten Age
+    id: ForgottenAge
+    aliases: [TFA]
+    group: Campaigns
+    box: The Forgotten Age Campaign Expansion
+  - display: The Circle Undone
+    id: CircleUndone
+    aliases: [TCU]
+    group: Campaigns
+    box: The Circle Undone Campaign Expansion
+  - display: The Dream-Eaters
+    id: DreamEaters
+    aliases: [Dream Eaters, TDE]
+    group: Campaigns
+    box: The Dream-Eaters Campaign Expansion
+  - display: The Innsmouth Conspiracy
+    id: Innsmouth
+    aliases: [Innsmouth]
+    group: Campaigns
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: Edge of the Earth
+    id: Edge
+    aliases: [EotE, Edge]
+    group: Campaigns
+    box: Edge of the Earth Campaign Expansion
+  - display: The Scarlet Keys
+    id: ScarletKeys
+    aliases: [Scarlet Keys, TSK]
+    group: Campaigns
+    box: The Scarlet Keys Campaign Expansion
+  - display: The Feast of Hemlock Vale
+    id: Hemlock
+    aliases: [Hemlock Vale, Hemlock, FHV]
+    group: Campaigns
+    box: The Feast of Hemlock Vale Campaign Expansion
+  - display: The Drowned City
+    id: DrownedCity
+    aliases: [Drowned City]
+    group: Campaigns
+    box: The Drowned City Campaign Expansion
+  - display: Fortune and Folly
+    id: FortuneAndFolly
+    aliases: [Fortune Folly]
+    group: Standalone
+    box: Fortune and Folly
+
+difficulties:
+  - display: Easy
+    id: Easy
+  - display: Standard
+    id: Standard
+    aliases: [Std]
+  - display: Hard
+    id: Hard
+  - display: Expert
+    id: Expert
+
+scenarios:
+  - display: Extracurricular Activity
+    id: DunwichS1
+    aliases: [S1, Scenario 1]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: The House Always Wins
+    id: DunwichS1b
+    aliases: [S1b, Scenario 1b]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: The Miskatonic Museum
+    id: DunwichS2
+    aliases: [S2, Scenario 2]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: The Essex County Express
+    id: DunwichS3
+    aliases: [S3, Scenario 3]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: Blood on the Altar
+    id: DunwichS4
+    aliases: [S4, Scenario 4]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: Undimensioned and Unseen
+    id: DunwichS5
+    aliases: [S5, Scenario 5]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: Where Doom Awaits
+    id: DunwichS6
+    aliases: [S6, Scenario 6]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: Lost in Time and Space
+    id: DunwichS7
+    aliases: [S7, Scenario 7]
+    campaign: The Dunwich Legacy
+    box: The Dunwich Legacy Campaign Expansion
+  - display: Curtain Call
+    id: Carcosa1
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: The Last King
+    id: Carcosa2
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: Echoes of the Past
+    id: Carcosa3
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: The Unspeakable Oath
+    id: Carcosa4
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: A Phantom of Truth
+    id: Carcosa5
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: The Pallid Mask
+    id: Carcosa6
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: Black Stars Rise
+    id: Carcosa7
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: Dim Carcosa
+    id: Carcosa8
+    campaign: The Path to Carcosa
+    box: The Path to Carcosa Campaign Expansion
+  - display: Untamed Wilds
+    id: ForgottenAge1
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: The Doom of Eztli
+    id: ForgottenAge2
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: Threads of Fate
+    id: ForgottenAge3
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: The Boundary Beyond
+    id: ForgottenAge4
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: Heart of the Elders
+    id: ForgottenAge5
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: The City of Archives
+    id: ForgottenAge6
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: The Depths of Yoth
+    id: ForgottenAge7
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: Shattered Aeons
+    id: ForgottenAge8
+    campaign: The Forgotten Age
+    box: The Forgotten Age Campaign Expansion
+  - display: Disappearance at the Twilight Estate
+    id: CircleUndone1
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: The Witching Hour
+    id: CircleUndone2
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: At Death's Doorstep
+    id: CircleUndone3
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: The Secret Name
+    id: CircleUndone4
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: The Wages of Sin
+    id: CircleUndone5
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: For the Greater Good
+    id: CircleUndone6
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: Union and Disillusion
+    id: CircleUndone7
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: In the Clutches of Chaos
+    id: CircleUndone8
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: Before the Black Throne
+    id: CircleUndone9
+    campaign: The Circle Undone
+    box: The Circle Undone Campaign Expansion
+  - display: Beyond the Gates of Sleep
+    id: DreamEaters1
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: Waking Nightmare
+    id: DreamEaters2
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: A Thousand Shapes of Horror
+    id: DreamEaters3
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: Search for Kadath
+    id: DreamEaters4
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: Dark Side of the Moon
+    id: DreamEaters5
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: Point of No Return
+    id: DreamEaters6
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: Where the Gods Dwell
+    id: DreamEaters7
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: Weaver of the Cosmos
+    id: DreamEaters8
+    campaign: The Dream-Eaters
+    box: The Dream-Eaters Campaign Expansion
+  - display: The Pit of Despair
+    id: Innsmouth1
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: The Vanishing of Elina Harper
+    id: Innsmouth2
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: In Too Deep
+    id: Innsmouth3
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: Devil Reef
+    id: Innsmouth4
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: Horror in High Gear
+    id: Innsmouth5
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: A Light in the Fog
+    id: Innsmouth6
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: The Lair of Dagon
+    id: Innsmouth7
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: Into the Maelstrom
+    id: Innsmouth8
+    campaign: The Innsmouth Conspiracy
+    box: The Innsmouth Conspiracy Campaign Expansion
+  - display: Ice and Death
+    id: Edge1
+    campaign: Edge of the Earth
+    box: Edge of the Earth Campaign Expansion
+  - display: Fatal Mirage
+    id: Edge2
+    campaign: Edge of the Earth
+    box: Edge of the Earth Campaign Expansion
+  - display: To the Forbidden Peaks
+    id: Edge3
+    campaign: Edge of the Earth
+    box: Edge of the Earth Campaign Expansion
+  - display: City of the Elder Things
+    id: Edge4
+    campaign: Edge of the Earth
+    box: Edge of the Earth Campaign Expansion
+  - display: Tekeli-li!
+    id: Edge5
+    campaign: Edge of the Earth
+    box: Edge of the Earth Campaign Expansion
+  - display: The Heart of Madness
+    id: Edge6
+    campaign: Edge of the Earth
+    box: Edge of the Earth Campaign Expansion
+  - display: Fortune and Folly
+    id: FortuneAndFollyScenario
+    aliases: [Fortune and Folly]
+    campaign: Fortune and Folly
+    box: Fortune and Folly
+
+investigators:
+  - display: Zoey Samaras
+    id: Zoey
+    aliases: [Zoey]
+    class: Guardian
+    box: The Dunwich Legacy Investigator Expansion
+  - display: Rex Murphy
+    id: Rex
+    aliases: [Rex]
+    class: Seeker
+    box: The Dunwich Legacy Investigator Expansion
+  - display: Jenny Barnes
+    id: Jenny
+    aliases: [Jenny]
+    class: Rogue
+    box: The Dunwich Legacy Investigator Expansion
+  - display: Jim Culver
+    id: Jim
+    aliases: [Jim]
+    class: Mystic
+    box: The Dunwich Legacy Investigator Expansion
+  - display: Ashcan Pete
+    id: Ashcan
+    aliases: [Pete, Ashcan]
+    class: Survivor
+    box: The Dunwich Legacy Investigator Expansion
+  - display: Mark Harrigan
+    id: Mark
+    aliases: [Mark]
+    class: Guardian
+    box: The Path to Carcosa Investigator Expansion
+  - display: Minh Thi Phan
+    id: Minh
+    aliases: [Minh]
+    class: Seeker
+    box: The Path to Carcosa Investigator Expansion
+  - display: Sefina Rousseau
+    id: Sefina
+    aliases: [Sefina]
+    class: Rogue
+    box: The Path to Carcosa Investigator Expansion
+  - display: Akachi Onyele
+    id: Akachi
+    aliases: [Akachi]
+    class: Mystic
+    box: The Path to Carcosa Investigator Expansion
+  - display: William Yorick
+    id: Yorick
+    aliases: [William Yorick, William, Yorick]
+    class: Survivor
+    box: The Path to Carcosa Investigator Expansion
+  - display: Leo Anderson
+    id: Leo
+    aliases: [Leo]
+    class: Guardian
+    box: The Forgotten Age Investigator Expansion
+  - display: Ursula Downs
+    id: Ursula
+    aliases: [Ursula]
+    class: Seeker
+    box: The Forgotten Age Investigator Expansion
+  - display: Finn Edwards
+    id: Finn
+    aliases: [Finn]
+    class: Rogue
+    box: The Forgotten Age Investigator Expansion
+  - display: Calvin Wright
+    id: Calvin
+    aliases: [Calvin]
+    class: Survivor
+    box: The Forgotten Age Investigator Expansion
+  - display: Father Mateo
+    id: Mateo
+    aliases: [Mateo, Father Mateo]
+    class: Mystic
+    box: The Forgotten Age Investigator Expansion
+  - display: Carolyn Fern
+    id: Carolyn
+    aliases: [Carolyn]
+    class: Guardian
+    box: The Circle Undone Investigator Expansion
+  - display: Joe Diamond
+    id: Joe
+    aliases: [Joe]
+    class: Seeker
+    box: The Circle Undone Investigator Expansion
+  - display: Preston Fairmont
+    id: Preston
+    aliases: [Preston]
+    class: Rogue
+    box: The Circle Undone Investigator Expansion
+  - display: Diana Stanley
+    id: Diana
+    aliases: [Diana]
+    class: Mystic
+    box: The Circle Undone Investigator Expansion
+  - display: Rita Young
+    id: Rita
+    aliases: [Rita]
+    class: Survivor
+    box: The Circle Undone Investigator Expansion
+  - display: Daniela Reyes
+    id: Daniela
+    aliases: [Daniela]
+    class: Guardian
+    box: Edge of the Earth Investigator Expansion
+  - display: Monterey Jack
+    id: MontereyJack
+    aliases: [Monterey Jack, Jack]
+    class: Seeker
+    box: Edge of the Earth Investigator Expansion
+  - display: Bob Jenkins
+    id: Bob
+    aliases: [Bob]
+    class: Rogue
+    box: Edge of the Earth Investigator Expansion
+  - display: Lily Chen
+    id: Lily
+    aliases: [Lily]
+    class: Mystic
+    box: Edge of the Earth Investigator Expansion
+  - display: Norman Withers
+    id: Norman
+    aliases: [Norman]
+    class: Seeker
+    box: Edge of the Earth Investigator Expansion
+  - display: Carson Sinclair
+    id: Carson
+    aliases: [Carson]
+    class: Guardian
+    box: The Scarlet Keys Investigator Expansion
+  - display: Darrell Simmons
+    id: Darrell
+    aliases: [Darrell]
+    class: Seeker
+    box: The Scarlet Keys Investigator Expansion
+  - display: Kymani Jones
+    id: Kymani
+    aliases: [Kymani]
+    class: Rogue
+    box: The Scarlet Keys Investigator Expansion
+  - display: Amina Zidane
+    id: Amina
+    aliases: [Amina]
+    class: Mystic
+    box: The Scarlet Keys Investigator Expansion
+  - display: Charlie Kane
+    id: Charlie
+    aliases: [Charlie]
+    class: Survivor
+    box: The Scarlet Keys Investigator Expansion
+  - display: Wilson Richards
+    id: Wilson
+    aliases: [Wilson]
+    class: Guardian
+    box: The Feast of Hemlock Vale Investigator Expansion
+  - display: Kate Winthrop
+    id: Kate
+    aliases: [Kate]
+    class: Seeker
+    box: The Feast of Hemlock Vale Investigator Expansion
+  - display: Alessandra Zorzi
+    id: Alessandra
+    aliases: [Alessandra]
+    class: Rogue
+    box: The Feast of Hemlock Vale Investigator Expansion
+  - display: Kohaku Narukami
+    id: Kohaku
+    aliases: [Kohaku]
+    class: Mystic
+    box: The Feast of Hemlock Vale Investigator Expansion
+  - display: Hank Samson
+    id: Hank
+    aliases: [Hank]
+    class: Survivor
+    box: The Feast of Hemlock Vale Investigator Expansion
+  - display: Nathaniel Cho
+    id: Nathaniel
+    aliases: [Nathaniel]
+    class: Guardian
+    box: Nathaniel Cho Investigator Starter Deck
+  - display: Harvey Walters
+    id: Harvey
+    aliases: [Harvey]
+    class: Seeker
+    box: Harvey Walters Investigator Starter Deck
+  - display: Winifred Habbamock
+    id: Winifred
+    aliases: [Winifred]
+    class: Rogue
+    box: Winifred Habbamock Investigator Starter Deck
+  - display: Jacqueline Fine
+    id: Jacqueline
+    aliases: [Jacqueline]
+    class: Mystic
+    box: Jacqueline Fine Investigator Starter Deck
+
+costs:
+  currency: "£"
+  boxes:
+    The Dunwich Legacy Campaign Expansion:
+      spreadsheetCell: C154
+      divideBy: 3
+    The Dunwich Legacy Investigator Expansion:
+      spreadsheetCell: C154
+      divideBy: 3
+    The Path to Carcosa Campaign Expansion: C147
+    The Path to Carcosa Investigator Expansion: C153
+    The Forgotten Age Campaign Expansion:
+      spreadsheetCell: C154
+      divideBy: 3
+    The Forgotten Age Investigator Expansion: C152
+    The Circle Undone Campaign Expansion: C142
+    The Circle Undone Investigator Expansion: C148
+    The Dream-Eaters Campaign Expansion: C145
+    The Innsmouth Conspiracy Campaign Expansion: C146
+    Edge of the Earth Campaign Expansion: C143
+    Edge of the Earth Investigator Expansion: C149
+    The Scarlet Keys Investigator Expansion: C150
+    The Feast of Hemlock Vale Campaign Expansion:
+      spreadsheetCell: C151
+      divideBy: 2
+    The Feast of Hemlock Vale Investigator Expansion:
+      spreadsheetCell: C151
+      divideBy: 2
+    The Drowned City Campaign Expansion: C144
+    Fortune and Folly: C123
+    Nathaniel Cho Investigator Starter Deck: C139
+    Harvey Walters Investigator Starter Deck:
+      spreadsheetCell: C140
+      divideBy: 2
+    Winifred Habbamock Investigator Starter Deck:
+      spreadsheetCell: C140
+      divideBy: 2
+    Jacqueline Fine Investigator Starter Deck: C128

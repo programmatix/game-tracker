@@ -1,0 +1,81 @@
+# The Isofarian Guard
+#
+# Recommended BG Stats player color tags:
+#   G: Gri,Ale／Ch: C1-1:1
+#   Guards: Catherine,Yury／Chapter: C2-3:4
+# Optional campaign-only shorthand:
+#   C: 1
+# Continuations are also supported:
+#   ContPrev
+#   ContNext
+
+campaigns:
+  - display: Campaign 1
+    id: C1
+    group: Core
+    box: Core
+    chapterCounts: [11, 20, 20, 22]
+  - display: Campaign 2
+    id: C2
+    group: Core
+    box: Core
+    chapterCounts: [11, 17, 11, 21]
+  - display: Campaign 3
+    id: C3
+    group: Core
+    box: Core
+    chapterCounts: [12, 16, 21, 24]
+  - display: Campaign 4
+    id: C4
+    group: Core
+    box: Core
+    chapterCounts: [13, 17, 19, 19]
+  - display: Campaign 5
+    id: C5
+    group: Core
+    box: Core
+    chapterCounts: [16, 17]
+
+guards:
+  - display: Grigory
+    id: Gri
+    aliases: [Greg]
+    group: Campaign 1
+    box: Core
+  - display: Alek
+    id: Ale
+    group: Campaign 1
+    box: Core
+  - display: Catherine
+    id: Cat
+    aliases: [Cathy]
+    group: Campaign 2
+    box: Core
+  - display: Yury
+    id: Yur
+    aliases: [Yuri]
+    group: Campaign 2
+    box: Core
+  - display: Kharzin
+    id: Kha
+    aliases: [Khar]
+    group: Campaign 3
+    box: Core
+  - display: Vera
+    id: Ver
+    group: Campaign 3
+    box: Core
+  - display: Pavel
+    id: Pav
+    group: Campaign 4
+    box: Core
+  - display: Yana
+    id: Yan
+    group: Campaign 4
+    box: Core
+
+costs:
+  currency: "£"
+  boxes:
+    Core: C158
+    Forteller: C165

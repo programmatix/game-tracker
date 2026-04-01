@@ -64,6 +64,12 @@ function playMinutesWithAssumption(
 }
 
 const CHECKLIST: ReadonlyArray<ChecklistItem> = [
+  {
+    key: 'arkhamHorrorLcg',
+    label: 'Arkham Horror LCG',
+    objectIds: ['205637'],
+    titleIncludes: ['arkham horror the card game', 'arkham horror card game'],
+  },
   { key: 'vantage', label: 'Vantage', titleIncludes: ['vantage'] },
   {
     key: 'starTrekCaptainsChair',
@@ -138,6 +144,12 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     key: 'spiritIsland',
     label: 'Spirit Island',
     titleIncludes: ['spirit island'],
+  },
+  {
+    key: 'isofarianGuard',
+    label: 'Isofarian Guard',
+    objectIds: ['281526'],
+    titleIncludes: ['the isofarian guard', 'isofarian guard'],
   },
   {
     key: 'taintedGrail',

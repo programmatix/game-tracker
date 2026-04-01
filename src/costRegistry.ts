@@ -6,8 +6,10 @@ import { deckersContent } from './games/deckers/content'
 import { deathMayDieContent } from './games/death-may-die/content'
 import { elderScrollsContent } from './games/elder-scrolls/content'
 import { earthborneRangersContent } from './games/earthborne-rangers/content'
+import { arkhamHorrorLcgContent } from './games/arkham-horror-lcg/content'
 import rawFinalGirlContentText from './games/final-girl/content.yaml?raw'
 import { parseOwnedFinalGirlContent } from './games/final-girl/ownedContent'
+import { isofarianGuardContent } from './games/isofarian-guard/content'
 import { mageKnightContent } from './games/mage-knight/content'
 import { mandalorianAdventuresContent } from './games/mandalorian-adventures/content'
 import { oathswornContent } from './games/oathsworn/content'
@@ -47,6 +49,12 @@ function toBoxCostConfig(input: {
 }
 
 export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
+  {
+    id: 'arkhamHorrorLcg',
+    label: 'Arkham Horror LCG',
+    aliases: ['Arkham Horror LCG', 'Arkham Horror: The Card Game'],
+    costs: toBoxCostConfig(arkhamHorrorLcgContent),
+  },
   {
     id: 'finalGirl',
     label: 'Final Girl',
@@ -112,6 +120,12 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
     label: "Star Trek: Captain's Chair",
     aliases: ["Star Trek: Captain's Chair"],
     costs: toBoxCostConfig(starTrekCaptainsChairContent),
+  },
+  {
+    id: 'isofarianGuard',
+    label: 'Isofarian Guard',
+    aliases: ['Isofarian Guard', 'The Isofarian Guard'],
+    costs: toBoxCostConfig(isofarianGuardContent),
   },
   {
     id: 'taintedGrail',

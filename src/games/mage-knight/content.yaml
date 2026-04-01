@@ -3,9 +3,9 @@
 # This list drives the UI (including 0-play rows) and token resolution.
 # Use the player `color` field in BG Stats with either:
 # - just the hero token/name (e.g. `Goldyx`)
-# - a scenario token/name (e.g. `SoloConquest`)
-# - both as separate tags (e.g. `Goldyx／SoloConquest`)
-# - or key/value (e.g. `H: Goldyx／S: SoloConquest`)
+# - a scenario token/name (e.g. `Solo Conquest`)
+# - both as separate tags (e.g. `Goldyx／Solo Conquest`)
+# - or key/value (e.g. `H: Goldyx／S: Solo Conquest`)
 
 heroes:
   - display: Tovak

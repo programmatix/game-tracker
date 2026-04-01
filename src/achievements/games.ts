@@ -21,6 +21,8 @@ import { computeDeckersAchievements } from '../games/deckers/achievements'
 import { computeElderScrollsAchievements } from '../games/elder-scrolls/achievements'
 import { computeOathswornAchievements } from '../games/oathsworn/achievements'
 import { computeTaintedGrailAchievements } from '../games/tainted-grail/achievements'
+import { computeIsofarianGuardAchievements } from '../games/isofarian-guard/achievements'
+import { computeArkhamHorrorLcgAchievements } from '../games/arkham-horror-lcg/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -45,6 +47,8 @@ export type GameId =
   | 'mandalorianAdventures'
   | 'oathsworn'
   | 'taintedGrail'
+  | 'isofarianGuard'
+  | 'arkhamHorrorLcg'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -85,6 +89,8 @@ export function computeGameAchievements(
     return computeMandalorianAdventuresAchievements(plays, username)
   if (gameId === 'oathsworn') return computeOathswornAchievements(plays, username)
   if (gameId === 'taintedGrail') return computeTaintedGrailAchievements(plays, username)
+  if (gameId === 'isofarianGuard') return computeIsofarianGuardAchievements(plays, username)
+  if (gameId === 'arkhamHorrorLcg') return computeArkhamHorrorLcgAchievements(plays, username)
   return []
 }
 
@@ -146,6 +152,16 @@ export function computeAllGameAchievementSummaries(
       gameId: 'taintedGrail',
       gameName: 'Tainted Grail: The Fall of Avalon',
       achievements: computeTaintedGrailAchievements(plays, username),
+    },
+    {
+      gameId: 'isofarianGuard',
+      gameName: 'The Isofarian Guard',
+      achievements: computeIsofarianGuardAchievements(plays, username),
+    },
+    {
+      gameId: 'arkhamHorrorLcg',
+      gameName: 'Arkham Horror: The Card Game',
+      achievements: computeArkhamHorrorLcgAchievements(plays, username),
     },
   ]
 

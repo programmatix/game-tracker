@@ -347,8 +347,10 @@ export default function MageKnightView(props: {
           </div>
           <div class="muted">
             Solo tracker for heroes and recommended scenarios. Use BG Stats tags like{' '}
-            <span class="mono">Goldyx／SoloConquest</span> or{' '}
-            <span class="mono">H: Goldyx／S: SoloConquest</span>.
+            <span class="mono">Goldyx／Solo Conquest</span> or{' '}
+            <span class="mono">H: Goldyx／S: Solo Conquest</span>. If you omit the scenario, it
+            defaults to <span class="mono">Solo Conquest</span> unless the play is tagged{' '}
+            <span class="mono">ContPrev</span> or <span class="mono">ContNext</span>.
           </div>
         </div>
       </div>

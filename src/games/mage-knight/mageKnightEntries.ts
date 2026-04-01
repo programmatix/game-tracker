@@ -12,9 +12,13 @@ export type MageKnightEntry = {
   heroes: string[]
   myHero?: string
   scenario?: string
+  continuedFromPrevious: boolean
+  continuedToNext: boolean
   quantity: number
   isWin: boolean
 }
+
+const DEFAULT_SOLO_SCENARIO = 'Solo Conquest'
 
 function playQuantity(play: { attributes: Record<string, string> }): number {
   const parsed = Number(play.attributes.quantity || '1')
@@ -41,10 +45,20 @@ export function getMageKnightEntries(plays: BggPlay[], username: string): MageKn
           win: player.attributes.win === '1',
           hero: parsed.hero,
           scenario: parsed.scenario,
+          continuePrevious: parsed.continuePrevious,
+          continueNext: parsed.continueNext,
           extraTags: parsed.extraTags,
         }
       })
-      .filter((player) => Boolean(player.hero || player.scenario || player.extraTags.length > 0))
+      .filter((player) =>
+        Boolean(
+          player.hero ||
+            player.scenario ||
+            player.continuePrevious ||
+            player.continueNext ||
+            player.extraTags.length > 0,
+        ),
+      )
 
     const heroesSet = new Map<string, string>()
     for (const player of parsedPlayers) {
@@ -60,16 +74,23 @@ export function getMageKnightEntries(plays: BggPlay[], username: string): MageKn
     const heroes = [...heroesSet.values()]
     const myPlayer = parsedPlayers.find((player) => player.username === user)
     const myHero = myPlayer?.hero && isMageKnightHeroToken(myPlayer.hero) ? myPlayer.hero : undefined
-    const scenario =
+    const explicitScenario =
       myPlayer?.scenario && isMageKnightScenarioToken(myPlayer.scenario)
         ? myPlayer.scenario
         : undefined
+    const continuedFromPrevious = parsedPlayers.some((player) => player.continuePrevious)
+    const continuedToNext = parsedPlayers.some((player) => player.continueNext)
+    const scenario =
+      explicitScenario ||
+      (continuedFromPrevious || continuedToNext ? undefined : DEFAULT_SOLO_SCENARIO)
 
     result.push({
       play,
       heroes,
       myHero,
       scenario,
+      continuedFromPrevious,
+      continuedToNext,
       quantity: playQuantity(play),
       isWin: myPlayer?.win === true,
     })

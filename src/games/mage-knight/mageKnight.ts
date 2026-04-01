@@ -4,6 +4,8 @@ import { mageKnightContent } from './content'
 export type MageKnightPlayerTags = {
   hero?: string
   scenario?: string
+  continuePrevious: boolean
+  continueNext: boolean
   extraTags: string[]
 }
 
@@ -48,6 +50,16 @@ export function isMageKnightScenarioToken(input: string): boolean {
   return mageKnightContent.scenariosById.has(normalizeId(normalized))
 }
 
+function isContinuePreviousToken(value: string): boolean {
+  const normalized = normalizeId(value)
+  return normalized === 'contprev' || normalized === 'continueprevious' || normalized === 'continue'
+}
+
+function isContinueNextToken(value: string): boolean {
+  const normalized = normalizeId(value)
+  return normalized === 'contnext' || normalized === 'continuenext'
+}
+
 export function parseMageKnightPlayerColor(color: string): MageKnightPlayerTags {
   const parsedKv = parseBgStatsKeyValueSegments(color)
   const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
@@ -59,19 +71,35 @@ export function parseMageKnightPlayerColor(color: string): MageKnightPlayerTags 
   const heroFromKv = kvHero ? normalizeMageKnightHero(kvHero) : undefined
   const scenarioFromKv = kvScenario ? normalizeMageKnightScenario(kvScenario) : undefined
 
-  const heroFromTags = tagValues.find((tag) => isMageKnightHeroToken(tag))
-  const scenarioFromTags = tagValues.find((tag) => isMageKnightScenarioToken(tag))
+  let continuePrevious = false
+  let continueNext = false
+  const remainingTagValues: string[] = []
+
+  for (const tag of tagValues) {
+    if (isContinuePreviousToken(tag)) {
+      continuePrevious = true
+      continue
+    }
+    if (isContinueNextToken(tag)) {
+      continueNext = true
+      continue
+    }
+    remainingTagValues.push(tag)
+  }
+
+  const heroFromTags = remainingTagValues.find((tag) => isMageKnightHeroToken(tag))
+  const scenarioFromTags = remainingTagValues.find((tag) => isMageKnightScenarioToken(tag))
   const hero = heroFromKv || (heroFromTags ? normalizeMageKnightHero(heroFromTags) : undefined)
   const scenario =
     scenarioFromKv ||
     (scenarioFromTags ? normalizeMageKnightScenario(scenarioFromTags) : undefined)
 
-  const extraTags = tagValues.filter((tag) => {
+  const extraTags = remainingTagValues.filter((tag) => {
     const tagId = normalizeId(tag)
     if (hero && tagId === normalizeId(hero)) return false
     if (scenario && tagId === normalizeId(scenario)) return false
     return true
   })
 
-  return { hero, scenario, extraTags }
+  return { hero, scenario, continuePrevious, continueNext, extraTags }
 }

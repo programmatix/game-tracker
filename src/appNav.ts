@@ -1,5 +1,7 @@
 export type MainTab =
   | 'monthlyChecklist'
+  | 'arkhamHorrorLcg'
+  | 'isofarianGuard'
   | 'taintedGrail'
   | 'finalGirl'
   | 'skytearHorde'
@@ -40,6 +42,8 @@ export type MainTabOption = { value: MainTab; label: string; group: MainTabGroup
 
 export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
+  'arkhamHorrorLcg',
+  'isofarianGuard',
   'taintedGrail',
   'finalGirl',
   'skytearHorde',
@@ -71,6 +75,7 @@ export const MAIN_TABS: ReadonlyArray<MainTab> = [
 export const PLAYS_VIEWS: ReadonlyArray<PlaysView> = ['plays', 'byGame', 'gameDetail', 'drilldown']
 
 export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
+  { value: 'arkhamHorrorLcg', label: 'Arkham Horror LCG', group: 'games' },
   { value: 'bullet', label: 'Bullet', group: 'games' },
   { value: 'burncycle', label: 'burncycle', group: 'games' },
   { value: 'cloudspire', label: 'Cloudspire', group: 'games' },
@@ -78,6 +83,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
   { value: 'earthborneRangers', label: 'Earthborne Rangers', group: 'games' },
   { value: 'deckers', label: 'Deckers', group: 'games' },
   { value: 'finalGirl', label: 'Final Girl', group: 'games' },
+  { value: 'isofarianGuard', label: 'Isofarian Guard', group: 'games' },
   { value: 'mageKnight', label: 'Mage Knight', group: 'games' },
   { value: 'mandalorianAdventures', label: 'Mandalorian Adventures', group: 'games' },
   { value: 'mistfall', label: 'Mistfall', group: 'games' },
