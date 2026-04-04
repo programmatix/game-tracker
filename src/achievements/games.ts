@@ -23,6 +23,7 @@ import { computeOathswornAchievements } from '../games/oathsworn/achievements'
 import { computeTaintedGrailAchievements } from '../games/tainted-grail/achievements'
 import { computeIsofarianGuardAchievements } from '../games/isofarian-guard/achievements'
 import { computeArkhamHorrorLcgAchievements } from '../games/arkham-horror-lcg/achievements'
+import { computeKingdomsForlornAchievements } from '../games/kingdoms-forlorn/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 
 export type GameId =
@@ -49,6 +50,7 @@ export type GameId =
   | 'taintedGrail'
   | 'isofarianGuard'
   | 'arkhamHorrorLcg'
+  | 'kingdomsForlorn'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -91,6 +93,7 @@ export function computeGameAchievements(
   if (gameId === 'taintedGrail') return computeTaintedGrailAchievements(plays, username)
   if (gameId === 'isofarianGuard') return computeIsofarianGuardAchievements(plays, username)
   if (gameId === 'arkhamHorrorLcg') return computeArkhamHorrorLcgAchievements(plays, username)
+  if (gameId === 'kingdomsForlorn') return computeKingdomsForlornAchievements(plays, username)
   return []
 }
 
@@ -162,6 +165,11 @@ export function computeAllGameAchievementSummaries(
       gameId: 'arkhamHorrorLcg',
       gameName: 'Arkham Horror: The Card Game',
       achievements: computeArkhamHorrorLcgAchievements(plays, username),
+    },
+    {
+      gameId: 'kingdomsForlorn',
+      gameName: 'Kingdoms Forlorn',
+      achievements: computeKingdomsForlornAchievements(plays, username),
     },
   ]
 

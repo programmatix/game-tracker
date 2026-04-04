@@ -10,6 +10,7 @@ import { arkhamHorrorLcgContent } from './games/arkham-horror-lcg/content'
 import rawFinalGirlContentText from './games/final-girl/content.yaml?raw'
 import { parseOwnedFinalGirlContent } from './games/final-girl/ownedContent'
 import { isofarianGuardContent } from './games/isofarian-guard/content'
+import { kingdomsForlornContent } from './games/kingdoms-forlorn/content'
 import { mageKnightContent } from './games/mage-knight/content'
 import { mandalorianAdventuresContent } from './games/mandalorian-adventures/content'
 import { oathswornContent } from './games/oathsworn/content'
@@ -126,6 +127,12 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
     label: 'Isofarian Guard',
     aliases: ['Isofarian Guard', 'The Isofarian Guard'],
     costs: toBoxCostConfig(isofarianGuardContent),
+  },
+  {
+    id: 'kingdomsForlorn',
+    label: 'Kingdoms Forlorn',
+    aliases: ['Kingdoms Forlorn', 'Kingdoms Forlorn: Dragons, Devils and Kings'],
+    costs: toBoxCostConfig(kingdomsForlornContent),
   },
   {
     id: 'taintedGrail',

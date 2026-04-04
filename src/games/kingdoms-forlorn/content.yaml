@@ -1,0 +1,57 @@
+# Kingdoms Forlorn: Dragons, Devils and Kings
+#
+# Suggested BG Stats player color tags, e.g.:
+#   Kara／Barony
+#   K: Kara／Kg: Barony
+#   Knight: Sonch／Kingdom: Sunken
+#   ContPrev
+#   ContNext
+
+knights:
+  - display: Kara, the Wilder
+    id: Kara
+    group: Core
+    box: Collection
+    aliases: [Wilder, KW]
+  - display: Ser Sonch
+    id: Sonch
+    group: Core
+    box: Collection
+    aliases: [SS]
+  - display: Eggknight
+    id: Eggknight
+    group: Core
+    box: Collection
+    aliases: [Egg, EK]
+  - display: Flower Knight
+    id: FlowerKnight
+    group: Core
+    box: Collection
+    aliases: [Flower, FK]
+
+kingdoms:
+  - display: Barony of Bountiful Harvest
+    id: Barony
+    group: Core
+    box: Collection
+    aliases: [Bountiful Harvest, BH]
+  - display: Red Kingdom
+    id: RedKingdom
+    group: Core
+    box: Collection
+    aliases: [Red, RK]
+  - display: Sunken Kingdom
+    id: SunkenKingdom
+    group: Core
+    box: Collection
+    aliases: [Sunken, SK]
+  - display: Principality of Stone
+    id: PrincipalityOfStone
+    group: Core
+    box: Collection
+    aliases: [Stone, Principality, PS]
+
+costs:
+  currency: "£"
+  boxes:
+    Collection: C2

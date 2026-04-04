@@ -152,6 +152,12 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
     titleIncludes: ['the isofarian guard', 'isofarian guard'],
   },
   {
+    key: 'kingdomsForlorn',
+    label: 'Kingdoms Forlorn',
+    objectIds: ['297510'],
+    titleIncludes: ['kingdoms forlorn', 'kingdoms forlorn dragons devils and kings'],
+  },
+  {
     key: 'taintedGrail',
     label: 'Tainted Grail',
     objectIds: ['264220'],

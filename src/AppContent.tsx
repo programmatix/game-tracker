@@ -35,6 +35,7 @@ import OathswornView from './games/oathsworn/OathswornView'
 import TaintedGrailView from './games/tainted-grail/TaintedGrailView'
 import IsofarianGuardView from './games/isofarian-guard/IsofarianGuardView'
 import ArkhamHorrorLcgView from './games/arkham-horror-lcg/ArkhamHorrorLcgView'
+import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
 import AchievementsView from './AchievementsView'
 import CostsView from './CostsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
@@ -136,6 +137,8 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
       return <IsofarianGuardView {...props} />
     case 'arkhamHorrorLcg':
       return <ArkhamHorrorLcgView {...props} />
+    case 'kingdomsForlorn':
+      return <KingdomsForlornView {...props} />
     case 'elderScrolls':
       return <ElderScrollsView {...props} />
     case 'undauntedNormandy':

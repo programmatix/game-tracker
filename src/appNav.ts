@@ -1,6 +1,7 @@
 export type MainTab =
   | 'monthlyChecklist'
   | 'arkhamHorrorLcg'
+  | 'kingdomsForlorn'
   | 'isofarianGuard'
   | 'taintedGrail'
   | 'finalGirl'
@@ -43,6 +44,7 @@ export type MainTabOption = { value: MainTab; label: string; group: MainTabGroup
 export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
   'arkhamHorrorLcg',
+  'kingdomsForlorn',
   'isofarianGuard',
   'taintedGrail',
   'finalGirl',
@@ -84,6 +86,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
   { value: 'deckers', label: 'Deckers', group: 'games' },
   { value: 'finalGirl', label: 'Final Girl', group: 'games' },
   { value: 'isofarianGuard', label: 'Isofarian Guard', group: 'games' },
+  { value: 'kingdomsForlorn', label: 'Kingdoms Forlorn', group: 'games' },
   { value: 'mageKnight', label: 'Mage Knight', group: 'games' },
   { value: 'mandalorianAdventures', label: 'Mandalorian Adventures', group: 'games' },
   { value: 'mistfall', label: 'Mistfall', group: 'games' },
