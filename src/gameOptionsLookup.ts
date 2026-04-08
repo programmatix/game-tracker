@@ -1,11 +1,11 @@
 import { findConfigurableGameIdForOptions } from './configurableGameMatching'
-import { isGameTab, type GameTab } from './gameCatalog'
+import { isConfigurableGameId } from './configurableGames'
 
 export function findGameTabForOptions(input: {
   gameId?: string | null
   name?: string | null
   objectId?: string | null
-}): GameTab | null {
+}): string | null {
   const matched = findConfigurableGameIdForOptions(input)
-  return matched && isGameTab(matched) ? matched : null
+  return matched && isConfigurableGameId(matched) ? matched : null
 }

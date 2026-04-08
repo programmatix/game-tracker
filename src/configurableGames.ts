@@ -7,6 +7,7 @@ export type ConfigurableGameDefinition = {
   supportsMonthlyChecklist: boolean
   defaultShowInMonthlyChecklist: boolean
   supportsSeparateTab: boolean
+  defaultShowAsSeparateTab: boolean
   supportsCostsTable: boolean
   supportsAchievements: boolean
 }
@@ -18,6 +19,7 @@ const configurableGameDefinitionsFromTabs: ReadonlyArray<ConfigurableGameDefinit
     supportsMonthlyChecklist: true,
     defaultShowInMonthlyChecklist: game.supportsMonthlyChecklist,
     supportsSeparateTab: true,
+    defaultShowAsSeparateTab: true,
     supportsCostsTable: game.supportsCostsTable,
     supportsAchievements: game.supportsAchievements,
   }))
@@ -30,7 +32,8 @@ const configurablePurchaseOnlyDefinitions: ReadonlyArray<ConfigurableGameDefinit
     label: family.label,
     supportsMonthlyChecklist: true,
     defaultShowInMonthlyChecklist: false,
-    supportsSeparateTab: false,
+    supportsSeparateTab: true,
+    defaultShowAsSeparateTab: false,
     supportsCostsTable: true,
     supportsAchievements: false,
   }))
@@ -50,12 +53,31 @@ export const CONFIGURABLE_GAME_OPTIONS: ReadonlyArray<{
   label: game.label,
 }))
 
+export const SEPARATE_TAB_GAME_DEFINITIONS: ReadonlyArray<ConfigurableGameDefinition> =
+  CONFIGURABLE_GAME_DEFINITIONS.filter((game) => game.supportsSeparateTab)
+
+export const SEPARATE_TAB_GAME_IDS: ReadonlyArray<string> = SEPARATE_TAB_GAME_DEFINITIONS.map(
+  (game) => game.id,
+)
+
+export const SEPARATE_TAB_GAME_OPTIONS: ReadonlyArray<{
+  value: string
+  label: string
+}> = SEPARATE_TAB_GAME_DEFINITIONS.map((game) => ({
+  value: game.id,
+  label: game.label,
+}))
+
 const configurableGameById = new Map(
   CONFIGURABLE_GAME_DEFINITIONS.map((game) => [game.id, game] as const),
 )
 
 export function isConfigurableGameId(value: string): boolean {
   return configurableGameById.has(value)
+}
+
+export function isSeparateTabGameId(value: string): boolean {
+  return configurableGameById.get(value)?.supportsSeparateTab === true
 }
 
 export function normalizeConfigurableGameId(value: string): string | null {

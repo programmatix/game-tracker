@@ -37,7 +37,6 @@ import { pickBestAvailableAchievementForTrackIds } from './achievements/nextAchi
 import { computeAllGameAchievementSummaries } from './achievements/games'
 import NewAchievementsBanner from './components/NewAchievementsBanner'
 import type { PlaysDrilldownRequest } from './playsDrilldown'
-import { isGameTab } from './gameCatalog'
 import {
   fetchSpiritIslandSessions,
   SPIRIT_ISLAND_MINDWANDERER_UID,
@@ -54,6 +53,7 @@ import {
   type GamePreferences,
 } from './gamePreferences'
 import {
+  isGameMainTab,
   MAIN_TAB_GROUPS,
   MAIN_TAB_OPTIONS,
   type AppNavState,
@@ -224,7 +224,9 @@ function App() {
   )
 
   const visibleMainTabOptions = createMemo(() =>
-    MAIN_TAB_OPTIONS.filter((option) => !isGameTab(option.value) || shouldShowGameTab(option.value)),
+    MAIN_TAB_OPTIONS.filter(
+      (option) => !isGameMainTab(option.value) || shouldShowGameTab(option.value),
+    ),
   )
 
   createEffect(() => {
@@ -812,7 +814,7 @@ function App() {
 
   createEffect(() => {
     const currentTab = mainTab()
-    if (!isGameTab(currentTab)) return
+    if (!isGameMainTab(currentTab)) return
     if (shouldShowGameTab(currentTab)) return
 
     batch(() => {

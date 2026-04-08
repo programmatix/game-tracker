@@ -1,7 +1,8 @@
-import { Show } from 'solid-js'
+import { Show, createMemo } from 'solid-js'
 import type { User } from 'firebase/auth'
 import type { BggPlay } from './bgg'
 import {
+  isGameMainTab,
   MAIN_TAB_GROUPS,
   PLAYS_VIEW_OPTIONS,
   isMainTab,
@@ -11,7 +12,7 @@ import {
 import type { PlaysDrilldownRequest } from './playsDrilldown'
 import type { PlaysView as PlaysViewMode } from './appNav'
 import type { PlaysByGameRow } from './playsHelpers'
-import { isGameTab, type GameTab } from './gameCatalog'
+import { isConfigurableGameId } from './configurableGames'
 import FinalGirlView from './games/final-girl/FinalGirlView'
 import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
@@ -44,6 +45,7 @@ import OverallOptionsView from './OverallOptionsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
 import MonthlySummaryView from './MonthlySummaryView'
 import FeedbackView from './feedback/FeedbackView'
+import GenericGameView from './GenericGameView'
 import PlaysView, { PlaysPager } from './PlaysView'
 import type { SpiritIslandSession } from './games/spirit-island/mindwanderer'
 import type { GamePreferences, ResolvedGamePreferencesById } from './gamePreferences'
@@ -182,6 +184,15 @@ export default function AppContent(props: AppContentProps) {
     onOpenPlays: props.onOpenPlays,
   }
 
+  const dedicatedGameView = createMemo(() => renderSharedGameView(props.mainTab, sharedGameViewProps))
+
+  const genericGameId = createMemo(() => {
+    if (!isGameMainTab(props.mainTab)) return null
+    if (props.mainTab === 'spiritIsland') return null
+    if (dedicatedGameView()) return null
+    return isConfigurableGameId(props.mainTab) ? props.mainTab : null
+  })
+
   return (
     <>
       <div class="panelHeader playsHeader">
@@ -286,11 +297,11 @@ export default function AppContent(props: AppContentProps) {
           />
         </Show>
 
-        <Show when={isGameTab(props.mainTab)}>
+        <Show when={isGameMainTab(props.mainTab)}>
           <button
             class="linkButton"
             type="button"
-            onClick={() => props.onOpenGameOptions(props.mainTab as GameTab)}
+            onClick={() => props.onOpenGameOptions(props.mainTab)}
           >
             Game options
           </button>
@@ -325,8 +336,19 @@ export default function AppContent(props: AppContentProps) {
         <OverallOptionsView onClearBggThingCache={props.onClearBggThingCache} />
       </Show>
 
-      <Show when={renderSharedGameView(props.mainTab, sharedGameViewProps)}>
+      <Show when={dedicatedGameView()}>
         {(view) => view()}
+      </Show>
+
+      <Show when={genericGameId()}>
+        {(gameId) => (
+          <GenericGameView
+            gameId={gameId()}
+            plays={props.plays}
+            username={props.username}
+            onOpenPlays={props.onOpenPlays}
+          />
+        )}
       </Show>
 
       <Show when={props.mainTab === 'spiritIsland'}>

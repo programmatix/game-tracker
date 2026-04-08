@@ -22,7 +22,7 @@ import {
   thingAssumedPlayTimeMinutes,
   totalPlayMinutesWithAssumption,
 } from '../../playDuration'
-import { mageKnightContent } from './content'
+import { formatMageKnightScenarioLabel, mageKnightContent } from './content'
 import { getMageKnightEntries } from './mageKnightEntries'
 
 const MAGE_KNIGHT_ULTIMATE_OBJECT_ID = '248562'
@@ -347,9 +347,9 @@ export default function MageKnightView(props: {
           </div>
           <div class="muted">
             Solo tracker for heroes and recommended scenarios. Use BG Stats tags like{' '}
-            <span class="mono">Goldyx／Solo Conquest</span> or{' '}
-            <span class="mono">H: Goldyx／S: Solo Conquest</span>. If you omit the scenario, it
-            defaults to <span class="mono">Solo Conquest</span> unless the play is tagged{' '}
+            <span class="mono">Goldyx／SConq</span> or <span class="mono">H: Goldyx／S: VolQu</span>
+            . Scenario short codes are shown in brackets below. If you omit the scenario, it
+            defaults to <span class="mono">SConq</span> unless the play is tagged{' '}
             <span class="mono">ContPrev</span> or <span class="mono">ContNext</span>.
           </div>
         </div>
@@ -373,6 +373,7 @@ export default function MageKnightView(props: {
               cols={scenarioKeys()}
               rowHeader="Hero"
               colHeader="Scenario"
+              getColLabel={formatMageKnightScenarioLabel}
               rowGroupBy={(hero) => mageKnightContent.heroBoxByName.get(hero)}
               colGroupBy={(scenario) => mageKnightContent.scenarioGroupByName.get(scenario)}
               getCount={(hero, scenario) => heroScenarioMatrix()[hero]?.[scenario] ?? 0}
@@ -380,7 +381,7 @@ export default function MageKnightView(props: {
               maxCount={maxMatrixCount()}
               onCellClick={(hero, scenario) =>
                 props.onOpenPlays({
-                  title: `Mage Knight • ${hero} × ${scenario}`,
+                  title: `Mage Knight • ${hero} × ${formatMageKnightScenarioLabel(scenario)}`,
                   playIds: playIdsByHeroScenario().get(`${hero}|||${scenario}`) ?? [],
                 })
               }
@@ -439,6 +440,7 @@ export default function MageKnightView(props: {
             plays={scenarioCounts()}
             wins={scenarioWins()}
             keys={scenarioKeys()}
+            getLabel={formatMageKnightScenarioLabel}
             groupBy={(scenario) => mageKnightContent.scenarioGroupByName.get(scenario)}
             getNextAchievement={(scenario) =>
               pickBestAvailableAchievementForTrackIds(achievements(), [
@@ -448,7 +450,7 @@ export default function MageKnightView(props: {
             }
             onPlaysClick={(scenario) =>
               props.onOpenPlays({
-                title: `Mage Knight • Scenario: ${scenario}`,
+                title: `Mage Knight • Scenario: ${formatMageKnightScenarioLabel(scenario)}`,
                 playIds: playIdsByScenario()[scenario] ?? [],
               })
             }
@@ -481,7 +483,7 @@ export default function MageKnightView(props: {
               <For each={scenarioKeys()}>
                 {(scenario) => (
                   <tr>
-                    <td>{scenario}</td>
+                    <td>{formatMageKnightScenarioLabel(scenario)}</td>
                     <td class="mono">
                       {mageKnightContent.scenarioRoundsByName.get(scenario)?.toLocaleString() ?? '—'}
                     </td>

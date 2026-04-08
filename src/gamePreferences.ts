@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js'
-import { isGameTab, type GameTab } from './gameCatalog'
+import { isGameTab } from './gameCatalog'
 import {
   CONFIGURABLE_GAME_DEFINITIONS,
   getConfigurableGameDefinition,
@@ -46,7 +46,7 @@ export function defaultGamePreferencesFor(gameId: string): GamePreferences {
   const game = getConfigurableGameDefinition(gameId)
   return {
     showInMonthlyChecklist: game.defaultShowInMonthlyChecklist,
-    showAsSeparateTab: game.supportsSeparateTab,
+    showAsSeparateTab: game.defaultShowAsSeparateTab,
     showInCostsTable: game.supportsCostsTable,
     calculateAchievements: game.supportsAchievements,
     status: 'active',
@@ -139,7 +139,8 @@ export function gamePreferencesFor(gameId: string): GamePreferences {
   return resolveGamePreferences(gameId, storedGamePreferencesById())
 }
 
-export function shouldShowGameTab(gameId: GameTab): boolean {
+export function shouldShowGameTab(gameId: string): boolean {
+  if (!isConfigurableGameId(gameId)) return false
   return gamePreferencesFor(gameId).showAsSeparateTab
 }
 

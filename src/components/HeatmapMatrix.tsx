@@ -25,6 +25,8 @@ export default function HeatmapMatrix(props: {
   colHeader: string
   maxCount: number
   hideCounts?: boolean
+  getRowLabel?: (row: string) => string
+  getColLabel?: (col: string) => string
   getCellDisplayText?: (row: string, col: string, count: number) => string
   getCellBackgroundColor?: (
     row: string,
@@ -113,11 +115,12 @@ export default function HeatmapMatrix(props: {
               </th>
               <For each={props.cols}>
                 {(col) => {
+                  const colLabel = () => props.getColLabel?.(col) ?? col
                   const warningTitle = () => props.getColWarningTitle?.(col)
                   return (
                     <th class="heatmapColHead">
-                      <div class="heatmapColLabel" title={col}>
-                        <span class="heatmapLabelText">{col}</span>
+                      <div class="heatmapColLabel" title={colLabel()}>
+                        <span class="heatmapLabelText">{colLabel()}</span>
                         {warningTitle() ? (
                           <span
                             class="contentWarningIcon"
@@ -149,11 +152,12 @@ export default function HeatmapMatrix(props: {
             <tr>
               <For each={props.cols}>
                 {(col) => {
+                  const colLabel = () => props.getColLabel?.(col) ?? col
                   const warningTitle = () => props.getColWarningTitle?.(col)
                   return (
                     <th class="heatmapColHead">
-                      <div class="heatmapColLabel" title={col}>
-                        <span class="heatmapLabelText">{col}</span>
+                      <div class="heatmapColLabel" title={colLabel()}>
+                        <span class="heatmapLabelText">{colLabel()}</span>
                         {warningTitle() ? (
                           <span
                             class="contentWarningIcon"
@@ -174,6 +178,7 @@ export default function HeatmapMatrix(props: {
         <tbody>
           <For each={props.rows}>
             {(row, index) => {
+              const rowLabel = () => props.getRowLabel?.(row) ?? row
               const warningTitle = () => props.getRowWarningTitle?.(row)
               const groupSpan = () => rowGroupSpans()?.get(index()) ?? null
 
@@ -190,9 +195,9 @@ export default function HeatmapMatrix(props: {
                       ) : null}
                     </th>
                   ) : null}
-                  <th class="heatmapRowHead" title={row}>
+                  <th class="heatmapRowHead" title={rowLabel()}>
                     <div class="heatmapRowLabel">
-                      <span class="heatmapLabelText">{row}</span>
+                      <span class="heatmapLabelText">{rowLabel()}</span>
                       {warningTitle() ? (
                         <span
                           class="contentWarningIcon"
@@ -206,11 +211,13 @@ export default function HeatmapMatrix(props: {
                   </th>
                   <For each={props.cols}>
                     {(col) => {
+                      const colLabel = () => props.getColLabel?.(col) ?? col
                       const count = () => props.getCount(row, col)
                       const intensity = () =>
                         props.maxCount > 0 ? count() / props.maxCount : 0
                       const label = () =>
-                        props.getCellLabel?.(row, col, count()) ?? `${row} × ${col}: ${count()}`
+                        props.getCellLabel?.(row, col, count()) ??
+                        `${rowLabel()} × ${colLabel()}: ${count()}`
                       const isClickable = () => Boolean(props.onCellClick) && count() > 0
                       const displayText = () => {
                         if (props.getCellDisplayText) return props.getCellDisplayText(row, col, count())

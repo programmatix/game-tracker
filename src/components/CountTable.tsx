@@ -7,6 +7,7 @@ export default function CountTable(props: {
   plays: Record<string, number>
   wins?: Record<string, number>
   keys?: string[]
+  getLabel?: (key: string) => string
   groupBy?: (key: string) => string | undefined
   getNextAchievement?: (key: string) => Achievement | undefined
   isOwned?: (key: string) => boolean
@@ -32,6 +33,7 @@ export default function CountTable(props: {
           <tbody>
             <For each={keys()}>
               {(key, index) => {
+                const label = () => props.getLabel?.(key) ?? key
                 const groupLabel = () => props.groupBy?.(key) ?? ''
                 const prevGroupLabel = () =>
                   index() > 0 && props.groupBy ? props.groupBy(keys()[index() - 1]!) ?? '' : null
@@ -56,7 +58,7 @@ export default function CountTable(props: {
                     >
                       <td>
                         <span class="heatmapRowLabel">
-                          <span class="heatmapLabelText">{key}</span>
+                          <span class="heatmapLabelText">{label()}</span>
                           <Show when={props.getWarningTitle?.(key)}>
                             {(warningTitle) => (
                               <span

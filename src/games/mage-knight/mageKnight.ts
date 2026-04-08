@@ -22,6 +22,7 @@ function normalizeId(value: string): string {
 
 function stripDecorations(input: string): string {
   let value = normalizeToken(input)
+  value = value.replace(/\s*\[[^\]]*\]\s*$/u, '').trim()
   value = value.replace(/\s*\([^)]*\)\s*$/u, '').trim()
   return normalizeToken(value)
 }

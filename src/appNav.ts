@@ -1,5 +1,10 @@
-import { GAME_TAB_IDS, GAME_TAB_OPTIONS, type GameTab } from './gameCatalog'
-import { normalizeConfigurableGameId } from './configurableGames'
+import type { GameTab } from './gameCatalog'
+import {
+  SEPARATE_TAB_GAME_IDS,
+  SEPARATE_TAB_GAME_OPTIONS,
+  isSeparateTabGameId,
+  normalizeConfigurableGameId,
+} from './configurableGames'
 
 export type MainTab =
   | GameTab
@@ -27,7 +32,7 @@ export type MainTabOption = { value: MainTab; label: string; group: MainTabGroup
 export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
   'monthlySummary',
-  ...GAME_TAB_IDS,
+  ...SEPARATE_TAB_GAME_IDS.map((gameId) => gameId as MainTab),
   'options',
   'gameOptions',
   'achievements',
@@ -39,7 +44,11 @@ export const MAIN_TABS: ReadonlyArray<MainTab> = [
 export const PLAYS_VIEWS: ReadonlyArray<PlaysView> = ['plays', 'byGame', 'gameDetail', 'drilldown']
 
 export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
-  ...GAME_TAB_OPTIONS,
+  ...SEPARATE_TAB_GAME_OPTIONS.map((game) => ({
+    value: game.value as MainTab,
+    label: game.label,
+    group: 'games' as const,
+  })),
   { value: 'achievements', label: 'Achievements', group: 'other' },
   { value: 'costs', label: 'Costs', group: 'other' },
   { value: 'feedback', label: 'Feedback', group: 'other' },
@@ -62,6 +71,10 @@ export const PLAYS_VIEW_OPTIONS: ReadonlyArray<{
   { value: 'plays', label: 'All plays' },
   { value: 'byGame', label: 'By game' },
 ]
+
+export function isGameMainTab(value: string): boolean {
+  return isSeparateTabGameId(value)
+}
 
 export function isMainTab(value: string): value is MainTab {
   return (MAIN_TABS as readonly string[]).includes(value)
@@ -147,7 +160,7 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
     }
   }
 
-  if (isMainTab(head)) return { mainTab: head }
+  if (isMainTab(head)) return { mainTab: head as MainTab }
 
   return null
 }

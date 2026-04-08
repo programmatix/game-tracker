@@ -30,12 +30,14 @@ heroes:
 scenarios:
   - display: Lost Relic
     id: LostRelic
+    short: Relic
     aliases: [Lost Relic]
     rounds: 2
     box: Core
     recommended: true
   - display: Solo Conquest Blitz - 1 City
     id: SoloConquestBlitz1City
+    short: SCB1
     aliases:
       [Solo Conquest Blitz 1 City, Solo Blitz Conquest 1 City, Solo Blitz Conquest]
     rounds: 4
@@ -43,6 +45,7 @@ scenarios:
     recommended: true
   - display: Solo Conquest Blitz - 2 Cities
     id: SoloConquestBlitz2Cities
+    short: SCB2
     aliases:
       [Solo Conquest Blitz 2 Cities, Solo Blitz Conquest 2 Cities, Solo Blitz Conquest 2 City]
     rounds: 4
@@ -50,6 +53,7 @@ scenarios:
     recommended: true
   - display: Volkare's Return Blitz
     id: VolkareReturnBlitz
+    short: VRBlz
     aliases: [Volkares Return Blitz, Volkare Return Blitz]
     rounds: 4
     expansion: Lost Legion
@@ -57,6 +61,7 @@ scenarios:
     recommended: true
   - display: Hidden Valley
     id: HiddenValley
+    short: HVal
     aliases: [The Hidden Valley]
     rounds: 4
     expansion: Shades of Tezla
@@ -64,6 +69,7 @@ scenarios:
     recommended: true
   - display: Realm of the Dead
     id: RealmOfTheDead
+    short: RotD
     aliases: [The Realm of the Dead]
     rounds: 4
     expansion: Shades of Tezla
@@ -71,24 +77,28 @@ scenarios:
     recommended: true
   - display: Mines Liberation
     id: MinesLiberation
+    short: Mines
     aliases: [Mines Liberation Very Hard Solo]
     rounds: 4
     box: Core
     recommended: true
   - display: Dungeon Lords
     id: DungeonLords
+    short: DLord
     aliases: [Dungeon Lords]
     rounds: 5
     box: Core
     recommended: true
   - display: Solo Conquest
     id: SoloConquest
+    short: SConq
     aliases: [Solo Full Conquest, Full Conquest]
     rounds: 6
     box: Core
     recommended: true
   - display: Volkare's Quest
     id: VolkareQuest
+    short: VolQu
     aliases: [Volkares Quest, Volkare Quest]
     rounds: 6
     expansion: Lost Legion
@@ -96,6 +106,7 @@ scenarios:
     recommended: true
   - display: Volkare's Return
     id: VolkareReturn
+    short: VolRe
     aliases: [Volkares Return, Volkare Return]
     rounds: 6
     expansion: Lost Legion
@@ -103,6 +114,7 @@ scenarios:
     recommended: true
   - display: Life and Death
     id: LifeAndDeath
+    short: LiDth
     aliases: [Life and Death]
     rounds: 6
     expansion: Shades of Tezla
@@ -110,207 +122,245 @@ scenarios:
     recommended: true
   - display: The Lost Golden City
     id: TheLostGoldenCity
+    short: GolCt
     aliases: [Lost Golden City]
     rounds: 2
     box: Core
   - display: Druid Nights
     id: DruidNights
+    short: Druid
     aliases: [Druid Nights]
     rounds: 4
     box: Core
   - display: "Solo Conquest: Spellbound"
     id: SoloConquestSpellbound
+    short: Splbd
     aliases: [Solo Conquest Spellbound, Spellbound]
     rounds: 4
     box: Core
   - display: The Raven of Iraden
     id: TheRavenOfIraden
+    short: Raven
     aliases: [Raven of Iraden]
     rounds: 4
     box: Core
   - display: Return to the Void
     id: ReturnToTheVoid
+    short: RtVoi
     aliases: [Return to Void]
     rounds: 4
     box: Core
   - display: Abhorsen
     id: Abhorsen
+    short: Abhor
     aliases: [Abhorsen]
     rounds: 4
     expansion: Ultimate Edition
     box: Core
   - display: The Apprentice
     id: TheApprentice
+    short: Appr
     aliases: [Apprentice]
     rounds: 4
     box: Core
   - display: Traversing the Range
     id: TraversingTheRange
+    short: Range
     aliases: [Traversing Range]
     rounds: 4
     expansion: Lost Legion
     box: Lost Legion
   - display: Sack the Iron Citadel
     id: SackTheIronCitadel
+    short: SIron
     aliases: [Sack Iron Citadel]
     rounds: 4
     box: Core
   - display: Flee the City!
     id: FleeTheCity
+    short: Flee
     aliases: [Flee the City, Flee City]
     rounds: 4
     box: Core
   - display: Dragonslayer
     id: Dragonslayer
+    short: DrgSl
     aliases: [Dragon Slayer]
     rounds: 5
     expansion: Lost Legion
     box: Lost Legion
   - display: Volkare's Endless Maze
     id: VolkaresEndlessMaze
+    short: VEMaz
     aliases: [Volkare Endless Maze, Volkares Endless Maze]
     rounds: 5
     expansion: Lost Legion
     box: Lost Legion
   - display: Hunting for the Rogue Knight
     id: HuntingForTheRogueKnight
+    short: Rogue
     aliases: [Rogue Knight]
     rounds: 5
     box: Core
   - display: Ça Ira
     id: CaIra
+    short: CaIra
     aliases: [Ca Ira]
     rounds: 5
     box: Core
   - display: Grand Conqueror
     id: GrandConqueror
+    short: GConq
     aliases: [Grand Conqueror]
     rounds: 6
     box: Core
   - display: The Gauntlet
     id: TheGauntlet
+    short: Gaunt
     aliases: [Gauntlet]
     rounds: 6
     expansion: Lost Legion
     box: Lost Legion
   - display: The Coast
     id: TheCoast
+    short: Coast
     aliases: [Coast]
     rounds: 6
     box: Core
   - display: Ring of Fire
     id: RingOfFire
+    short: RFire
     aliases: [Ring of Fire]
     rounds: 6
     box: Core
   - display: A World Without Magic?
     id: AWorldWithoutMagic
+    short: NoMag
     aliases: [A World Without Magic, World Without Magic]
     rounds: 6
     box: Core
   - display: "Solo Conquest: Rags to Riches"
     id: SoloConquestRagsToRiches
+    short: RRich
     aliases: [Solo Conquest Rags to Riches, Rags to Riches]
     rounds: 6
     box: Core
   - display: The Devastation
     id: TheDevastation
+    short: Devas
     aliases: [Devastation]
     rounds: 6
     expansion: Shades of Tezla
     box: Shades of Tezla
   - display: Dragon Infestation
     id: DragonInfestation
+    short: DrInf
     aliases: [Dragon Infestation]
     rounds: 6
     box: Core
   - display: Quest for the Golden Grail
     id: QuestForTheGoldenGrail
+    short: Grail
     aliases: [Golden Grail]
     rounds: 6
     expansion: Lost Legion
     box: Lost Legion
   - display: City Defense
     id: CityDefense
+    short: CDef
     aliases: [City Defence]
     rounds: 6
     expansion: Lost Legion
     box: Lost Legion
   - display: Volkare's Allies
     id: VolkaresAllies
+    short: VAlly
     aliases: [Volkare Allies, Volkares Allies]
     rounds: 6
     expansion: Ultimate Edition
     box: Core
   - display: Atlantean Summer Bloodlust
     id: AtlanteanSummerBloodlust
+    short: Blood
     aliases: [Summer Bloodlust]
     rounds: 6
     box: Core
   - display: Balance of Power
     id: BalanceOfPower
+    short: BalPw
     aliases: [Balance of Power]
     rounds: 6
     expansion: Ultimate Edition
     box: Core
   - display: Evil God in the Sapphire Kingdom
     id: EvilGodInTheSapphireKingdom
+    short: SapKg
     aliases: [Sapphire Kingdom]
     rounds: 6
     expansion: Lost Legion
     box: Lost Legion
   - display: Strolling in the Deep
     id: StrollingInTheDeep
+    short: StrDp
     aliases: [Strolling Deep]
     rounds: 6
     expansion: Lost Legion
     box: Lost Legion
   - display: Search for the Sorceress
     id: SearchForTheSorceress
+    short: Sorc
     aliases: [Sorceress]
     rounds: 6
     expansion: Shades of Tezla
     box: Shades of Tezla
   - display: The Liberator of the Doomed Land
     id: TheLiberatorOfTheDoomedLand
+    short: LibDL
     aliases: [Liberator of the Doomed Land]
     rounds: 7
     box: Core
   - display: Long Night of the Dragon Rider
     id: LongNightOfTheDragonRider
+    short: DrRid
     aliases: [Dragon Rider]
     rounds: 7
     box: Core
   - display: Revenge of the Dragon Lords
     id: RevengeOfTheDragonLords
+    short: RevDL
     aliases: [Dragon Lords]
     rounds: 8
     box: Core
   - display: The Gathering Storm
     id: TheGatheringStorm
+    short: Storm
     aliases: [Gathering Storm]
     rounds: 8
     expansion: Lost Legion
     box: Lost Legion
   - display: Wars of the Sun and the Moon
     id: WarsOfTheSunAndTheMoon
+    short: SunMn
     aliases: [Sun and the Moon]
     rounds: 8
     expansion: Lost Legion
     box: Lost Legion
   - display: Onslaught
     id: Onslaught
+    short: Onslt
     aliases: [Onslaught]
     rounds: 8
     box: Core
   - display: Mega Conquest
     id: MegaConquest
+    short: Mega
     aliases: [Mega Conquest]
     rounds: 12
     expansion: Lost Legion
     box: Lost Legion
   - display: Super Epic Conquest
     id: SuperEpicConquest
+    short: SECon
     aliases: [Super Epic Conquest]
     rounds: 18
     expansion: Lost Legion
