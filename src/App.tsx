@@ -626,7 +626,7 @@ function App() {
   }
 
   function pushNavState(next: AppNavState) {
-    if (mainTab() === 'plays' && playsView() === 'drilldown') return
+    if (next.mainTab === 'plays' && next.playsView === 'drilldown') return
     const url = new URL(window.location.href)
     url.hash = hashForNavState(next)
     const state: AppHistoryState = { kind: 'app', nav: next }
@@ -636,60 +636,64 @@ function App() {
   const switchMainTab = (nextTab: MainTab) => {
     if (mainTab() === nextTab) return
     const next: AppNavState = { ...currentNavState(), mainTab: nextTab }
-    setMainTab(nextTab)
     pushNavState(next)
+    setMainTab(nextTab)
   }
 
   const switchPlaysView = (nextView: Extract<PlaysView, 'plays' | 'byGame'>) => {
     if (playsView() === nextView) return
-    setPlaysView(nextView)
-    setSelectedGameKey(null)
-    setPlaysDrilldown(null)
-    resetPage()
-    pushNavState({
+    const next: AppNavState = {
       mainTab: 'plays',
       playsView: nextView,
       selectedGameKey: null,
       selectedOptionsGameId: selectedOptionsGameId(),
-    })
+    }
+    pushNavState(next)
+    setPlaysView(nextView)
+    setSelectedGameKey(null)
+    setPlaysDrilldown(null)
+    resetPage()
   }
 
   function openGameDetail(gameKey: string) {
-    setSelectedGameKey(gameKey)
-    setPlaysView('gameDetail')
-    resetPage()
-    pushNavState({
+    const next: AppNavState = {
       mainTab: 'plays',
       playsView: 'gameDetail',
       selectedGameKey: gameKey,
       selectedOptionsGameId: selectedOptionsGameId(),
-    })
+    }
+    pushNavState(next)
+    setSelectedGameKey(gameKey)
+    setPlaysView('gameDetail')
+    resetPage()
   }
 
   function openGameOptions(gameId: GameTab) {
+    const next: AppNavState = {
+      ...currentNavState(),
+      mainTab: 'gameOptions',
+      selectedOptionsGameId: gameId,
+    }
+    pushNavState(next)
     batch(() => {
       setSelectedOptionsGameId(gameId)
       setMainTab('gameOptions')
       resetPage()
     })
-    pushNavState({
-      ...currentNavState(),
-      mainTab: 'gameOptions',
-      selectedOptionsGameId: gameId,
-    })
   }
 
   function selectOptionsGame(gameId: GameTab) {
     if (selectedOptionsGameId() === gameId && mainTab() === 'gameOptions') return
+    const next: AppNavState = {
+      ...currentNavState(),
+      mainTab: 'gameOptions',
+      selectedOptionsGameId: gameId,
+    }
+    pushNavState(next)
     setSelectedOptionsGameId(gameId)
     if (mainTab() !== 'gameOptions') {
       setMainTab('gameOptions')
     }
-    pushNavState({
-      ...currentNavState(),
-      mainTab: 'gameOptions',
-      selectedOptionsGameId: gameId,
-    })
   }
 
   function updateGamePreferences(gameId: GameTab, patch: Partial<GamePreferences>) {
@@ -950,15 +954,16 @@ function App() {
               if (playsView() === 'drilldown') {
                 closePlaysDrilldown({ viaHistoryBack: true })
               } else {
-                setPlaysView('byGame')
-                setSelectedGameKey(null)
-                resetPage()
-                pushNavState({
+                const next: AppNavState = {
                   mainTab: 'plays',
                   playsView: 'byGame',
                   selectedGameKey: null,
                   selectedOptionsGameId: selectedOptionsGameId(),
-                })
+                }
+                pushNavState(next)
+                setPlaysView('byGame')
+                setSelectedGameKey(null)
+                resetPage()
               }
             }}
             onSwitchPlaysView={switchPlaysView}

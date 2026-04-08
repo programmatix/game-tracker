@@ -987,6 +987,52 @@
   font-size: 13px;
 }
 
+.calcTooltip {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.calcTooltipSummary {
+  list-style: none;
+  display: inline-block;
+  cursor: pointer;
+  text-decoration: underline dotted rgba(255, 255, 255, 0.45);
+  text-underline-offset: 0.2em;
+}
+
+.calcTooltipSummary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.calcTooltipSummary::-webkit-details-marker {
+  display: none;
+}
+
+.calcTooltipBubble {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  width: min(300px, 75vw);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(12, 14, 22, 0.97);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  white-space: pre-line;
+}
+
+.calcTooltip:not([open]) .calcTooltipBubble {
+  display: none;
+}
+
 .monthlyProgressRing {
   --progress: 0%;
   width: 128px;
@@ -1601,6 +1647,26 @@
     font-size: 18px;
   }
 
+  .monthlyMonthNav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .monthlyMonthLabel {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .monthlyMonthNav > button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .monthlySummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
   .table {
     min-width: 640px;
   }
@@ -1656,6 +1722,16 @@
 
   .table.mobileCardTable .detailsCell pre {
     max-height: 180px;
+  }
+
+  .table.mobileCardTable .calcTooltip {
+    display: block;
+  }
+
+  .table.mobileCardTable .calcTooltipBubble {
+    position: static;
+    width: auto;
+    margin-top: 8px;
   }
 
   .table th,

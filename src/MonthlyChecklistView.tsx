@@ -24,6 +24,10 @@ type MonthlyChecklistRow = {
   hasAssumedMinutes: boolean
   dateMinutes: Array<{ date: string; minutes: number; assumed: boolean }>
   monthDots: Array<{ monthKey: string; label: string; played: boolean }>
+  projectedTimeLeftMinutes: number
+  projectedTimeLeftAssumed: boolean
+  projectedTimeLeftSource: 'played' | 'history' | 'fallback' | 'none'
+  projectedTimeLeftTooltip: string
 }
 
 type MonthlyChecklistProjection = {
@@ -33,6 +37,13 @@ type MonthlyChecklistProjection = {
   historyGames: number
   fallbackGames: number
   unavailableGames: number
+}
+
+type ChecklistItemProjection = {
+  minutes: number
+  assumed: boolean
+  source: 'played' | 'history' | 'fallback' | 'none'
+  tooltip: string
 }
 
 function normalizeTitle(value: string): string {
@@ -89,12 +100,23 @@ function assumedMinutesForChecklistItem(
   return null
 }
 
-function averageMonthlyMinutesForChecklistItem(input: {
+function projectedTimeLeftForChecklistItem(input: {
   item: ChecklistItem
   plays: BggPlay[]
   maxMonthIndex: number
   assumedMinutesByObjectId: Map<string, number> | undefined
-}): { minutes: number; assumed: boolean; source: 'history' | 'fallback' | 'none' } {
+  monthLabel: string
+  alreadyPlayed: boolean
+}): ChecklistItemProjection {
+  if (input.alreadyPlayed) {
+    return {
+      minutes: 0,
+      assumed: false,
+      source: 'played',
+      tooltip: `Already played in ${input.monthLabel}.\nProjected time left: 0m.`,
+    }
+  }
+
   let totalMinutes = 0
   let usedAssumption = false
   const measuredMonthKeys = new Set<string>()
@@ -118,19 +140,41 @@ function averageMonthlyMinutesForChecklistItem(input: {
   }
 
   if (measuredMonthKeys.size > 0 && totalMinutes > 0) {
+    const averageMinutes = Math.round(totalMinutes / measuredMonthKeys.size)
     return {
-      minutes: Math.round(totalMinutes / measuredMonthKeys.size),
+      minutes: averageMinutes,
       assumed: usedAssumption,
       source: 'history',
+      tooltip: [
+        `${formatMinutes(averageMinutes)} projected from monthly history.`,
+        `Calculation: ${formatMinutes(totalMinutes)} across ${measuredMonthKeys.size} active month${measuredMonthKeys.size === 1 ? '' : 's'} ÷ ${measuredMonthKeys.size} = ${formatMinutes(averageMinutes)}.`,
+        usedAssumption ? 'Includes estimated time for zero-length plays.' : 'Uses recorded play lengths only.',
+      ].join('\n'),
     }
   }
 
   const fallbackMinutes = assumedMinutesForChecklistItem(input.item, input.assumedMinutesByObjectId)
   if (fallbackMinutes && fallbackMinutes > 0) {
-    return { minutes: fallbackMinutes, assumed: true, source: 'fallback' }
+    return {
+      minutes: fallbackMinutes,
+      assumed: true,
+      source: 'fallback',
+      tooltip: [
+        `${formatMinutes(fallbackMinutes)} projected from BGG playing time.`,
+        'Calculation: no monthly history available, so this falls back to the game\'s BGG playing time.',
+      ].join('\n'),
+    }
   }
 
-  return { minutes: 0, assumed: false, source: 'none' }
+  return {
+    minutes: 0,
+    assumed: false,
+    source: 'none',
+    tooltip: [
+      'No projected time available.',
+      'Calculation: no monthly history and no BGG playing-time estimate were found.',
+    ].join('\n'),
+  }
 }
 
 const CHECKLIST: ReadonlyArray<ChecklistItem> = [
@@ -421,6 +465,7 @@ export default function MonthlyChecklistView(props: {
 
   const rows = createMemo<MonthlyChecklistRow[]>(() => {
     const monthPrefix = month().prefix
+    const monthLabel = month().label
     const plays = props.plays
     const assumed = assumedMinutesByObjectId()
 
@@ -460,6 +505,15 @@ export default function MonthlyChecklistView(props: {
         }
       }
 
+      const projected = projectedTimeLeftForChecklistItem({
+        item,
+        plays,
+        maxMonthIndex: selectedMonthIndex(),
+        assumedMinutesByObjectId: assumed,
+        monthLabel,
+        alreadyPlayed: playCount > 0,
+      })
+
       return {
         key: item.key,
         label: item.label,
@@ -476,6 +530,10 @@ export default function MonthlyChecklistView(props: {
           .map(([date, minutes]) => ({ date, minutes, assumed: assumedByDate.get(date) === true }))
           .sort((a, b) => a.date.localeCompare(b.date)),
         monthDots: buildMonthDots(firstMonthKey, monthStatsByKey, selectedMonthIndex(), 24),
+        projectedTimeLeftMinutes: projected.minutes,
+        projectedTimeLeftAssumed: projected.assumed,
+        projectedTimeLeftSource: projected.source,
+        projectedTimeLeftTooltip: projected.tooltip,
       }
     })
   })
@@ -608,11 +666,6 @@ export default function MonthlyChecklistView(props: {
   })
 
   const checklistProjection = createMemo<MonthlyChecklistProjection>(() => {
-    const checklist = activeChecklist()
-    const rowByKey = new Map(rows().map((row) => [row.key, row]))
-    const assumed = assumedMinutesByObjectId()
-    const maxMonthIndex = selectedMonthIndex()
-
     let remainingGames = 0
     let projectedMinutes = 0
     let usesAssumedMinutes = false
@@ -620,30 +673,21 @@ export default function MonthlyChecklistView(props: {
     let fallbackGames = 0
     let unavailableGames = 0
 
-    for (const item of checklist) {
-      const row = rowByKey.get(item.key)
-      if (row?.played) continue
-
+    for (const row of rows()) {
+      if (row.played) continue
       remainingGames += 1
-      const projection = averageMonthlyMinutesForChecklistItem({
-        item,
-        plays: props.plays,
-        maxMonthIndex,
-        assumedMinutesByObjectId: assumed,
-      })
+      projectedMinutes += row.projectedTimeLeftMinutes
+      usesAssumedMinutes ||= row.projectedTimeLeftAssumed
 
-      projectedMinutes += projection.minutes
-      usesAssumedMinutes ||= projection.assumed
-
-      if (projection.source === 'history') {
+      if (row.projectedTimeLeftSource === 'history') {
         historyGames += 1
         continue
       }
-      if (projection.source === 'fallback') {
+      if (row.projectedTimeLeftSource === 'fallback') {
         fallbackGames += 1
         continue
       }
-      unavailableGames += 1
+      if (row.projectedTimeLeftSource === 'none') unavailableGames += 1
     }
 
     return {
@@ -760,13 +804,14 @@ export default function MonthlyChecklistView(props: {
       </div>
 
       <div class="tableWrap">
-        <table class="table tableCompact">
+        <table class="table tableCompact mobileCardTable">
           <thead>
             <tr>
               <th>Game</th>
               <th>Played</th>
               <th>Play count</th>
               <th>Total time</th>
+              <th>Projected time left</th>
               <th class="hideOnMobile">When played</th>
             </tr>
           </thead>
@@ -774,7 +819,7 @@ export default function MonthlyChecklistView(props: {
             <For each={rows()}>
               {(row) => (
                 <tr>
-                  <td>
+                  <td data-label="Game">
                     <div class="gameTitleRow">
                       <span>{row.label}</span>
                       <Show when={row.optionsGameId}>
@@ -801,13 +846,28 @@ export default function MonthlyChecklistView(props: {
                       </div>
                     </Show>
                   </td>
-                  <td class="mono">{row.played ? '✓' : ''}</td>
-                  <td class="mono">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
-                  <td class="mono">
+                  <td class="mono" data-label="Played">{row.played ? '✓' : ''}</td>
+                  <td class="mono" data-label="Play count">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
+                  <td class="mono" data-label="Total time">
                     {formatMinutes(row.totalMinutes)}
                     {row.hasAssumedMinutes ? '*' : ''}
                   </td>
-                  <td class="mono hideOnMobile">
+                  <td class="mono" data-label="Projected time left">
+                    <details class="calcTooltip">
+                      <summary
+                        class="calcTooltipSummary"
+                        title={row.projectedTimeLeftTooltip}
+                        aria-label={row.projectedTimeLeftTooltip}
+                      >
+                        {row.projectedTimeLeftSource === 'none'
+                          ? '—'
+                          : formatMinutes(row.projectedTimeLeftMinutes)}
+                        {row.projectedTimeLeftAssumed ? '*' : ''}
+                      </summary>
+                      <div class="calcTooltipBubble">{row.projectedTimeLeftTooltip}</div>
+                    </details>
+                  </td>
+                  <td class="mono hideOnMobile" data-label="When played">
                     {row.dateMinutes.length > 0
                       ? row.dateMinutes
                           .map(
@@ -836,7 +896,7 @@ export default function MonthlyChecklistView(props: {
       </div>
 
       <div class="tableWrap">
-        <table class="table tableCompact">
+        <table class="table tableCompact mobileCardTable">
           <thead>
             <tr>
               <th>Game</th>
@@ -850,7 +910,7 @@ export default function MonthlyChecklistView(props: {
             <For each={otherRows()}>
               {(row) => (
                 <tr>
-                  <td>
+                  <td data-label="Game">
                     <div class="gameTitleRow">
                       <span>{row.label}</span>
                       <Show when={row.optionsGameId}>
@@ -877,13 +937,13 @@ export default function MonthlyChecklistView(props: {
                       </div>
                     </Show>
                   </td>
-                  <td class="mono">{row.played ? '✓' : ''}</td>
-                  <td class="mono">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
-                  <td class="mono">
+                  <td class="mono" data-label="Played">{row.played ? '✓' : ''}</td>
+                  <td class="mono" data-label="Play count">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
+                  <td class="mono" data-label="Total time">
                     {formatMinutes(row.totalMinutes)}
                     {row.hasAssumedMinutes ? '*' : ''}
                   </td>
-                  <td class="mono hideOnMobile">
+                  <td class="mono hideOnMobile" data-label="When played">
                     {row.dateMinutes.length > 0
                       ? row.dateMinutes
                           .map(

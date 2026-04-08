@@ -99,7 +99,7 @@ export default function GameOptionsView(props: {
         <div class="gameOptionsRows">
           <GameOptionsSelectRow
             title="Status"
-            description="Track whether this game is active, in transit, being sold, or already sold."
+            description="Track whether this game is active, in transit, returned, being sold, or already sold."
             value={selectedPreferences().status}
             options={GAME_STATUS_OPTIONS}
             onChange={(status) => {

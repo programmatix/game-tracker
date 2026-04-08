@@ -4,6 +4,7 @@ import { GAME_DEFINITIONS, getGameDefinition, isGameTab, type GameTab } from './
 export const GAME_STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
   { value: 'waitingOnShipping', label: 'Waiting on shipping' },
+  { value: 'returned', label: 'Returned' },
   { value: 'selling', label: 'Selling' },
   { value: 'sold', label: 'Sold' },
 ] as const
