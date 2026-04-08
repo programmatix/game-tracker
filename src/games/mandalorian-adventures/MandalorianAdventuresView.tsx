@@ -397,15 +397,6 @@ export default function MandalorianAdventuresView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -473,6 +464,23 @@ export default function MandalorianAdventuresView(props: {
             })
           }
         />
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={mandalorianAdventuresContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `The Mandalorian: Adventures • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
 
         <div class="statsGrid">
           <CountTable
@@ -548,24 +556,17 @@ export default function MandalorianAdventuresView(props: {
               })
             }
           />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={mandalorianAdventuresContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `The Mandalorian: Adventures • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
         </div>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

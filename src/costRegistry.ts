@@ -39,6 +39,29 @@ const finalGirlContent = parseOwnedFinalGirlContent(rawFinalGirlContentText)
 const mistfallMappings = parseMistfallMappings(rawMistfallContentText)
 const spiritIslandMappings = parseSpiritIslandMappings(rawSpiritIslandContentText)
 
+function uniqueAliases(values: Iterable<string>): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const value of values) {
+    const trimmed = value.trim()
+    if (!trimmed) continue
+    const normalized = trimmed.toLowerCase()
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
+    result.push(trimmed)
+  }
+  return result
+}
+
+const arkhamHorrorLcgAliases = uniqueAliases([
+  'Arkham Horror LCG',
+  'Arkham Horror: The Card Game',
+  ...arkhamHorrorLcgContent.campaigns,
+  ...arkhamHorrorLcgContent.campaignBoxByName.values(),
+  ...arkhamHorrorLcgContent.scenarioBoxByName.values(),
+  ...arkhamHorrorLcgContent.investigatorBoxByName.values(),
+])
+
 function toBoxCostConfig(input: {
   costCurrencySymbol: string
   boxCostsByName: Map<string, number>
@@ -53,7 +76,7 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
   {
     id: 'arkhamHorrorLcg',
     label: 'Arkham Horror LCG',
-    aliases: ['Arkham Horror LCG', 'Arkham Horror: The Card Game'],
+    aliases: arkhamHorrorLcgAliases,
     costs: toBoxCostConfig(arkhamHorrorLcgContent),
   },
   {

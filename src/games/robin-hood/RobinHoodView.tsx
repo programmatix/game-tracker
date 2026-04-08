@@ -333,15 +333,6 @@ export default function RobinHoodView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -412,6 +403,23 @@ export default function RobinHoodView(props: {
           }
         />
 
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={robinHoodContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `The Adventures of Robin Hood • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
         <div class="statsGrid">
           <CountTable
             title="Adventures"
@@ -468,24 +476,17 @@ export default function RobinHoodView(props: {
               })
             }
           />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={robinHoodContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `The Adventures of Robin Hood • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
         </div>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

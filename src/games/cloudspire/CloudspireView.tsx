@@ -389,15 +389,6 @@ export default function CloudspireView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -408,6 +399,60 @@ export default function CloudspireView(props: {
           </div>
         }
       >
+        <div class="statsBlock">
+          <div class="statsTitleRow">
+            <h3 class="statsTitle">My faction × Solo scenario</h3>
+            <div class="matrixControls">
+              <label class="control">
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) => setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)}
+                >
+                  <option value="count">Count</option>
+                  <option value="played">Played</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <HeatmapMatrix
+            rows={soloFactionKeys()}
+            cols={soloMatrixScenarioKeys()}
+            rowHeader="My faction"
+            colHeader="Solo scenario"
+            rowGroupBy={(row) => cloudspireContent.factionGroupByName.get(row)}
+            getCount={(row, col) => soloMatrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => soloMatrixWins()[row]?.[col] ?? 0}
+            maxCount={soloMatrixMax()}
+            hideCounts={matrixDisplayMode() === 'played'}
+            onCellClick={(row, col) => {
+              const key = `${row}|||${col}`
+              props.onOpenPlays({
+                title: `Cloudspire • ${row} • ${col}`,
+                playIds: playIdsBySoloFactionScenario().get(key) ?? [],
+              })
+            }}
+          />
+        </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={cloudspireContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Cloudspire • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
         <div class="statsGrid">
           <CountTable
             title="Solo scenarios"
@@ -474,61 +519,17 @@ export default function CloudspireView(props: {
               }
             />
           </Show>
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={cloudspireContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Cloudspire • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
-        <div class="statsBlock">
-          <div class="statsTitleRow">
-            <h3 class="statsTitle">My faction × Solo scenario</h3>
-            <div class="matrixControls">
-              <label class="control">
-                <span>Display</span>
-                <select
-                  value={matrixDisplayMode()}
-                  onInput={(e) => setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)}
-                >
-                  <option value="count">Count</option>
-                  <option value="played">Played</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
-          <HeatmapMatrix
-            rows={soloFactionKeys()}
-            cols={soloMatrixScenarioKeys()}
-            rowHeader="My faction"
-            colHeader="Solo scenario"
-            rowGroupBy={(row) => cloudspireContent.factionGroupByName.get(row)}
-            getCount={(row, col) => soloMatrix()[row]?.[col] ?? 0}
-            getWinCount={(row, col) => soloMatrixWins()[row]?.[col] ?? 0}
-            maxCount={soloMatrixMax()}
-            hideCounts={matrixDisplayMode() === 'played'}
-            onCellClick={(row, col) => {
-              const key = `${row}|||${col}`
-              props.onOpenPlays({
-                title: `Cloudspire • ${row} • ${col}`,
-                playIds: playIdsBySoloFactionScenario().get(key) ?? [],
-              })
-            }}
-          />
         </div>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

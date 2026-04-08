@@ -371,15 +371,6 @@ export default function TooManyBonesView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -390,65 +381,6 @@ export default function TooManyBonesView(props: {
           </div>
         }
       >
-        <div class="statsGrid">
-          <CountTable
-            title="Tyrants"
-            plays={tyrantCounts()}
-            wins={tyrantWins()}
-            keys={tyrantKeys()}
-            groupBy={(tyrant) => tooManyBonesContent.tyrantGroupByName.get(tyrant)}
-            getNextAchievement={(key) => getNextAchievement('tyrantWins', key)}
-            onPlaysClick={(tyrant) =>
-              props.onOpenPlays({
-                title: `Too Many Bones • Tyrant: ${tyrant}`,
-                playIds: playIdsByTyrant()[tyrant] ?? [],
-              })
-            }
-          />
-          <CountTable
-            title="My gearlocs"
-            plays={gearlocCountsMine()}
-            wins={gearlocWinsMine()}
-            keys={gearlocKeysMine()}
-            groupBy={(gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc)}
-            getNextAchievement={(key) => getNextAchievement('gearlocPlays', key)}
-            onPlaysClick={(gearloc) =>
-              props.onOpenPlays({
-                title: `Too Many Bones • My gearloc: ${gearloc}`,
-                playIds: playIdsByGearlocMine()[gearloc] ?? [],
-              })
-            }
-          />
-          <CountTable
-            title="All gearlocs"
-            plays={gearlocCountsAll()}
-            keys={gearlocKeysAll()}
-            groupBy={(gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc)}
-            onPlaysClick={(gearloc) =>
-              props.onOpenPlays({
-                title: `Too Many Bones • Gearloc: ${gearloc}`,
-                playIds: playIdsByGearlocAll()[gearloc] ?? [],
-              })
-            }
-          />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={tooManyBonesContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Too Many Bones • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
         <div class="statsBlock">
           <div class="statsTitleRow">
             <h3 class="statsTitle">Tyrant × Gearloc</h3>
@@ -490,7 +422,76 @@ export default function TooManyBonesView(props: {
             }}
           />
         </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={tooManyBonesContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Too Many Bones • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
+        <div class="statsGrid">
+          <CountTable
+            title="Tyrants"
+            plays={tyrantCounts()}
+            wins={tyrantWins()}
+            keys={tyrantKeys()}
+            groupBy={(tyrant) => tooManyBonesContent.tyrantGroupByName.get(tyrant)}
+            getNextAchievement={(key) => getNextAchievement('tyrantWins', key)}
+            onPlaysClick={(tyrant) =>
+              props.onOpenPlays({
+                title: `Too Many Bones • Tyrant: ${tyrant}`,
+                playIds: playIdsByTyrant()[tyrant] ?? [],
+              })
+            }
+          />
+          <CountTable
+            title="My gearlocs"
+            plays={gearlocCountsMine()}
+            wins={gearlocWinsMine()}
+            keys={gearlocKeysMine()}
+            groupBy={(gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc)}
+            getNextAchievement={(key) => getNextAchievement('gearlocPlays', key)}
+            onPlaysClick={(gearloc) =>
+              props.onOpenPlays({
+                title: `Too Many Bones • My gearloc: ${gearloc}`,
+                playIds: playIdsByGearlocMine()[gearloc] ?? [],
+              })
+            }
+          />
+          <CountTable
+            title="All gearlocs"
+            plays={gearlocCountsAll()}
+            keys={gearlocKeysAll()}
+            groupBy={(gearloc) => tooManyBonesContent.gearlocGroupByName.get(gearloc)}
+            onPlaysClick={(gearloc) =>
+              props.onOpenPlays({
+                title: `Too Many Bones • Gearloc: ${gearloc}`,
+                playIds: playIdsByGearlocAll()[gearloc] ?? [],
+              })
+            }
+          />
+        </div>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

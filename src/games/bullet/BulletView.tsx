@@ -366,15 +366,6 @@ export default function BulletView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -386,6 +377,61 @@ export default function BulletView(props: {
           </div>
         }
       >
+        <div class="statsBlock">
+          <div class="statsTitleRow">
+            <h3 class="statsTitle">Boss × Heroine</h3>
+            <div class="gameControls">
+              <label class="control">
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) =>
+                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
+                  }
+                >
+                  <option value="count">Count</option>
+                  <option value="played">Played</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <HeatmapMatrix
+            rows={matrixRows()}
+            cols={matrixCols()}
+            rowHeader="Boss"
+            colHeader="Heroine"
+            rowGroupBy={rowGroupBy}
+            colGroupBy={colGroupBy}
+            maxCount={matrixMax()}
+            hideCounts={matrixDisplayMode() === 'played'}
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
+            onCellClick={(row, col) => {
+              const boss = row
+              const heroine = col
+              const ids = playIdsByPair().get(`${boss}|||${heroine}`) ?? []
+              props.onOpenPlays({ title: `Bullet • ${boss} • ${heroine}`, playIds: ids })
+            }}
+          />
+        </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={bulletContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Bullet • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
         <div class="statsGrid">
           <CountTable
             title="Bosses"
@@ -427,62 +473,17 @@ export default function BulletView(props: {
               })
             }
           />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={bulletContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Bullet • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
-        <div class="statsBlock">
-          <div class="statsTitleRow">
-            <h3 class="statsTitle">Boss × Heroine</h3>
-            <div class="gameControls">
-              <label class="control">
-                <span>Display</span>
-                <select
-                  value={matrixDisplayMode()}
-                  onInput={(e) =>
-                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
-                  }
-                >
-                  <option value="count">Count</option>
-                  <option value="played">Played</option>
-                </select>
-              </label>
-            </div>
-          </div>
-          <HeatmapMatrix
-            rows={matrixRows()}
-            cols={matrixCols()}
-            rowHeader="Boss"
-            colHeader="Heroine"
-            rowGroupBy={rowGroupBy}
-            colGroupBy={colGroupBy}
-            maxCount={matrixMax()}
-            hideCounts={matrixDisplayMode() === 'played'}
-            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
-            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
-            onCellClick={(row, col) => {
-              const boss = row
-              const heroine = col
-              const ids = playIdsByPair().get(`${boss}|||${heroine}`) ?? []
-              props.onOpenPlays({ title: `Bullet • ${boss} • ${heroine}`, playIds: ids })
-            }}
-          />
         </div>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

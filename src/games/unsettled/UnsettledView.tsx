@@ -286,15 +286,6 @@ export default function UnsettledView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <div class="matrixControls">
         <label class="control">
           <span>Display</span>
@@ -328,6 +319,25 @@ export default function UnsettledView(props: {
             })
           }}
         />
+      </div>
+
+      <div class="statsGrid">
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={unsettledContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Unsettled • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
         <CountTable
           title="Planets"
           plays={planetCounts()}
@@ -357,23 +367,16 @@ export default function UnsettledView(props: {
             })
           }
         />
-        <Show when={hasCostTable()}>
-          <CostPerPlayTable
-            title="Cost per box"
-            rows={costRows()}
-            currencySymbol={unsettledContent.costCurrencySymbol}
-            overallPlays={totalPlays()}
-            overallHours={totalHours()}
-            overallHoursHasAssumed={totalHoursHasAssumed()}
-            onPlaysClick={(box) =>
-              props.onOpenPlays({
-                title: `Unsettled • Box: ${box}`,
-                playIds: playIdsByBox()[box] ?? [],
-              })
-            }
-          />
-        </Show>
       </div>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

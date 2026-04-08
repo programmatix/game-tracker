@@ -307,50 +307,6 @@ export default function UndauntedNormandyView(props: {
           </div>
         }
       >
-        <div class="statsGrid">
-          <CountTable
-            title="Scenarios"
-            plays={scenarioCounts()}
-            wins={scenarioWins()}
-            keys={scenarioKeys()}
-            onPlaysClick={(scenario) =>
-              props.onOpenPlays({
-                title: `Undaunted: Normandy • Scenario: ${scenario}`,
-                playIds: playIdsByScenario().get(normalizeLabel(scenario)) ?? [],
-              })
-            }
-          />
-
-          <CountTable
-            title="Sides"
-            plays={sideCounts()}
-            wins={sideWins()}
-            keys={sideKeys()}
-            onPlaysClick={(side) =>
-              props.onOpenPlays({
-                title: `Undaunted: Normandy • Side: ${side}`,
-                playIds: playIdsBySide().get(normalizeLabel(side)) ?? [],
-              })
-            }
-          />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={undauntedNormandyContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Undaunted: Normandy • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
         <div class="statsBlock">
           <div class="statsTitleRow">
             <h3 class="statsTitle">Scenario × Side</h3>
@@ -388,6 +344,51 @@ export default function UndauntedNormandyView(props: {
                 playIds: playIdsByPair().get(key) ?? [],
               })
             }}
+          />
+        </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={undauntedNormandyContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Undaunted: Normandy • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
+        <div class="statsGrid">
+          <CountTable
+            title="Scenarios"
+            plays={scenarioCounts()}
+            wins={scenarioWins()}
+            keys={scenarioKeys()}
+            onPlaysClick={(scenario) =>
+              props.onOpenPlays({
+                title: `Undaunted: Normandy • Scenario: ${scenario}`,
+                playIds: playIdsByScenario().get(normalizeLabel(scenario)) ?? [],
+              })
+            }
+          />
+
+          <CountTable
+            title="Sides"
+            plays={sideCounts()}
+            wins={sideWins()}
+            keys={sideKeys()}
+            onPlaysClick={(side) =>
+              props.onOpenPlays({
+                title: `Undaunted: Normandy • Side: ${side}`,
+                playIds: playIdsBySide().get(normalizeLabel(side)) ?? [],
+              })
+            }
           />
         </div>
       </Show>

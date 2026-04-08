@@ -355,15 +355,6 @@ export default function MageKnightView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -375,6 +366,42 @@ export default function MageKnightView(props: {
         }
       >
         <div class="statsGrid">
+          <div class="statsBlock">
+            <h3 class="statsTitle">My heroes × scenarios</h3>
+            <HeatmapMatrix
+              rows={heroKeys()}
+              cols={scenarioKeys()}
+              rowHeader="Hero"
+              colHeader="Scenario"
+              rowGroupBy={(hero) => mageKnightContent.heroBoxByName.get(hero)}
+              colGroupBy={(scenario) => mageKnightContent.scenarioGroupByName.get(scenario)}
+              getCount={(hero, scenario) => heroScenarioMatrix()[hero]?.[scenario] ?? 0}
+              getWinCount={(hero, scenario) => heroScenarioWins()[hero]?.[scenario] ?? 0}
+              maxCount={maxMatrixCount()}
+              onCellClick={(hero, scenario) =>
+                props.onOpenPlays({
+                  title: `Mage Knight • ${hero} × ${scenario}`,
+                  playIds: playIdsByHeroScenario().get(`${hero}|||${scenario}`) ?? [],
+                })
+              }
+            />
+          </div>
+          <Show when={hasCostTable()}>
+            <CostPerPlayTable
+              title="Cost per box"
+              rows={costRows()}
+              currencySymbol={mageKnightContent.costCurrencySymbol}
+              overallPlays={totalPlays()}
+              overallHours={totalHours()}
+              overallHoursHasAssumed={totalHoursHasAssumed()}
+              onPlaysClick={(box) =>
+                props.onOpenPlays({
+                  title: `Mage Knight • Box: ${box}`,
+                  playIds: playIdsByBox()[box] ?? [],
+                })
+              }
+            />
+          </Show>
           <CountTable
             title="My heroes"
             plays={heroCountsMine()}
@@ -426,73 +453,47 @@ export default function MageKnightView(props: {
               })
             }
           />
-          <div class="statsBlock">
-            <h3 class="statsTitle">Scenario guide</h3>
-            <div class="tableWrap compact">
-              <table class="table compactTable">
-                <thead>
-                  <tr>
-                    <th>Scenario</th>
-                    <th class="mono">Rounds</th>
-                    <th>Expansion</th>
-                    <th>Recommended</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={scenarioKeys()}>
-                    {(scenario) => (
-                      <tr>
-                        <td>{scenario}</td>
-                        <td class="mono">
-                          {mageKnightContent.scenarioRoundsByName.get(scenario)?.toLocaleString() ?? '—'}
-                        </td>
-                        <td>{mageKnightContent.scenarioExpansionByName.get(scenario) ?? 'Core'}</td>
-                        <td>{mageKnightContent.scenarioRecommendedByName.get(scenario) ? 'Yes' : '—'}</td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="statsBlock">
-            <h3 class="statsTitle">My heroes × scenarios</h3>
-            <HeatmapMatrix
-              rows={heroKeys()}
-              cols={scenarioKeys()}
-              rowHeader="Hero"
-              colHeader="Scenario"
-              rowGroupBy={(hero) => mageKnightContent.heroBoxByName.get(hero)}
-              colGroupBy={(scenario) => mageKnightContent.scenarioGroupByName.get(scenario)}
-              getCount={(hero, scenario) => heroScenarioMatrix()[hero]?.[scenario] ?? 0}
-              getWinCount={(hero, scenario) => heroScenarioWins()[hero]?.[scenario] ?? 0}
-              maxCount={maxMatrixCount()}
-              onCellClick={(hero, scenario) =>
-                props.onOpenPlays({
-                  title: `Mage Knight • ${hero} × ${scenario}`,
-                  playIds: playIdsByHeroScenario().get(`${hero}|||${scenario}`) ?? [],
-                })
-              }
-            />
-          </div>
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={mageKnightContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Mage Knight • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
         </div>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
+
+      <div class="statsBlock">
+        <h3 class="statsTitle">Scenario guide</h3>
+        <div class="tableWrap compact">
+          <table class="table compactTable">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th class="mono">Rounds</th>
+                <th>Expansion</th>
+                <th>Recommended</th>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={scenarioKeys()}>
+                {(scenario) => (
+                  <tr>
+                    <td>{scenario}</td>
+                    <td class="mono">
+                      {mageKnightContent.scenarioRoundsByName.get(scenario)?.toLocaleString() ?? '—'}
+                    </td>
+                    <td>{mageKnightContent.scenarioExpansionByName.get(scenario) ?? 'Core'}</td>
+                    <td>{mageKnightContent.scenarioRecommendedByName.get(scenario) ? 'Yes' : '—'}</td>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }

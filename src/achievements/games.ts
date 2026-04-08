@@ -25,6 +25,7 @@ import { computeIsofarianGuardAchievements } from '../games/isofarian-guard/achi
 import { computeArkhamHorrorLcgAchievements } from '../games/arkham-horror-lcg/achievements'
 import { computeKingdomsForlornAchievements } from '../games/kingdoms-forlorn/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
+import { shouldCalculateAchievementsForGame } from '../gamePreferences'
 
 export type GameId =
   | 'finalGirl'
@@ -68,6 +69,8 @@ export function computeGameAchievements(
   username: string,
   options?: ComputeAchievementsOptions,
 ) {
+  if (!shouldCalculateAchievementsForGame(gameId)) return []
+
   if (gameId === 'finalGirl') return computeFinalGirlAchievements(plays, username)
   if (gameId === 'spiritIsland')
     return computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions)
@@ -102,76 +105,66 @@ export function computeAllGameAchievementSummaries(
   username: string,
   options?: ComputeAchievementsOptions,
 ): GameAchievementSummary[] {
-  const summaries: GameAchievementSummary[] = [
-    { gameId: 'finalGirl', gameName: 'Final Girl', achievements: computeFinalGirlAchievements(plays, username) },
-    { gameId: 'spiritIsland', gameName: 'Spirit Island', achievements: computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions) },
-    { gameId: 'mistfall', gameName: 'Mistfall', achievements: computeMistfallAchievements(plays, username) },
-    { gameId: 'deathMayDie', gameName: 'Cthulhu: Death May Die', achievements: computeDeathMayDieAchievements(plays, username) },
-    { gameId: 'bullet', gameName: 'Bullet', achievements: computeBulletAchievements(plays, username) },
-    { gameId: 'tooManyBones', gameName: 'Too Many Bones', achievements: computeTooManyBonesAchievements(plays, username) },
-    { gameId: 'skytearHorde', gameName: 'Skytear Horde', achievements: computeSkytearHordeAchievements(plays, username) },
-    { gameId: 'cloudspire', gameName: 'Cloudspire', achievements: computeCloudspireAchievements(plays, username) },
-    { gameId: 'burncycle', gameName: 'burncycle', achievements: computeBurncycleAchievements(plays, username) },
-    { gameId: 'paleo', gameName: 'Paleo', achievements: computePaleoAchievements(plays, username) },
-    {
-      gameId: 'robinsonCrusoe',
-      gameName: 'Robinson Crusoe',
-      achievements: computeRobinsonCrusoeAchievements(plays, username),
-    },
-    {
-      gameId: 'robinHood',
-      gameName: 'The Adventures of Robin Hood',
-      achievements: computeRobinHoodAchievements(plays, username),
-    },
-    {
-      gameId: 'earthborneRangers',
-      gameName: 'Earthborne Rangers',
-      achievements: computeEarthborneRangersAchievements(plays, username),
-    },
-    { gameId: 'deckers', gameName: 'Deckers', achievements: computeDeckersAchievements(plays, username) },
-    {
-      gameId: 'elderScrolls',
-      gameName: 'The Elder Scrolls: Betrayal of the Second Era',
-      achievements: computeElderScrollsAchievements(plays, username),
-    },
-    {
-      gameId: 'starTrekCaptainsChair',
-      gameName: "Star Trek: Captain's Chair",
-      achievements: computeStarTrekCaptainsChairAchievements(plays, username),
-    },
-    { gameId: 'unsettled', gameName: 'Unsettled', achievements: computeUnsettledAchievements(plays, username) },
-    { gameId: 'mageKnight', gameName: 'Mage Knight', achievements: computeMageKnightAchievements(plays, username) },
-    {
-      gameId: 'mandalorianAdventures',
-      gameName: 'The Mandalorian: Adventures',
-      achievements: computeMandalorianAdventuresAchievements(plays, username),
-    },
-    {
-      gameId: 'oathsworn',
-      gameName: 'Oathsworn: Into the Deepwood',
-      achievements: computeOathswornAchievements(plays, username),
-    },
-    {
-      gameId: 'taintedGrail',
-      gameName: 'Tainted Grail: The Fall of Avalon',
-      achievements: computeTaintedGrailAchievements(plays, username),
-    },
-    {
-      gameId: 'isofarianGuard',
-      gameName: 'The Isofarian Guard',
-      achievements: computeIsofarianGuardAchievements(plays, username),
-    },
-    {
-      gameId: 'arkhamHorrorLcg',
-      gameName: 'Arkham Horror: The Card Game',
-      achievements: computeArkhamHorrorLcgAchievements(plays, username),
-    },
-    {
-      gameId: 'kingdomsForlorn',
-      gameName: 'Kingdoms Forlorn',
-      achievements: computeKingdomsForlornAchievements(plays, username),
-    },
-  ]
+  const summaries: GameAchievementSummary[] = []
+  const maybePush = (
+    gameId: GameId,
+    gameName: string,
+    compute: () => Achievement[],
+  ) => {
+    if (!shouldCalculateAchievementsForGame(gameId)) return
+    summaries.push({ gameId, gameName, achievements: compute() })
+  }
+
+  maybePush('finalGirl', 'Final Girl', () => computeFinalGirlAchievements(plays, username))
+  maybePush('spiritIsland', 'Spirit Island', () =>
+    computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions),
+  )
+  maybePush('mistfall', 'Mistfall', () => computeMistfallAchievements(plays, username))
+  maybePush('deathMayDie', 'Cthulhu: Death May Die', () =>
+    computeDeathMayDieAchievements(plays, username),
+  )
+  maybePush('bullet', 'Bullet', () => computeBulletAchievements(plays, username))
+  maybePush('tooManyBones', 'Too Many Bones', () => computeTooManyBonesAchievements(plays, username))
+  maybePush('skytearHorde', 'Skytear Horde', () => computeSkytearHordeAchievements(plays, username))
+  maybePush('cloudspire', 'Cloudspire', () => computeCloudspireAchievements(plays, username))
+  maybePush('burncycle', 'burncycle', () => computeBurncycleAchievements(plays, username))
+  maybePush('paleo', 'Paleo', () => computePaleoAchievements(plays, username))
+  maybePush('robinsonCrusoe', 'Robinson Crusoe', () =>
+    computeRobinsonCrusoeAchievements(plays, username),
+  )
+  maybePush('robinHood', 'The Adventures of Robin Hood', () =>
+    computeRobinHoodAchievements(plays, username),
+  )
+  maybePush('earthborneRangers', 'Earthborne Rangers', () =>
+    computeEarthborneRangersAchievements(plays, username),
+  )
+  maybePush('deckers', 'Deckers', () => computeDeckersAchievements(plays, username))
+  maybePush('elderScrolls', 'The Elder Scrolls: Betrayal of the Second Era', () =>
+    computeElderScrollsAchievements(plays, username),
+  )
+  maybePush('starTrekCaptainsChair', "Star Trek: Captain's Chair", () =>
+    computeStarTrekCaptainsChairAchievements(plays, username),
+  )
+  maybePush('unsettled', 'Unsettled', () => computeUnsettledAchievements(plays, username))
+  maybePush('mageKnight', 'Mage Knight', () => computeMageKnightAchievements(plays, username))
+  maybePush('mandalorianAdventures', 'The Mandalorian: Adventures', () =>
+    computeMandalorianAdventuresAchievements(plays, username),
+  )
+  maybePush('oathsworn', 'Oathsworn: Into the Deepwood', () =>
+    computeOathswornAchievements(plays, username),
+  )
+  maybePush('taintedGrail', 'Tainted Grail: The Fall of Avalon', () =>
+    computeTaintedGrailAchievements(plays, username),
+  )
+  maybePush('isofarianGuard', 'The Isofarian Guard', () =>
+    computeIsofarianGuardAchievements(plays, username),
+  )
+  maybePush('arkhamHorrorLcg', 'Arkham Horror: The Card Game', () =>
+    computeArkhamHorrorLcgAchievements(plays, username),
+  )
+  maybePush('kingdomsForlorn', 'Kingdoms Forlorn', () =>
+    computeKingdomsForlornAchievements(plays, username),
+  )
 
   return summaries
 }

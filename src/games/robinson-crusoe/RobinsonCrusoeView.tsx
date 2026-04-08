@@ -216,15 +216,6 @@ export default function RobinsonCrusoeView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
       <div class="finalGirlMetaRow">
         <div class="meta">
           <div class="metaLabel">Total hours</div>
@@ -254,22 +245,6 @@ export default function RobinsonCrusoeView(props: {
         </div>
       </Show>
 
-      <CountTable
-        title="Scenarios"
-        plays={scenarioCounts()}
-        wins={scenarioWins()}
-        keys={scenarioKeys()}
-        groupBy={(scenario) => robinsonCrusoeContent.scenarioGroupByName.get(scenario)}
-        getNextAchievement={(scenario) => getNextAchievement('scenarioPlays', scenario)}
-        onPlaysClick={(scenario) => {
-          const playIds = playIdsByScenario()[scenario] ?? []
-          props.onOpenPlays({
-            title: `Robinson Crusoe • ${scenario}`,
-            playIds,
-          })
-        }}
-      />
-
       <Show when={hasCostTable()}>
         <CostPerPlayTable
           title="Cost Per Box"
@@ -288,6 +263,31 @@ export default function RobinsonCrusoeView(props: {
           }}
         />
       </Show>
+
+      <CountTable
+        title="Scenarios"
+        plays={scenarioCounts()}
+        wins={scenarioWins()}
+        keys={scenarioKeys()}
+        groupBy={(scenario) => robinsonCrusoeContent.scenarioGroupByName.get(scenario)}
+        getNextAchievement={(scenario) => getNextAchievement('scenarioPlays', scenario)}
+        onPlaysClick={(scenario) => {
+          const playIds = playIdsByScenario()[scenario] ?? []
+          props.onOpenPlays({
+            title: `Robinson Crusoe • ${scenario}`,
+            playIds,
+          })
+        }}
+      />
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
     </div>
   )
 }

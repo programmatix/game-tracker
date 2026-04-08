@@ -1,4 +1,5 @@
 import { For, Show, createMemo } from 'solid-js'
+import { COST_PER_HOUR_TARGET_OPTIONS } from '../costTargets'
 import ProgressBar from './ProgressBar'
 
 export type CostPerPlayRow = {
@@ -49,7 +50,12 @@ export default function CostPerPlayTable(props: {
     hours > 0 ? formatMoney(cost / hours) : '—'
   const formatHours = (hours: number): string =>
     hours.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-  const costPerHourTargets = [10, 5, 3, 2, 1] as const
+  const formatPercent = (value: number): string =>
+    `${(value * 100).toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}%`
+  const costPerHourTargets = [...COST_PER_HOUR_TARGET_OPTIONS].reverse()
   const overallCostPerHour = createMemo(() => {
     const hours = overallHours()
     if (hours <= 0) return undefined
@@ -111,7 +117,7 @@ export default function CostPerPlayTable(props: {
     <div class="statsBlock">
       <h3 class="statsTitle">{props.title ?? 'Cost Per Play'}</h3>
       <div class="tableWrap compact">
-        <table class="table compactTable">
+        <table class="table compactTable mobileCardTable">
           <thead>
             <tr>
               <th>Box / Expansion</th>
@@ -126,9 +132,9 @@ export default function CostPerPlayTable(props: {
             <For each={rows()}>
               {(row) => (
                 <tr>
-                  <td>{row.box}</td>
-                  <td class="mono">{formatMoney(row.cost)}</td>
-                  <td class="mono">
+                  <td data-label="Box / Expansion">{row.box}</td>
+                  <td class="mono" data-label="Cost">{formatMoney(row.cost)}</td>
+                  <td class="mono" data-label="Plays">
                     <Show
                       when={Boolean(props.onPlaysClick) && row.plays > 0}
                       fallback={row.plays.toLocaleString()}
@@ -143,25 +149,25 @@ export default function CostPerPlayTable(props: {
                       </button>
                     </Show>
                   </td>
-                  <td class="mono">
+                  <td class="mono" data-label="Hours">
                     {formatHours(row.hoursPlayed)}
                     {row.hasAssumedHours ? '*' : ''}
                   </td>
-                  <td class="mono">{formatCostPerPlay(row.cost, row.plays)}</td>
-                  <td class="mono">{formatCostPerHour(row.cost, row.hoursPlayed)}</td>
+                  <td class="mono" data-label="Cost / play">{formatCostPerPlay(row.cost, row.plays)}</td>
+                  <td class="mono" data-label="Cost / hour">{formatCostPerHour(row.cost, row.hoursPlayed)}</td>
                 </tr>
               )}
             </For>
             <tr>
-              <th>Overall</th>
-              <th class="mono">{formatMoney(overallCost())}</th>
-              <th class="mono">{props.overallPlays.toLocaleString()}</th>
-              <th class="mono">
+              <td class="costsSummaryLabel" data-label="Box / Expansion">Overall</td>
+              <td class="mono" data-label="Cost">{formatMoney(overallCost())}</td>
+              <td class="mono" data-label="Plays">{props.overallPlays.toLocaleString()}</td>
+              <td class="mono" data-label="Hours">
                 {formatHours(overallHours())}
                 {hasAnyAssumedHours() ? '*' : ''}
-              </th>
-              <th class="mono">{formatCostPerPlay(overallCost(), props.overallPlays)}</th>
-              <th class="mono">{formatCostPerHour(overallCost(), overallHours())}</th>
+              </td>
+              <td class="mono" data-label="Cost / play">{formatCostPerPlay(overallCost(), props.overallPlays)}</td>
+              <td class="mono" data-label="Cost / hour">{formatCostPerHour(overallCost(), overallHours())}</td>
             </tr>
           </tbody>
         </table>
@@ -173,7 +179,7 @@ export default function CostPerPlayTable(props: {
         </div>
       </Show>
       <div class="tableWrap compact">
-        <table class="table compactTable">
+        <table class="table compactTable mobileCardTable">
           <thead>
             <tr>
               <th>Cost/hour achievement</th>
@@ -186,23 +192,37 @@ export default function CostPerPlayTable(props: {
           <tbody>
             <For each={costPerHourAchievementRows()}>
               {(row) => {
+                const progress =
+                  typeof row.totalTargetPlays === 'number' && row.totalTargetPlays > 0
+                    ? Math.min(1, props.overallPlays / row.totalTargetPlays)
+                    : undefined
                 return (
                   <tr>
-                    <td>Bring cost/hour to {formatTargetValue(row.target)}</td>
-                    <td class="mono">{formatTargetValue(row.target)}</td>
-                    <td class="mono">
+                    <td data-label="Cost/hour achievement">
+                      Bring cost/hour to {formatTargetValue(row.target)}
+                    </td>
+                    <td class="mono" data-label="Target">{formatTargetValue(row.target)}</td>
+                    <td class="costProgressTableCell" data-label="Progress">
                       <Show when={typeof row.totalTargetPlays === 'number'} fallback="—">
-                        <ProgressBar
-                          value={props.overallPlays}
-                          target={row.totalTargetPlays!}
-                          widthPx={120}
-                          label={row.tooltip}
-                          showLabel={false}
-                        />
+                        <div class="costProgressCell">
+                          <ProgressBar
+                            value={props.overallPlays}
+                            target={row.totalTargetPlays!}
+                            widthPx={156}
+                            label={row.tooltip}
+                            showLabel={false}
+                          />
+                          <div class="costProgressMeta">
+                            <span class="mono">{typeof progress === 'number' ? formatPercent(progress) : '—'}</span>
+                            <span class="mono muted">
+                              {props.overallPlays.toLocaleString()}/{row.totalTargetPlays!.toLocaleString()} plays
+                            </span>
+                          </div>
+                        </div>
                       </Show>
                     </td>
-                    <td>{row.completed ? 'Unlocked' : 'In progress'}</td>
-                    <td class="mono">
+                    <td data-label="Status">{row.completed ? 'Unlocked' : 'In progress'}</td>
+                    <td class="mono" data-label="Plays remaining">
                       {typeof row.remaining === 'number' ? row.remaining.toLocaleString() : '—'}
                     </td>
                   </tr>

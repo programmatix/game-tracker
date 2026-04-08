@@ -333,15 +333,6 @@ export default function PaleoView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -352,52 +343,6 @@ export default function PaleoView(props: {
           </div>
         }
       >
-        <div class="statsGrid">
-          <CountTable
-            title="Modules"
-            plays={moduleCounts()}
-            wins={moduleWins()}
-            keys={moduleKeys()}
-            groupBy={(module) => paleoContent.moduleGroupByName.get(module)}
-            getNextAchievement={(key) => getNextAchievement('moduleWins', key)}
-            onPlaysClick={(module) =>
-              props.onOpenPlays({
-                title: `Paleo • Module: ${module}`,
-                playIds: playIdsByModule()[module] ?? [],
-              })
-            }
-          />
-          <CountTable
-            title="Scenarios"
-            plays={scenarioCounts()}
-            wins={scenarioWins()}
-            keys={scenarioKeys()}
-            getNextAchievement={(key) => getNextAchievement('scenarioWins', key)}
-            onPlaysClick={(scenario) =>
-              props.onOpenPlays({
-                title: `Paleo • Scenario: ${scenario}`,
-                playIds: playIdsByScenario()[scenario] ?? [],
-              })
-            }
-          />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={paleoContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Paleo • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
         <div class="statsBlock">
           <div class="statsTitleRow">
             <h3 class="statsTitle">Module A × Module B</h3>
@@ -434,7 +379,63 @@ export default function PaleoView(props: {
             }
           />
         </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={paleoContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Paleo • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
+        <div class="statsGrid">
+          <CountTable
+            title="Modules"
+            plays={moduleCounts()}
+            wins={moduleWins()}
+            keys={moduleKeys()}
+            groupBy={(module) => paleoContent.moduleGroupByName.get(module)}
+            getNextAchievement={(key) => getNextAchievement('moduleWins', key)}
+            onPlaysClick={(module) =>
+              props.onOpenPlays({
+                title: `Paleo • Module: ${module}`,
+                playIds: playIdsByModule()[module] ?? [],
+              })
+            }
+          />
+          <CountTable
+            title="Scenarios"
+            plays={scenarioCounts()}
+            wins={scenarioWins()}
+            keys={scenarioKeys()}
+            getNextAchievement={(key) => getNextAchievement('scenarioWins', key)}
+            onPlaysClick={(scenario) =>
+              props.onOpenPlays({
+                title: `Paleo • Scenario: ${scenario}`,
+                playIds: playIdsByScenario()[scenario] ?? [],
+              })
+            }
+          />
+        </div>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

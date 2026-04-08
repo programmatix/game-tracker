@@ -356,15 +356,6 @@ export default function ArkhamHorrorLcgView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
       <div class="finalGirlMetaRow">
         <div class="meta">
           <div class="metaLabel">Total hours</div>
@@ -404,63 +395,6 @@ export default function ArkhamHorrorLcgView(props: {
           <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has no recorded length.
         </div>
       </Show>
-
-      <CountTable
-        title="Campaigns"
-        plays={campaignCounts()}
-        keys={campaignKeys()}
-        groupBy={(campaign) => arkhamHorrorLcgContent.campaignGroupByName.get(campaign)}
-        getNextAchievement={(campaign) => nextAchievement('campaignPlays', campaign)}
-        onPlaysClick={(campaign) =>
-          props.onOpenPlays({
-            title: `Arkham Horror LCG • ${campaign}`,
-            playIds: uniquePlayIds(playIdsByCampaign()[campaign] ?? []),
-          })
-        }
-      />
-
-      <CountTable
-        title="Scenarios"
-        plays={scenarioCounts()}
-        keys={scenarioKeys()}
-        groupBy={(scenario) => arkhamHorrorLcgContent.scenarioCampaignByName.get(scenario)}
-        getNextAchievement={(scenario) => nextAchievement('scenarioPlays', scenario)}
-        onPlaysClick={(scenario) =>
-          props.onOpenPlays({
-            title: `Arkham Horror LCG • ${scenario}`,
-            playIds: uniquePlayIds(playIdsByScenario()[scenario] ?? []),
-          })
-        }
-      />
-
-      <CountTable
-        title="Investigators"
-        plays={investigatorCounts()}
-        wins={investigatorWins()}
-        keys={investigatorKeys()}
-        groupBy={(investigator) => arkhamHorrorLcgContent.investigatorClassByName.get(investigator)}
-        getNextAchievement={(investigator) => nextAchievement('investigatorPlays', investigator)}
-        onPlaysClick={(investigator) =>
-          props.onOpenPlays({
-            title: `Arkham Horror LCG • ${investigator}`,
-            playIds: uniquePlayIds(playIdsByInvestigator()[investigator] ?? []),
-          })
-        }
-      />
-
-      <CountTable
-        title="Difficulty"
-        plays={difficultyCounts()}
-        wins={difficultyWins()}
-        keys={mergeCanonicalKeys(arkhamHorrorLcgContent.difficulties, Object.keys(difficultyCounts()))}
-        getNextAchievement={(difficulty) => nextAchievement('difficultyWins', difficulty)}
-        onPlaysClick={(difficulty) =>
-          props.onOpenPlays({
-            title: `Arkham Horror LCG • ${difficulty}`,
-            playIds: uniquePlayIds(playIdsByDifficulty()[difficulty] ?? []),
-          })
-        }
-      />
 
       <div class="statsBlock">
         <div class="statsTitleRow">
@@ -524,6 +458,72 @@ export default function ArkhamHorrorLcgView(props: {
           }
         />
       </Show>
+
+      <CountTable
+        title="Campaigns"
+        plays={campaignCounts()}
+        keys={campaignKeys()}
+        groupBy={(campaign) => arkhamHorrorLcgContent.campaignGroupByName.get(campaign)}
+        getNextAchievement={(campaign) => nextAchievement('campaignPlays', campaign)}
+        onPlaysClick={(campaign) =>
+          props.onOpenPlays({
+            title: `Arkham Horror LCG • ${campaign}`,
+            playIds: uniquePlayIds(playIdsByCampaign()[campaign] ?? []),
+          })
+        }
+      />
+
+      <CountTable
+        title="Scenarios"
+        plays={scenarioCounts()}
+        keys={scenarioKeys()}
+        groupBy={(scenario) => arkhamHorrorLcgContent.scenarioCampaignByName.get(scenario)}
+        getNextAchievement={(scenario) => nextAchievement('scenarioPlays', scenario)}
+        onPlaysClick={(scenario) =>
+          props.onOpenPlays({
+            title: `Arkham Horror LCG • ${scenario}`,
+            playIds: uniquePlayIds(playIdsByScenario()[scenario] ?? []),
+          })
+        }
+      />
+
+      <CountTable
+        title="Investigators"
+        plays={investigatorCounts()}
+        wins={investigatorWins()}
+        keys={investigatorKeys()}
+        groupBy={(investigator) => arkhamHorrorLcgContent.investigatorClassByName.get(investigator)}
+        getNextAchievement={(investigator) => nextAchievement('investigatorPlays', investigator)}
+        onPlaysClick={(investigator) =>
+          props.onOpenPlays({
+            title: `Arkham Horror LCG • ${investigator}`,
+            playIds: uniquePlayIds(playIdsByInvestigator()[investigator] ?? []),
+          })
+        }
+      />
+
+      <CountTable
+        title="Difficulty"
+        plays={difficultyCounts()}
+        wins={difficultyWins()}
+        keys={mergeCanonicalKeys(arkhamHorrorLcgContent.difficulties, Object.keys(difficultyCounts()))}
+        getNextAchievement={(difficulty) => nextAchievement('difficultyWins', difficulty)}
+        onPlaysClick={(difficulty) =>
+          props.onOpenPlays({
+            title: `Arkham Horror LCG • ${difficulty}`,
+            playIds: uniquePlayIds(playIdsByDifficulty()[difficulty] ?? []),
+          })
+        }
+      />
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
     </div>
   )
 }

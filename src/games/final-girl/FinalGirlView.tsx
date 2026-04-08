@@ -510,14 +510,6 @@ export default function FinalGirlView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        achievements={achievements()}
-        nextLimit={5}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -583,6 +575,27 @@ export default function FinalGirlView(props: {
               })
             }}
           />
+        </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={ownedContent.costCurrencySymbol}
+            overallPlays={displayFinalGirlPlays()}
+            overallHours={displayTotalHours()}
+            averageHoursPerPlay={displayAverageHoursPerPlay()}
+            overallHoursHasAssumed={displayTotalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Final Girl • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
+        <div class="statsGrid">
           <CountTable
             title="Villains"
             plays={villainCounts()}
@@ -639,44 +652,33 @@ export default function FinalGirlView(props: {
           />
         </div>
 
-        <div class="statsGrid">
-          <CountTable
-            title="Final Girls"
-            plays={finalGirlCounts()}
-            wins={finalGirlWins()}
-            keys={finalGirlKeys()}
-            groupBy={(finalGirl) =>
-              ownedContent.finalGirlSeasonsByName.get(normalizeFinalGirlName(finalGirl))
-            }
-            getNextAchievement={(finalGirl) =>
-              findFinalGirlAchievement('finalGirlPlays', finalGirl, finalGirlLabelToId())
-            }
-            onPlaysClick={(finalGirl) =>
-              props.onOpenPlays({
-                title: `Final Girl • Final Girl: ${finalGirl}`,
-                playIds: playIdsByFinalGirl()[finalGirl] ?? [],
-              })
-            }
-          />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={ownedContent.costCurrencySymbol}
-              overallPlays={displayFinalGirlPlays()}
-              overallHours={displayTotalHours()}
-              averageHoursPerPlay={displayAverageHoursPerPlay()}
-              overallHoursHasAssumed={displayTotalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Final Girl • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
+        <CountTable
+          title="Final Girls"
+          plays={finalGirlCounts()}
+          wins={finalGirlWins()}
+          keys={finalGirlKeys()}
+          groupBy={(finalGirl) =>
+            ownedContent.finalGirlSeasonsByName.get(normalizeFinalGirlName(finalGirl))
+          }
+          getNextAchievement={(finalGirl) =>
+            findFinalGirlAchievement('finalGirlPlays', finalGirl, finalGirlLabelToId())
+          }
+          onPlaysClick={(finalGirl) =>
+            props.onOpenPlays({
+              title: `Final Girl • Final Girl: ${finalGirl}`,
+              playIds: playIdsByFinalGirl()[finalGirl] ?? [],
+            })
+          }
+        />
       </Show>
+
+      <AchievementsPanel
+        achievements={achievements()}
+        nextLimit={5}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

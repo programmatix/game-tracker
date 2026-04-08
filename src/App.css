@@ -124,6 +124,7 @@
   position: sticky;
   top: 14px;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
   align-self: start;
   max-height: calc(100vh - 28px);
@@ -139,6 +140,7 @@
 
 .sidebarTabs {
   display: grid;
+  min-height: 0;
   gap: 6px;
   overflow-y: auto;
   padding-right: 4px;
@@ -322,10 +324,64 @@
 }
 
 .costProgressCell {
-  display: inline-flex;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.costProgressMeta {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   min-width: 0;
+  font-size: 11px;
+}
+
+.costsToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.costToolbarGroup {
+  display: grid;
+  gap: 6px;
+}
+
+.costLoadingCard {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.costLoadingHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.costTargetGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.costsSummaryLabel {
+  font-weight: 650;
+}
+
+.costProgressTableCell {
+  min-width: 180px;
 }
 
 .gameRow {
@@ -333,6 +389,20 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+
+.gameTitleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.gameOptionsCogButton {
+  padding: 0 4px;
+  line-height: 1;
+  font-size: 14px;
 }
 
 .gameThumb {
@@ -420,6 +490,100 @@
 .statsBlock {
   display: grid;
   gap: 8px;
+}
+
+.gameOptionsView {
+  gap: 14px;
+}
+
+.gameOptionsPicker {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.gameOptionsPicker select {
+  min-width: 240px;
+  max-width: 100%;
+}
+
+.gameOptionsCard {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gameOptionsCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gameOptionsCardHeader h4 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.gameOptionsRows {
+  display: grid;
+  gap: 10px;
+}
+
+.gameOptionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gameOptionRowDisabled {
+  opacity: 0.7;
+}
+
+.gameOptionCopy {
+  display: grid;
+  gap: 4px;
+}
+
+.gameOptionTitle {
+  font-weight: 650;
+}
+
+.gameOptionRow input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.gameOptionSelect {
+  min-width: 180px;
+  max-width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .statsTitle {
@@ -763,6 +927,19 @@
   margin-bottom: 10px;
   color: var(--muted);
   overflow-wrap: anywhere;
+}
+
+.monthlyMonthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.monthlyMonthLabel {
+  margin-bottom: 0;
 }
 
 .monthlySummaryGrid {
@@ -1131,13 +1308,22 @@
 }
 
 .progressBar {
+  position: relative;
   width: var(--progress-width, 140px);
   height: 10px;
   border-radius: 999px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+.progressBar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 55%);
+  pointer-events: none;
 }
 
 .progressFill {
@@ -1146,6 +1332,8 @@
   width: 0%;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(96, 165, 250, 0.95), rgba(167, 139, 250, 0.95));
+  box-shadow: 0 0 16px rgba(96, 165, 250, 0.28);
+  transition: width 180ms ease;
 }
 
 .progressBarComplete .progressFill {
@@ -1276,6 +1464,12 @@
   font-weight: 650;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.statusInProgress {
+  border-color: rgba(120, 168, 255, 0.42);
+  background: rgba(120, 168, 255, 0.16);
+  color: #c9dcff;
 }
 
 .statusResolved {
@@ -1473,6 +1667,19 @@
     display: grid;
     justify-items: start;
     gap: 6px;
+  }
+
+  .costProgressMeta {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .costsToolbar {
+    align-items: flex-start;
+  }
+
+  .costLoadingHeader {
+    align-items: flex-start;
   }
 
   .progressBar {

@@ -486,14 +486,6 @@ export default function MistfallView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        achievements={achievements()}
-        nextLimit={5}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -505,53 +497,6 @@ export default function MistfallView(props: {
           </div>
         }
       >
-        <div class="statsGrid">
-          <CountTable
-            title="Heroes"
-            plays={heroCounts()}
-            wins={heroWins()}
-            keys={heroKeys()}
-            groupBy={(hero) => mappings.heroGroupByName.get(hero)}
-            getNextAchievement={getHeroNextAchievement}
-            onPlaysClick={(hero) =>
-              props.onOpenPlays({
-                title: `Mistfall • Hero: ${hero}`,
-                playIds: playIdsByHero()[hero] ?? [],
-              })
-            }
-          />
-          <CountTable
-            title="Quests"
-            plays={questCounts()}
-            wins={questWins()}
-            keys={questKeys()}
-            groupBy={(quest) => mappings.questGroupByName.get(quest)}
-            getNextAchievement={getQuestNextAchievement}
-            onPlaysClick={(quest) =>
-              props.onOpenPlays({
-                title: `Mistfall • Quest: ${quest}`,
-                playIds: playIdsByQuest()[quest] ?? [],
-              })
-            }
-          />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={mappings.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Mistfall • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
         <div class="statsBlock">
           <div class="statsTitleRow">
             <h3 class="statsTitle">Hero × Quest</h3>
@@ -592,7 +537,63 @@ export default function MistfallView(props: {
             }}
           />
         </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={mappings.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Mistfall • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
+        <div class="statsGrid">
+          <CountTable
+            title="Heroes"
+            plays={heroCounts()}
+            wins={heroWins()}
+            keys={heroKeys()}
+            groupBy={(hero) => mappings.heroGroupByName.get(hero)}
+            getNextAchievement={getHeroNextAchievement}
+            onPlaysClick={(hero) =>
+              props.onOpenPlays({
+                title: `Mistfall • Hero: ${hero}`,
+                playIds: playIdsByHero()[hero] ?? [],
+              })
+            }
+          />
+          <CountTable
+            title="Quests"
+            plays={questCounts()}
+            wins={questWins()}
+            keys={questKeys()}
+            groupBy={(quest) => mappings.questGroupByName.get(quest)}
+            getNextAchievement={getQuestNextAchievement}
+            onPlaysClick={(quest) =>
+              props.onOpenPlays({
+                title: `Mistfall • Quest: ${quest}`,
+                playIds: playIdsByQuest()[quest] ?? [],
+              })
+            }
+          />
+        </div>
       </Show>
+
+      <AchievementsPanel
+        achievements={achievements()}
+        nextLimit={5}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

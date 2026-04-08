@@ -344,15 +344,6 @@ export default function IsofarianGuardView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
       <div class="finalGirlMetaRow">
         <div class="meta">
           <div class="metaLabel">Total hours</div>
@@ -382,43 +373,6 @@ export default function IsofarianGuardView(props: {
           <div class="metaValue mono">{untaggedPlays().toLocaleString()}</div>
         </div>
       </div>
-
-      <div class="statsGrid">
-        <CountTable
-          title="Campaigns"
-          plays={campaignCounts()}
-          wins={campaignWins()}
-          keys={campaignKeys()}
-          onPlaysClick={(campaign) => {
-            const playIds = playIdsByCampaign().get(normalizeLabel(campaign)) ?? []
-            props.onOpenPlays({ title: `Isofarian Guard • ${campaign}`, playIds })
-          }}
-        />
-
-        <CountTable
-          title="Guards"
-          plays={guardCounts()}
-          wins={guardWins()}
-          keys={guardKeys()}
-          groupBy={(guard) => isofarianGuardContent.guardGroupByName.get(guard)}
-          onPlaysClick={(guard) => {
-            const playIds = playIdsByGuard().get(normalizeLabel(guard)) ?? []
-            props.onOpenPlays({ title: `Isofarian Guard • ${guard}`, playIds })
-          }}
-        />
-      </div>
-
-      <CountTable
-        title="Chapters"
-        plays={chapterCounts()}
-        wins={chapterWins()}
-        keys={chapterKeys()}
-        groupBy={(chapter) => isofarianGuardContent.chapterGroupByName.get(chapter)}
-        onPlaysClick={(chapter) => {
-          const playIds = playIdsByChapter().get(normalizeLabel(chapter)) ?? []
-          props.onOpenPlays({ title: `Isofarian Guard • ${chapter}`, playIds })
-        }}
-      />
 
       <div class="statsBlock">
         <div class="statsTitleRow">
@@ -478,6 +432,52 @@ export default function IsofarianGuardView(props: {
           }}
         />
       </Show>
+
+      <div class="statsGrid">
+        <CountTable
+          title="Campaigns"
+          plays={campaignCounts()}
+          wins={campaignWins()}
+          keys={campaignKeys()}
+          onPlaysClick={(campaign) => {
+            const playIds = playIdsByCampaign().get(normalizeLabel(campaign)) ?? []
+            props.onOpenPlays({ title: `Isofarian Guard • ${campaign}`, playIds })
+          }}
+        />
+
+        <CountTable
+          title="Guards"
+          plays={guardCounts()}
+          wins={guardWins()}
+          keys={guardKeys()}
+          groupBy={(guard) => isofarianGuardContent.guardGroupByName.get(guard)}
+          onPlaysClick={(guard) => {
+            const playIds = playIdsByGuard().get(normalizeLabel(guard)) ?? []
+            props.onOpenPlays({ title: `Isofarian Guard • ${guard}`, playIds })
+          }}
+        />
+      </div>
+
+      <CountTable
+        title="Chapters"
+        plays={chapterCounts()}
+        wins={chapterWins()}
+        keys={chapterKeys()}
+        groupBy={(chapter) => isofarianGuardContent.chapterGroupByName.get(chapter)}
+        onPlaysClick={(chapter) => {
+          const playIds = playIdsByChapter().get(normalizeLabel(chapter)) ?? []
+          props.onOpenPlays({ title: `Isofarian Guard • ${chapter}`, playIds })
+        }}
+      />
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
     </div>
   )
 }

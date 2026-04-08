@@ -196,15 +196,6 @@ export default function EarthborneRangersView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
       <div class="finalGirlMetaRow">
         <div class="meta">
           <div class="metaLabel">Days played</div>
@@ -244,20 +235,6 @@ export default function EarthborneRangersView(props: {
         </div>
       </Show>
 
-      <CountTable
-        title="Days"
-        plays={dayCounts()}
-        keys={earthborneRangersContent.days}
-        getNextAchievement={(day) => getNextAchievement('dayPlays', day)}
-        onPlaysClick={(day) => {
-          const playIds = playIdsByDay()[day] ?? []
-          props.onOpenPlays({
-            title: `Earthborne Rangers • ${day}`,
-            playIds,
-          })
-        }}
-      />
-
       <Show when={hasCostTable()}>
         <CostPerPlayTable
           title="Cost Per Box"
@@ -276,6 +253,29 @@ export default function EarthborneRangersView(props: {
           }}
         />
       </Show>
+
+      <CountTable
+        title="Days"
+        plays={dayCounts()}
+        keys={earthborneRangersContent.days}
+        getNextAchievement={(day) => getNextAchievement('dayPlays', day)}
+        onPlaysClick={(day) => {
+          const playIds = playIdsByDay()[day] ?? []
+          props.onOpenPlays({
+            title: `Earthborne Rangers • ${day}`,
+            playIds,
+          })
+        }}
+      />
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
     </div>
   )
 }

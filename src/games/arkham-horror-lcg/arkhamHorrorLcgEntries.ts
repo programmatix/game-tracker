@@ -1,5 +1,6 @@
 import type { BggPlay } from '../../bgg'
 import { parseArkhamHorrorLcgPlayerColor } from './arkhamHorrorLcg'
+import { arkhamHorrorLcgContent } from './content'
 
 export const ARKHAM_HORROR_LCG_OBJECT_ID = '205637'
 
@@ -15,6 +16,28 @@ export type ArkhamHorrorLcgEntry = {
   continuedToNext: boolean
 }
 
+function normalizeArkhamItemName(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
+const ARKHAM_KNOWN_ITEM_NAMES = new Set(
+  [
+    'Arkham Horror LCG',
+    'Arkham Horror: The Card Game',
+    ...arkhamHorrorLcgContent.campaigns,
+    ...arkhamHorrorLcgContent.campaignBoxByName.values(),
+    ...arkhamHorrorLcgContent.scenarioBoxByName.values(),
+    ...arkhamHorrorLcgContent.investigatorBoxByName.values(),
+  ]
+    .map(normalizeArkhamItemName)
+    .filter(Boolean),
+)
+
 function playQuantity(play: { attributes: Record<string, string> }): number {
   const parsed = Number(play.attributes.quantity || '1')
   if (!Number.isFinite(parsed) || parsed <= 0) return 1
@@ -28,10 +51,31 @@ function compareArkhamPlaysAsc(a: BggPlay, b: BggPlay): number {
   return a.id - b.id
 }
 
-function isArkhamPlay(play: BggPlay): boolean {
+function hasMeaningfulArkhamTags(play: BggPlay): boolean {
+  return play.players.some((player) => {
+    const parsed = parseArkhamHorrorLcgPlayerColor(player.attributes.color || '')
+    return Boolean(
+      parsed.campaign ||
+        parsed.scenario ||
+        parsed.difficulty ||
+        parsed.investigators.length > 0 ||
+        parsed.continuePrevious ||
+        parsed.continueNext,
+    )
+  })
+}
+
+export function isArkhamHorrorLcgPlay(play: BggPlay): boolean {
   const objectid = play.item?.attributes.objectid || ''
   if (objectid === ARKHAM_HORROR_LCG_OBJECT_ID) return true
-  return (play.item?.attributes.name || '').trim() === 'Arkham Horror: The Card Game'
+
+  const name = normalizeArkhamItemName(play.item?.attributes.name || '')
+  if (!name) return hasMeaningfulArkhamTags(play)
+
+  if (ARKHAM_KNOWN_ITEM_NAMES.has(name)) return true
+  if (name.includes('arkham horror') && name.includes('card game')) return true
+
+  return hasMeaningfulArkhamTags(play)
 }
 
 function chooseMostCommonOrFirst(candidates: string[]): string | undefined {
@@ -64,7 +108,7 @@ function mergeUnique(values: string[][]): string[] {
 
 export function getArkhamHorrorLcgEntries(plays: BggPlay[], username: string): ArkhamHorrorLcgEntry[] {
   const user = username.toLowerCase()
-  const arkhamPlays = plays.filter(isArkhamPlay).slice().sort(compareArkhamPlaysAsc)
+  const arkhamPlays = plays.filter(isArkhamHorrorLcgPlay).slice().sort(compareArkhamPlaysAsc)
   const result = arkhamPlays.map((play) => {
     const parsedPlayers = play.players.map((player) => {
       const parsed = parseArkhamHorrorLcgPlayerColor(player.attributes.color || '')

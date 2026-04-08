@@ -220,15 +220,6 @@ export default function TaintedGrailView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
       <div class="finalGirlMetaRow">
         <div class="meta">
           <div class="metaLabel">Total hours</div>
@@ -268,6 +259,26 @@ export default function TaintedGrailView(props: {
           <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has
           no recorded length.
         </div>
+      </Show>
+
+      <Show when={hasCostTable()}>
+        <CostPerPlayTable
+          rows={costRows()}
+          currencySymbol={taintedGrailContent.costCurrencySymbol}
+          overallPlays={totalPlays()}
+          overallHours={totalHours()}
+          averageHoursPerPlay={averageHoursPerPlay()}
+          overallHoursHasAssumed={totalHoursHasAssumed()}
+          title="Cost Per Box"
+          onPlaysClick={(box) => {
+            const ids = playIdsByBox()[box] ?? []
+            if (ids.length === 0) return
+            props.onOpenPlays({
+              title: `Tainted Grail • ${box}`,
+              playIds: ids,
+            })
+          }}
+        />
       </Show>
 
       <div class="statsBlock">
@@ -353,25 +364,14 @@ export default function TaintedGrailView(props: {
         </div>
       </div>
 
-      <Show when={hasCostTable()}>
-        <CostPerPlayTable
-          rows={costRows()}
-          currencySymbol={taintedGrailContent.costCurrencySymbol}
-          overallPlays={totalPlays()}
-          overallHours={totalHours()}
-          averageHoursPerPlay={averageHoursPerPlay()}
-          overallHoursHasAssumed={totalHoursHasAssumed()}
-          title="Cost Per Box"
-          onPlaysClick={(box) => {
-            const ids = playIdsByBox()[box] ?? []
-            if (ids.length === 0) return
-            props.onOpenPlays({
-              title: `Tainted Grail • ${box}`,
-              playIds: ids,
-            })
-          }}
-        />
-      </Show>
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
     </div>
   )
 }

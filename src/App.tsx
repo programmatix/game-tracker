@@ -21,6 +21,10 @@ import {
   savePinnedAchievementIds,
 } from './achievements/pinsFirebase'
 import {
+  fetchStoredGamePreferences,
+  saveStoredGamePreferences,
+} from './gamePreferencesFirebase'
+import {
   computeNewlyUnlockedAchievements,
   computeTrackIdsForAchievements,
 } from './achievements/newlyUnlocked'
@@ -28,6 +32,7 @@ import { pickBestAvailableAchievementForTrackIds } from './achievements/nextAchi
 import { computeAllGameAchievementSummaries } from './achievements/games'
 import NewAchievementsBanner from './components/NewAchievementsBanner'
 import type { PlaysDrilldownRequest } from './playsDrilldown'
+import { isGameTab, type GameTab } from './gameCatalog'
 import {
   fetchSpiritIslandSessions,
   SPIRIT_ISLAND_MINDWANDERER_UID,
@@ -35,6 +40,14 @@ import {
 import { formatPlayLength } from './formatPlayLength'
 import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from './playDuration'
 import AppContent from './AppContent'
+import {
+  buildResolvedGamePreferencesById,
+  defaultGamePreferencesFor,
+  gamePreferencesStore,
+  setGamePreferencesStore,
+  shouldShowGameTab,
+  type GamePreferences,
+} from './gamePreferences'
 import {
   MAIN_TAB_GROUPS,
   MAIN_TAB_OPTIONS,
@@ -68,6 +81,7 @@ type PlaysDrilldownReturn = {
   mainTab: MainTab
   playsView: PlaysView
   selectedGameKey: string | null
+  selectedOptionsGameId: GameTab | null
 }
 
 type AppHistoryState =
@@ -84,12 +98,17 @@ function App() {
     initialMainTab === 'plays' && initialPlaysView === 'gameDetail'
       ? (parsedHash?.selectedGameKey ?? null)
       : null
+  const initialSelectedOptionsGameId: GameTab | null =
+    initialMainTab === 'gameOptions' ? (parsedHash?.selectedOptionsGameId ?? null) : null
 
   const [page, setPage] = createSignal(1)
   const [pageDraft, setPageDraft] = createSignal('1')
   const [mainTab, setMainTab] = createSignal<MainTab>(initialMainTab)
   const [playsView, setPlaysView] = createSignal<PlaysView>(initialPlaysView)
   const [selectedGameKey, setSelectedGameKey] = createSignal<string | null>(initialSelectedGameKey)
+  const [selectedOptionsGameId, setSelectedOptionsGameId] = createSignal<GameTab | null>(
+    initialSelectedOptionsGameId,
+  )
   const [playsDrilldown, setPlaysDrilldown] = createSignal<PlaysDrilldownRequest | null>(null)
   const [playsDrilldownReturn, setPlaysDrilldownReturn] =
     createSignal<PlaysDrilldownReturn | null>(null)
@@ -105,6 +124,7 @@ function App() {
   const [assumedMinutesByObjectId, setAssumedMinutesByObjectId] = createSignal(
     new Map<string, number>(),
   )
+  const [thingSummaryStatusVersion, setThingSummaryStatusVersion] = createSignal(0)
 
   const bggAuthToken = createMemo(
     () => (import.meta.env.BGG_TOKEN || import.meta.env.VITE_BGG_TOKEN || '').trim(),
@@ -139,6 +159,10 @@ function App() {
   let firebaseSaveErrorToastTimeoutId: number | undefined
   let lastAchievementsSnapshotSavedAtMs = 0
 
+  function bumpThingSummaryStatusVersion() {
+    setThingSummaryStatusVersion((current) => current + 1)
+  }
+
   function showFirebaseSaveErrorToast(message: string) {
     setFirebaseSaveErrorToast(message)
     if (firebaseSaveErrorToastTimeoutId) {
@@ -164,17 +188,23 @@ function App() {
       batch(() => {
         setPinnedAchievementIds(new Set<string>())
         setSeenCompletedAchievementIds(new Set<string>())
+        setGamePreferencesStore({})
       })
       return
     }
 
     let cancelled = false
-    void Promise.all([fetchPinnedAchievementIds(user), fetchAchievementStore(user)]).then(
-      ([remotePinnedIds, store]) => {
+    void Promise.all([
+      fetchPinnedAchievementIds(user),
+      fetchAchievementStore(user),
+      fetchStoredGamePreferences(user),
+    ]).then(
+      ([remotePinnedIds, store, remoteGamePreferences]) => {
         if (cancelled) return
         batch(() => {
           setPinnedAchievementIds(remotePinnedIds)
           setSeenCompletedAchievementIds(store.seenCompletedAchievementIds)
+          setGamePreferencesStore(remoteGamePreferences)
         })
       },
     )
@@ -183,6 +213,14 @@ function App() {
       cancelled = true
     })
   })
+
+  const resolvedGamePreferencesById = createMemo(() =>
+    buildResolvedGamePreferencesById(gamePreferencesStore()),
+  )
+
+  const visibleMainTabOptions = createMemo(() =>
+    MAIN_TAB_OPTIONS.filter((option) => !isGameTab(option.value) || shouldShowGameTab(option.value)),
+  )
 
   createEffect(() => {
     if (mainTab() === 'plays') return
@@ -373,6 +411,63 @@ function App() {
     })
   }
 
+  const costTimeEstimateStatus = createMemo(() => {
+    thingSummaryStatusVersion()
+    const assumedMinutes = assumedMinutesByObjectId()
+    const objectIds = new Set(
+      allPlays()
+        .plays.filter((play) => !hasRecordedPlayLength(play.attributes))
+        .map((play) => play.item?.attributes.objectid || '')
+        .filter(Boolean),
+    )
+
+    let assumed = 0
+    let checkedWithoutEstimate = 0
+    let failed = 0
+    let inFlight = 0
+    let queued = 0
+    let pending = 0
+
+    for (const objectid of objectIds) {
+      if (assumedMinutes.has(objectid)) {
+        assumed += 1
+        continue
+      }
+      if (thingSummaryInFlight.has(objectid)) {
+        inFlight += 1
+        continue
+      }
+      if (queuedThingSummaryObjectIds.has(objectid)) {
+        queued += 1
+        continue
+      }
+      if (thingSummaryFailed.has(objectid)) {
+        failed += 1
+        continue
+      }
+      if (thingSummaryResolved.has(objectid)) {
+        checkedWithoutEstimate += 1
+        continue
+      }
+      pending += 1
+    }
+
+    const total = objectIds.size
+    const complete = assumed + checkedWithoutEstimate + failed
+
+    return {
+      total,
+      complete,
+      assumed,
+      checkedWithoutEstimate,
+      failed,
+      inFlight,
+      queued,
+      pending,
+      active: total > 0 && complete < total,
+    }
+  })
+
   async function pumpThingSummaryQueue() {
     if (isThingSummaryPumpRunning) return
     isThingSummaryPumpRunning = true
@@ -385,6 +480,7 @@ function App() {
 
         for (const objectid of queuedThingSummaryObjectIds) {
           queuedThingSummaryObjectIds.delete(objectid)
+          bumpThingSummaryStatusVersion()
           if (thingSummaryResolved.has(objectid)) continue
           if (thingSummaryInFlight.has(objectid)) continue
           if (thingSummaryFailed.has(objectid)) continue
@@ -397,18 +493,22 @@ function App() {
         await Promise.allSettled(
           batchIds.map(async (objectid) => {
             thingSummaryInFlight.add(objectid)
+            bumpThingSummaryStatusVersion()
             try {
               const authToken = bggAuthToken() || undefined
               const thing = await fetchThingSummary(objectid, { authToken })
               thingSummaryResolved.add(objectid)
+              bumpThingSummaryStatusVersion()
               if (!shouldSkipThumbnailUpdates) {
                 noteThumbnail(objectid, thing.image || thing.thumbnail)
               }
               noteAssumedMinutes(objectid, thingAssumedPlayTimeMinutes(thing.raw) ?? undefined)
             } catch {
               thingSummaryFailed.add(objectid)
+              bumpThingSummaryStatusVersion()
             } finally {
               thingSummaryInFlight.delete(objectid)
+              bumpThingSummaryStatusVersion()
             }
           }),
         )
@@ -419,13 +519,17 @@ function App() {
   }
 
   function enqueueThingSummaries(objectids: string[]) {
+    let didQueueAny = false
     for (const objectid of objectids) {
       if (!objectid) continue
       if (thingSummaryResolved.has(objectid)) continue
       if (thingSummaryInFlight.has(objectid)) continue
       if (thingSummaryFailed.has(objectid)) continue
+      if (queuedThingSummaryObjectIds.has(objectid)) continue
       queuedThingSummaryObjectIds.add(objectid)
+      didQueueAny = true
     }
+    if (didQueueAny) bumpThingSummaryStatusVersion()
     void pumpThingSummaryQueue()
   }
 
@@ -462,7 +566,7 @@ function App() {
   })
 
   createEffect(() => {
-    if (mainTab() !== 'costs') return
+    if (mainTab() !== 'costs' && mainTab() !== 'monthlySummary') return
     enqueueThingSummaries(
       allPlays()
         .plays.filter((play) => !hasRecordedPlayLength(play.attributes))
@@ -509,6 +613,7 @@ function App() {
       mainTab: mainTab(),
       playsView: playsView(),
       selectedGameKey: selectedGameKey(),
+      selectedOptionsGameId: selectedOptionsGameId(),
     }
   }
 
@@ -516,6 +621,7 @@ function App() {
     setMainTab(next.mainTab)
     setPlaysView(next.playsView)
     setSelectedGameKey(next.selectedGameKey)
+    setSelectedOptionsGameId(next.selectedOptionsGameId)
     resetPage()
   }
 
@@ -540,7 +646,12 @@ function App() {
     setSelectedGameKey(null)
     setPlaysDrilldown(null)
     resetPage()
-    pushNavState({ mainTab: 'plays', playsView: nextView, selectedGameKey: null })
+    pushNavState({
+      mainTab: 'plays',
+      playsView: nextView,
+      selectedGameKey: null,
+      selectedOptionsGameId: selectedOptionsGameId(),
+    })
   }
 
   function openGameDetail(gameKey: string) {
@@ -551,6 +662,54 @@ function App() {
       mainTab: 'plays',
       playsView: 'gameDetail',
       selectedGameKey: gameKey,
+      selectedOptionsGameId: selectedOptionsGameId(),
+    })
+  }
+
+  function openGameOptions(gameId: GameTab) {
+    batch(() => {
+      setSelectedOptionsGameId(gameId)
+      setMainTab('gameOptions')
+      resetPage()
+    })
+    pushNavState({
+      ...currentNavState(),
+      mainTab: 'gameOptions',
+      selectedOptionsGameId: gameId,
+    })
+  }
+
+  function selectOptionsGame(gameId: GameTab) {
+    if (selectedOptionsGameId() === gameId && mainTab() === 'gameOptions') return
+    setSelectedOptionsGameId(gameId)
+    if (mainTab() !== 'gameOptions') {
+      setMainTab('gameOptions')
+    }
+    pushNavState({
+      ...currentNavState(),
+      mainTab: 'gameOptions',
+      selectedOptionsGameId: gameId,
+    })
+  }
+
+  function updateGamePreferences(gameId: GameTab, patch: Partial<GamePreferences>) {
+    const currentStored = gamePreferencesStore()
+    const currentResolved = resolvedGamePreferencesById()[gameId] ?? defaultGamePreferencesFor(gameId)
+    const nextStored = {
+      ...currentStored,
+      [gameId]: {
+        ...currentResolved,
+        ...patch,
+      },
+    }
+
+    setGamePreferencesStore(nextStored)
+
+    const user = authUser()
+    if (!user) return
+
+    void saveStoredGamePreferences(user, nextStored).catch(() => {
+      showFirebaseSaveErrorToast('Failed to save game options to Firebase.')
     })
   }
 
@@ -629,6 +788,18 @@ function App() {
 
     window.addEventListener('popstate', onPopState)
     onCleanup(() => window.removeEventListener('popstate', onPopState))
+  })
+
+  createEffect(() => {
+    const currentTab = mainTab()
+    if (!isGameTab(currentTab)) return
+    if (shouldShowGameTab(currentTab)) return
+
+    batch(() => {
+      setSelectedOptionsGameId(currentTab)
+      setMainTab('gameOptions')
+      resetPage()
+    })
   })
 
   createEffect(() => {
@@ -725,7 +896,7 @@ function App() {
                 <section class="sidebarSection">
                   <div class="sidebarSectionLabel">{group.label}</div>
                   <div role="tablist" aria-label={`${group.label} views`}>
-                    <For each={MAIN_TAB_OPTIONS.filter((option) => option.group === group.id)}>
+                    <For each={visibleMainTabOptions().filter((option) => option.group === group.id)}>
                       {(option) => (
                         <button
                           class="tabButton sidebarTabButton"
@@ -749,18 +920,25 @@ function App() {
         <section class="panel contentPanel">
           <AppContent
             mainTab={mainTab()}
+            mainTabOptions={visibleMainTabOptions()}
             playsView={playsView()}
+            selectedOptionsGameId={selectedOptionsGameId()}
             username={USERNAME}
             authToken={bggAuthToken()}
             plays={allPlays().plays}
+            gamePreferencesById={resolvedGamePreferencesById()}
             pinnedAchievementIds={pinnedAchievementIds()}
             suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
             onTogglePin={toggleAchievementPin}
+            onOpenGameOptions={openGameOptions}
             onOpenPlays={openPlaysDrilldown}
+            onSelectOptionsGame={selectOptionsGame}
+            onUpdateGamePreferences={updateGamePreferences}
             spiritIslandSessions={spiritIslandSessionsValue()}
             spiritIslandSessionsLoading={spiritIslandSessions.loading}
             spiritIslandSessionsError={spiritIslandSessionsError()}
             assumedMinutesByObjectId={assumedMinutesByObjectId()}
+            costTimeEstimateStatus={costTimeEstimateStatus()}
             feedbackUser={authUser()}
             isFeedbackAdmin={isFeedbackAdmin()}
             page={page()}
@@ -779,6 +957,7 @@ function App() {
                   mainTab: 'plays',
                   playsView: 'byGame',
                   selectedGameKey: null,
+                  selectedOptionsGameId: selectedOptionsGameId(),
                 })
               }
             }}

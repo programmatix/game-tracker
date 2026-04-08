@@ -367,14 +367,6 @@ export default function DeathMayDieView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        achievements={achievements()}
-        nextLimit={5}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -387,6 +379,63 @@ export default function DeathMayDieView(props: {
           </div>
         }
       >
+        <div class="statsBlock">
+          <div class="statsTitleRow">
+            <h3 class="statsTitle">Elder One × Scenario</h3>
+            <div class="finalGirlControls">
+              <label class="control">
+                <span>Display</span>
+                <select
+                  value={matrixDisplayMode()}
+                  onInput={(e) =>
+                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
+                  }
+                >
+                  <option value="count">Count</option>
+                  <option value="played">Played</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <HeatmapMatrix
+            rows={matrixRows()}
+            cols={matrixCols()}
+            rowHeader="Elder One"
+            colHeader="Scenario"
+            maxCount={matrixMax()}
+            hideCounts={matrixDisplayMode() === 'played'}
+            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
+            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
+            onCellClick={(row, col) => {
+              const elderOne = row
+              const scenario = col
+              const key = `${elderOne}|||${scenario}`
+              props.onOpenPlays({
+                title: `Cthulhu: Death May Die • ${elderOne} × ${scenario}`,
+                playIds: playIdsByPair().get(key) ?? [],
+              })
+            }}
+          />
+        </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={deathMayDieContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Cthulhu: Death May Die • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
         <div class="statsGrid">
           <CountTable
             title="Elder Ones"
@@ -440,64 +489,16 @@ export default function DeathMayDieView(props: {
               })
             }
           />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={deathMayDieContent.costCurrencySymbol}
-              overallPlays={totalPlays()}
-              overallHours={totalHours()}
-              overallHoursHasAssumed={totalHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Cthulhu: Death May Die • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
-        <div class="statsBlock">
-          <div class="statsTitleRow">
-            <h3 class="statsTitle">Elder One × Scenario</h3>
-            <div class="finalGirlControls">
-              <label class="control">
-                <span>Display</span>
-                <select
-                  value={matrixDisplayMode()}
-                  onInput={(e) =>
-                    setMatrixDisplayMode(e.currentTarget.value as MatrixDisplayMode)
-                  }
-                >
-                  <option value="count">Count</option>
-                  <option value="played">Played</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
-          <HeatmapMatrix
-            rows={matrixRows()}
-            cols={matrixCols()}
-            rowHeader="Elder One"
-            colHeader="Scenario"
-            maxCount={matrixMax()}
-            hideCounts={matrixDisplayMode() === 'played'}
-            getCount={(row, col) => matrix()[row]?.[col] ?? 0}
-            getWinCount={(row, col) => matrixWins()[row]?.[col] ?? 0}
-            onCellClick={(row, col) => {
-              const elderOne = row
-              const scenario = col
-              const key = `${elderOne}|||${scenario}`
-              props.onOpenPlays({
-                title: `Cthulhu: Death May Die • ${elderOne} × ${scenario}`,
-                playIds: playIdsByPair().get(key) ?? [],
-              })
-            }}
-          />
         </div>
       </Show>
+
+      <AchievementsPanel
+        achievements={achievements()}
+        nextLimit={5}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

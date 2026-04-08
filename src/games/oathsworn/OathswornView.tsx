@@ -339,15 +339,6 @@ export default function OathswornView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -438,6 +429,23 @@ export default function OathswornView(props: {
           </div>
         </Show>
 
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            rows={costRows()}
+            currencySymbol={oathswornContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            averageHoursPerPlay={averageHoursPerPlay()}
+            title="Cost Per Play"
+            onPlaysClick={(box) => {
+              const playIds = playIdsByBox()[box] ?? []
+              if (playIds.length === 0) return
+              props.onOpenPlays({ title: `Oathsworn • ${box}`, playIds })
+            }}
+          />
+        </Show>
+
         <CountTable
           title="Story Chapters"
           plays={storyCounts()}
@@ -479,24 +487,16 @@ export default function OathswornView(props: {
             props.onOpenPlays({ title: `Oathsworn • ${character}`, playIds })
           }}
         />
-
-        <Show when={hasCostTable()}>
-          <CostPerPlayTable
-            rows={costRows()}
-            currencySymbol={oathswornContent.costCurrencySymbol}
-            overallPlays={totalPlays()}
-            overallHours={totalHours()}
-            overallHoursHasAssumed={totalHoursHasAssumed()}
-            averageHoursPerPlay={averageHoursPerPlay()}
-            title="Cost Per Play"
-            onPlaysClick={(box) => {
-              const playIds = playIdsByBox()[box] ?? []
-              if (playIds.length === 0) return
-              props.onOpenPlays({ title: `Oathsworn • ${box}`, playIds })
-            }}
-          />
-        </Show>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

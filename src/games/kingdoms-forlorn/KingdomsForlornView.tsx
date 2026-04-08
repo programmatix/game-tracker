@@ -295,15 +295,6 @@ export default function KingdomsForlornView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -394,6 +385,23 @@ export default function KingdomsForlornView(props: {
           </div>
         </Show>
 
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            rows={costRows()}
+            currencySymbol={kingdomsForlornContent.costCurrencySymbol}
+            overallPlays={totalPlays()}
+            overallHours={totalHours()}
+            overallHoursHasAssumed={totalHoursHasAssumed()}
+            averageHoursPerPlay={averageHoursPerPlay()}
+            title="Cost Per Play"
+            onPlaysClick={(box) => {
+              const playIds = playIdsByBox()[box] ?? []
+              if (playIds.length === 0) return
+              props.onOpenPlays({ title: `Kingdoms Forlorn • ${box}`, playIds })
+            }}
+          />
+        </Show>
+
         <CountTable
           title="Kingdoms"
           plays={kingdomCounts()}
@@ -421,24 +429,16 @@ export default function KingdomsForlornView(props: {
             props.onOpenPlays({ title: `Kingdoms Forlorn • ${knight}`, playIds })
           }}
         />
-
-        <Show when={hasCostTable()}>
-          <CostPerPlayTable
-            rows={costRows()}
-            currencySymbol={kingdomsForlornContent.costCurrencySymbol}
-            overallPlays={totalPlays()}
-            overallHours={totalHours()}
-            overallHoursHasAssumed={totalHoursHasAssumed()}
-            averageHoursPerPlay={averageHoursPerPlay()}
-            title="Cost Per Play"
-            onPlaysClick={(box) => {
-              const playIds = playIdsByBox()[box] ?? []
-              if (playIds.length === 0) return
-              props.onOpenPlays({ title: `Kingdoms Forlorn • ${box}`, playIds })
-            }}
-          />
-        </Show>
       </Show>
+
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

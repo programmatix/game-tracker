@@ -1,30 +1,10 @@
+import { GAME_TAB_IDS, GAME_TAB_OPTIONS, isGameTab, type GameTab } from './gameCatalog'
+
 export type MainTab =
+  | GameTab
   | 'monthlyChecklist'
-  | 'arkhamHorrorLcg'
-  | 'kingdomsForlorn'
-  | 'isofarianGuard'
-  | 'taintedGrail'
-  | 'finalGirl'
-  | 'skytearHorde'
-  | 'cloudspire'
-  | 'burncycle'
-  | 'paleo'
-  | 'robinsonCrusoe'
-  | 'robinHood'
-  | 'earthborneRangers'
-  | 'deckers'
-  | 'oathsworn'
-  | 'elderScrolls'
-  | 'starTrekCaptainsChair'
-  | 'unsettled'
-  | 'spiritIsland'
-  | 'mistfall'
-  | 'deathMayDie'
-  | 'bullet'
-  | 'tooManyBones'
-  | 'mageKnight'
-  | 'mandalorianAdventures'
-  | 'undauntedNormandy'
+  | 'monthlySummary'
+  | 'gameOptions'
   | 'achievements'
   | 'costs'
   | 'feedback'
@@ -36,6 +16,7 @@ export type AppNavState = {
   mainTab: MainTab
   playsView: PlaysView
   selectedGameKey: string | null
+  selectedOptionsGameId: GameTab | null
 }
 
 export type MainTabGroup = 'games' | 'other'
@@ -43,31 +24,9 @@ export type MainTabOption = { value: MainTab; label: string; group: MainTabGroup
 
 export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
-  'arkhamHorrorLcg',
-  'kingdomsForlorn',
-  'isofarianGuard',
-  'taintedGrail',
-  'finalGirl',
-  'skytearHorde',
-  'cloudspire',
-  'burncycle',
-  'paleo',
-  'robinsonCrusoe',
-  'robinHood',
-  'earthborneRangers',
-  'deckers',
-  'oathsworn',
-  'elderScrolls',
-  'starTrekCaptainsChair',
-  'unsettled',
-  'spiritIsland',
-  'mistfall',
-  'deathMayDie',
-  'bullet',
-  'tooManyBones',
-  'mageKnight',
-  'mandalorianAdventures',
-  'undauntedNormandy',
+  'monthlySummary',
+  ...GAME_TAB_IDS,
+  'gameOptions',
   'achievements',
   'costs',
   'feedback',
@@ -77,36 +36,14 @@ export const MAIN_TABS: ReadonlyArray<MainTab> = [
 export const PLAYS_VIEWS: ReadonlyArray<PlaysView> = ['plays', 'byGame', 'gameDetail', 'drilldown']
 
 export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
-  { value: 'arkhamHorrorLcg', label: 'Arkham Horror LCG', group: 'games' },
-  { value: 'bullet', label: 'Bullet', group: 'games' },
-  { value: 'burncycle', label: 'burncycle', group: 'games' },
-  { value: 'cloudspire', label: 'Cloudspire', group: 'games' },
-  { value: 'deathMayDie', label: 'Death May Die', group: 'games' },
-  { value: 'earthborneRangers', label: 'Earthborne Rangers', group: 'games' },
-  { value: 'deckers', label: 'Deckers', group: 'games' },
-  { value: 'finalGirl', label: 'Final Girl', group: 'games' },
-  { value: 'isofarianGuard', label: 'Isofarian Guard', group: 'games' },
-  { value: 'kingdomsForlorn', label: 'Kingdoms Forlorn', group: 'games' },
-  { value: 'mageKnight', label: 'Mage Knight', group: 'games' },
-  { value: 'mandalorianAdventures', label: 'Mandalorian Adventures', group: 'games' },
-  { value: 'mistfall', label: 'Mistfall', group: 'games' },
-  { value: 'oathsworn', label: 'Oathsworn', group: 'games' },
-  { value: 'elderScrolls', label: 'Elder Scrolls', group: 'games' },
-  { value: 'paleo', label: 'Paleo', group: 'games' },
-  { value: 'robinHood', label: 'Robin Hood', group: 'games' },
-  { value: 'robinsonCrusoe', label: 'Robinson Crusoe', group: 'games' },
-  { value: 'skytearHorde', label: 'Skytear Horde', group: 'games' },
-  { value: 'spiritIsland', label: 'Spirit Island', group: 'games' },
-  { value: 'starTrekCaptainsChair', label: "Star Trek: Captain's Chair", group: 'games' },
-  { value: 'taintedGrail', label: 'Tainted Grail', group: 'games' },
-  { value: 'tooManyBones', label: 'Too Many Bones', group: 'games' },
-  { value: 'undauntedNormandy', label: 'Undaunted: Normandy', group: 'games' },
-  { value: 'unsettled', label: 'Unsettled', group: 'games' },
+  ...GAME_TAB_OPTIONS,
   { value: 'achievements', label: 'Achievements', group: 'other' },
   { value: 'costs', label: 'Costs', group: 'other' },
   { value: 'feedback', label: 'Feedback', group: 'other' },
+  { value: 'gameOptions', label: 'Game options', group: 'other' },
   { value: 'plays', label: 'Plays', group: 'other' },
   { value: 'monthlyChecklist', label: 'This month', group: 'other' },
+  { value: 'monthlySummary', label: 'By month', group: 'other' },
 ]
 
 export const MAIN_TAB_GROUPS: ReadonlyArray<{ id: MainTabGroup; label: string }> = [
@@ -131,6 +68,12 @@ export function isPlaysView(value: string): value is PlaysView {
 }
 
 export function hashForNavState(nav: AppNavState): string {
+  if (nav.mainTab === 'gameOptions') {
+    return nav.selectedOptionsGameId
+      ? `#game-options/${encodeURIComponent(nav.selectedOptionsGameId)}`
+      : '#game-options'
+  }
+
   if (nav.mainTab !== 'plays') return `#${nav.mainTab}`
 
   if (nav.playsView === 'byGame') return '#plays/byGame'
@@ -152,25 +95,52 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
     const viewRaw = rest[0] || 'plays'
     if (viewRaw === 'game') {
       const encodedKey = rest[1]
-      if (!encodedKey) return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
+      if (!encodedKey)
+        return {
+          mainTab: 'plays',
+          playsView: 'byGame',
+          selectedGameKey: null,
+          selectedOptionsGameId: null,
+        }
       let decodedKey = ''
       try {
         decodedKey = decodeURIComponent(encodedKey)
       } catch {
-        return { mainTab: 'plays', playsView: 'byGame', selectedGameKey: null }
+        return {
+          mainTab: 'plays',
+          playsView: 'byGame',
+          selectedGameKey: null,
+          selectedOptionsGameId: null,
+        }
       }
       return {
         mainTab: 'plays',
         playsView: 'gameDetail',
         selectedGameKey: decodedKey,
+        selectedOptionsGameId: null,
       }
     }
 
     if (!isPlaysView(viewRaw) || viewRaw === 'drilldown') {
-      return { mainTab: 'plays', playsView: 'plays', selectedGameKey: null }
+      return {
+        mainTab: 'plays',
+        playsView: 'plays',
+        selectedGameKey: null,
+        selectedOptionsGameId: null,
+      }
     }
 
-    return { mainTab: 'plays', playsView: viewRaw, selectedGameKey: null }
+    return { mainTab: 'plays', playsView: viewRaw, selectedGameKey: null, selectedOptionsGameId: null }
+  }
+
+  if (head === 'game-options') {
+    const selectedOptionsGameId = isGameTab(rest[0] || '') ? rest[0]! : null
+    return {
+      mainTab: 'gameOptions',
+      selectedOptionsGameId,
+      selectedGameKey: null,
+      playsView: 'plays',
+    }
   }
 
   if (isMainTab(head)) return { mainTab: head }

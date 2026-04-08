@@ -3,10 +3,13 @@ import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'so
 import {
   createFeedback,
   deleteFeedback,
-  resolveFeedback,
+  deleteResolvedFeedback,
   subscribeAllFeedback,
+  type AdminFeedbackStatus,
   subscribeFeedbackForUser,
   type FeedbackItem,
+  type FeedbackStatus,
+  updateFeedbackStatus,
 } from './feedbackFirebase'
 
 type Props = {
@@ -19,6 +22,11 @@ function formatDateTime(valueMs: number | null): string {
   return new Date(valueMs).toLocaleString()
 }
 
+function formatFeedbackStatus(status: FeedbackStatus): string {
+  if (status === 'in-progress') return 'in progress'
+  return status
+}
+
 export default function FeedbackView(props: Props) {
   const [message, setMessage] = createSignal('')
   const [feedbackItems, setFeedbackItems] = createSignal<FeedbackItem[]>([])
@@ -26,12 +34,20 @@ export default function FeedbackView(props: Props) {
   const [submitError, setSubmitError] = createSignal<string | null>(null)
   const [submitStatus, setSubmitStatus] = createSignal<string | null>(null)
   const [isSubmitting, setIsSubmitting] = createSignal(false)
-  const [isResolvingId, setIsResolvingId] = createSignal<string | null>(null)
+  const [isUpdatingStatusId, setIsUpdatingStatusId] = createSignal<string | null>(null)
   const [isDeletingId, setIsDeletingId] = createSignal<string | null>(null)
+  const [isDeletingResolved, setIsDeletingResolved] = createSignal(false)
   const [confirmDeleteId, setConfirmDeleteId] = createSignal<string | null>(null)
+  const [confirmDeleteResolved, setConfirmDeleteResolved] = createSignal(false)
   const [resolveError, setResolveError] = createSignal<string | null>(null)
 
   const canSubmit = createMemo(() => Boolean(props.user && message().trim()))
+  const visibleFeedbackItems = createMemo(() =>
+    props.isAdmin ? allFeedbackItems() : feedbackItems(),
+  )
+  const resolvedFeedbackCount = createMemo(
+    () => allFeedbackItems().filter((item) => item.status === 'resolved').length,
+  )
 
   createEffect(() => {
     const user = props.user
@@ -41,9 +57,14 @@ export default function FeedbackView(props: Props) {
       return
     }
 
-    const unsubscribeMine = subscribeFeedbackForUser(user, (items) => {
-      setFeedbackItems(items)
-    })
+    let unsubscribeMine = () => {}
+    if (props.isAdmin) {
+      setFeedbackItems([])
+    } else {
+      unsubscribeMine = subscribeFeedbackForUser(user, (items) => {
+        setFeedbackItems(items)
+      })
+    }
 
     let unsubscribeAll = () => {}
     if (props.isAdmin) {
@@ -80,20 +101,21 @@ export default function FeedbackView(props: Props) {
     }
   }
 
-  async function onResolveFeedback(item: FeedbackItem) {
+  async function onUpdateFeedbackStatus(item: FeedbackItem, status: AdminFeedbackStatus) {
     const user = props.user
-    if (!props.isAdmin || !user || item.status === 'resolved') return
+    if (!props.isAdmin || !user || item.status === status || item.status === 'resolved') return
 
     setResolveError(null)
     setConfirmDeleteId(null)
-    setIsResolvingId(item.id)
+    setConfirmDeleteResolved(false)
+    setIsUpdatingStatusId(item.id)
     try {
-      await resolveFeedback(item.id, user)
+      await updateFeedbackStatus(item.id, status, user)
     } catch (error) {
       const errorText = error instanceof Error ? error.message : String(error)
-      setResolveError(errorText || 'Failed to resolve feedback.')
+      setResolveError(errorText || 'Failed to update feedback status.')
     } finally {
-      setIsResolvingId(null)
+      setIsUpdatingStatusId(null)
     }
   }
 
@@ -102,6 +124,7 @@ export default function FeedbackView(props: Props) {
     if (!props.isAdmin || !user) return
 
     setResolveError(null)
+    setConfirmDeleteResolved(false)
     setIsDeletingId(item.id)
     try {
       await deleteFeedback(item.id, user)
@@ -111,6 +134,24 @@ export default function FeedbackView(props: Props) {
       setResolveError(errorText || 'Failed to delete feedback.')
     } finally {
       setIsDeletingId(null)
+    }
+  }
+
+  async function onDeleteResolvedFeedback() {
+    const user = props.user
+    if (!props.isAdmin || !user) return
+
+    setResolveError(null)
+    setConfirmDeleteId(null)
+    setIsDeletingResolved(true)
+    try {
+      await deleteResolvedFeedback(user)
+      setConfirmDeleteResolved(false)
+    } catch (error) {
+      const errorText = error instanceof Error ? error.message : String(error)
+      setResolveError(errorText || 'Failed to delete resolved feedback.')
+    } finally {
+      setIsDeletingResolved(false)
     }
   }
 
@@ -146,8 +187,44 @@ export default function FeedbackView(props: Props) {
       </div>
 
       <div class="feedbackBlock">
-        <h3 class="statsTitle">My feedback</h3>
-        <Show when={feedbackItems().length > 0} fallback={<div class="muted">No feedback yet.</div>}>
+        <div class="feedbackActions">
+          <h3 class="statsTitle">Feedback</h3>
+          <Show when={props.isAdmin && resolvedFeedbackCount() > 0}>
+            <Show
+              when={confirmDeleteResolved()}
+              fallback={
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteResolved(true)}
+                  disabled={
+                    isDeletingResolved() || isDeletingId() !== null || isUpdatingStatusId() !== null
+                  }
+                >
+                  Delete all resolved ({resolvedFeedbackCount()})
+                </button>
+              }
+            >
+              <button
+                type="button"
+                onClick={() => void onDeleteResolvedFeedback()}
+                disabled={isDeletingResolved() || isDeletingId() !== null || isUpdatingStatusId() !== null}
+              >
+                {isDeletingResolved() ? 'Deleting…' : 'Confirm delete resolved'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteResolved(false)}
+                disabled={isDeletingResolved()}
+              >
+                Cancel
+              </button>
+            </Show>
+          </Show>
+        </div>
+        <Show when={resolveError()}>
+          {(errorText) => <div class="error">{errorText()}</div>}
+        </Show>
+        <Show when={visibleFeedbackItems().length > 0} fallback={<div class="muted">No feedback yet.</div>}>
           <div class="tableWrap">
             <table class="table tableCompact feedbackTable">
               <thead>
@@ -156,79 +233,56 @@ export default function FeedbackView(props: Props) {
                   <th>Message</th>
                   <th>Created</th>
                   <th>Resolved</th>
+                  <Show when={props.isAdmin}>
+                    <th>Actions</th>
+                  </Show>
                 </tr>
               </thead>
               <tbody>
-                <For each={feedbackItems()}>
+                <For each={visibleFeedbackItems()}>
                   {(item) => (
                     <tr>
                       <td>
                         <span
                           class="statusPill"
-                          classList={{ statusResolved: item.status === 'resolved' }}
+                          classList={{
+                            statusInProgress: item.status === 'in-progress',
+                            statusResolved: item.status === 'resolved',
+                          }}
                         >
-                          {item.status}
+                          {formatFeedbackStatus(item.status)}
                         </span>
                       </td>
                       <td>{item.message}</td>
                       <td class="mono">{formatDateTime(item.createdAtMs)}</td>
                       <td class="mono">{formatDateTime(item.resolvedAtMs)}</td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
-          </div>
-        </Show>
-      </div>
-
-      <Show when={props.isAdmin}>
-        <div class="feedbackBlock">
-          <h3 class="statsTitle">All feedback</h3>
-          <Show when={resolveError()}>
-            {(errorText) => <div class="error">{errorText()}</div>}
-          </Show>
-          <Show when={allFeedbackItems().length > 0} fallback={<div class="muted">No feedback yet.</div>}>
-            <div class="tableWrap">
-              <table class="table feedbackTable">
-                <thead>
-                  <tr>
-                    <th>Status</th>
-                    <th>User</th>
-                    <th>Message</th>
-                    <th>Created</th>
-                    <th>Resolved</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={allFeedbackItems()}>
-                    {(item) => (
-                      <tr>
-                        <td>
-                          <span
-                            class="statusPill"
-                            classList={{ statusResolved: item.status === 'resolved' }}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div>{item.ownerDisplayName || 'Unknown'}</div>
-                          <div class="muted mono">{item.ownerEmail || '—'}</div>
-                        </td>
-                        <td>{item.message}</td>
-                        <td class="mono">{formatDateTime(item.createdAtMs)}</td>
-                        <td class="mono">{formatDateTime(item.resolvedAtMs)}</td>
+                      <Show when={props.isAdmin}>
                         <td>
                           <div class="feedbackActions">
+                            <Show when={item.status === 'open'}>
+                              <button
+                                type="button"
+                                onClick={() => void onUpdateFeedbackStatus(item, 'in-progress')}
+                                disabled={
+                                  isUpdatingStatusId() === item.id ||
+                                  isDeletingId() === item.id ||
+                                  isDeletingResolved()
+                                }
+                              >
+                                {isUpdatingStatusId() === item.id ? 'Saving…' : 'Mark in progress'}
+                              </button>
+                            </Show>
                             <Show when={item.status !== 'resolved'}>
                               <button
                                 type="button"
-                                onClick={() => void onResolveFeedback(item)}
-                                disabled={isResolvingId() === item.id || isDeletingId() === item.id}
+                                onClick={() => void onUpdateFeedbackStatus(item, 'resolved')}
+                                disabled={
+                                  isUpdatingStatusId() === item.id ||
+                                  isDeletingId() === item.id ||
+                                  isDeletingResolved()
+                                }
                               >
-                                {isResolvingId() === item.id ? 'Resolving…' : 'Mark resolved'}
+                                {isUpdatingStatusId() === item.id ? 'Saving…' : 'Mark resolved'}
                               </button>
                             </Show>
                             <Show
@@ -236,8 +290,15 @@ export default function FeedbackView(props: Props) {
                               fallback={
                                 <button
                                   type="button"
-                                  onClick={() => setConfirmDeleteId(item.id)}
-                                  disabled={isDeletingId() === item.id || isResolvingId() === item.id}
+                                  onClick={() => {
+                                    setConfirmDeleteResolved(false)
+                                    setConfirmDeleteId(item.id)
+                                  }}
+                                  disabled={
+                                    isDeletingId() === item.id ||
+                                    isUpdatingStatusId() === item.id ||
+                                    isDeletingResolved()
+                                  }
                                 >
                                   Delete
                                 </button>
@@ -246,29 +307,33 @@ export default function FeedbackView(props: Props) {
                               <button
                                 type="button"
                                 onClick={() => void onDeleteFeedback(item)}
-                                disabled={isDeletingId() === item.id || isResolvingId() === item.id}
+                                disabled={
+                                  isDeletingId() === item.id ||
+                                  isUpdatingStatusId() === item.id ||
+                                  isDeletingResolved()
+                                }
                               >
                                 {isDeletingId() === item.id ? 'Deleting…' : 'Confirm delete'}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteId(null)}
-                                disabled={isDeletingId() === item.id}
+                                disabled={isDeletingId() === item.id || isDeletingResolved()}
                               >
                                 Cancel
                               </button>
                             </Show>
                           </div>
                         </td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
-            </div>
-          </Show>
-        </div>
-      </Show>
+                      </Show>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+          </div>
+        </Show>
+      </div>
     </div>
   )
 }

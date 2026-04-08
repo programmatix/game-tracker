@@ -277,15 +277,6 @@ export default function ElderScrollsView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Next achievements"
-        achievements={achievements()}
-        nextLimit={10}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
       <div class="finalGirlMetaRow">
         <div class="meta">
           <div class="metaLabel">Provinces played</div>
@@ -352,6 +343,46 @@ export default function ElderScrollsView(props: {
         </div>
       </Show>
 
+      <div class="statsBlock">
+        <div class="statsTitleRow">
+          <h3 class="statsTitle">Province × Class</h3>
+        </div>
+        <HeatmapMatrix
+          rows={elderScrollsContent.provinces}
+          cols={elderScrollsContent.classes}
+          rowHeader="Province"
+          colHeader="Class"
+          maxCount={matrixMax()}
+          getCount={(province, heroClass) => matrix()[province]?.[heroClass] ?? 0}
+          onCellClick={(province, heroClass) => {
+            const playIds = playIdsByPair().get(pairKey(province, heroClass)) ?? []
+            props.onOpenPlays({
+              title: `Elder Scrolls • ${province} × ${heroClass}`,
+              playIds,
+            })
+          }}
+        />
+      </div>
+
+      <Show when={hasCostTable()}>
+        <CostPerPlayTable
+          title="Cost Per Box"
+          rows={costRows()}
+          currencySymbol={elderScrollsContent.costCurrencySymbol}
+          overallPlays={totalPlays()}
+          overallHours={totalHours()}
+          averageHoursPerPlay={averageHoursPerPlay()}
+          overallHoursHasAssumed={totalHoursHasAssumed()}
+          onPlaysClick={(box) => {
+            const playIds = playIdsByBox()[box] ?? []
+            props.onOpenPlays({
+              title: `Elder Scrolls • ${box}`,
+              playIds,
+            })
+          }}
+        />
+      </Show>
+
       <CountTable
         title="Provinces"
         plays={provinceCounts()}
@@ -395,45 +426,14 @@ export default function ElderScrollsView(props: {
         }}
       />
 
-      <div class="statsBlock">
-        <div class="statsTitleRow">
-          <h3 class="statsTitle">Province × Class</h3>
-        </div>
-        <HeatmapMatrix
-          rows={elderScrollsContent.provinces}
-          cols={elderScrollsContent.classes}
-          rowHeader="Province"
-          colHeader="Class"
-          maxCount={matrixMax()}
-          getCount={(province, heroClass) => matrix()[province]?.[heroClass] ?? 0}
-          onCellClick={(province, heroClass) => {
-            const playIds = playIdsByPair().get(pairKey(province, heroClass)) ?? []
-            props.onOpenPlays({
-              title: `Elder Scrolls • ${province} × ${heroClass}`,
-              playIds,
-            })
-          }}
-        />
-      </div>
-
-      <Show when={hasCostTable()}>
-        <CostPerPlayTable
-          title="Cost Per Box"
-          rows={costRows()}
-          currencySymbol={elderScrollsContent.costCurrencySymbol}
-          overallPlays={totalPlays()}
-          overallHours={totalHours()}
-          averageHoursPerPlay={averageHoursPerPlay()}
-          overallHoursHasAssumed={totalHoursHasAssumed()}
-          onPlaysClick={(box) => {
-            const playIds = playIdsByBox()[box] ?? []
-            props.onOpenPlays({
-              title: `Elder Scrolls • ${box}`,
-              playIds,
-            })
-          }}
-        />
-      </Show>
+      <AchievementsPanel
+        title="Next achievements"
+        achievements={achievements()}
+        nextLimit={10}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
     </div>
   )
 }

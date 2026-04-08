@@ -448,14 +448,6 @@ export default function SpiritIslandView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        achievements={achievements()}
-        nextLimit={5}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        onTogglePin={props.onTogglePin}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-      />
-
       <Show
         when={entries().length > 0}
         fallback={
@@ -473,59 +465,6 @@ export default function SpiritIslandView(props: {
           </div>
         }
       >
-        <div class="statsTitleRow">
-          <h3 class="statsTitle">Tables</h3>
-          <div class="finalGirlControls">
-            <label class="control">
-              <span>Spirit grouping</span>
-              <select
-                value={spiritGroupingMode()}
-                onInput={(e) =>
-                  setSpiritGroupingMode(e.currentTarget.value as SpiritGroupingMode)
-                }
-              >
-                <option value="group">Group</option>
-                <option value="complexity">Complexity</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        <div class="statsGrid">
-          <CountTable
-            title={
-              spiritGroupingMode() === 'group' ? 'Spirits (By Group)' : 'Spirits (By Complexity)'
-            }
-            plays={spiritCounts()}
-            wins={spiritWins()}
-            keys={spiritKeysByGrouping()}
-            groupBy={spiritGroupingLabel}
-            getNextAchievement={getSpiritNextAchievement}
-          />
-          <CountTable
-            title="Adversaries"
-            plays={adversaryCounts()}
-            wins={adversaryWins()}
-            keys={adversaryKeys()}
-            getNextAchievement={getAdversaryNextAchievement}
-          />
-          <Show when={hasCostTable()}>
-            <CostPerPlayTable
-              title="Cost per box"
-              rows={costRows()}
-              currencySymbol={spiritIslandMappings.costCurrencySymbol}
-              overallPlays={totalSpiritIslandPlays()}
-              overallHours={totalSpiritIslandHours()}
-              overallHoursHasAssumed={totalSpiritIslandHoursHasAssumed()}
-              onPlaysClick={(box) =>
-                props.onOpenPlays({
-                  title: `Spirit Island • Box: ${box}`,
-                  playIds: playIdsByBox()[box] ?? [],
-                })
-              }
-            />
-          </Show>
-        </div>
-
         <div class="statsBlock">
           <div class="statsTitleRow">
             <h3 class="statsTitle">Spirit × Adversary</h3>
@@ -624,7 +563,69 @@ export default function SpiritIslandView(props: {
             </div>
           </Show>
         </div>
+
+        <Show when={hasCostTable()}>
+          <CostPerPlayTable
+            title="Cost per box"
+            rows={costRows()}
+            currencySymbol={spiritIslandMappings.costCurrencySymbol}
+            overallPlays={totalSpiritIslandPlays()}
+            overallHours={totalSpiritIslandHours()}
+            overallHoursHasAssumed={totalSpiritIslandHoursHasAssumed()}
+            onPlaysClick={(box) =>
+              props.onOpenPlays({
+                title: `Spirit Island • Box: ${box}`,
+                playIds: playIdsByBox()[box] ?? [],
+              })
+            }
+          />
+        </Show>
+
+        <div class="statsTitleRow">
+          <h3 class="statsTitle">Tables</h3>
+          <div class="finalGirlControls">
+            <label class="control">
+              <span>Spirit grouping</span>
+              <select
+                value={spiritGroupingMode()}
+                onInput={(e) =>
+                  setSpiritGroupingMode(e.currentTarget.value as SpiritGroupingMode)
+                }
+              >
+                <option value="group">Group</option>
+                <option value="complexity">Complexity</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="statsGrid">
+          <CountTable
+            title={
+              spiritGroupingMode() === 'group' ? 'Spirits (By Group)' : 'Spirits (By Complexity)'
+            }
+            plays={spiritCounts()}
+            wins={spiritWins()}
+            keys={spiritKeysByGrouping()}
+            groupBy={spiritGroupingLabel}
+            getNextAchievement={getSpiritNextAchievement}
+          />
+          <CountTable
+            title="Adversaries"
+            plays={adversaryCounts()}
+            wins={adversaryWins()}
+            keys={adversaryKeys()}
+            getNextAchievement={getAdversaryNextAchievement}
+          />
+        </div>
       </Show>
+
+      <AchievementsPanel
+        achievements={achievements()}
+        nextLimit={5}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        onTogglePin={props.onTogglePin}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+      />
     </div>
   )
 }

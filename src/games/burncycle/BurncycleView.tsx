@@ -390,62 +390,6 @@ export default function BurncycleView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        achievements={achievements()}
-        nextLimit={8}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
-      <div class="statsBlock">
-        <h3 class="statsTitle">Summary</h3>
-        <p class="muted">
-          Plays: <strong>{totalPlays().toLocaleString()}</strong> · Hours:{' '}
-          <strong>
-            {totalHours().toLocaleString(undefined, {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            })}
-            {totalHoursHasAssumed() ? '*' : ''}
-          </strong>
-        </p>
-      </div>
-
-      <CountTable
-        title="Corporations"
-        plays={corporationCounts()}
-        wins={corporationWins()}
-        keys={corporationKeys()}
-        groupBy={(corporation) => burncycleContent.corporationGroupByName.get(corporation)}
-        getNextAchievement={(corporation) => nextForTrackPrefix('corporationPlays', corporation)}
-        onPlaysClick={(corporation) =>
-          handlePlaysForIds(`burncycle plays: ${corporation}`, playIdsByCorporation()[corporation] || [])
-        }
-      />
-
-      <CountTable
-        title="Bots"
-        plays={botCounts()}
-        wins={botWins()}
-        keys={botKeys()}
-        groupBy={(bot) => burncycleContent.botGroupByName.get(bot)}
-        getNextAchievement={(bot) => nextForTrackPrefix('botPlays', bot)}
-        onPlaysClick={(bot) => handlePlaysForIds(`burncycle plays: ${bot}`, playIdsByBot()[bot] || [])}
-      />
-
-      <CountTable
-        title="Captains"
-        plays={captainCounts()}
-        wins={captainWins()}
-        keys={captainKeys()}
-        groupBy={(captain) => burncycleContent.captainGroupByName.get(captain)}
-        getNextAchievement={(captain) => nextForTrackPrefix('captainPlays', captain)}
-        onPlaysClick={(captain) =>
-          handlePlaysForIds(`burncycle plays: ${captain}`, playIdsByCaptain()[captain] || [])
-        }
-      />
-
       <div class="statsBlock">
         <div class="statsTitleRow">
           <h3 class="statsTitle">Corporation × Bot</h3>
@@ -506,6 +450,62 @@ export default function BurncycleView(props: {
           }
         />
       </Show>
+
+      <CountTable
+        title="Corporations"
+        plays={corporationCounts()}
+        wins={corporationWins()}
+        keys={corporationKeys()}
+        groupBy={(corporation) => burncycleContent.corporationGroupByName.get(corporation)}
+        getNextAchievement={(corporation) => nextForTrackPrefix('corporationPlays', corporation)}
+        onPlaysClick={(corporation) =>
+          handlePlaysForIds(`burncycle plays: ${corporation}`, playIdsByCorporation()[corporation] || [])
+        }
+      />
+
+      <CountTable
+        title="Bots"
+        plays={botCounts()}
+        wins={botWins()}
+        keys={botKeys()}
+        groupBy={(bot) => burncycleContent.botGroupByName.get(bot)}
+        getNextAchievement={(bot) => nextForTrackPrefix('botPlays', bot)}
+        onPlaysClick={(bot) => handlePlaysForIds(`burncycle plays: ${bot}`, playIdsByBot()[bot] || [])}
+      />
+
+      <CountTable
+        title="Captains"
+        plays={captainCounts()}
+        wins={captainWins()}
+        keys={captainKeys()}
+        groupBy={(captain) => burncycleContent.captainGroupByName.get(captain)}
+        getNextAchievement={(captain) => nextForTrackPrefix('captainPlays', captain)}
+        onPlaysClick={(captain) =>
+          handlePlaysForIds(`burncycle plays: ${captain}`, playIdsByCaptain()[captain] || [])
+        }
+      />
+
+      <AchievementsPanel
+        achievements={achievements()}
+        nextLimit={8}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
+
+      <div class="statsBlock">
+        <h3 class="statsTitle">Summary</h3>
+        <p class="muted">
+          Plays: <strong>{totalPlays().toLocaleString()}</strong> · Hours:{' '}
+          <strong>
+            {totalHours().toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            {totalHoursHasAssumed() ? '*' : ''}
+          </strong>
+        </p>
+      </div>
 
       <Show when={allPlayIds().length === 0}>
         <p class="muted">No burncycle plays found yet.</p>

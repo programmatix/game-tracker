@@ -315,15 +315,6 @@ export default function DeckersView(props: {
         </div>
       </div>
 
-      <AchievementsPanel
-        title="Achievements"
-        achievements={achievements()}
-        nextLimit={6}
-        pinnedAchievementIds={props.pinnedAchievementIds}
-        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
-        onTogglePin={props.onTogglePin}
-      />
-
       <div class="statsBlock">
         <div class="statsTitleRow">
           <h3 class="statsTitle">Decker vs SMC Matrix</h3>
@@ -370,6 +361,22 @@ export default function DeckersView(props: {
         />
       </div>
 
+      <Show when={hasCostTable()}>
+        <CostPerPlayTable
+          rows={costRows()}
+          currencySymbol={deckersContent.costCurrencySymbol}
+          overallPlays={totalPlays()}
+          overallHours={totalHours()}
+          overallHoursHasAssumed={totalHoursHasAssumed()}
+          onPlaysClick={(box) =>
+            props.onOpenPlays({
+              title: `Deckers • Box: ${box}`,
+              playIds: playIdsByBox()[box] ?? [],
+            })
+          }
+        />
+      </Show>
+
       <CountTable
         title="Deckers Played"
         plays={deckerCounts()}
@@ -411,22 +418,6 @@ export default function DeckersView(props: {
         }
       />
 
-      <Show when={hasCostTable()}>
-        <CostPerPlayTable
-          rows={costRows()}
-          currencySymbol={deckersContent.costCurrencySymbol}
-          overallPlays={totalPlays()}
-          overallHours={totalHours()}
-          overallHoursHasAssumed={totalHoursHasAssumed()}
-          onPlaysClick={(box) =>
-            props.onOpenPlays({
-              title: `Deckers • Box: ${box}`,
-              playIds: playIdsByBox()[box] ?? [],
-            })
-          }
-        />
-      </Show>
-
       <Show when={unknownTagKeys().length > 0}>
         <CountTable
           title="Unparsed Tags"
@@ -447,6 +438,15 @@ export default function DeckersView(props: {
           no recorded length.
         </div>
       </Show>
+
+      <AchievementsPanel
+        title="Achievements"
+        achievements={achievements()}
+        nextLimit={6}
+        pinnedAchievementIds={props.pinnedAchievementIds}
+        suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
+        onTogglePin={props.onTogglePin}
+      />
 
       <div class="meta">
         Raw Deckers plays tracked: <span class="mono">{allPlayIds().length.toLocaleString()}</span>

@@ -2,6 +2,9 @@ import { For, Show } from 'solid-js'
 import type { BggPlay } from './bgg'
 import type { PlaysView as PlaysViewMode } from './appNav'
 import type { PlaysByGameRow } from './playsHelpers'
+import type { GameTab } from './gameCatalog'
+import GameOptionsButton from './components/GameOptionsButton'
+import { findGameTabForOptions } from './gameOptionsLookup'
 import {
   bggPlayUrl,
   getBggPlayerResult,
@@ -35,6 +38,7 @@ type PlaysPanelProps = {
   selectedGamePagedPlays: BggPlay[]
   playTimeDisplay: (play: BggPlay) => string
   onOpenGame: (gameKey: string) => void
+  onOpenGameOptions: (gameId: GameTab) => void
   onOpenPlayGame: (play: BggPlay) => void
 }
 
@@ -265,9 +269,20 @@ export default function PlaysView(props: PlaysPanelProps) {
                         </Show>
 
                         <div class="gameInfo">
-                          <button class="gameButton" type="button" onClick={() => props.onOpenGame(row.key)}>
-                            {row.name}
-                          </button>
+                          <div class="gameTitleRow">
+                            <button class="gameButton" type="button" onClick={() => props.onOpenGame(row.key)}>
+                              {row.name}
+                            </button>
+                            <Show when={findGameTabForOptions({ name: row.name, objectId: row.objectid || null })}>
+                              {(gameId) => (
+                                <GameOptionsButton
+                                  gameId={gameId()}
+                                  gameLabel={row.name}
+                                  onOpenGameOptions={props.onOpenGameOptions}
+                                />
+                              )}
+                            </Show>
+                          </div>
                           <Show when={row.objectid} fallback={<span class="muted mono">—</span>}>
                             <div class="muted mono">
                               {row.objecttype || 'thing'} #{row.objectid}

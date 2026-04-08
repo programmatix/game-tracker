@@ -3,14 +3,15 @@ import type { User } from 'firebase/auth'
 import type { BggPlay } from './bgg'
 import {
   MAIN_TAB_GROUPS,
-  MAIN_TAB_OPTIONS,
   PLAYS_VIEW_OPTIONS,
   isMainTab,
+  type MainTabOption,
   type MainTab,
 } from './appNav'
 import type { PlaysDrilldownRequest } from './playsDrilldown'
 import type { PlaysView as PlaysViewMode } from './appNav'
 import type { PlaysByGameRow } from './playsHelpers'
+import { isGameTab, type GameTab } from './gameCatalog'
 import FinalGirlView from './games/final-girl/FinalGirlView'
 import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
@@ -38,10 +39,13 @@ import ArkhamHorrorLcgView from './games/arkham-horror-lcg/ArkhamHorrorLcgView'
 import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
 import AchievementsView from './AchievementsView'
 import CostsView from './CostsView'
+import GameOptionsView from './GameOptionsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
+import MonthlySummaryView from './MonthlySummaryView'
 import FeedbackView from './feedback/FeedbackView'
 import PlaysView, { PlaysPager } from './PlaysView'
 import type { SpiritIslandSession } from './games/spirit-island/mindwanderer'
+import type { GamePreferences, ResolvedGamePreferencesById } from './gamePreferences'
 
 type SharedGameViewProps = {
   plays: BggPlay[]
@@ -55,18 +59,35 @@ type SharedGameViewProps = {
 
 type AppContentProps = {
   mainTab: MainTab
+  mainTabOptions: ReadonlyArray<MainTabOption>
   playsView: PlaysViewMode
+  selectedOptionsGameId: GameTab | null
   username: string
   authToken: string
   plays: BggPlay[]
+  gamePreferencesById: ResolvedGamePreferencesById
   pinnedAchievementIds: ReadonlySet<string>
   suppressAvailableAchievementTrackIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  onOpenGameOptions: (gameId: GameTab) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
+  onSelectOptionsGame: (gameId: GameTab) => void
+  onUpdateGamePreferences: (gameId: GameTab, patch: Partial<GamePreferences>) => void
   spiritIslandSessions: SpiritIslandSession[] | undefined
   spiritIslandSessionsLoading: boolean
   spiritIslandSessionsError: string | null
   assumedMinutesByObjectId: ReadonlyMap<string, number>
+  costTimeEstimateStatus: {
+    total: number
+    complete: number
+    assumed: number
+    checkedWithoutEstimate: number
+    failed: number
+    inFlight: number
+    queued: number
+    pending: number
+    active: boolean
+  }
   feedbackUser: User | null
   isFeedbackAdmin: boolean
   page: number
@@ -181,7 +202,7 @@ export default function AppContent(props: AppContentProps) {
             >
               {MAIN_TAB_GROUPS.map((group) => (
                 <optgroup label={group.label}>
-                  {MAIN_TAB_OPTIONS.filter((option) => option.group === group.id).map((option) => (
+                  {props.mainTabOptions.filter((option) => option.group === group.id).map((option) => (
                     <option value={option.value}>{option.label}</option>
                   ))}
                 </optgroup>
@@ -262,10 +283,40 @@ export default function AppContent(props: AppContentProps) {
             onGoToPage={props.onGoToPage}
           />
         </Show>
+
+        <Show when={isGameTab(props.mainTab)}>
+          <button
+            class="linkButton"
+            type="button"
+            onClick={() => props.onOpenGameOptions(props.mainTab as GameTab)}
+          >
+            Game options
+          </button>
+        </Show>
       </div>
 
       <Show when={props.mainTab === 'monthlyChecklist'}>
-        <MonthlyChecklistView plays={props.plays} authToken={props.authToken} />
+        <MonthlyChecklistView
+          plays={props.plays}
+          authToken={props.authToken}
+          onOpenGameOptions={props.onOpenGameOptions}
+        />
+      </Show>
+
+      <Show when={props.mainTab === 'monthlySummary'}>
+        <MonthlySummaryView
+          plays={props.plays}
+          assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+        />
+      </Show>
+
+      <Show when={props.mainTab === 'gameOptions'}>
+        <GameOptionsView
+          selectedGameId={props.selectedOptionsGameId}
+          gamePreferencesById={props.gamePreferencesById}
+          onSelectGame={props.onSelectOptionsGame}
+          onUpdateGamePreferences={props.onUpdateGamePreferences}
+        />
       </Show>
 
       <Show when={renderSharedGameView(props.mainTab, sharedGameViewProps)}>
@@ -302,6 +353,8 @@ export default function AppContent(props: AppContentProps) {
         <CostsView
           plays={props.plays}
           assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+          onOpenGameOptions={props.onOpenGameOptions}
+          costTimeEstimateStatus={props.costTimeEstimateStatus}
         />
       </Show>
 
@@ -323,6 +376,7 @@ export default function AppContent(props: AppContentProps) {
           selectedGamePagedPlays={props.selectedGamePagedPlays}
           playTimeDisplay={props.playTimeDisplay}
           onOpenGame={props.onOpenGame}
+          onOpenGameOptions={props.onOpenGameOptions}
           onOpenPlayGame={props.onOpenPlayGame}
         />
       </Show>

@@ -2,6 +2,7 @@ import type { User } from 'firebase/auth'
 import {
   addDoc,
   collection,
+  getDocs,
   deleteDoc,
   doc,
   onSnapshot,
@@ -9,11 +10,14 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
   type Timestamp,
 } from 'firebase/firestore'
 import { getFirebaseFirestore, isFirebaseConfigured } from '../firebase'
 
-export type FeedbackStatus = 'open' | 'resolved'
+export type FeedbackStatus = 'open' | 'in-progress' | 'resolved'
+
+export type AdminFeedbackStatus = 'in-progress' | 'resolved'
 
 export type FeedbackItem = {
   id: string
@@ -56,10 +60,13 @@ function toMillis(value: unknown): number | null {
 }
 
 function toFeedbackItem(id: string, data: FeedbackDocData): FeedbackItem {
+  const status =
+    data.status === 'resolved' || data.status === 'in-progress' ? data.status : 'open'
+
   return {
     id,
     message: typeof data.message === 'string' ? data.message : '',
-    status: data.status === 'resolved' ? 'resolved' : 'open',
+    status,
     ownerUid: typeof data.ownerUid === 'string' ? data.ownerUid : '',
     ownerEmail: typeof data.ownerEmail === 'string' ? data.ownerEmail : '',
     ownerDisplayName: typeof data.ownerDisplayName === 'string' ? data.ownerDisplayName : '',
@@ -135,15 +142,30 @@ export async function createFeedback(user: User, message: string) {
   })
 }
 
-export async function resolveFeedback(feedbackId: string, adminUser: User) {
+export async function updateFeedbackStatus(
+  feedbackId: string,
+  status: AdminFeedbackStatus,
+  adminUser: User,
+) {
   if (!isFirebaseConfigured()) throw new Error('Firebase is not configured.')
   if (!adminUser.email) throw new Error('Admin account email is missing.')
 
+  if (status === 'resolved') {
+    await updateDoc(doc(getFirebaseFirestore(), 'feedback', feedbackId), {
+      status,
+      resolvedByUid: adminUser.uid,
+      resolvedByEmail: adminUser.email,
+      resolvedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    return
+  }
+
   await updateDoc(doc(getFirebaseFirestore(), 'feedback', feedbackId), {
-    status: 'resolved',
-    resolvedByUid: adminUser.uid,
-    resolvedByEmail: adminUser.email,
-    resolvedAt: serverTimestamp(),
+    status,
+    resolvedByUid: null,
+    resolvedByEmail: null,
+    resolvedAt: null,
     updatedAt: serverTimestamp(),
   })
 }
@@ -153,4 +175,22 @@ export async function deleteFeedback(feedbackId: string, adminUser: User) {
   if (!adminUser.email) throw new Error('Admin account email is missing.')
 
   await deleteDoc(doc(getFirebaseFirestore(), 'feedback', feedbackId))
+}
+
+export async function deleteResolvedFeedback(adminUser: User) {
+  if (!isFirebaseConfigured()) throw new Error('Firebase is not configured.')
+  if (!adminUser.email) throw new Error('Admin account email is missing.')
+
+  const firestore = getFirebaseFirestore()
+  const resolvedFeedback = await getDocs(query(feedbackCollection(), where('status', '==', 'resolved')))
+
+  if (resolvedFeedback.empty) return
+
+  for (let index = 0; index < resolvedFeedback.docs.length; index += 500) {
+    const batch = writeBatch(firestore)
+    resolvedFeedback.docs.slice(index, index + 500).forEach((entry) => {
+      batch.delete(doc(firestore, 'feedback', entry.id))
+    })
+    await batch.commit()
+  }
 }

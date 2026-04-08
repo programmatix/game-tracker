@@ -1,23 +1,41 @@
-import { For, Show, createMemo, createSignal } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import type { BggPlay } from './bgg'
 import ProgressBar from './components/ProgressBar'
 import { costRegistry } from './costRegistry'
+import {
+  COST_PER_HOUR_TARGET_OPTIONS,
+  DEFAULT_COST_PER_HOUR_TARGET,
+  isCostPerHourTarget,
+} from './costTargets'
 import { totalPlayMinutesWithAssumption } from './playDuration'
+import {
+  GAME_STATUS_OPTIONS,
+  gamePreferencesFor,
+  gameStatusLabel,
+  isGameStatus,
+  type GameStatus,
+  shouldShowGameInCostsTable,
+} from './gamePreferences'
+import { isGameTab, type GameTab } from './gameCatalog'
+import GameOptionsButton from './components/GameOptionsButton'
 
 type CostsRow = {
   id: string
   name: string
+  status: GameStatus
+  statusLabel: string
   currencySymbol: string
   totalCost: number
   plays: number
   hours: number
   hasAssumedHours: boolean
   costPerHour?: number
-  progressToOnePerHour?: number
 }
 
-type SortKey = 'name' | 'plays' | 'hours' | 'totalCost' | 'costPerHour' | 'progressToOnePerHour'
+type SortKey = 'name' | 'plays' | 'hours' | 'totalCost' | 'costPerHour' | 'progressToTarget'
 type SortDirection = 'asc' | 'desc'
+const COSTS_TARGET_STORAGE_KEY = 'costs.targetCostPerHour'
+const COSTS_VISIBLE_STATUSES_STORAGE_KEY = 'costs.visibleStatuses'
 
 function normalizeGameName(value: string): string {
   return value
@@ -44,12 +62,88 @@ function compareOptionalNumber(
   return direction === 'asc' ? a - b : b - a
 }
 
+function hoursNeededForTarget(totalCost: number, targetCostPerHour: number): number | undefined {
+  if (totalCost <= 0 || targetCostPerHour <= 0) return undefined
+  return totalCost / targetCostPerHour
+}
+
+function progressToTarget(totalCost: number, hours: number, targetCostPerHour: number): number | undefined {
+  const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour)
+  if (targetHours == null || targetHours <= 0) return undefined
+  return Math.min(1, hours / targetHours)
+}
+
+function readStoredTarget(): number {
+  if (typeof window === 'undefined') return DEFAULT_COST_PER_HOUR_TARGET
+  try {
+    const parsed = Number(window.localStorage.getItem(COSTS_TARGET_STORAGE_KEY) || '')
+    return isCostPerHourTarget(parsed) ? parsed : DEFAULT_COST_PER_HOUR_TARGET
+  } catch {
+    return DEFAULT_COST_PER_HOUR_TARGET
+  }
+}
+
+function allGameStatuses(): GameStatus[] {
+  return GAME_STATUS_OPTIONS.map((option) => option.value)
+}
+
+function readStoredVisibleStatuses(): GameStatus[] {
+  if (typeof window === 'undefined') return allGameStatuses()
+
+  try {
+    const raw = window.localStorage.getItem(COSTS_VISIBLE_STATUSES_STORAGE_KEY)
+    if (!raw) return allGameStatuses()
+
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return allGameStatuses()
+    if (parsed.length === 0) return []
+
+    const visibleStatuses = parsed.filter(isGameStatus)
+    return visibleStatuses.length > 0 ? Array.from(new Set(visibleStatuses)) : allGameStatuses()
+  } catch {
+    return allGameStatuses()
+  }
+}
+
 export default function CostsView(props: {
   plays: BggPlay[]
   assumedMinutesByObjectId: ReadonlyMap<string, number>
+  onOpenGameOptions: (gameId: GameTab) => void
+  costTimeEstimateStatus: {
+    total: number
+    complete: number
+    assumed: number
+    checkedWithoutEstimate: number
+    failed: number
+    inFlight: number
+    queued: number
+    pending: number
+    active: boolean
+  }
 }) {
   const [sortKey, setSortKey] = createSignal<SortKey>('costPerHour')
   const [sortDirection, setSortDirection] = createSignal<SortDirection>('asc')
+  const [targetCostPerHour, setTargetCostPerHour] = createSignal<number>(readStoredTarget())
+  const [visibleStatuses, setVisibleStatuses] = createSignal<GameStatus[]>(readStoredVisibleStatuses())
+
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(COSTS_TARGET_STORAGE_KEY, String(targetCostPerHour()))
+    } catch {
+      return
+    }
+  })
+
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(
+        COSTS_VISIBLE_STATUSES_STORAGE_KEY,
+        JSON.stringify(visibleStatuses()),
+      )
+    } catch {
+      return
+    }
+  })
 
   const rows = createMemo<CostsRow[]>(() => {
     const playedByAlias = new Map<string, BggPlay[]>()
@@ -64,60 +158,74 @@ export default function CostsView(props: {
       }
     }
 
-    return costRegistry.map((entry) => {
-      const matchedPlays = entry.aliases.flatMap(
-        (alias) => playedByAlias.get(normalizeGameName(alias)) || [],
-      )
-      const totalCost = [...entry.costs.boxCostsByName.values()].reduce((sum, cost) => sum + cost, 0)
+    return costRegistry
+      .filter((entry) => shouldShowGameInCostsTable(entry.id))
+      .map((entry) => {
+        const status = isGameTab(entry.id) ? gamePreferencesFor(entry.id).status : 'active'
+        const matchedPlays = entry.aliases.flatMap(
+          (alias) => playedByAlias.get(normalizeGameName(alias)) || [],
+        )
+        const totalCost = [...entry.costs.boxCostsByName.values()].reduce((sum, cost) => sum + cost, 0)
 
-      let plays = 0
-      let hours = 0
-      let hasAssumedHours = false
+        let plays = 0
+        let hours = 0
+        let hasAssumedHours = false
 
-      for (const play of matchedPlays) {
-        const quantity = playQuantity(play)
-        const assumedMinutesPerPlay = play.item?.attributes.objectid
-          ? props.assumedMinutesByObjectId.get(play.item.attributes.objectid)
-          : undefined
-        const resolved = totalPlayMinutesWithAssumption({
-          attributes: play.attributes,
-          quantity,
-          assumedMinutesPerPlay,
-        })
-        plays += quantity
-        hours += resolved.minutes / 60
-        hasAssumedHours ||= resolved.assumed
-      }
+        for (const play of matchedPlays) {
+          const quantity = playQuantity(play)
+          const assumedMinutesPerPlay = play.item?.attributes.objectid
+            ? props.assumedMinutesByObjectId.get(play.item.attributes.objectid)
+            : undefined
+          const resolved = totalPlayMinutesWithAssumption({
+            attributes: play.attributes,
+            quantity,
+            assumedMinutesPerPlay,
+          })
+          plays += quantity
+          hours += resolved.minutes / 60
+          hasAssumedHours ||= resolved.assumed
+        }
 
-      const costPerHour = hours > 0 ? totalCost / hours : undefined
-      const progressToOnePerHour = totalCost > 0 ? Math.min(1, hours / totalCost) : undefined
+        const costPerHour = hours > 0 ? totalCost / hours : undefined
 
-      return {
-        id: entry.id,
-        name: entry.label,
-        currencySymbol: entry.costs.currencySymbol,
-        totalCost,
-        plays,
-        hours,
-        hasAssumedHours,
-        costPerHour,
-        progressToOnePerHour,
-      }
-    })
+        return {
+          id: entry.id,
+          name: entry.label,
+          status,
+          statusLabel: gameStatusLabel(status),
+          currencySymbol: entry.costs.currencySymbol,
+          totalCost,
+          plays,
+          hours,
+          hasAssumedHours,
+          costPerHour,
+        }
+      })
   })
 
-  const hasAnyAssumedHours = createMemo(() => rows().some((row) => row.hasAssumedHours))
+  const visibleStatusSet = createMemo(() => new Set(visibleStatuses()))
+  const filteredRows = createMemo(() =>
+    rows().filter((row) => visibleStatusSet().has(row.status)),
+  )
+
+  const hasAnyAssumedHours = createMemo(() => filteredRows().some((row) => row.hasAssumedHours))
   const overallCurrencySymbol = createMemo(
-    () => rows().find((row) => row.totalCost > 0)?.currencySymbol || rows()[0]?.currencySymbol || '£',
+    () =>
+      filteredRows().find((row) => row.totalCost > 0)?.currencySymbol ||
+      filteredRows()[0]?.currencySymbol ||
+      rows().find((row) => row.totalCost > 0)?.currencySymbol ||
+      rows()[0]?.currencySymbol ||
+      '£',
   )
 
   const sortedRows = createMemo(() => {
     const key = sortKey()
     const direction = sortDirection()
 
-    return rows()
+    return filteredRows()
       .slice()
       .sort((a, b) => {
+        const target = targetCostPerHour()
         if (key === 'name') {
           const compared = a.name.localeCompare(b.name)
           return direction === 'asc' ? compared : -compared
@@ -130,7 +238,11 @@ export default function CostsView(props: {
         if (key === 'costPerHour') {
           return compareOptionalNumber(a.costPerHour, b.costPerHour, direction)
         }
-        return compareOptionalNumber(a.progressToOnePerHour, b.progressToOnePerHour, direction)
+        return compareOptionalNumber(
+          progressToTarget(a.totalCost, a.hours, target),
+          progressToTarget(b.totalCost, b.hours, target),
+          direction,
+        )
       })
   })
 
@@ -139,7 +251,7 @@ export default function CostsView(props: {
     let plays = 0
     let hours = 0
     let hasAssumedHours = false
-    for (const row of rows()) {
+    for (const row of filteredRows()) {
       totalCost += row.totalCost
       plays += row.plays
       hours += row.hours
@@ -151,7 +263,6 @@ export default function CostsView(props: {
       hours,
       hasAssumedHours,
       costPerHour: hours > 0 ? totalCost / hours : undefined,
-      progressToOnePerHour: totalCost > 0 ? Math.min(1, hours / totalCost) : undefined,
     }
   })
 
@@ -167,6 +278,11 @@ export default function CostsView(props: {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     })}%`
+  const formatTargetValue = (value: number, currencySymbol: string): string =>
+    `${currencySymbol}${value.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`
 
   const toggleSort = (nextKey: SortKey) => {
     if (sortKey() === nextKey) {
@@ -182,11 +298,102 @@ export default function CostsView(props: {
     return sortDirection() === 'asc' ? ' ▲' : ' ▼'
   }
 
+  const toggleStatusFilter = (status: GameStatus) => {
+    setVisibleStatuses((current) => {
+      const next = current.includes(status)
+        ? current.filter((value) => value !== status)
+        : [...current, status]
+
+      return GAME_STATUS_OPTIONS.map((option) => option.value).filter((value) => next.includes(value))
+    })
+  }
+
+  const progressHeading = createMemo(
+    () => `Progress to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`,
+  )
+  const costTimeEstimateLabel = createMemo(() => {
+    const status = props.costTimeEstimateStatus
+    return `Checked ${status.complete.toLocaleString()} of ${status.total.toLocaleString()} games with missing play times`
+  })
+  const costTimeEstimateSummary = createMemo(() => {
+    const status = props.costTimeEstimateStatus
+    const parts: string[] = []
+    if (status.pending > 0) parts.push(`${status.pending.toLocaleString()} waiting to queue`)
+    if (status.queued > 0) parts.push(`${status.queued.toLocaleString()} queued`)
+    if (status.inFlight > 0) parts.push(`${status.inFlight.toLocaleString()} loading from BGG`)
+    if (status.assumed > 0) parts.push(`${status.assumed.toLocaleString()} with estimated time found`)
+    if (status.checkedWithoutEstimate > 0) {
+      parts.push(`${status.checkedWithoutEstimate.toLocaleString()} with no usable play time`)
+    }
+    if (status.failed > 0) parts.push(`${status.failed.toLocaleString()} failed`)
+    return parts.join(' • ')
+  })
+  const showCostTimeEstimateStatus = createMemo(() => {
+    const status = props.costTimeEstimateStatus
+    return status.total > 0 && (status.active || status.failed > 0 || status.checkedWithoutEstimate > 0)
+  })
+
   return (
     <div class="statsBlock">
       <h3 class="statsTitle">Costs</h3>
+      <Show when={showCostTimeEstimateStatus()}>
+        <div class="costLoadingCard">
+          <div class="costLoadingHeader">
+            <div>
+              <div>Estimating missing play times</div>
+              <div class="muted">
+                The table updates as BGG game metadata comes back for plays with no recorded length.
+              </div>
+            </div>
+            <div class="mono muted">{costTimeEstimateLabel()}</div>
+          </div>
+          <ProgressBar
+            value={props.costTimeEstimateStatus.complete}
+            target={Math.max(1, props.costTimeEstimateStatus.total)}
+            widthPx={320}
+            label={costTimeEstimateLabel()}
+          />
+          <div class="muted">{costTimeEstimateSummary()}</div>
+        </div>
+      </Show>
+      <div class="costsToolbar">
+        <div class="costToolbarGroup">
+          <div class="muted">Choose the target cost/hour to compare against.</div>
+          <div class="costTargetGroup" role="group" aria-label="Cost per hour target">
+            <For each={COST_PER_HOUR_TARGET_OPTIONS}>
+              {(target) => (
+                <button
+                  type="button"
+                  class="tabButton"
+                  classList={{ tabButtonActive: targetCostPerHour() === target }}
+                  onClick={() => setTargetCostPerHour(target)}
+                >
+                  {formatTargetValue(target, overallCurrencySymbol())}/h
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+        <div class="costToolbarGroup">
+          <div class="muted">Show statuses</div>
+          <div class="costTargetGroup" role="group" aria-label="Visible game statuses">
+            <For each={GAME_STATUS_OPTIONS}>
+              {(status) => (
+                <button
+                  type="button"
+                  class="tabButton"
+                  classList={{ tabButtonActive: visibleStatuses().includes(status.value) }}
+                  onClick={() => toggleStatusFilter(status.value)}
+                >
+                  {status.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+      </div>
       <div class="tableWrap">
-        <table class="table">
+        <table class="table compactTable mobileCardTable costsTable">
           <thead>
             <tr>
               <th>
@@ -194,6 +401,7 @@ export default function CostsView(props: {
                   Game{sortIndicator('name')}
                 </button>
               </th>
+              <th>Status</th>
               <th class="mono">
                 <button type="button" class="sortButton" onClick={() => toggleSort('plays')}>
                   Plays{sortIndicator('plays')}
@@ -218,78 +426,139 @@ export default function CostsView(props: {
                 <button
                   type="button"
                   class="sortButton"
-                  onClick={() => toggleSort('progressToOnePerHour')}
+                  onClick={() => toggleSort('progressToTarget')}
                 >
-                  Progress to £1/hour{sortIndicator('progressToOnePerHour')}
+                  {progressHeading()}
+                  {sortIndicator('progressToTarget')}
                 </button>
               </th>
             </tr>
           </thead>
           <tbody>
-            <For each={sortedRows()}>
-              {(row) => (
+            <Show
+              when={sortedRows().length > 0}
+              fallback={
                 <tr>
-                  <td>{row.name}</td>
-                  <td class="mono">{row.plays.toLocaleString()}</td>
-                  <td class="mono">
-                    {formatHours(row.hours)}
-                    {row.hasAssumedHours ? '*' : ''}
+                  <td colSpan={7} class="muted">
+                    No games match the selected statuses.
                   </td>
-                  <td class="mono">{formatMoney(row.totalCost, row.currencySymbol)}</td>
-                  <td class="mono">
-                    <Show when={typeof row.costPerHour === 'number'} fallback="—">
-                      {formatMoney(row.costPerHour!, row.currencySymbol)}
+                </tr>
+              }
+            >
+              <>
+                <For each={sortedRows()}>
+                  {(row) => (
+                    <tr>
+                      <td data-label="Game">
+                        <div class="gameTitleRow">
+                          <span>{row.name}</span>
+                          <Show when={isGameTab(row.id) ? row.id : null}>
+                            {(gameId) => (
+                              <GameOptionsButton
+                                gameId={gameId()}
+                                gameLabel={row.name}
+                                onOpenGameOptions={props.onOpenGameOptions}
+                              />
+                            )}
+                          </Show>
+                        </div>
+                      </td>
+                      <td data-label="Status">
+                        <span class="statusBadge">{row.statusLabel}</span>
+                      </td>
+                      <td class="mono" data-label="Plays">{row.plays.toLocaleString()}</td>
+                      <td class="mono" data-label="Hours">
+                        {formatHours(row.hours)}
+                        {row.hasAssumedHours ? '*' : ''}
+                      </td>
+                      <td class="mono" data-label="Total cost">
+                        {formatMoney(row.totalCost, row.currencySymbol)}
+                      </td>
+                      <td class="mono" data-label="Cost / hour">
+                        <Show when={typeof row.costPerHour === 'number'} fallback="—">
+                          {formatMoney(row.costPerHour!, row.currencySymbol)}
+                        </Show>
+                      </td>
+                      <td class="costProgressTableCell" data-label={progressHeading()}>
+                        <Show
+                          when={typeof progressToTarget(row.totalCost, row.hours, targetCostPerHour()) === 'number'}
+                          fallback="—"
+                        >
+                          <div class="costProgressCell">
+                            <ProgressBar
+                              value={row.hours}
+                              target={hoursNeededForTarget(row.totalCost, targetCostPerHour())!}
+                              widthPx={156}
+                              label={`${row.name}: ${formatHours(row.hours)}/${formatHours(
+                                hoursNeededForTarget(row.totalCost, targetCostPerHour())!,
+                              )} hours needed for ${formatTargetValue(targetCostPerHour(), row.currencySymbol)}/hour`}
+                              showLabel={false}
+                            />
+                            <div class="costProgressMeta">
+                              <span class="mono">
+                                {formatPercent(
+                                  progressToTarget(row.totalCost, row.hours, targetCostPerHour())!,
+                                )}
+                              </span>
+                              <span class="mono muted">
+                                {formatHours(row.hours)} /{' '}
+                                {formatHours(hoursNeededForTarget(row.totalCost, targetCostPerHour())!)}h
+                              </span>
+                            </div>
+                          </div>
+                        </Show>
+                      </td>
+                    </tr>
+                  )}
+                </For>
+                <tr>
+                  <td class="costsSummaryLabel" data-label="Game">Overall</td>
+                  <td data-label="Status">—</td>
+                  <td class="mono" data-label="Plays">{totals().plays.toLocaleString()}</td>
+                  <td class="mono" data-label="Hours">
+                    {formatHours(totals().hours)}
+                    {totals().hasAssumedHours ? '*' : ''}
+                  </td>
+                  <td class="mono" data-label="Total cost">
+                    {formatMoney(totals().totalCost, overallCurrencySymbol())}
+                  </td>
+                  <td class="mono" data-label="Cost / hour">
+                    <Show when={typeof totals().costPerHour === 'number'} fallback="—">
+                      {formatMoney(totals().costPerHour!, overallCurrencySymbol())}
                     </Show>
                   </td>
-                  <td>
-                    <Show when={typeof row.progressToOnePerHour === 'number'} fallback="—">
+                  <td class="costProgressTableCell" data-label={progressHeading()}>
+                    <Show
+                      when={typeof progressToTarget(totals().totalCost, totals().hours, targetCostPerHour()) === 'number'}
+                      fallback="—"
+                    >
                       <div class="costProgressCell">
                         <ProgressBar
-                          value={row.hours}
-                          target={row.totalCost}
-                          widthPx={120}
-                          label={`${row.name}: ${formatHours(row.hours)}/${formatHours(
-                            row.totalCost,
-                          )} hours needed for £1/hour`}
+                          value={totals().hours}
+                          target={hoursNeededForTarget(totals().totalCost, targetCostPerHour())!}
+                          widthPx={156}
+                          label={`Overall: ${formatHours(totals().hours)}/${formatHours(
+                            hoursNeededForTarget(totals().totalCost, targetCostPerHour())!,
+                          )} hours needed for ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`}
                           showLabel={false}
                         />
-                        <span class="mono muted">{formatPercent(row.progressToOnePerHour!)}</span>
+                        <div class="costProgressMeta">
+                          <span class="mono">
+                            {formatPercent(
+                              progressToTarget(totals().totalCost, totals().hours, targetCostPerHour())!,
+                            )}
+                          </span>
+                          <span class="mono muted">
+                            {formatHours(totals().hours)} /{' '}
+                            {formatHours(hoursNeededForTarget(totals().totalCost, targetCostPerHour())!)}h
+                          </span>
+                        </div>
                       </div>
                     </Show>
                   </td>
                 </tr>
-              )}
-            </For>
-            <tr>
-              <th>Overall</th>
-              <th class="mono">{totals().plays.toLocaleString()}</th>
-              <th class="mono">
-                {formatHours(totals().hours)}
-                {totals().hasAssumedHours ? '*' : ''}
-              </th>
-              <th class="mono">{formatMoney(totals().totalCost, overallCurrencySymbol())}</th>
-              <th class="mono">
-                <Show when={typeof totals().costPerHour === 'number'} fallback="—">
-                  {formatMoney(totals().costPerHour!, overallCurrencySymbol())}
-                </Show>
-              </th>
-              <th>
-                <Show when={typeof totals().progressToOnePerHour === 'number'} fallback="—">
-                  <div class="costProgressCell">
-                    <ProgressBar
-                      value={totals().hours}
-                      target={totals().totalCost}
-                      widthPx={120}
-                      label={`Overall: ${formatHours(totals().hours)}/${formatHours(
-                        totals().totalCost,
-                      )} hours needed for £1/hour`}
-                      showLabel={false}
-                    />
-                    <span class="mono muted">{formatPercent(totals().progressToOnePerHour!)}</span>
-                  </div>
-                </Show>
-              </th>
-            </tr>
+              </>
+            </Show>
           </tbody>
         </table>
       </div>
