@@ -40,6 +40,7 @@ import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
 import AchievementsView from './AchievementsView'
 import CostsView from './CostsView'
 import GameOptionsView from './GameOptionsView'
+import OverallOptionsView from './OverallOptionsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
 import MonthlySummaryView from './MonthlySummaryView'
 import FeedbackView from './feedback/FeedbackView'
@@ -61,7 +62,7 @@ type AppContentProps = {
   mainTab: MainTab
   mainTabOptions: ReadonlyArray<MainTabOption>
   playsView: PlaysViewMode
-  selectedOptionsGameId: GameTab | null
+  selectedOptionsGameId: string | null
   username: string
   authToken: string
   plays: BggPlay[]
@@ -69,10 +70,11 @@ type AppContentProps = {
   pinnedAchievementIds: ReadonlySet<string>
   suppressAvailableAchievementTrackIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
-  onOpenGameOptions: (gameId: GameTab) => void
+  onOpenGameOptions: (gameId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
-  onSelectOptionsGame: (gameId: GameTab) => void
-  onUpdateGamePreferences: (gameId: GameTab, patch: Partial<GamePreferences>) => void
+  onSelectOptionsGame: (gameId: string) => void
+  onUpdateGamePreferences: (gameId: string, patch: Partial<GamePreferences>) => void
+  onClearBggThingCache: () => number
   spiritIslandSessions: SpiritIslandSession[] | undefined
   spiritIslandSessionsLoading: boolean
   spiritIslandSessionsError: string | null
@@ -319,6 +321,10 @@ export default function AppContent(props: AppContentProps) {
         />
       </Show>
 
+      <Show when={props.mainTab === 'options'}>
+        <OverallOptionsView onClearBggThingCache={props.onClearBggThingCache} />
+      </Show>
+
       <Show when={renderSharedGameView(props.mainTab, sharedGameViewProps)}>
         {(view) => view()}
       </Show>
@@ -354,6 +360,7 @@ export default function AppContent(props: AppContentProps) {
           plays={props.plays}
           assumedMinutesByObjectId={props.assumedMinutesByObjectId}
           onOpenGameOptions={props.onOpenGameOptions}
+          onUpdateGamePreferences={props.onUpdateGamePreferences}
           costTimeEstimateStatus={props.costTimeEstimateStatus}
         />
       </Show>

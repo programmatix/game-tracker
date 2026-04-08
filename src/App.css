@@ -586,6 +586,14 @@
   white-space: nowrap;
 }
 
+.statusBadgeSelect {
+  min-width: 0;
+  max-width: 100%;
+  appearance: none;
+  cursor: pointer;
+  padding-right: 24px;
+}
+
 .statsTitle {
   margin: 0;
   font-size: 13px;

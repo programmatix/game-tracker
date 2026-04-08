@@ -1,5 +1,11 @@
 import { createSignal } from 'solid-js'
-import { GAME_DEFINITIONS, getGameDefinition, isGameTab, type GameTab } from './gameCatalog'
+import { isGameTab, type GameTab } from './gameCatalog'
+import {
+  CONFIGURABLE_GAME_DEFINITIONS,
+  getConfigurableGameDefinition,
+  isConfigurableGameId,
+  normalizeConfigurableGameId,
+} from './configurableGames'
 
 export const GAME_STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -21,9 +27,9 @@ export type GamePreferences = {
 
 export type StoredGamePreferences = Partial<GamePreferences>
 
-export type StoredGamePreferencesById = Partial<Record<GameTab, StoredGamePreferences>>
+export type StoredGamePreferencesById = Partial<Record<string, StoredGamePreferences>>
 
-export type ResolvedGamePreferencesById = Record<GameTab, GamePreferences>
+export type ResolvedGamePreferencesById = Record<string, GamePreferences>
 
 const [storedGamePreferencesById, setStoredGamePreferencesById] =
   createSignal<StoredGamePreferencesById>({})
@@ -36,11 +42,11 @@ export function gameStatusLabel(status: GameStatus): string {
   return GAME_STATUS_OPTIONS.find((option) => option.value === status)?.label || 'Active'
 }
 
-export function defaultGamePreferencesFor(gameId: GameTab): GamePreferences {
-  const game = getGameDefinition(gameId)
+export function defaultGamePreferencesFor(gameId: string): GamePreferences {
+  const game = getConfigurableGameDefinition(gameId)
   return {
     showInMonthlyChecklist: game.supportsMonthlyChecklist,
-    showAsSeparateTab: true,
+    showAsSeparateTab: game.supportsSeparateTab,
     showInCostsTable: game.supportsCostsTable,
     calculateAchievements: game.supportsAchievements,
     status: 'active',
@@ -48,11 +54,11 @@ export function defaultGamePreferencesFor(gameId: GameTab): GamePreferences {
 }
 
 export function resolveGamePreferences(
-  gameId: GameTab,
+  gameId: string,
   stored: StoredGamePreferencesById = {},
 ): GamePreferences {
   const defaults = defaultGamePreferencesFor(gameId)
-  const game = getGameDefinition(gameId)
+  const game = getConfigurableGameDefinition(gameId)
   const raw = stored[gameId]
 
   return {
@@ -61,7 +67,7 @@ export function resolveGamePreferences(
         ? raw.showInMonthlyChecklist
         : defaults.showInMonthlyChecklist,
     showAsSeparateTab:
-      typeof raw?.showAsSeparateTab === 'boolean'
+      game.supportsSeparateTab && typeof raw?.showAsSeparateTab === 'boolean'
         ? raw.showAsSeparateTab
         : defaults.showAsSeparateTab,
     showInCostsTable:
@@ -80,7 +86,7 @@ export function buildResolvedGamePreferencesById(
   stored: StoredGamePreferencesById = {},
 ): ResolvedGamePreferencesById {
   return Object.fromEntries(
-    GAME_DEFINITIONS.map((game) => [game.id, resolveGamePreferences(game.id, stored)]),
+    CONFIGURABLE_GAME_DEFINITIONS.map((game) => [game.id, resolveGamePreferences(game.id, stored)]),
   ) as ResolvedGamePreferencesById
 }
 
@@ -90,17 +96,19 @@ export function normalizeStoredGamePreferencesById(input: unknown): StoredGamePr
   const source = input as Record<string, unknown>
   const normalized: StoredGamePreferencesById = {}
 
-  for (const game of GAME_DEFINITIONS) {
-    const raw = source[game.id]
+  for (const [rawGameId, raw] of Object.entries(source)) {
+    const gameId = normalizeConfigurableGameId(rawGameId)
+    if (!gameId) continue
+    const game = getConfigurableGameDefinition(gameId)
     if (!raw || typeof raw !== 'object') continue
 
     const rawRecord = raw as Record<string, unknown>
-    const next: StoredGamePreferences = {}
+    const next: StoredGamePreferences = { ...(normalized[game.id] || {}) }
 
     if (typeof rawRecord.showInMonthlyChecklist === 'boolean') {
       next.showInMonthlyChecklist = rawRecord.showInMonthlyChecklist
     }
-    if (typeof rawRecord.showAsSeparateTab === 'boolean') {
+    if (game.supportsSeparateTab && typeof rawRecord.showAsSeparateTab === 'boolean') {
       next.showAsSeparateTab = rawRecord.showAsSeparateTab
     }
     if (typeof rawRecord.showInCostsTable === 'boolean') {
@@ -127,7 +135,7 @@ export function setGamePreferencesStore(next: StoredGamePreferencesById) {
   setStoredGamePreferencesById(normalizeStoredGamePreferencesById(next))
 }
 
-export function gamePreferencesFor(gameId: GameTab): GamePreferences {
+export function gamePreferencesFor(gameId: string): GamePreferences {
   return resolveGamePreferences(gameId, storedGamePreferencesById())
 }
 
@@ -136,12 +144,12 @@ export function shouldShowGameTab(gameId: GameTab): boolean {
 }
 
 export function shouldShowGameInMonthlyChecklist(gameId: string): boolean {
-  if (!isGameTab(gameId)) return true
+  if (!isConfigurableGameId(gameId)) return true
   return gamePreferencesFor(gameId).showInMonthlyChecklist
 }
 
 export function shouldShowGameInCostsTable(gameId: string): boolean {
-  if (!isGameTab(gameId)) return true
+  if (!isConfigurableGameId(gameId)) return true
   return gamePreferencesFor(gameId).showInCostsTable
 }
 

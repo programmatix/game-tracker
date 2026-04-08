@@ -38,6 +38,14 @@ export type BggThingSummary = {
 }
 
 const BGG_BASE = '/bgg/xmlapi2'
+const THING_SUMMARY_CACHE_PREFIX = 'bggThingSummaryCache:v1:'
+const THING_SUMMARY_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000
+
+type ThingSummaryCacheV1 = {
+  version: 1
+  fetchedAtMs: number
+  data: BggThingSummary
+}
 
 type BggRequestOptions = {
   signal?: AbortSignal
@@ -95,6 +103,97 @@ function elementToObject(element: Element): unknown {
   }
 
   return node
+}
+
+function thingSummaryCacheKey(id: string): string {
+  return `${THING_SUMMARY_CACHE_PREFIX}${id}`
+}
+
+function readThingSummaryCache(id: string): ThingSummaryCacheV1 | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = window.localStorage.getItem(thingSummaryCacheKey(id))
+    if (!raw) return null
+
+    const parsed: unknown = JSON.parse(raw)
+    if (
+      typeof parsed !== 'object' ||
+      parsed == null ||
+      !('version' in parsed) ||
+      (parsed as { version: unknown }).version !== 1 ||
+      !('fetchedAtMs' in parsed) ||
+      typeof (parsed as { fetchedAtMs: unknown }).fetchedAtMs !== 'number' ||
+      !('data' in parsed) ||
+      typeof (parsed as { data: unknown }).data !== 'object' ||
+      (parsed as { data: unknown }).data == null
+    ) {
+      return null
+    }
+
+    const cache = parsed as ThingSummaryCacheV1
+    if (Date.now() - cache.fetchedAtMs > THING_SUMMARY_CACHE_TTL_MS) {
+      window.localStorage.removeItem(thingSummaryCacheKey(id))
+      return null
+    }
+
+    return cache
+  } catch {
+    return null
+  }
+}
+
+function writeThingSummaryCache(id: string, summary: BggThingSummary) {
+  if (typeof window === 'undefined') return
+
+  const cache: ThingSummaryCacheV1 = {
+    version: 1,
+    fetchedAtMs: Date.now(),
+    data: summary,
+  }
+
+  try {
+    window.localStorage.setItem(thingSummaryCacheKey(id), JSON.stringify(cache))
+  } catch {
+    // ignore quota / storage failures
+  }
+}
+
+export function countThingSummaryCacheEntries(): number {
+  if (typeof window === 'undefined') return 0
+
+  try {
+    let count = 0
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (key?.startsWith(THING_SUMMARY_CACHE_PREFIX)) count += 1
+    }
+    return count
+  } catch {
+    return 0
+  }
+}
+
+export function clearThingSummaryCache(): number {
+  if (typeof window === 'undefined') return 0
+
+  try {
+    const keysToRemove: string[] = []
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (key?.startsWith(THING_SUMMARY_CACHE_PREFIX)) {
+        keysToRemove.push(key)
+      }
+    }
+
+    for (const key of keysToRemove) {
+      window.localStorage.removeItem(key)
+    }
+
+    return keysToRemove.length
+  } catch {
+    return 0
+  }
 }
 
 async function fetchXml(
@@ -311,6 +410,11 @@ export async function fetchThingSummary(
   id: string,
   options?: BggRequestOptions,
 ): Promise<BggThingSummary> {
+  if (!options?.bypassCache) {
+    const cached = readThingSummaryCache(id)
+    if (cached) return cached.data
+  }
+
   const query = new URLSearchParams({ id })
   const doc = await fetchXml(`/thing?${query.toString()}`, options)
 
@@ -327,7 +431,7 @@ export async function fetchThingSummary(
       ?.getAttribute('value')
       ?.trim() || undefined
 
-  return {
+  const summary: BggThingSummary = {
     id: itemElement.getAttribute('id') || id,
     type,
     primaryName,
@@ -335,4 +439,7 @@ export async function fetchThingSummary(
     image: image || undefined,
     raw: elementToObject(itemElement),
   }
+
+  writeThingSummaryCache(id, summary)
+  return summary
 }

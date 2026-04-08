@@ -27,6 +27,7 @@ import { taintedGrailContent } from './games/tainted-grail/content'
 import { tooManyBonesContent } from './games/too-many-bones/content'
 import { undauntedNormandyContent } from './games/undaunted-normandy/content'
 import { unsettledContent } from './games/unsettled/content'
+import { PURCHASE_GAME_FAMILIES, purchaseGameFamilyById } from './purchaseGameFamilies'
 
 export type CostRegistryEntry = {
   id: string
@@ -72,48 +73,57 @@ function toBoxCostConfig(input: {
   }
 }
 
-export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
+function familyCostConfig(gameId: string, fallback: BoxCostConfig): BoxCostConfig {
+  const family = purchaseGameFamilyById.get(gameId)
+  if (!family) return fallback
+  return {
+    currencySymbol: '£',
+    boxCostsByName: new Map([[family.label, family.price]]),
+  }
+}
+
+const legacyCostRegistry: ReadonlyArray<CostRegistryEntry> = [
   {
     id: 'arkhamHorrorLcg',
     label: 'Arkham Horror LCG',
     aliases: arkhamHorrorLcgAliases,
-    costs: toBoxCostConfig(arkhamHorrorLcgContent),
+    costs: familyCostConfig('arkhamHorrorLcg', toBoxCostConfig(arkhamHorrorLcgContent)),
   },
   {
     id: 'finalGirl',
     label: 'Final Girl',
     aliases: ['Final Girl'],
-    costs: toBoxCostConfig(finalGirlContent),
+    costs: familyCostConfig('finalGirl', toBoxCostConfig(finalGirlContent)),
   },
   {
     id: 'skytearHorde',
     label: 'Skytear Horde',
     aliases: ['Skytear Horde'],
-    costs: toBoxCostConfig(skytearHordeContent),
+    costs: familyCostConfig('skytearHorde', toBoxCostConfig(skytearHordeContent)),
   },
   {
     id: 'cloudspire',
     label: 'Cloudspire',
     aliases: ['Cloudspire'],
-    costs: toBoxCostConfig(cloudspireContent),
+    costs: familyCostConfig('cloudspire', toBoxCostConfig(cloudspireContent)),
   },
   {
     id: 'burncycle',
     label: 'burncycle',
     aliases: ['burncycle'],
-    costs: toBoxCostConfig(burncycleContent),
+    costs: familyCostConfig('burncycle', toBoxCostConfig(burncycleContent)),
   },
   {
     id: 'paleo',
     label: 'Paleo',
     aliases: ['Paleo'],
-    costs: toBoxCostConfig(paleoContent),
+    costs: familyCostConfig('paleo', toBoxCostConfig(paleoContent)),
   },
   {
     id: 'robinsonCrusoe',
     label: 'Robinson Crusoe',
     aliases: ['Robinson Crusoe', 'Robinson Crusoe: Adventures on the Cursed Island'],
-    costs: toBoxCostConfig(robinsonCrusoeContent),
+    costs: familyCostConfig('robinsonCrusoe', toBoxCostConfig(robinsonCrusoeContent)),
   },
   {
     id: 'robinHood',
@@ -125,43 +135,46 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
     id: 'earthborneRangers',
     label: 'Earthborne Rangers',
     aliases: ['Earthborne Rangers'],
-    costs: toBoxCostConfig(earthborneRangersContent),
+    costs: familyCostConfig('earthborneRangers', toBoxCostConfig(earthborneRangersContent)),
   },
   {
     id: 'deckers',
     label: 'Deckers',
     aliases: ['Deckers'],
-    costs: toBoxCostConfig(deckersContent),
+    costs: familyCostConfig('deckers', toBoxCostConfig(deckersContent)),
   },
   {
     id: 'elderScrolls',
     label: 'Elder Scrolls',
     aliases: ['Elder Scrolls', 'The Elder Scrolls: Betrayal of the Second Era'],
-    costs: toBoxCostConfig(elderScrollsContent),
+    costs: familyCostConfig('elderScrolls', toBoxCostConfig(elderScrollsContent)),
   },
   {
     id: 'starTrekCaptainsChair',
     label: "Star Trek: Captain's Chair",
     aliases: ["Star Trek: Captain's Chair"],
-    costs: toBoxCostConfig(starTrekCaptainsChairContent),
+    costs: familyCostConfig(
+      'starTrekCaptainsChair',
+      toBoxCostConfig(starTrekCaptainsChairContent),
+    ),
   },
   {
     id: 'isofarianGuard',
     label: 'Isofarian Guard',
     aliases: ['Isofarian Guard', 'The Isofarian Guard'],
-    costs: toBoxCostConfig(isofarianGuardContent),
+    costs: familyCostConfig('isofarianGuard', toBoxCostConfig(isofarianGuardContent)),
   },
   {
     id: 'kingdomsForlorn',
     label: 'Kingdoms Forlorn',
     aliases: ['Kingdoms Forlorn', 'Kingdoms Forlorn: Dragons, Devils and Kings'],
-    costs: toBoxCostConfig(kingdomsForlornContent),
+    costs: familyCostConfig('kingdomsForlorn', toBoxCostConfig(kingdomsForlornContent)),
   },
   {
     id: 'taintedGrail',
     label: 'Tainted Grail',
     aliases: ['Tainted Grail', 'Tainted Grail: The Fall of Avalon'],
-    costs: toBoxCostConfig(taintedGrailContent),
+    costs: familyCostConfig('taintedGrail', toBoxCostConfig(taintedGrailContent)),
   },
   {
     id: 'spiritIsland',
@@ -173,54 +186,76 @@ export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
     id: 'unsettled',
     label: 'Unsettled',
     aliases: ['Unsettled'],
-    costs: toBoxCostConfig(unsettledContent),
+    costs: familyCostConfig('unsettled', toBoxCostConfig(unsettledContent)),
   },
   {
     id: 'mistfall',
     label: 'Mistfall',
     aliases: ['Mistfall', 'Mistfall Heart of the Mists'],
-    costs: toBoxCostConfig(mistfallMappings),
+    costs: familyCostConfig('mistfall', toBoxCostConfig(mistfallMappings)),
   },
   {
     id: 'oathsworn',
     label: 'Oathsworn',
     aliases: ['Oathsworn', 'Oathsworn Into the Deepwood'],
-    costs: toBoxCostConfig(oathswornContent),
+    costs: familyCostConfig('oathsworn', toBoxCostConfig(oathswornContent)),
   },
   {
     id: 'deathMayDie',
     label: 'Death May Die',
     aliases: ['Death May Die', 'Cthulhu Death May Die'],
-    costs: toBoxCostConfig(deathMayDieContent),
+    costs: familyCostConfig('deathMayDie', toBoxCostConfig(deathMayDieContent)),
   },
   {
     id: 'bullet',
     label: 'Bullet',
     aliases: ['Bullet', 'Bullet Heart', 'Bullet Star', 'Bullet♥︎'],
-    costs: toBoxCostConfig(bulletContent),
+    costs: familyCostConfig('bullet', toBoxCostConfig(bulletContent)),
   },
   {
     id: 'tooManyBones',
     label: 'Too Many Bones',
     aliases: ['Too Many Bones'],
-    costs: toBoxCostConfig(tooManyBonesContent),
+    costs: familyCostConfig('tooManyBones', toBoxCostConfig(tooManyBonesContent)),
   },
   {
     id: 'mageKnight',
     label: 'Mage Knight',
     aliases: ['Mage Knight', 'Mage Knight Board Game', 'Mage Knight: Ultimate Edition'],
-    costs: toBoxCostConfig(mageKnightContent),
+    costs: familyCostConfig('mageKnight', toBoxCostConfig(mageKnightContent)),
   },
   {
     id: 'mandalorianAdventures',
     label: 'Mandalorian Adventures',
     aliases: ['Mandalorian Adventures', 'The Mandalorian Adventures'],
-    costs: toBoxCostConfig(mandalorianAdventuresContent),
+    costs: familyCostConfig(
+      'mandalorianAdventures',
+      toBoxCostConfig(mandalorianAdventuresContent),
+    ),
   },
   {
     id: 'undauntedNormandy',
     label: 'Undaunted: Normandy',
     aliases: ['Undaunted Normandy'],
-    costs: toBoxCostConfig(undauntedNormandyContent),
+    costs: familyCostConfig('undauntedNormandy', toBoxCostConfig(undauntedNormandyContent)),
   },
+]
+
+const legacyIds = new Set(legacyCostRegistry.map((entry) => entry.id))
+
+const purchaseOnlyCostRegistry: ReadonlyArray<CostRegistryEntry> = PURCHASE_GAME_FAMILIES.filter(
+  (family) => !legacyIds.has(family.id),
+).map((family) => ({
+  id: family.id,
+  label: family.label,
+  aliases: uniqueAliases([family.label, family.spreadsheetFamily, ...(family.aliases || [])]),
+  costs: {
+    currencySymbol: '£',
+    boxCostsByName: new Map([[family.label, family.price]]),
+  },
+}))
+
+export const costRegistry: ReadonlyArray<CostRegistryEntry> = [
+  ...legacyCostRegistry,
+  ...purchaseOnlyCostRegistry,
 ]

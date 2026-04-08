@@ -16,7 +16,7 @@ import {
   type GameStatus,
   shouldShowGameInCostsTable,
 } from './gamePreferences'
-import { isGameTab, type GameTab } from './gameCatalog'
+import { isConfigurableGameId } from './configurableGames'
 import GameOptionsButton from './components/GameOptionsButton'
 
 type CostsRow = {
@@ -36,6 +36,7 @@ type SortKey = 'name' | 'plays' | 'hours' | 'totalCost' | 'costPerHour' | 'progr
 type SortDirection = 'asc' | 'desc'
 const COSTS_TARGET_STORAGE_KEY = 'costs.targetCostPerHour'
 const COSTS_VISIBLE_STATUSES_STORAGE_KEY = 'costs.visibleStatuses'
+const COSTS_CHECKLIST_ONLY_STORAGE_KEY = 'costs.checklistOnly'
 
 function normalizeGameName(value: string): string {
   return value
@@ -105,10 +106,21 @@ function readStoredVisibleStatuses(): GameStatus[] {
   }
 }
 
+function readStoredChecklistOnly(): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    return window.localStorage.getItem(COSTS_CHECKLIST_ONLY_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
 export default function CostsView(props: {
   plays: BggPlay[]
   assumedMinutesByObjectId: ReadonlyMap<string, number>
-  onOpenGameOptions: (gameId: GameTab) => void
+  onOpenGameOptions: (gameId: string) => void
+  onUpdateGamePreferences: (gameId: string, patch: { status: GameStatus }) => void
   costTimeEstimateStatus: {
     total: number
     complete: number
@@ -125,6 +137,7 @@ export default function CostsView(props: {
   const [sortDirection, setSortDirection] = createSignal<SortDirection>('asc')
   const [targetCostPerHour, setTargetCostPerHour] = createSignal<number>(readStoredTarget())
   const [visibleStatuses, setVisibleStatuses] = createSignal<GameStatus[]>(readStoredVisibleStatuses())
+  const [checklistOnly, setChecklistOnly] = createSignal<boolean>(readStoredChecklistOnly())
 
   createEffect(() => {
     try {
@@ -140,6 +153,14 @@ export default function CostsView(props: {
         COSTS_VISIBLE_STATUSES_STORAGE_KEY,
         JSON.stringify(visibleStatuses()),
       )
+    } catch {
+      return
+    }
+  })
+
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(COSTS_CHECKLIST_ONLY_STORAGE_KEY, String(checklistOnly()))
     } catch {
       return
     }
@@ -161,7 +182,9 @@ export default function CostsView(props: {
     return costRegistry
       .filter((entry) => shouldShowGameInCostsTable(entry.id))
       .map((entry) => {
-        const status = isGameTab(entry.id) ? gamePreferencesFor(entry.id).status : 'active'
+        const status = isConfigurableGameId(entry.id)
+          ? gamePreferencesFor(entry.id).status
+          : 'active'
         const matchedPlays = entry.aliases.flatMap(
           (alias) => playedByAlias.get(normalizeGameName(alias)) || [],
         )
@@ -205,7 +228,11 @@ export default function CostsView(props: {
 
   const visibleStatusSet = createMemo(() => new Set(visibleStatuses()))
   const filteredRows = createMemo(() =>
-    rows().filter((row) => visibleStatusSet().has(row.status)),
+    rows().filter((row) => {
+      if (!visibleStatusSet().has(row.status)) return false
+      if (!checklistOnly()) return true
+      return isConfigurableGameId(row.id) && gamePreferencesFor(row.id).showInMonthlyChecklist
+    }),
   )
 
   const hasAnyAssumedHours = createMemo(() => filteredRows().some((row) => row.hasAssumedHours))
@@ -391,6 +418,27 @@ export default function CostsView(props: {
             </For>
           </div>
         </div>
+        <div class="costToolbarGroup">
+          <div class="muted">Games</div>
+          <div class="costTargetGroup" role="group" aria-label="Visible cost games">
+            <button
+              type="button"
+              class="tabButton"
+              classList={{ tabButtonActive: !checklistOnly() }}
+              onClick={() => setChecklistOnly(false)}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              class="tabButton"
+              classList={{ tabButtonActive: checklistOnly() }}
+              onClick={() => setChecklistOnly(true)}
+            >
+              Checklist only
+            </button>
+          </div>
+        </div>
       </div>
       <div class="tableWrap">
         <table class="table compactTable mobileCardTable costsTable">
@@ -440,7 +488,7 @@ export default function CostsView(props: {
               fallback={
                 <tr>
                   <td colSpan={7} class="muted">
-                    No games match the selected statuses.
+                    No games match the selected filters.
                   </td>
                 </tr>
               }
@@ -452,7 +500,7 @@ export default function CostsView(props: {
                       <td data-label="Game">
                         <div class="gameTitleRow">
                           <span>{row.name}</span>
-                          <Show when={isGameTab(row.id) ? row.id : null}>
+                          <Show when={isConfigurableGameId(row.id) ? row.id : null}>
                             {(gameId) => (
                               <GameOptionsButton
                                 gameId={gameId()}
@@ -464,7 +512,27 @@ export default function CostsView(props: {
                         </div>
                       </td>
                       <td data-label="Status">
-                        <span class="statusBadge">{row.statusLabel}</span>
+                        <Show
+                          when={isConfigurableGameId(row.id) ? row.id : null}
+                          fallback={<span class="statusBadge">{row.statusLabel}</span>}
+                        >
+                          {(gameId) => (
+                            <select
+                              class="statusBadge statusBadgeSelect"
+                              value={row.status}
+                              aria-label={`Status for ${row.name}`}
+                              onChange={(event) => {
+                                const status = event.currentTarget.value
+                                if (!isGameStatus(status)) return
+                                props.onUpdateGamePreferences(gameId(), { status })
+                              }}
+                            >
+                              <For each={GAME_STATUS_OPTIONS}>
+                                {(option) => <option value={option.value}>{option.label}</option>}
+                              </For>
+                            </select>
+                          )}
+                        </Show>
                       </td>
                       <td class="mono" data-label="Plays">{row.plays.toLocaleString()}</td>
                       <td class="mono" data-label="Hours">

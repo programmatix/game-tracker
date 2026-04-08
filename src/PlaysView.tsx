@@ -2,7 +2,6 @@ import { For, Show } from 'solid-js'
 import type { BggPlay } from './bgg'
 import type { PlaysView as PlaysViewMode } from './appNav'
 import type { PlaysByGameRow } from './playsHelpers'
-import type { GameTab } from './gameCatalog'
 import GameOptionsButton from './components/GameOptionsButton'
 import { findGameTabForOptions } from './gameOptionsLookup'
 import {
@@ -38,7 +37,7 @@ type PlaysPanelProps = {
   selectedGamePagedPlays: BggPlay[]
   playTimeDisplay: (play: BggPlay) => string
   onOpenGame: (gameKey: string) => void
-  onOpenGameOptions: (gameId: GameTab) => void
+  onOpenGameOptions: (gameId: string) => void
   onOpenPlayGame: (play: BggPlay) => void
 }
 

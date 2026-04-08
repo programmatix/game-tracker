@@ -9,7 +9,12 @@ import {
   onCleanup,
   onMount,
 } from 'solid-js'
-import { fetchAllUserPlays, fetchThingSummary, type BggPlaysResponse } from './bgg'
+import {
+  clearThingSummaryCache,
+  fetchAllUserPlays,
+  fetchThingSummary,
+  type BggPlaysResponse,
+} from './bgg'
 import { authUser, signOutUser } from './auth/auth'
 import {
   fetchAchievementStore,
@@ -32,7 +37,7 @@ import { pickBestAvailableAchievementForTrackIds } from './achievements/nextAchi
 import { computeAllGameAchievementSummaries } from './achievements/games'
 import NewAchievementsBanner from './components/NewAchievementsBanner'
 import type { PlaysDrilldownRequest } from './playsDrilldown'
-import { isGameTab, type GameTab } from './gameCatalog'
+import { isGameTab } from './gameCatalog'
 import {
   fetchSpiritIslandSessions,
   SPIRIT_ISLAND_MINDWANDERER_UID,
@@ -81,7 +86,7 @@ type PlaysDrilldownReturn = {
   mainTab: MainTab
   playsView: PlaysView
   selectedGameKey: string | null
-  selectedOptionsGameId: GameTab | null
+  selectedOptionsGameId: string | null
 }
 
 type AppHistoryState =
@@ -98,7 +103,7 @@ function App() {
     initialMainTab === 'plays' && initialPlaysView === 'gameDetail'
       ? (parsedHash?.selectedGameKey ?? null)
       : null
-  const initialSelectedOptionsGameId: GameTab | null =
+  const initialSelectedOptionsGameId: string | null =
     initialMainTab === 'gameOptions' ? (parsedHash?.selectedOptionsGameId ?? null) : null
 
   const [page, setPage] = createSignal(1)
@@ -106,7 +111,7 @@ function App() {
   const [mainTab, setMainTab] = createSignal<MainTab>(initialMainTab)
   const [playsView, setPlaysView] = createSignal<PlaysView>(initialPlaysView)
   const [selectedGameKey, setSelectedGameKey] = createSignal<string | null>(initialSelectedGameKey)
-  const [selectedOptionsGameId, setSelectedOptionsGameId] = createSignal<GameTab | null>(
+  const [selectedOptionsGameId, setSelectedOptionsGameId] = createSignal<string | null>(
     initialSelectedOptionsGameId,
   )
   const [playsDrilldown, setPlaysDrilldown] = createSignal<PlaysDrilldownRequest | null>(null)
@@ -411,6 +416,17 @@ function App() {
     })
   }
 
+  function clearBggThingCache() {
+    const removed = clearThingSummaryCache()
+    thingSummaryFailed.clear()
+    thingSummaryResolved.clear()
+    queuedThingSummaryObjectIds.clear()
+    setThumbnailsByObjectId(new Map())
+    setAssumedMinutesByObjectId(new Map())
+    bumpThingSummaryStatusVersion()
+    return removed
+  }
+
   const costTimeEstimateStatus = createMemo(() => {
     thingSummaryStatusVersion()
     const assumedMinutes = assumedMinutesByObjectId()
@@ -668,7 +684,7 @@ function App() {
     resetPage()
   }
 
-  function openGameOptions(gameId: GameTab) {
+  function openGameOptions(gameId: string) {
     const next: AppNavState = {
       ...currentNavState(),
       mainTab: 'gameOptions',
@@ -682,7 +698,7 @@ function App() {
     })
   }
 
-  function selectOptionsGame(gameId: GameTab) {
+  function selectOptionsGame(gameId: string) {
     if (selectedOptionsGameId() === gameId && mainTab() === 'gameOptions') return
     const next: AppNavState = {
       ...currentNavState(),
@@ -696,7 +712,7 @@ function App() {
     }
   }
 
-  function updateGamePreferences(gameId: GameTab, patch: Partial<GamePreferences>) {
+  function updateGamePreferences(gameId: string, patch: Partial<GamePreferences>) {
     const currentStored = gamePreferencesStore()
     const currentResolved = resolvedGamePreferencesById()[gameId] ?? defaultGamePreferencesFor(gameId)
     const nextStored = {
@@ -938,6 +954,7 @@ function App() {
             onOpenPlays={openPlaysDrilldown}
             onSelectOptionsGame={selectOptionsGame}
             onUpdateGamePreferences={updateGamePreferences}
+            onClearBggThingCache={clearBggThingCache}
             spiritIslandSessions={spiritIslandSessionsValue()}
             spiritIslandSessionsLoading={spiritIslandSessions.loading}
             spiritIslandSessionsError={spiritIslandSessionsError()}

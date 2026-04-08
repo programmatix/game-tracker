@@ -1,5 +1,10 @@
 import { createMemo } from 'solid-js'
-import { GAME_DEFINITIONS, getGameDefinition, type GameTab } from './gameCatalog'
+import {
+  CONFIGURABLE_GAME_DEFINITIONS,
+  CONFIGURABLE_GAME_OPTIONS,
+  DEFAULT_CONFIGURABLE_GAME_ID,
+  getConfigurableGameDefinition,
+} from './configurableGames'
 import {
   GAME_STATUS_OPTIONS,
   isGameStatus,
@@ -62,13 +67,15 @@ function GameOptionsSelectRow(props: GameOptionsSelectRowProps) {
 }
 
 export default function GameOptionsView(props: {
-  selectedGameId: GameTab | null
+  selectedGameId: string | null
   gamePreferencesById: ResolvedGamePreferencesById
-  onSelectGame: (gameId: GameTab) => void
-  onUpdateGamePreferences: (gameId: GameTab, patch: Partial<GamePreferences>) => void
+  onSelectGame: (gameId: string) => void
+  onUpdateGamePreferences: (gameId: string, patch: Partial<GamePreferences>) => void
 }) {
-  const selectedGameId = createMemo<GameTab>(() => props.selectedGameId ?? GAME_DEFINITIONS[0]!.id)
-  const selectedGame = createMemo(() => getGameDefinition(selectedGameId()))
+  const selectedGameId = createMemo<string>(
+    () => props.selectedGameId ?? DEFAULT_CONFIGURABLE_GAME_ID ?? CONFIGURABLE_GAME_DEFINITIONS[0]!.id,
+  )
+  const selectedGame = createMemo(() => getConfigurableGameDefinition(selectedGameId()))
   const selectedPreferences = createMemo(() => props.gamePreferencesById[selectedGameId()])
 
   return (
@@ -82,10 +89,10 @@ export default function GameOptionsView(props: {
         <span>Game</span>
         <select
           value={selectedGameId()}
-          onChange={(event) => props.onSelectGame(event.currentTarget.value as GameTab)}
+          onChange={(event) => props.onSelectGame(event.currentTarget.value)}
         >
-          {GAME_DEFINITIONS.map((game) => (
-            <option value={game.id}>{game.label}</option>
+          {CONFIGURABLE_GAME_OPTIONS.map((game) => (
+            <option value={game.value}>{game.label}</option>
           ))}
         </select>
       </label>
@@ -121,8 +128,10 @@ export default function GameOptionsView(props: {
 
           <GameOptionsRow
             checked={selectedPreferences().showAsSeparateTab}
+            disabled={!selectedGame().supportsSeparateTab}
             title="Show as separate tab"
             description="Keep this game visible in the main navigation."
+            disabledReason="Standalone tabs are not wired up for this game yet."
             onChange={(checked) =>
               props.onUpdateGamePreferences(selectedGameId(), { showAsSeparateTab: checked })
             }

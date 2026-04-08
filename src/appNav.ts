@@ -1,9 +1,11 @@
-import { GAME_TAB_IDS, GAME_TAB_OPTIONS, isGameTab, type GameTab } from './gameCatalog'
+import { GAME_TAB_IDS, GAME_TAB_OPTIONS, type GameTab } from './gameCatalog'
+import { normalizeConfigurableGameId } from './configurableGames'
 
 export type MainTab =
   | GameTab
   | 'monthlyChecklist'
   | 'monthlySummary'
+  | 'options'
   | 'gameOptions'
   | 'achievements'
   | 'costs'
@@ -16,7 +18,7 @@ export type AppNavState = {
   mainTab: MainTab
   playsView: PlaysView
   selectedGameKey: string | null
-  selectedOptionsGameId: GameTab | null
+  selectedOptionsGameId: string | null
 }
 
 export type MainTabGroup = 'games' | 'other'
@@ -26,6 +28,7 @@ export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
   'monthlySummary',
   ...GAME_TAB_IDS,
+  'options',
   'gameOptions',
   'achievements',
   'costs',
@@ -40,6 +43,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
   { value: 'achievements', label: 'Achievements', group: 'other' },
   { value: 'costs', label: 'Costs', group: 'other' },
   { value: 'feedback', label: 'Feedback', group: 'other' },
+  { value: 'options', label: 'Options', group: 'other' },
   { value: 'gameOptions', label: 'Game options', group: 'other' },
   { value: 'plays', label: 'Plays', group: 'other' },
   { value: 'monthlyChecklist', label: 'This month', group: 'other' },
@@ -134,7 +138,7 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
   }
 
   if (head === 'game-options') {
-    const selectedOptionsGameId = isGameTab(rest[0] || '') ? rest[0]! : null
+    const selectedOptionsGameId = normalizeConfigurableGameId(rest[0] || '')
     return {
       mainTab: 'gameOptions',
       selectedOptionsGameId,

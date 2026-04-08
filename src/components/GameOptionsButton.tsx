@@ -1,9 +1,7 @@
-import type { GameTab } from '../gameCatalog'
-
 export default function GameOptionsButton(props: {
-  gameId: GameTab
+  gameId: string
   gameLabel: string
-  onOpenGameOptions: (gameId: GameTab) => void
+  onOpenGameOptions: (gameId: string) => void
 }) {
   const label = `Open options for ${props.gameLabel}`
 

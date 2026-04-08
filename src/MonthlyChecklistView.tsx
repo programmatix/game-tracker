@@ -384,7 +384,7 @@ function buildMonthDots(
 export default function MonthlyChecklistView(props: {
   plays: BggPlay[]
   authToken?: string
-  onOpenGameOptions: (gameId: GameTab) => void
+  onOpenGameOptions: (gameId: string) => void
 }) {
   const activeChecklist = createMemo(() =>
     CHECKLIST.filter((item) => shouldShowGameInMonthlyChecklist(item.key)),
