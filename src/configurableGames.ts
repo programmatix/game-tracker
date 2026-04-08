@@ -5,6 +5,7 @@ export type ConfigurableGameDefinition = {
   id: string
   label: string
   supportsMonthlyChecklist: boolean
+  defaultShowInMonthlyChecklist: boolean
   supportsSeparateTab: boolean
   supportsCostsTable: boolean
   supportsAchievements: boolean
@@ -14,7 +15,8 @@ const configurableGameDefinitionsFromTabs: ReadonlyArray<ConfigurableGameDefinit
   GAME_DEFINITIONS.map((game) => ({
     id: game.id,
     label: game.label,
-    supportsMonthlyChecklist: game.supportsMonthlyChecklist,
+    supportsMonthlyChecklist: true,
+    defaultShowInMonthlyChecklist: game.supportsMonthlyChecklist,
     supportsSeparateTab: true,
     supportsCostsTable: game.supportsCostsTable,
     supportsAchievements: game.supportsAchievements,
@@ -26,7 +28,8 @@ const configurablePurchaseOnlyDefinitions: ReadonlyArray<ConfigurableGameDefinit
   PURCHASE_GAME_FAMILIES.filter((family) => !configurableTabIds.has(family.id)).map((family) => ({
     id: family.id,
     label: family.label,
-    supportsMonthlyChecklist: false,
+    supportsMonthlyChecklist: true,
+    defaultShowInMonthlyChecklist: false,
     supportsSeparateTab: false,
     supportsCostsTable: true,
     supportsAchievements: false,

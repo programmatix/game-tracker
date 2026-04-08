@@ -1,23 +1,27 @@
 import { For, Show, createEffect, createMemo, createResource, createSignal } from 'solid-js'
 import { fetchThingSummary, type BggPlay } from './bgg'
+import {
+  CONFIGURABLE_GAME_MATCH_DEFINITIONS,
+  findConfigurableGameIdForOptions,
+  normalizeConfigurableGameMatchName,
+} from './configurableGameMatching'
 import { shouldShowGameInMonthlyChecklist } from './gamePreferences'
-import type { GameTab } from './gameCatalog'
 import GameOptionsButton from './components/GameOptionsButton'
-import { findGameTabForOptions } from './gameOptionsLookup'
 import { isArkhamHorrorLcgPlay } from './games/arkham-horror-lcg/arkhamHorrorLcgEntries'
 import { thingAssumedPlayTimeMinutes } from './playDuration'
 
 type ChecklistItem = {
-  key: string
+  id: string
   label: string
-  objectIds?: string[]
-  titleIncludes?: string[]
+  aliases: ReadonlyArray<string>
+  objectIds: ReadonlyArray<string>
+  useArkhamSpecialMatcher: boolean
 }
 
 type MonthlyChecklistRow = {
   key: string
   label: string
-  optionsGameId: GameTab | null
+  optionsGameId: string | null
   played: boolean
   playCount: number
   totalMinutes: number
@@ -44,14 +48,6 @@ type ChecklistItemProjection = {
   assumed: boolean
   source: 'played' | 'history' | 'fallback' | 'none'
   tooltip: string
-}
-
-function normalizeTitle(value: string): string {
-  return (value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, ' ')
 }
 
 function playQuantity(play: BggPlay): number {
@@ -93,7 +89,7 @@ function assumedMinutesForChecklistItem(
   item: ChecklistItem,
   assumedMinutesByObjectId: Map<string, number> | undefined,
 ): number | null {
-  for (const objectId of item.objectIds || []) {
+  for (const objectId of item.objectIds) {
     const assumed = assumedMinutesByObjectId?.get(objectId)
     if (assumed && assumed > 0) return assumed
   }
@@ -177,125 +173,16 @@ function projectedTimeLeftForChecklistItem(input: {
   }
 }
 
-const CHECKLIST: ReadonlyArray<ChecklistItem> = [
-  {
-    key: 'arkhamHorrorLcg',
-    label: 'Arkham Horror LCG',
-    objectIds: ['205637'],
-    titleIncludes: ['arkham horror the card game', 'arkham horror card game'],
-  },
-  { key: 'vantage', label: 'Vantage', titleIncludes: ['vantage'] },
-  {
-    key: 'starTrekCaptainsChair',
-    label: "Star Trek Captain's Chair",
-    objectIds: ['422541'],
-    titleIncludes: ["star trek: captain's chair", "star trek captain's chair"],
-  },
-  // {
-  //   key: 'marvelChampions',
-  //   label: 'Marvel Champions',
-  //   titleIncludes: ['marvel champions'],
-  // },
-  {
-    key: 'robinsonCrusoe',
-    label: 'Robinson Crusoe',
-    objectIds: ['121921'],
-    titleIncludes: ['robinson crusoe'],
-  },
-  {
-    key: 'earthborneRangers',
-    label: 'Earthborne Rangers',
-    objectIds: ['342900'],
-    titleIncludes: ['earthborne rangers'],
-  },
-  {
-    key: 'oathsworn',
-    label: 'Oathsworn',
-    objectIds: ['251661'],
-    titleIncludes: ['oathsworn', 'oathsworn into the deepwood', 'oathsworn: into the deepwood'],
-  },
-  {
-    key: 'robinHood',
-    label: 'Robin Hood',
-    objectIds: ['326494'],
-    titleIncludes: ['the adventures of robin hood', 'adventures of robin hood', 'robin hood'],
-  },
-  { key: 'mageKnight', label: 'Mage Knight', titleIncludes: ['mage knight'] },
-  {
-    key: 'skytearHorde',
-    label: 'Sky Tear Horde',
-    titleIncludes: ['skytear horde', 'sky tear horde'],
-  },
-  {
-    key: 'cloudspire',
-    label: 'Cloudspire',
-    objectIds: ['262211'],
-    titleIncludes: ['cloudspire'],
-  },
-  { key: 'burncycle', label: 'burncycle', objectIds: ['322656'], titleIncludes: ['burncycle'] },
-  { key: 'paleo', label: 'Paleo', objectIds: ['300531'], titleIncludes: ['paleo'] },
-  { key: 'deckers', label: 'Deckers', titleIncludes: ['deckers'] },
-  {
-    key: 'mandalorianAdventures',
-    label: 'Mandalorian Adventures',
-    titleIncludes: ['mandalorian adventures', 'the mandalorian: adventures', 'the mandalorian adventures'],
-  },
-  { key: 'unsettled', label: 'Unsettled', objectIds: ['290484'], titleIncludes: ['unsettled'] },
-  { key: 'finalGirl', label: 'Final Girl', objectIds: ['277659'], titleIncludes: ['final girl'] },
-  {
-    key: 'tooManyBones',
-    label: 'Too Many Bones',
-    objectIds: ['192135'],
-    titleIncludes: ['too many bones'],
-  },
-  {
-    key: 'elderScrolls',
-    label: 'Elder Scrolls',
-    objectIds: ['356080'],
-    titleIncludes: ['elder scrolls'],
-  },
-  {
-    key: 'spiritIsland',
-    label: 'Spirit Island',
-    titleIncludes: ['spirit island'],
-  },
-  {
-    key: 'isofarianGuard',
-    label: 'Isofarian Guard',
-    objectIds: ['281526'],
-    titleIncludes: ['the isofarian guard', 'isofarian guard'],
-  },
-  {
-    key: 'kingdomsForlorn',
-    label: 'Kingdoms Forlorn',
-    objectIds: ['297510'],
-    titleIncludes: ['kingdoms forlorn', 'kingdoms forlorn dragons devils and kings'],
-  },
-  {
-    key: 'taintedGrail',
-    label: 'Tainted Grail',
-    objectIds: ['264220'],
-    titleIncludes: ['tainted grail', 'tainted grail the fall of avalon', 'tainted grail: the fall of avalon'],
-  },
-  {
-    key: 'swordAndSorcery',
-    label: 'Sword & Sorcery',
-    titleIncludes: ['sword & sorcery', 'sword and sorcery'],
-  },
-  // { key: 'gloomhaven', label: 'Gloomhaven', titleIncludes: ['gloomhaven'] },
-  { key: 'bullet', label: 'Bullet', titleIncludes: ['bullet'] },
-] as const
-
 function isPlayForItem(play: BggPlay, item: ChecklistItem): boolean {
-  if (item.key === 'arkhamHorrorLcg') return isArkhamHorrorLcgPlay(play)
+  if (item.useArkhamSpecialMatcher) return isArkhamHorrorLcgPlay(play)
 
   const objectId = play.item?.attributes.objectid || ''
-  if (item.objectIds && item.objectIds.includes(objectId)) return true
+  if (item.objectIds.includes(objectId)) return true
 
-  const title = normalizeTitle(play.item?.attributes.name || '')
+  const title = normalizeConfigurableGameMatchName(play.item?.attributes.name || '')
   if (!title) return false
 
-  const patterns = item.titleIncludes?.map(normalizeTitle).filter(Boolean) || []
+  const patterns = item.aliases.map(normalizeConfigurableGameMatchName).filter(Boolean)
   return patterns.some((p) => title.includes(p))
 }
 
@@ -387,7 +274,7 @@ export default function MonthlyChecklistView(props: {
   onOpenGameOptions: (gameId: string) => void
 }) {
   const activeChecklist = createMemo(() =>
-    CHECKLIST.filter((item) => shouldShowGameInMonthlyChecklist(item.key)),
+    CONFIGURABLE_GAME_MATCH_DEFINITIONS.filter((item) => shouldShowGameInMonthlyChecklist(item.id)),
   )
 
   const nowMonthIndex = createMemo(() => currentMonthIndex(new Date()))
@@ -434,7 +321,7 @@ export default function MonthlyChecklistView(props: {
     const ids = new Set<string>()
 
     for (const item of checklist) {
-      for (const objectId of item.objectIds || []) {
+      for (const objectId of item.objectIds) {
         if (objectId) ids.add(objectId)
       }
     }
@@ -515,13 +402,9 @@ export default function MonthlyChecklistView(props: {
       })
 
       return {
-        key: item.key,
+        key: item.id,
         label: item.label,
-        optionsGameId: findGameTabForOptions({
-          gameId: item.key,
-          name: item.label,
-          objectId: item.objectIds?.[0] || null,
-        }),
+        optionsGameId: item.id,
         played: playCount > 0,
         playCount,
         totalMinutes,
@@ -615,7 +498,7 @@ export default function MonthlyChecklistView(props: {
       .map((row) => ({
         key: row.key,
         label: row.label,
-        optionsGameId: findGameTabForOptions({ name: row.label, objectId: row.objectId }),
+        optionsGameId: findConfigurableGameIdForOptions({ name: row.label, objectId: row.objectId }),
         played: true,
         playCount: row.playCount,
         totalMinutes: row.totalMinutes,

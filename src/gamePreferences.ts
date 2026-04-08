@@ -45,7 +45,7 @@ export function gameStatusLabel(status: GameStatus): string {
 export function defaultGamePreferencesFor(gameId: string): GamePreferences {
   const game = getConfigurableGameDefinition(gameId)
   return {
-    showInMonthlyChecklist: game.supportsMonthlyChecklist,
+    showInMonthlyChecklist: game.defaultShowInMonthlyChecklist,
     showAsSeparateTab: game.supportsSeparateTab,
     showInCostsTable: game.supportsCostsTable,
     calculateAchievements: game.supportsAchievements,

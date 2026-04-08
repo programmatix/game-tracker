@@ -47,6 +47,11 @@ function normalizeGameName(value: string): string {
     .replace(/\s+/g, ' ')
 }
 
+function matchesNormalizedGameName(normalizedName: string, normalizedAlias: string): boolean {
+  if (!normalizedName || !normalizedAlias) return false
+  return normalizedName === normalizedAlias || normalizedName.startsWith(`${normalizedAlias} `)
+}
+
 function playQuantity(play: { attributes: Record<string, string> }): number {
   const parsed = Number(play.attributes.quantity || '1')
   if (!Number.isFinite(parsed) || parsed <= 0) return 1
@@ -65,14 +70,15 @@ function compareOptionalNumber(
 }
 
 function hoursNeededForTarget(totalCost: number, targetCostPerHour: number): number | undefined {
-  if (totalCost <= 0 || targetCostPerHour <= 0) return undefined
-  return totalCost / targetCostPerHour
+  if (targetCostPerHour <= 0) return undefined
+  return Math.max(0, totalCost) / targetCostPerHour
 }
 
 function progressToTarget(totalCost: number, hours: number, targetCostPerHour: number): number | undefined {
   const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour)
-  if (targetHours == null || targetHours <= 0) return undefined
-  return Math.min(1, hours / targetHours)
+  if (targetHours == null) return undefined
+  if (targetHours <= 0) return 1
+  return Math.min(1, Math.max(0, hours) / targetHours)
 }
 
 function readStoredTarget(): number {
@@ -186,9 +192,18 @@ export default function CostsView(props: {
         const status = isConfigurableGameId(entry.id)
           ? gamePreferencesFor(entry.id).status
           : 'active'
-        const matchedPlays = entry.aliases.flatMap(
-          (alias) => playedByAlias.get(normalizeGameName(alias)) || [],
-        )
+        const matchedPlaysById = new Map<number, BggPlay>()
+        for (const alias of entry.aliases) {
+          const normalizedAlias = normalizeGameName(alias)
+          if (!normalizedAlias) continue
+          for (const [normalizedName, plays] of playedByAlias.entries()) {
+            if (!matchesNormalizedGameName(normalizedName, normalizedAlias)) continue
+            for (const play of plays) {
+              matchedPlaysById.set(play.id, play)
+            }
+          }
+        }
+        const matchedPlays = [...matchedPlaysById.values()]
         const totalCost = [...entry.costs.boxCostsByName.values()].reduce((sum, cost) => sum + cost, 0)
 
         let plays = 0
@@ -360,6 +375,43 @@ export default function CostsView(props: {
     const status = props.costTimeEstimateStatus
     return status.total > 0 && (status.active || status.failed > 0 || status.checkedWithoutEstimate > 0)
   })
+  const renderCostProgress = (
+    name: string,
+    totalCost: number,
+    hours: number,
+    currencySymbol: string,
+  ) => {
+    const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour())
+    const progress = progressToTarget(totalCost, hours, targetCostPerHour())
+
+    if (targetHours == null || typeof progress !== 'number') return '—'
+
+    const label =
+      targetHours <= 0
+        ? `${name}: already at or below ${formatTargetValue(targetCostPerHour(), currencySymbol)}/hour`
+        : `${name}: ${formatHours(hours)}/${formatHours(targetHours)} hours needed for ${formatTargetValue(
+            targetCostPerHour(),
+            currencySymbol,
+          )}/hour`
+
+    return (
+      <div class="costProgressCell">
+        <ProgressBar
+          value={hours}
+          target={targetHours <= 0 ? Math.max(hours, 1) : targetHours}
+          widthPx={156}
+          label={label}
+          showLabel={false}
+        />
+        <div class="costProgressMeta">
+          <span class="mono">{formatPercent(progress)}</span>
+          <span class="mono muted">
+            {targetHours <= 0 ? 'No hours needed' : `${formatHours(hours)} / ${formatHours(targetHours)}h`}
+          </span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div class="statsBlock">
@@ -549,33 +601,7 @@ export default function CostsView(props: {
                         </Show>
                       </td>
                       <td class="costProgressTableCell" data-label={progressHeading()}>
-                        <Show
-                          when={typeof progressToTarget(row.totalCost, row.hours, targetCostPerHour()) === 'number'}
-                          fallback="—"
-                        >
-                          <div class="costProgressCell">
-                            <ProgressBar
-                              value={row.hours}
-                              target={hoursNeededForTarget(row.totalCost, targetCostPerHour())!}
-                              widthPx={156}
-                              label={`${row.name}: ${formatHours(row.hours)}/${formatHours(
-                                hoursNeededForTarget(row.totalCost, targetCostPerHour())!,
-                              )} hours needed for ${formatTargetValue(targetCostPerHour(), row.currencySymbol)}/hour`}
-                              showLabel={false}
-                            />
-                            <div class="costProgressMeta">
-                              <span class="mono">
-                                {formatPercent(
-                                  progressToTarget(row.totalCost, row.hours, targetCostPerHour())!,
-                                )}
-                              </span>
-                              <span class="mono muted">
-                                {formatHours(row.hours)} /{' '}
-                                {formatHours(hoursNeededForTarget(row.totalCost, targetCostPerHour())!)}h
-                              </span>
-                            </div>
-                          </div>
-                        </Show>
+                        {renderCostProgress(row.name, row.totalCost, row.hours, row.currencySymbol)}
                       </td>
                     </tr>
                   )}
@@ -597,33 +623,12 @@ export default function CostsView(props: {
                     </Show>
                   </td>
                   <td class="costProgressTableCell" data-label={progressHeading()}>
-                    <Show
-                      when={typeof progressToTarget(totals().totalCost, totals().hours, targetCostPerHour()) === 'number'}
-                      fallback="—"
-                    >
-                      <div class="costProgressCell">
-                        <ProgressBar
-                          value={totals().hours}
-                          target={hoursNeededForTarget(totals().totalCost, targetCostPerHour())!}
-                          widthPx={156}
-                          label={`Overall: ${formatHours(totals().hours)}/${formatHours(
-                            hoursNeededForTarget(totals().totalCost, targetCostPerHour())!,
-                          )} hours needed for ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`}
-                          showLabel={false}
-                        />
-                        <div class="costProgressMeta">
-                          <span class="mono">
-                            {formatPercent(
-                              progressToTarget(totals().totalCost, totals().hours, targetCostPerHour())!,
-                            )}
-                          </span>
-                          <span class="mono muted">
-                            {formatHours(totals().hours)} /{' '}
-                            {formatHours(hoursNeededForTarget(totals().totalCost, targetCostPerHour())!)}h
-                          </span>
-                        </div>
-                      </div>
-                    </Show>
+                    {renderCostProgress(
+                      'Overall',
+                      totals().totalCost,
+                      totals().hours,
+                      overallCurrencySymbol(),
+                    )}
                   </td>
                 </tr>
               </>
