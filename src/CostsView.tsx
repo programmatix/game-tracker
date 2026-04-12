@@ -616,6 +616,7 @@ export default function CostsView(props: {
         <table class="table compactTable mobileCardTable costsTable">
           <thead>
             <tr>
+              <th class="mono">#</th>
               <th>
                 <button type="button" class="sortButton" onClick={() => toggleSort('name')}>
                   Game{sortIndicator('name')}
@@ -659,7 +660,7 @@ export default function CostsView(props: {
               when={sortedRows().length > 0}
               fallback={
                 <tr>
-                  <td colSpan={7} class="muted">
+                  <td colSpan={8} class="muted">
                     No games match the selected filters.
                   </td>
                 </tr>
@@ -667,8 +668,9 @@ export default function CostsView(props: {
             >
               <>
                 <For each={sortedRows()}>
-                  {(row) => (
+                  {(row, index) => (
                     <tr>
+                      <td class="mono" data-label="#">{index() + 1}</td>
                       <td data-label="Game">
                         <div class="gameTitleRow">
                           <span>{row.name}</span>
@@ -726,6 +728,7 @@ export default function CostsView(props: {
                   )}
                 </For>
                 <tr>
+                  <td class="mono" data-label="#">—</td>
                   <td class="costsSummaryLabel" data-label="Game">Overall</td>
                   <td data-label="Status">—</td>
                   <td class="mono" data-label="Plays">{totals().plays.toLocaleString()}</td>

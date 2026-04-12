@@ -214,11 +214,18 @@ export default function MonthlySummaryView(props: {
             padding: '14px',
             'border-radius': '14px',
             border: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(255, 255, 255, 0.02)',
+            background:
+              'linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015))',
           }}
         >
           <div class="monthlySummaryLabel">Hours played by month</div>
-          <div class="tableWrap" style={{ padding: '8px', background: 'rgba(7, 10, 18, 0.28)' }}>
+          <div
+            class="tableWrap"
+            style={{
+              padding: '10px',
+              background: 'linear-gradient(180deg, rgba(9, 12, 22, 0.36), rgba(9, 12, 22, 0.2))',
+            }}
+          >
             <svg
               viewBox={`0 0 ${Math.max(680, chartRows().length * 84)} 260`}
               preserveAspectRatio="none"
@@ -249,8 +256,8 @@ export default function MonthlySummaryView(props: {
                       width={plotWidth}
                       height={plotHeight}
                       rx="12"
-                      fill="rgba(255, 255, 255, 0.015)"
-                      stroke="rgba(255, 255, 255, 0.05)"
+                      fill="rgba(255, 255, 255, 0.018)"
+                      stroke="rgba(255, 255, 255, 0.06)"
                     />
 
                     <For each={chartTicks()}>
@@ -263,7 +270,7 @@ export default function MonthlySummaryView(props: {
                               y1={y}
                               x2={marginLeft + plotWidth}
                               y2={y}
-                              stroke="rgba(255, 255, 255, 0.09)"
+                              stroke="rgba(255, 255, 255, 0.08)"
                               stroke-width="1"
                             />
                             <text
@@ -271,8 +278,8 @@ export default function MonthlySummaryView(props: {
                               y={y + 4}
                               text-anchor="end"
                               fill="var(--muted)"
-                              font-size="11"
-                              class="mono"
+                              font-size="12"
+                              font-weight="500"
                             >
                               {tick.toFixed(tick % 1 === 0 ? 0 : 1)}h
                             </text>
@@ -300,39 +307,40 @@ export default function MonthlySummaryView(props: {
                               width={barWidth}
                               height={Math.max(barHeight, 0)}
                               rx="8"
-                              fill={row.minutes > 0 ? 'rgba(79, 195, 255, 0.88)' : 'rgba(255, 255, 255, 0.08)'}
+                              fill={row.minutes > 0 ? 'rgba(91, 191, 241, 0.92)' : 'rgba(255, 255, 255, 0.07)'}
                             />
                             <Show when={row.minutes > 0}>
                               <text
                                 x={x + barWidth / 2}
-                                y={Math.max(y - 8, marginTop + 12)}
+                                y={Math.max(y - 10, marginTop + 14)}
                                 text-anchor="middle"
-                                fill="#bfe7ff"
-                                font-size="11"
-                                class="mono"
+                                fill="rgba(214, 238, 250, 0.98)"
+                                font-size="12"
+                                font-weight="600"
+                                letter-spacing="0.01em"
                               >
-                                {formatHours(row.minutes)}
+                                {`${formatHours(row.minutes)}h`}
                               </text>
                             </Show>
                             <text
                               x={x + barWidth / 2}
-                              y={marginTop + plotHeight + 18}
+                              y={marginTop + plotHeight + 20}
                               text-anchor="middle"
-                              fill="var(--muted)"
-                              font-size="11"
-                              class="mono"
+                              fill="var(--text)"
+                              font-size="12"
+                              font-weight="600"
                             >
                               {monthLabel}
                             </text>
                             <text
                               x={x + barWidth / 2}
-                              y={marginTop + plotHeight + 33}
+                              y={marginTop + plotHeight + 36}
                               text-anchor="middle"
                               fill="var(--muted)"
-                              font-size="10"
-                              class="mono"
+                              font-size="11"
+                              font-weight="500"
                             >
-                              {row.monthKey.slice(2, 4)}
+                              {`'${row.monthKey.slice(2, 4)}`}
                             </text>
                           </g>
                         )
