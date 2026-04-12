@@ -74,6 +74,22 @@ function hoursNeededForTarget(totalCost: number, targetCostPerHour: number): num
   return Math.max(0, totalCost) / targetCostPerHour
 }
 
+function formatDurationHoursMinutes(hours: number): string {
+  if (!Number.isFinite(hours) || hours <= 0) return '0m'
+
+  const totalMinutes = Math.round(hours * 60)
+  const wholeHours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  if (wholeHours <= 0) return `${minutes}m`
+  if (minutes <= 0) return `${wholeHours}h`
+  return `${wholeHours}h${String(minutes).padStart(2, '0')}m`
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  return Math.min(1, Math.max(0, value))
+}
+
 function progressToTarget(totalCost: number, hours: number, targetCostPerHour: number): number | undefined {
   const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour)
   if (targetHours == null) return undefined
@@ -354,6 +370,36 @@ export default function CostsView(props: {
   const progressHeading = createMemo(
     () => `Progress to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`,
   )
+  const visibleGameCount = createMemo(() => filteredRows().length)
+  const overallProjection = createMemo(() => {
+    const overall = totals()
+    const targetHours = hoursNeededForTarget(overall.totalCost, targetCostPerHour())
+    if (targetHours == null) return null
+
+    const remainingHours = Math.max(0, targetHours - overall.hours)
+    return {
+      targetHours,
+      remainingHours,
+      isComplete: remainingHours <= 0,
+    }
+  })
+  const overallProgress = createMemo(() => {
+    const projection = overallProjection()
+    if (!projection) return null
+
+    const targetHours = projection.targetHours
+    const progress = targetHours <= 0 ? 1 : clamp01(totals().hours / targetHours)
+    return {
+      progress,
+      percentLabel: formatPercent(progress),
+      chartStyle: {
+        '--progress': `${progress * 100}%`,
+      },
+      splitChartStyle: {
+        '--cost-donut-complete': `${progress * 100}%`,
+      },
+    }
+  })
   const costTimeEstimateLabel = createMemo(() => {
     const status = props.costTimeEstimateStatus
     return `Checked ${status.complete.toLocaleString()} of ${status.total.toLocaleString()} games with missing play times`
@@ -435,6 +481,79 @@ export default function CostsView(props: {
           />
           <div class="muted">{costTimeEstimateSummary()}</div>
         </div>
+      </Show>
+      <Show when={overallProjection()}>
+        {(projection) => (
+          <div class="monthlySummaryGrid costsSummaryGrid">
+            <section class="monthlySummaryCard monthlySummaryCardProgress costsSummaryCardChart">
+              <div class="monthlySummaryLabel">
+                Progress to {formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/h
+              </div>
+              <div
+                class="monthlyProgressRing costSummaryRing"
+                style={overallProgress()?.chartStyle}
+                aria-label={`Overall progress: ${overallProgress()?.percentLabel || '0%'}`}
+              >
+                <div class="monthlyProgressInner">
+                  <span class="monthlyProgressValue mono">{overallProgress()?.percentLabel || '0%'}</span>
+                </div>
+              </div>
+              <div class="monthlySummarySubtext">
+                <span class="mono">{formatDurationHoursMinutes(totals().hours)}</span>
+                {totals().hasAssumedHours ? '*' : ''}
+                {' '}logged of{' '}
+                <span class="mono">{formatDurationHoursMinutes(projection().targetHours)}</span>
+              </div>
+            </section>
+
+            <section class="monthlySummaryCard">
+              <div class="monthlySummaryLabel">Current hours</div>
+              <div class="monthlySummaryValue mono">
+                {formatDurationHoursMinutes(totals().hours)}
+                {totals().hasAssumedHours ? '*' : ''}
+              </div>
+              <div class="monthlySummarySubtext">
+                Across <span class="mono">{visibleGameCount().toLocaleString()}</span> visible game
+                {visibleGameCount() === 1 ? '' : 's'}
+              </div>
+            </section>
+
+            <section class="monthlySummaryCard">
+              <div class="monthlySummaryLabel">Projected hours left</div>
+              <div class="costSummarySplit">
+                <div
+                  class="costDonutMini"
+                  style={overallProgress()?.splitChartStyle}
+                  aria-label={`Logged versus remaining hours: ${overallProgress()?.percentLabel || '0%'} logged`}
+                >
+                  <div class="costDonutMiniInner">
+                    <span class="costDonutMiniValue mono">{overallProgress()?.percentLabel || '0%'}</span>
+                  </div>
+                </div>
+                <div class="monthlySummaryValue mono">
+                  {formatDurationHoursMinutes(projection().remainingHours)}
+                  {totals().hasAssumedHours && projection().remainingHours > 0 ? '*' : ''}
+                </div>
+              </div>
+              <div class="monthlySummarySubtext">
+                <Show
+                  when={!projection().isComplete}
+                  fallback={<>Already at or below the selected target.</>}
+                >
+                  <span class="costLegend">
+                    <span class="costLegendSwatch costLegendSwatchComplete" />
+                    Logged
+                  </span>
+                  {' • '}
+                  <span class="costLegend">
+                    <span class="costLegendSwatch costLegendSwatchRemaining" />
+                    Remaining
+                  </span>
+                </Show>
+              </div>
+            </section>
+          </div>
+        )}
       </Show>
       <div class="costsToolbar">
         <div class="costToolbarGroup">

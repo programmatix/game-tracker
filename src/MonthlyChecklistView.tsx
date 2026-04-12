@@ -273,6 +273,7 @@ export default function MonthlyChecklistView(props: {
   authToken?: string
   onOpenGameOptions: (gameId: string) => void
 }) {
+  const [onlyUnplayed, setOnlyUnplayed] = createSignal(false)
   const activeChecklist = createMemo(() =>
     CONFIGURABLE_GAME_MATCH_DEFINITIONS.filter((item) => shouldShowGameInMonthlyChecklist(item.id)),
   )
@@ -583,6 +584,11 @@ export default function MonthlyChecklistView(props: {
     }
   })
 
+  const visibleRows = createMemo(() => {
+    if (!onlyUnplayed()) return rows()
+    return rows().filter((row) => !row.played)
+  })
+
   const anyAssumedMinutes = createMemo(() => {
     if (checklistProjection().usesAssumedMinutes) return true
     for (const row of rows()) {
@@ -686,6 +692,17 @@ export default function MonthlyChecklistView(props: {
         </section>
       </div>
 
+      <div class="monthlyChecklistControls">
+        <label class="control">
+          <input
+            type="checkbox"
+            checked={onlyUnplayed()}
+            onChange={(event) => setOnlyUnplayed(event.currentTarget.checked)}
+          />
+          <span>Show only unplayed checklist games</span>
+        </label>
+      </div>
+
       <div class="tableWrap">
         <table class="table tableCompact mobileCardTable">
           <thead>
@@ -694,75 +711,92 @@ export default function MonthlyChecklistView(props: {
               <th>Played</th>
               <th>Play count</th>
               <th>Total time</th>
-              <th>Projected time left</th>
+              <th class="hideOnMobile">Projected time left</th>
               <th class="hideOnMobile">When played</th>
             </tr>
           </thead>
           <tbody>
-            <For each={rows()}>
-              {(row) => (
+            <Show
+              when={visibleRows().length > 0}
+              fallback={
                 <tr>
-                  <td data-label="Game">
-                    <div class="gameTitleRow">
-                      <span>{row.label}</span>
-                      <Show when={row.optionsGameId}>
-                        {(gameId) => (
-                          <GameOptionsButton
-                            gameId={gameId()}
-                            gameLabel={row.label}
-                            onOpenGameOptions={props.onOpenGameOptions}
-                          />
-                        )}
-                      </Show>
-                    </div>
-                    <Show when={row.monthDots.length > 0}>
-                      <div class="monthDots" aria-label={`${row.label} monthly play history`}>
-                        <For each={row.monthDots}>
-                          {(dot) => (
-                            <span
-                              classList={{ monthDot: true, monthDotPlayed: dot.played, monthDotMissed: !dot.played }}
-                              title={dot.label}
-                              aria-label={dot.label}
-                            />
-                          )}
-                        </For>
-                      </div>
-                    </Show>
-                  </td>
-                  <td class="mono" data-label="Played">{row.played ? '✓' : ''}</td>
-                  <td class="mono" data-label="Play count">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
-                  <td class="mono" data-label="Total time">
-                    {formatMinutes(row.totalMinutes)}
-                    {row.hasAssumedMinutes ? '*' : ''}
-                  </td>
-                  <td class="mono" data-label="Projected time left">
-                    <details class="calcTooltip">
-                      <summary
-                        class="calcTooltipSummary"
-                        title={row.projectedTimeLeftTooltip}
-                        aria-label={row.projectedTimeLeftTooltip}
-                      >
-                        {row.projectedTimeLeftSource === 'none'
-                          ? '—'
-                          : formatMinutes(row.projectedTimeLeftMinutes)}
-                        {row.projectedTimeLeftAssumed ? '*' : ''}
-                      </summary>
-                      <div class="calcTooltipBubble">{row.projectedTimeLeftTooltip}</div>
-                    </details>
-                  </td>
-                  <td class="mono hideOnMobile" data-label="When played">
-                    {row.dateMinutes.length > 0
-                      ? row.dateMinutes
-                          .map(
-                            (d) =>
-                              `${d.date} (${formatMinutes(d.minutes)}${d.assumed ? '*' : ''})`,
-                          )
-                          .join(', ')
-                      : '—'}
+                  <td colspan="6" class="muted">
+                    No checklist games match the current filter.
                   </td>
                 </tr>
-              )}
-            </For>
+              }
+            >
+              <For each={visibleRows()}>
+                {(row) => (
+                  <tr classList={{ monthlyChecklistRowPlayed: row.played }}>
+                    <td data-label="Game">
+                      <div class="gameTitleRow">
+                        <span classList={{ monthlyChecklistGamePlayed: row.played }}>{row.label}</span>
+                        <Show when={row.optionsGameId}>
+                          {(gameId) => (
+                            <GameOptionsButton
+                              gameId={gameId()}
+                              gameLabel={row.label}
+                              onOpenGameOptions={props.onOpenGameOptions}
+                            />
+                          )}
+                        </Show>
+                      </div>
+                      <Show when={row.monthDots.length > 0}>
+                        <div class="monthDots" aria-label={`${row.label} monthly play history`}>
+                          <For each={row.monthDots}>
+                            {(dot) => (
+                              <span
+                                classList={{ monthDot: true, monthDotPlayed: dot.played, monthDotMissed: !dot.played }}
+                                title={dot.label}
+                                aria-label={dot.label}
+                              />
+                            )}
+                          </For>
+                        </div>
+                      </Show>
+                    </td>
+                    <td
+                      class="mono"
+                      classList={{ monthlyChecklistPlayedValue: row.played }}
+                      data-label="Played"
+                    >
+                      {row.played ? '✓' : ''}
+                    </td>
+                    <td class="mono" data-label="Play count">{row.playCount ? row.playCount.toLocaleString() : '0'}</td>
+                    <td class="mono" data-label="Total time">
+                      {formatMinutes(row.totalMinutes)}
+                      {row.hasAssumedMinutes ? '*' : ''}
+                    </td>
+                    <td class="mono hideOnMobile" data-label="Projected time left">
+                      <details class="calcTooltip">
+                        <summary
+                          class="calcTooltipSummary"
+                          title={row.projectedTimeLeftTooltip}
+                          aria-label={row.projectedTimeLeftTooltip}
+                        >
+                          {row.projectedTimeLeftSource === 'none'
+                            ? '—'
+                            : formatMinutes(row.projectedTimeLeftMinutes)}
+                          {row.projectedTimeLeftAssumed ? '*' : ''}
+                        </summary>
+                        <div class="calcTooltipBubble">{row.projectedTimeLeftTooltip}</div>
+                      </details>
+                    </td>
+                    <td class="mono hideOnMobile" data-label="When played">
+                      {row.dateMinutes.length > 0
+                        ? row.dateMinutes
+                            .map(
+                              (d) =>
+                                `${d.date} (${formatMinutes(d.minutes)}${d.assumed ? '*' : ''})`,
+                            )
+                            .join(', ')
+                        : '—'}
+                    </td>
+                  </tr>
+                )}
+              </For>
+            </Show>
           </tbody>
         </table>
       </div>

@@ -956,6 +956,21 @@
   gap: 12px;
 }
 
+.monthlyChecklistControls {
+  display: flex;
+  justify-content: flex-end;
+  margin: 14px 0 10px;
+}
+
+.costsSummaryGrid {
+  margin-bottom: 12px;
+}
+
+.costsSummaryCardChart {
+  justify-items: center;
+  text-align: center;
+}
+
 .monthlySummaryCard {
   display: grid;
   align-content: start;
@@ -1068,6 +1083,70 @@
   font-size: 26px;
   line-height: 1;
   letter-spacing: -0.02em;
+}
+
+.costSummaryRing {
+  --progress: 0%;
+  background:
+    conic-gradient(#58c2ff var(--progress), rgba(255, 255, 255, 0.14) 0),
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.18), transparent 60%);
+}
+
+.costSummarySplit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.costDonutMini {
+  --cost-donut-complete: 0%;
+  width: 62px;
+  height: 62px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(#58c2ff var(--cost-donut-complete), rgba(255, 255, 255, 0.16) 0);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.costDonutMiniInner {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(13, 15, 24, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+}
+
+.costDonutMiniValue {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.costLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.costLegendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.costLegendSwatchComplete {
+  background: #58c2ff;
+}
+
+.costLegendSwatchRemaining {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .tableWrap {
@@ -1412,6 +1491,20 @@
 
 .table tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.monthlyChecklistRowPlayed {
+  background: rgba(47, 176, 111, 0.1);
+}
+
+.monthlyChecklistRowPlayed:hover {
+  background: rgba(47, 176, 111, 0.16);
+}
+
+.monthlyChecklistGamePlayed,
+.monthlyChecklistPlayedValue {
+  color: #7fdfad;
+  font-weight: 650;
 }
 
 .monthDots {
@@ -1774,7 +1867,9 @@
     grid-column: span 1;
   }
 
-  .hideOnMobile {
+  .hideOnMobile,
+  .table.mobileCardTable th.hideOnMobile,
+  .table.mobileCardTable td.hideOnMobile {
     display: none;
   }
 }
