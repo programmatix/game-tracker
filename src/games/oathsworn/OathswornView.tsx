@@ -348,58 +348,6 @@ export default function OathswornView(props: {
           </div>
         }
       >
-        <div class="matrixHeaderRow">
-          <div class="muted">
-            Matrix mode:{' '}
-            <span class="mono">
-              {matrixDisplayMode() === 'played' ? 'Played/Unplayed' : 'Play counts'}
-            </span>
-          </div>
-          <div class="tabs">
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: matrixDisplayMode() === 'played' }}
-              onClick={() => setMatrixDisplayMode('played')}
-            >
-              Played/Unplayed
-            </button>
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: matrixDisplayMode() === 'count' }}
-              onClick={() => setMatrixDisplayMode('count')}
-            >
-              Play counts
-            </button>
-          </div>
-        </div>
-
-        <HeatmapMatrix
-          rows={oathswornContent.encounters}
-          cols={oathswornContent.characters}
-          rowHeader="Encounter"
-          colHeader="Character"
-          maxCount={matrixMax()}
-          hideCounts={matrixDisplayMode() === 'played'}
-          getCount={(encounter, character) => matrix()[encounter]?.[character] ?? 0}
-          getWinCount={(encounter, character) => matrixWins()[encounter]?.[character] ?? 0}
-          getCellDisplayText={(_encounter, _character, count) =>
-            matrixDisplayMode() === 'played' ? (count > 0 ? '✓' : '') : count === 0 ? '—' : String(count)
-          }
-          getCellLabel={(encounter, character, count) => `${encounter} × ${character}: ${count}`}
-          rowGroupBy={(encounter) => oathswornContent.encounterGroupByName.get(encounter)}
-          colGroupBy={(character) => oathswornContent.characterGroupByName.get(character)}
-          onCellClick={(encounter, character) => {
-            const playIds = playIdsByPair().get(pairKey(encounter, character)) ?? []
-            if (playIds.length === 0) return
-            props.onOpenPlays({
-              title: `Oathsworn • ${encounter} × ${character}`,
-              playIds,
-            })
-          }}
-        />
-
         <div class="finalGirlMetaRow">
           <div class="meta">
             <div class="metaLabel">Total hours</div>
@@ -487,6 +435,55 @@ export default function OathswornView(props: {
             props.onOpenPlays({ title: `Oathsworn • ${character}`, playIds })
           }}
         />
+
+        <div class="statsBlock">
+          <div class="statsTitleRow">
+            <h3 class="statsTitle">Encounter × Character</h3>
+            <div class="tabs">
+              <button
+                type="button"
+                class="tabButton"
+                classList={{ tabButtonActive: matrixDisplayMode() === 'played' }}
+                onClick={() => setMatrixDisplayMode('played')}
+              >
+                Played/Unplayed
+              </button>
+              <button
+                type="button"
+                class="tabButton"
+                classList={{ tabButtonActive: matrixDisplayMode() === 'count' }}
+                onClick={() => setMatrixDisplayMode('count')}
+              >
+                Play counts
+              </button>
+            </div>
+          </div>
+          <div class="muted">Secondary analysis: which party characters you used against each encounter chapter.</div>
+          <HeatmapMatrix
+            rows={oathswornContent.encounters}
+            cols={oathswornContent.characters}
+            rowHeader="Encounter"
+            colHeader="Character"
+            maxCount={matrixMax()}
+            hideCounts={matrixDisplayMode() === 'played'}
+            getCount={(encounter, character) => matrix()[encounter]?.[character] ?? 0}
+            getWinCount={(encounter, character) => matrixWins()[encounter]?.[character] ?? 0}
+            getCellDisplayText={(_encounter, _character, count) =>
+              matrixDisplayMode() === 'played' ? (count > 0 ? '✓' : '') : count === 0 ? '—' : String(count)
+            }
+            getCellLabel={(encounter, character, count) => `${encounter} × ${character}: ${count}`}
+            rowGroupBy={(encounter) => oathswornContent.encounterGroupByName.get(encounter)}
+            colGroupBy={(character) => oathswornContent.characterGroupByName.get(character)}
+            onCellClick={(encounter, character) => {
+              const playIds = playIdsByPair().get(pairKey(encounter, character)) ?? []
+              if (playIds.length === 0) return
+              props.onOpenPlays({
+                title: `Oathsworn • ${encounter} × ${character}`,
+                playIds,
+              })
+            }}
+          />
+        </div>
       </Show>
 
       <AchievementsPanel

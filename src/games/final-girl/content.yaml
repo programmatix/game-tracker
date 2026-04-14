@@ -96,14 +96,14 @@ costs:
   currency: "£"
   boxes:
     The Haunting of Creech Manor: C49
-    Frightmare on Maple Lane: C47
-    Into the Void: C46 # Includes core
-    Panic at Station 2891: C52
+    Frightmare on Maple Lane: C44
+    Into the Void: C43
+    Panic at Station 2891: C52 # Includes core
     A Knock at the Door: C50
-    Once Upon a Full Moon: C51
-    Madness in the Dark: C50
-    The Falconwood Files: C49
-    The Marrek Murders: C48
-    Bad Times at Buddyland: C29
+    Once Upon a Full Moon: C48
+    Madness in the Dark: C47
+    The Falconwood Files: C46
+    The Marrek Murders: C45
+    Bad Times at Buddyland: C26
     Shriek: C31
-  
+    Accessories Box: C27

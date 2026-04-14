@@ -1,9 +1,8 @@
-import { Show, createMemo, createResource, createSignal } from 'solid-js'
+import { Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
-import HeatmapMatrix from '../../components/HeatmapMatrix'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
 import { computeGameAchievements } from '../../achievements/games'
@@ -13,8 +12,6 @@ import { incrementCount, mergeCanonicalKeys, sortKeysByGroupThenCountDesc } from
 import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from '../../playDuration'
 import { arkhamHorrorLcgContent } from './content'
 import { ARKHAM_HORROR_LCG_OBJECT_ID, getArkhamHorrorLcgEntries } from './arkhamHorrorLcgEntries'
-
-type MatrixDisplayMode = 'count' | 'played'
 
 function uniquePlayIds(values: number[]): number[] {
   return [...new Set(values)]
@@ -29,8 +26,6 @@ export default function ArkhamHorrorLcgView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
-
   const [thing] = createResource(
     () => ({ id: ARKHAM_HORROR_LCG_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
@@ -155,42 +150,6 @@ export default function ArkhamHorrorLcgView(props: {
     return ids
   })
 
-  const matrix = createMemo(() => {
-    const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
-      for (const investigator of entry.investigators) {
-        counts[investigator] ||= {}
-        incrementCount(counts[investigator]!, entry.scenario, entry.quantity)
-      }
-    }
-    return counts
-  })
-
-  const matrixWins = createMemo(() => {
-    const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
-      if (!entry.isWin) continue
-      for (const investigator of entry.investigators) {
-        counts[investigator] ||= {}
-        incrementCount(counts[investigator]!, entry.scenario, entry.quantity)
-      }
-    }
-    return counts
-  })
-
-  const playIdsByPair = createMemo(() => {
-    const ids = new Map<string, number[]>()
-    for (const entry of entries()) {
-      for (const investigator of entry.investigators) {
-        const key = `${investigator}|||${entry.scenario}`
-        const existing = ids.get(key)
-        if (existing) existing.push(entry.play.id)
-        else ids.set(key, [entry.play.id])
-      }
-    }
-    return ids
-  })
-
   const taggedPlays = createMemo(() =>
     entries().reduce(
       (sum, entry) =>
@@ -306,14 +265,6 @@ export default function ArkhamHorrorLcgView(props: {
     ),
   )
 
-  const matrixMax = createMemo(() => {
-    let max = 0
-    for (const row of Object.values(matrix())) {
-      for (const value of Object.values(row)) max = Math.max(max, value)
-    }
-    return max
-  })
-
   function nextAchievement(trackIdPrefix: string, label: string) {
     return pickBestAvailableAchievementForTrackIds(achievements(), [
       `${trackIdPrefix}:${slugifyAchievementItemId(label)}`,
@@ -351,7 +302,8 @@ export default function ArkhamHorrorLcgView(props: {
             </button>
           </div>
           <div class="muted">
-            Track campaigns, scenarios, investigators, and difficulty tags from BG Stats player colors.
+            Track campaign and scenario progression, plus investigator and difficulty tags from BG Stats player
+            colors.
           </div>
         </div>
       </div>
@@ -396,69 +348,6 @@ export default function ArkhamHorrorLcgView(props: {
         </div>
       </Show>
 
-      <div class="statsBlock">
-        <div class="statsTitleRow">
-          <h3 class="statsTitle">Investigators × Scenarios</h3>
-          <div class="tabs">
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: matrixDisplayMode() === 'played' }}
-              onClick={() => setMatrixDisplayMode('played')}
-            >
-              Played
-            </button>
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: matrixDisplayMode() === 'count' }}
-              onClick={() => setMatrixDisplayMode('count')}
-            >
-              Counts
-            </button>
-          </div>
-        </div>
-        <HeatmapMatrix
-          rows={investigatorKeys()}
-          cols={scenarioKeys()}
-          rowHeader="Investigator"
-          colHeader="Scenario"
-          maxCount={Math.max(1, matrixMax())}
-          getCount={(investigator, scenario) => matrix()[investigator]?.[scenario] ?? 0}
-          getWinCount={(investigator, scenario) => matrixWins()[investigator]?.[scenario] ?? 0}
-          hideCounts={matrixDisplayMode() === 'played'}
-          getCellDisplayText={(_investigator, _scenario, count) =>
-            matrixDisplayMode() === 'played' ? (count > 0 ? '✓' : '—') : count === 0 ? '—' : String(count)
-          }
-          rowGroupBy={(investigator) => arkhamHorrorLcgContent.investigatorClassByName.get(investigator)}
-          colGroupBy={(scenario) => arkhamHorrorLcgContent.scenarioCampaignByName.get(scenario)}
-          onCellClick={(investigator, scenario) => {
-            const playIds = uniquePlayIds(playIdsByPair().get(`${investigator}|||${scenario}`) ?? [])
-            props.onOpenPlays({
-              title: `Arkham Horror LCG • ${investigator} × ${scenario}`,
-              playIds,
-            })
-          }}
-        />
-      </div>
-
-      <Show when={hasCostTable()}>
-        <CostPerPlayTable
-          rows={costRows()}
-          currencySymbol={arkhamHorrorLcgContent.costCurrencySymbol}
-          overallPlays={totalPlays()}
-          overallHours={totalHours()}
-          averageHoursPerPlay={averageHoursPerPlay()}
-          overallHoursHasAssumed={totalHoursHasAssumed()}
-          onPlaysClick={(box) =>
-            props.onOpenPlays({
-              title: `Arkham Horror LCG • ${box}`,
-              playIds: uniquePlayIds(playIdsByBox()[box] ?? []),
-            })
-          }
-        />
-      </Show>
-
       <CountTable
         title="Campaigns"
         plays={campaignCounts()}
@@ -486,6 +375,23 @@ export default function ArkhamHorrorLcgView(props: {
           })
         }
       />
+
+      <Show when={hasCostTable()}>
+        <CostPerPlayTable
+          rows={costRows()}
+          currencySymbol={arkhamHorrorLcgContent.costCurrencySymbol}
+          overallPlays={totalPlays()}
+          overallHours={totalHours()}
+          averageHoursPerPlay={averageHoursPerPlay()}
+          overallHoursHasAssumed={totalHoursHasAssumed()}
+          onPlaysClick={(box) =>
+            props.onOpenPlays({
+              title: `Arkham Horror LCG • ${box}`,
+              playIds: uniquePlayIds(playIdsByBox()[box] ?? []),
+            })
+          }
+        />
+      </Show>
 
       <CountTable
         title="Investigators"

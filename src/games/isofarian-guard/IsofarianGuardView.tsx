@@ -1,11 +1,10 @@
-import { Show, createMemo, createResource, createSignal } from 'solid-js'
+import { Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import { computeGameAchievements } from '../../achievements/games'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import CountTable from '../../components/CountTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
-import HeatmapMatrix from '../../components/HeatmapMatrix'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
 import { incrementCount, mergeCanonicalKeys, sortKeysByGroupThenCountDesc } from '../../stats'
@@ -13,14 +12,8 @@ import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from '../
 import { isofarianGuardContent } from './content'
 import { getIsofarianGuardEntries, ISOFARIAN_GUARD_OBJECT_ID } from './isofarianGuardEntries'
 
-type MatrixDisplayMode = 'count' | 'played'
-
 function normalizeLabel(value: string): string {
   return value.trim().toLowerCase()
-}
-
-function pairKey(campaign: string, guard: string): string {
-  return `${normalizeLabel(campaign)}|||${normalizeLabel(guard)}`
 }
 
 export default function IsofarianGuardView(props: {
@@ -32,8 +25,6 @@ export default function IsofarianGuardView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
-
   const [thing] = createResource(
     () => ({ id: ISOFARIAN_GUARD_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
@@ -155,36 +146,6 @@ export default function IsofarianGuardView(props: {
     return ids
   })
 
-  const matrix = createMemo(() => {
-    const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
-      counts[entry.campaign] ||= {}
-      for (const guard of entry.guards) incrementCount(counts[entry.campaign]!, guard, entry.quantity)
-    }
-    return counts
-  })
-  const matrixWins = createMemo(() => {
-    const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
-      if (!entry.isWin) continue
-      counts[entry.campaign] ||= {}
-      for (const guard of entry.guards) incrementCount(counts[entry.campaign]!, guard, entry.quantity)
-    }
-    return counts
-  })
-  const playIdsByPair = createMemo(() => {
-    const ids = new Map<string, number[]>()
-    for (const entry of entries()) {
-      for (const guard of entry.guards) {
-        const key = pairKey(entry.campaign, guard)
-        const existing = ids.get(key)
-        if (existing) existing.push(entry.play.id)
-        else ids.set(key, [entry.play.id])
-      }
-    }
-    return ids
-  })
-
   const boxPlayCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
@@ -288,17 +249,19 @@ export default function IsofarianGuardView(props: {
     ),
   )
 
-  const matrixRows = createMemo(() => campaignKeys())
-  const matrixCols = createMemo(() => guardKeys())
-  const matrixMax = createMemo(() => {
-    let max = 0
-    for (const row of matrixRows()) {
-      for (const col of matrixCols()) {
-        const value = matrix()[row]?.[col] ?? 0
-        if (value > max) max = value
-      }
+  const chapterPlayHours = createMemo(() => {
+    const hoursByChapter: Record<string, number> = {}
+    const hasAssumedHoursByChapter: Record<string, boolean> = {}
+    for (const entry of entries()) {
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      incrementCount(hoursByChapter, entry.chapter, resolved.minutes / 60)
+      if (resolved.assumed) hasAssumedHoursByChapter[entry.chapter] = true
     }
-    return max
+    return { hoursByChapter, hasAssumedHoursByChapter }
   })
 
   const taggedPlays = createMemo(() =>
@@ -339,7 +302,7 @@ export default function IsofarianGuardView(props: {
             </button>
           </div>
           <div class="muted">
-            Track campaign progress, chapter coverage, and which guard pairs you&apos;ve used.
+            Track campaign progress, chapter coverage, and time spent per chapter.
           </div>
         </div>
       </div>
@@ -375,47 +338,108 @@ export default function IsofarianGuardView(props: {
       </div>
 
       <div class="statsBlock">
-        <div class="statsTitleRow">
-          <h3 class="statsTitle">Campaign × Guard</h3>
-          <div class="segmentedControl" role="group" aria-label="Isofarian Guard matrix mode">
-            <button
-              type="button"
-              class="segmentedControlButton"
-              classList={{ segmentedControlButtonActive: matrixDisplayMode() === 'played' }}
-              onClick={() => setMatrixDisplayMode('played')}
-            >
-              Played
-            </button>
-            <button
-              type="button"
-              class="segmentedControlButton"
-              classList={{ segmentedControlButtonActive: matrixDisplayMode() === 'count' }}
-              onClick={() => setMatrixDisplayMode('count')}
-            >
-              Counts
-            </button>
-          </div>
-        </div>
+        <h3 class="statsTitle">Chapters</h3>
+        <div class="tableWrap compact">
+          <table class="table compactTable">
+            <thead>
+              <tr>
+                <th>Chapter</th>
+                <th class="mono">Played</th>
+                <th class="mono">Plays</th>
+                <th class="mono">Wins</th>
+                <th class="mono">Hours</th>
+                <th class="mono">Avg / play</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chapterKeys().map((chapter, index) => {
+                const plays = chapterCounts()[chapter] ?? 0
+                const wins = chapterWins()[chapter] ?? 0
+                const hours = chapterPlayHours().hoursByChapter[chapter] ?? 0
+                const avgHours = plays > 0 ? hours / plays : 0
+                const hasAssumed = chapterPlayHours().hasAssumedHoursByChapter[chapter] === true
+                const groupLabel = isofarianGuardContent.chapterGroupByName.get(chapter)?.trim() ?? ''
+                const previousGroupLabel =
+                  index > 0
+                    ? (isofarianGuardContent.chapterGroupByName.get(chapterKeys()[index - 1]!)?.trim() ?? '')
+                    : ''
+                const shouldRenderGroupHeader = groupLabel.length > 0 && groupLabel !== previousGroupLabel
 
-        <HeatmapMatrix
-          rows={matrixRows()}
-          cols={matrixCols()}
-          rowHeader="Campaign"
-          colHeader="Guard"
-          maxCount={matrixMax()}
-          hideCounts={matrixDisplayMode() === 'played'}
-          getCount={(campaign, guard) => matrix()[campaign]?.[guard] ?? 0}
-          getWinCount={(campaign, guard) => matrixWins()[campaign]?.[guard] ?? 0}
-          getCellDisplayText={(_campaign, _guard, count) =>
-            matrixDisplayMode() === 'played' ? (count > 0 ? '✓' : '') : count === 0 ? '—' : String(count)
-          }
-          colGroupBy={(guard) => isofarianGuardContent.guardGroupByName.get(guard)}
-          onCellClick={(campaign, guard) => {
-            const playIds = playIdsByPair().get(pairKey(campaign, guard)) ?? []
-            props.onOpenPlays({ title: `Isofarian Guard • ${campaign} × ${guard}`, playIds })
-          }}
-        />
+                return (
+                  <>
+                    <Show when={shouldRenderGroupHeader}>
+                      <tr>
+                        <th class="heatmapRowGroupHead" colSpan={6}>
+                          {groupLabel}
+                        </th>
+                      </tr>
+                    </Show>
+                    <tr>
+                      <td>{chapter}</td>
+                      <td class="mono">{plays > 0 ? '✓' : ''}</td>
+                      <td class="mono">
+                        <Show when={plays > 0} fallback="0">
+                          <button
+                            type="button"
+                            class="countLink"
+                            onClick={() => {
+                              const playIds = playIdsByChapter().get(normalizeLabel(chapter)) ?? []
+                              props.onOpenPlays({ title: `Isofarian Guard • ${chapter}`, playIds })
+                            }}
+                            title="View plays"
+                          >
+                            {plays.toLocaleString()}
+                          </button>
+                        </Show>
+                      </td>
+                      <td class="mono">{wins.toLocaleString()}</td>
+                      <td class="mono">
+                        {hours.toLocaleString(undefined, {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        })}
+                        {hasAssumed ? '*' : ''}
+                      </td>
+                      <td class="mono">
+                        <Show when={plays > 0} fallback="—">
+                          {avgHours.toLocaleString(undefined, {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          })}
+                          {hasAssumed ? '*' : ''}
+                        </Show>
+                      </td>
+                    </tr>
+                  </>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <CountTable
+        title="Campaigns"
+        plays={campaignCounts()}
+        wins={campaignWins()}
+        keys={campaignKeys()}
+        onPlaysClick={(campaign) => {
+          const playIds = playIdsByCampaign().get(normalizeLabel(campaign)) ?? []
+          props.onOpenPlays({ title: `Isofarian Guard • ${campaign}`, playIds })
+        }}
+      />
+
+      <CountTable
+        title="Guards"
+        plays={guardCounts()}
+        wins={guardWins()}
+        keys={guardKeys()}
+        groupBy={(guard) => isofarianGuardContent.guardGroupByName.get(guard)}
+        onPlaysClick={(guard) => {
+          const playIds = playIdsByGuard().get(normalizeLabel(guard)) ?? []
+          props.onOpenPlays({ title: `Isofarian Guard • ${guard}`, playIds })
+        }}
+      />
 
       <Show when={hasCostTable()}>
         <CostPerPlayTable
@@ -432,43 +456,6 @@ export default function IsofarianGuardView(props: {
           }}
         />
       </Show>
-
-      <div class="statsGrid">
-        <CountTable
-          title="Campaigns"
-          plays={campaignCounts()}
-          wins={campaignWins()}
-          keys={campaignKeys()}
-          onPlaysClick={(campaign) => {
-            const playIds = playIdsByCampaign().get(normalizeLabel(campaign)) ?? []
-            props.onOpenPlays({ title: `Isofarian Guard • ${campaign}`, playIds })
-          }}
-        />
-
-        <CountTable
-          title="Guards"
-          plays={guardCounts()}
-          wins={guardWins()}
-          keys={guardKeys()}
-          groupBy={(guard) => isofarianGuardContent.guardGroupByName.get(guard)}
-          onPlaysClick={(guard) => {
-            const playIds = playIdsByGuard().get(normalizeLabel(guard)) ?? []
-            props.onOpenPlays({ title: `Isofarian Guard • ${guard}`, playIds })
-          }}
-        />
-      </div>
-
-      <CountTable
-        title="Chapters"
-        plays={chapterCounts()}
-        wins={chapterWins()}
-        keys={chapterKeys()}
-        groupBy={(chapter) => isofarianGuardContent.chapterGroupByName.get(chapter)}
-        onPlaysClick={(chapter) => {
-          const playIds = playIdsByChapter().get(normalizeLabel(chapter)) ?? []
-          props.onOpenPlays({ title: `Isofarian Guard • ${chapter}`, playIds })
-        }}
-      />
 
       <AchievementsPanel
         title="Next achievements"

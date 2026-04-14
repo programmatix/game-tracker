@@ -226,130 +226,122 @@ export default function MonthlySummaryView(props: {
               background: 'linear-gradient(180deg, rgba(9, 12, 22, 0.36), rgba(9, 12, 22, 0.2))',
             }}
           >
-            <svg
-              viewBox={`0 0 ${Math.max(680, chartRows().length * 84)} 260`}
-              preserveAspectRatio="none"
-              style={{
-                display: 'block',
-                width: '100%',
-                height: '260px',
-                overflow: 'visible',
-              }}
-            >
-              {(() => {
-                const svgWidth = Math.max(680, chartRows().length * 84)
-                const svgHeight = 260
-                const marginTop = 16
-                const marginRight = 16
-                const marginBottom = 52
-                const marginLeft = 52
-                const plotWidth = svgWidth - marginLeft - marginRight
-                const plotHeight = svgHeight - marginTop - marginBottom
-                const slotWidth = plotWidth / Math.max(chartRows().length, 1)
-                const barWidth = Math.max(20, Math.min(slotWidth - 18, 44))
+            {(() => {
+              const svgWidth = Math.max(680, chartRows().length * 84)
+              const svgHeight = 260
+              const marginTop = 16
+              const marginRight = 16
+              const marginBottom = 52
+              const marginLeft = 52
+              const plotWidth = svgWidth - marginLeft - marginRight
+              const plotHeight = svgHeight - marginTop - marginBottom
+              const slotWidth = plotWidth / Math.max(chartRows().length, 1)
+              const barWidth = Math.max(20, Math.min(slotWidth - 18, 44))
 
-                return (
-                  <>
-                    <rect
-                      x={marginLeft}
-                      y={marginTop}
-                      width={plotWidth}
-                      height={plotHeight}
-                      rx="12"
-                      fill="rgba(255, 255, 255, 0.018)"
-                      stroke="rgba(255, 255, 255, 0.06)"
-                    />
+              return (
+                <svg
+                  viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                  preserveAspectRatio="xMinYMin meet"
+                  style={{
+                    display: 'block',
+                    width: `${svgWidth}px`,
+                    height: `${svgHeight}px`,
+                    'min-width': '100%',
+                    overflow: 'visible',
+                    'font-family': 'inherit',
+                  }}
+                >
+                  <rect
+                    x={marginLeft}
+                    y={marginTop}
+                    width={plotWidth}
+                    height={plotHeight}
+                    rx="12"
+                    fill="rgba(255, 255, 255, 0.018)"
+                    stroke="rgba(255, 255, 255, 0.06)"
+                  />
 
-                    <For each={chartTicks()}>
-                      {(tick) => {
-                        const y = marginTop + plotHeight - (tick / chartUpperBoundHours()) * plotHeight
-                        return (
-                          <>
-                            <line
-                              x1={marginLeft}
-                              y1={y}
-                              x2={marginLeft + plotWidth}
-                              y2={y}
-                              stroke="rgba(255, 255, 255, 0.08)"
-                              stroke-width="1"
-                            />
-                            <text
-                              x={marginLeft - 10}
-                              y={y + 4}
-                              text-anchor="end"
-                              fill="var(--muted)"
-                              font-size="12"
-                              font-weight="500"
-                            >
-                              {tick.toFixed(tick % 1 === 0 ? 0 : 1)}h
-                            </text>
-                          </>
-                        )
-                      }}
-                    </For>
+                  <For each={chartTicks()}>
+                    {(tick) => {
+                      const y = marginTop + plotHeight - (tick / chartUpperBoundHours()) * plotHeight
+                      return (
+                        <>
+                          <line
+                            x1={marginLeft}
+                            y1={y}
+                            x2={marginLeft + plotWidth}
+                            y2={y}
+                            stroke="rgba(255, 255, 255, 0.08)"
+                            stroke-width="1"
+                          />
+                          <text x={marginLeft - 10} y={y + 4} text-anchor="end" fill="var(--muted)" font-size="12" font-weight="500">
+                            {tick.toFixed(tick % 1 === 0 ? 0 : 1)}h
+                          </text>
+                        </>
+                      )
+                    }}
+                  </For>
 
-                    <For each={chartRows()}>
-                      {(row, index) => {
-                        const hours = row.minutes / 60
-                        const x = marginLeft + slotWidth * index() + (slotWidth - barWidth) / 2
-                        const barHeight = (hours / chartUpperBoundHours()) * plotHeight
-                        const y = marginTop + plotHeight - barHeight
-                        const monthLabel = formatShortMonthKey(row.monthKey)
+                  <For each={chartRows()}>
+                    {(row, index) => {
+                      const hours = row.minutes / 60
+                      const x = marginLeft + slotWidth * index() + (slotWidth - barWidth) / 2
+                      const barHeight = (hours / chartUpperBoundHours()) * plotHeight
+                      const y = marginTop + plotHeight - barHeight
+                      const monthLabel = formatShortMonthKey(row.monthKey)
 
-                        return (
-                          <g>
-                            <title>
-                              {`${row.monthLabel}: ${formatHours(row.minutes)}h across ${row.plays.toLocaleString()} play${row.plays === 1 ? '' : 's'}`}
-                            </title>
-                            <rect
-                              x={x}
-                              y={y}
-                              width={barWidth}
-                              height={Math.max(barHeight, 0)}
-                              rx="8"
-                              fill={row.minutes > 0 ? 'rgba(91, 191, 241, 0.92)' : 'rgba(255, 255, 255, 0.07)'}
-                            />
-                            <Show when={row.minutes > 0}>
-                              <text
-                                x={x + barWidth / 2}
-                                y={Math.max(y - 10, marginTop + 14)}
-                                text-anchor="middle"
-                                fill="rgba(214, 238, 250, 0.98)"
-                                font-size="12"
-                                font-weight="600"
-                                letter-spacing="0.01em"
-                              >
-                                {`${formatHours(row.minutes)}h`}
-                              </text>
-                            </Show>
+                      return (
+                        <g>
+                          <title>
+                            {`${row.monthLabel}: ${formatHours(row.minutes)}h across ${row.plays.toLocaleString()} play${row.plays === 1 ? '' : 's'}`}
+                          </title>
+                          <rect
+                            x={x}
+                            y={y}
+                            width={barWidth}
+                            height={Math.max(barHeight, 0)}
+                            rx="8"
+                            fill={row.minutes > 0 ? 'rgba(91, 191, 241, 0.92)' : 'rgba(255, 255, 255, 0.07)'}
+                          />
+                          <Show when={row.minutes > 0}>
                             <text
                               x={x + barWidth / 2}
-                              y={marginTop + plotHeight + 20}
+                              y={Math.max(y - 10, marginTop + 14)}
                               text-anchor="middle"
-                              fill="var(--text)"
+                              fill="rgba(214, 238, 250, 0.98)"
                               font-size="12"
                               font-weight="600"
                             >
-                              {monthLabel}
+                              {`${formatHours(row.minutes)}h`}
                             </text>
-                            <text
-                              x={x + barWidth / 2}
-                              y={marginTop + plotHeight + 36}
-                              text-anchor="middle"
-                              fill="var(--muted)"
-                              font-size="11"
-                              font-weight="500"
-                            >
-                              {`'${row.monthKey.slice(2, 4)}`}
-                            </text>
-                          </g>
-                        )
-                      }}
-                    </For>
-                  </>
-                )
-              })()}
-            </svg>
+                          </Show>
+                          <text
+                            x={x + barWidth / 2}
+                            y={marginTop + plotHeight + 20}
+                            text-anchor="middle"
+                            fill="var(--text)"
+                            font-size="12"
+                            font-weight="600"
+                          >
+                            {monthLabel}
+                          </text>
+                          <text
+                            x={x + barWidth / 2}
+                            y={marginTop + plotHeight + 36}
+                            text-anchor="middle"
+                            fill="var(--muted)"
+                            font-size="11"
+                            font-weight="500"
+                          >
+                            {`'${row.monthKey.slice(2, 4)}`}
+                          </text>
+                        </g>
+                      )
+                    }}
+                  </For>
+                </svg>
+              )
+            })()}
           </div>
         </div>
       </Show>

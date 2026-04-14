@@ -32,7 +32,15 @@ type CostsRow = {
   costPerHour?: number
 }
 
-type SortKey = 'name' | 'plays' | 'hours' | 'totalCost' | 'costPerHour' | 'progressToTarget'
+type SortKey =
+  | 'name'
+  | 'status'
+  | 'plays'
+  | 'hours'
+  | 'totalCost'
+  | 'costPerHour'
+  | 'hoursRemainingToTarget'
+  | 'progressToTarget'
 type SortDirection = 'asc' | 'desc'
 const COSTS_TARGET_STORAGE_KEY = 'costs.targetCostPerHour'
 const COSTS_VISIBLE_STATUSES_STORAGE_KEY = 'costs.visibleStatuses'
@@ -72,6 +80,16 @@ function compareOptionalNumber(
 function hoursNeededForTarget(totalCost: number, targetCostPerHour: number): number | undefined {
   if (targetCostPerHour <= 0) return undefined
   return Math.max(0, totalCost) / targetCostPerHour
+}
+
+function hoursRemainingForTarget(
+  totalCost: number,
+  hours: number,
+  targetCostPerHour: number,
+): number | undefined {
+  const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour)
+  if (targetHours == null) return undefined
+  return Math.max(0, targetHours - Math.max(0, hours))
 }
 
 function formatDurationHoursMinutes(hours: number): string {
@@ -289,6 +307,10 @@ export default function CostsView(props: {
           const compared = a.name.localeCompare(b.name)
           return direction === 'asc' ? compared : -compared
         }
+        if (key === 'status') {
+          const compared = a.statusLabel.localeCompare(b.statusLabel)
+          return direction === 'asc' ? compared : -compared
+        }
         if (key === 'plays') return direction === 'asc' ? a.plays - b.plays : b.plays - a.plays
         if (key === 'hours') return direction === 'asc' ? a.hours - b.hours : b.hours - a.hours
         if (key === 'totalCost') {
@@ -296,6 +318,13 @@ export default function CostsView(props: {
         }
         if (key === 'costPerHour') {
           return compareOptionalNumber(a.costPerHour, b.costPerHour, direction)
+        }
+        if (key === 'hoursRemainingToTarget') {
+          return compareOptionalNumber(
+            hoursRemainingForTarget(a.totalCost, a.hours, target),
+            hoursRemainingForTarget(b.totalCost, b.hours, target),
+            direction,
+          )
         }
         return compareOptionalNumber(
           progressToTarget(a.totalCost, a.hours, target),
@@ -369,6 +398,9 @@ export default function CostsView(props: {
 
   const progressHeading = createMemo(
     () => `Progress to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`,
+  )
+  const remainingHeading = createMemo(
+    () => `Hours left to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`,
   )
   const visibleGameCount = createMemo(() => filteredRows().length)
   const overallProjection = createMemo(() => {
@@ -622,7 +654,11 @@ export default function CostsView(props: {
                   Game{sortIndicator('name')}
                 </button>
               </th>
-              <th>Status</th>
+              <th>
+                <button type="button" class="sortButton" onClick={() => toggleSort('status')}>
+                  Status{sortIndicator('status')}
+                </button>
+              </th>
               <th class="mono">
                 <button type="button" class="sortButton" onClick={() => toggleSort('plays')}>
                   Plays{sortIndicator('plays')}
@@ -643,6 +679,16 @@ export default function CostsView(props: {
                   Cost / hour{sortIndicator('costPerHour')}
                 </button>
               </th>
+              <th class="mono">
+                <button
+                  type="button"
+                  class="sortButton"
+                  onClick={() => toggleSort('hoursRemainingToTarget')}
+                >
+                  {remainingHeading()}
+                  {sortIndicator('hoursRemainingToTarget')}
+                </button>
+              </th>
               <th>
                 <button
                   type="button"
@@ -660,7 +706,7 @@ export default function CostsView(props: {
               when={sortedRows().length > 0}
               fallback={
                 <tr>
-                  <td colSpan={8} class="muted">
+                  <td colSpan={9} class="muted">
                     No games match the selected filters.
                   </td>
                 </tr>
@@ -721,6 +767,22 @@ export default function CostsView(props: {
                           {formatMoney(row.costPerHour!, row.currencySymbol)}
                         </Show>
                       </td>
+                      <td class="mono" data-label={remainingHeading()}>
+                        {(() => {
+                          const remainingHours = hoursRemainingForTarget(
+                            row.totalCost,
+                            row.hours,
+                            targetCostPerHour(),
+                          )
+                          if (remainingHours == null) return '—'
+                          return (
+                            <>
+                              {formatDurationHoursMinutes(remainingHours)}
+                              {row.hasAssumedHours && remainingHours > 0 ? '*' : ''}
+                            </>
+                          )
+                        })()}
+                      </td>
                       <td class="costProgressTableCell" data-label={progressHeading()}>
                         {renderCostProgress(row.name, row.totalCost, row.hours, row.currencySymbol)}
                       </td>
@@ -742,6 +804,16 @@ export default function CostsView(props: {
                   <td class="mono" data-label="Cost / hour">
                     <Show when={typeof totals().costPerHour === 'number'} fallback="—">
                       {formatMoney(totals().costPerHour!, overallCurrencySymbol())}
+                    </Show>
+                  </td>
+                  <td class="mono" data-label={remainingHeading()}>
+                    <Show when={overallProjection()} keyed fallback="—">
+                      {(projection) => (
+                        <>
+                          {formatDurationHoursMinutes(projection.remainingHours)}
+                          {totals().hasAssumedHours && projection.remainingHours > 0 ? '*' : ''}
+                        </>
+                      )}
                     </Show>
                   </td>
                   <td class="costProgressTableCell" data-label={progressHeading()}>

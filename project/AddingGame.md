@@ -14,11 +14,19 @@ And core requirements are usually going to be:
 
 Basically, follow the convention of other games e.g. src/games/death-may-die.
 
+
+My games tend to be either modular, or campaign based.
+For modular games I want to see:
+* Heroes vs villains matrix.  
+
+For campaign these matrixes rarely make sense.  I more often want to see:
+* A table showing each chapter/scenario, whether I've played it, how long I spent on it.
+
 Other rules to follow:
 - Where we have groups, use them in all tables and matrix grids.
 - Add achievements.
 - Add the played tables - what heroes/villains/locations etc. I've played.
-- Add the heroes vs villains matrix, where that makes sense.
+- Add the heroes vs villains matrix, where that makes sense (modular games).
 - Include the costs in the content.yaml (approximate), and a costs table.
 - Add to monthly checklist.
 - If we don't have an actual time played figure for a play, use the BGG estimate and display a (*) somewhere.
@@ -28,4 +36,3 @@ Other rules to follow:
 Use the CLI tool (`node scripts/bgg-plays.js --username stony82 --all --stdout`) to pull the BGG data and to see how that game's data is structured.  The color= field particularly.
 But note that it may not be suitable. If there are two axes we only have 15 characters for each axis. If 3, only 10. So you may need to define your compact tokens/ids directly in `content.yaml`, and ask me to change the BGG data manually to follow it.
 You will need a content.yaml anyway, that will contain all content for the game.
-

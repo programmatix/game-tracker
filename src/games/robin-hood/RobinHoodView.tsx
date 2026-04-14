@@ -79,6 +79,13 @@ export default function RobinHoodView(props: {
     }
     return false
   })
+  const averageHoursPerPlay = createMemo(() => {
+    const plays = totalPlays()
+    if (plays <= 0) return undefined
+    const hours = totalHours()
+    if (hours <= 0) return undefined
+    return hours / plays
+  })
 
   const adventureCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -343,65 +350,34 @@ export default function RobinHoodView(props: {
           </div>
         }
       >
-        <div class="matrixHeaderRow">
-          <div class="muted">
-            Matrix mode:{' '}
-            <span class="mono">
-              {matrixDisplayMode() === 'played' ? 'Played/Unplayed' : 'Play counts'}
-            </span>
-            {' • '}
-            Continuations: <span class="mono">{continuationCount().toLocaleString()}</span>
+        <div class="finalGirlMetaRow">
+          <div class="meta">
+            <div class="metaLabel">Total hours</div>
+            <div class="metaValue mono">
+              {totalHours().toLocaleString(undefined, { maximumFractionDigits: 1 })}
+              {totalHoursHasAssumed() ? '*' : ''}
+            </div>
           </div>
-          <div class="tabs">
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: matrixDisplayMode() === 'played' }}
-              onClick={() => setMatrixDisplayMode('played')}
-            >
-              Played/Unplayed
-            </button>
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: matrixDisplayMode() === 'count' }}
-              onClick={() => setMatrixDisplayMode('count')}
-            >
-              Play counts
-            </button>
+          <div class="meta">
+            <div class="metaLabel">Avg hours / play</div>
+            <div class="metaValue mono">
+              <Show when={averageHoursPerPlay() !== undefined} fallback="—">
+                {averageHoursPerPlay()!.toLocaleString(undefined, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
+                {totalHoursHasAssumed() ? '*' : ''}
+              </Show>
+            </div>
           </div>
         </div>
 
-        <HeatmapMatrix
-          rows={robinHoodContent.adventures}
-          cols={robinHoodContent.characters}
-          rowHeader="Adventure"
-          colHeader="My character"
-          maxCount={matrixMax()}
-          hideCounts={matrixDisplayMode() === 'played'}
-          getCount={(adventure, character) => matrix()[adventure]?.[character] ?? 0}
-          getWinCount={(adventure, character) => matrixWins()[adventure]?.[character] ?? 0}
-          getCellDisplayText={(adventure, character, count) => {
-            if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
-            const wins = matrixWins()[adventure]?.[character] ?? 0
-            if (count === 0) return '—'
-            if (wins <= 0) return '✗'
-            return '✓'
-          }}
-          getCellLabel={(adventure, character, count) => {
-            const wins = matrixWins()[adventure]?.[character] ?? 0
-            if (count === 0) return `${adventure} × ${character}: unplayed`
-            return `${adventure} × ${character}: ${count} plays, ${wins} wins`
-          }}
-          rowGroupBy={(adventure) => robinHoodContent.adventureGroupByName.get(adventure)}
-          colGroupBy={(character) => robinHoodContent.characterGroupByName.get(character)}
-          onCellClick={(adventure, character) =>
-            props.onOpenPlays({
-              title: `The Adventures of Robin Hood • ${adventure} × ${character}`,
-              playIds: playIdsByPair().get(pairKey(adventure, character)) ?? [],
-            })
-          }
-        />
+        <Show when={totalHoursHasAssumed()}>
+          <div class="muted">
+            <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has no
+            recorded length.
+          </div>
+        </Show>
 
         <Show when={hasCostTable()}>
           <CostPerPlayTable
@@ -411,6 +387,7 @@ export default function RobinHoodView(props: {
             overallPlays={totalPlays()}
             overallHours={totalHours()}
             overallHoursHasAssumed={totalHoursHasAssumed()}
+            averageHoursPerPlay={averageHoursPerPlay()}
             onPlaysClick={(box) =>
               props.onOpenPlays({
                 title: `The Adventures of Robin Hood • Box: ${box}`,
@@ -473,6 +450,63 @@ export default function RobinHoodView(props: {
               props.onOpenPlays({
                 title: `The Adventures of Robin Hood • Party character: ${character}`,
                 playIds: playIdsByAllCharacter().get(normalizeLabel(character)) ?? [],
+              })
+            }
+          />
+        </div>
+
+        <div class="statsBlock">
+          <div class="statsTitleRow">
+            <h3 class="statsTitle">Adventure × My Character</h3>
+            <div class="tabs">
+              <button
+                type="button"
+                class="tabButton"
+                classList={{ tabButtonActive: matrixDisplayMode() === 'played' }}
+                onClick={() => setMatrixDisplayMode('played')}
+              >
+                Played/Unplayed
+              </button>
+              <button
+                type="button"
+                class="tabButton"
+                classList={{ tabButtonActive: matrixDisplayMode() === 'count' }}
+                onClick={() => setMatrixDisplayMode('count')}
+              >
+                Play counts
+              </button>
+            </div>
+          </div>
+          <div class="muted">
+            Secondary analysis only. Continuations: <span class="mono">{continuationCount().toLocaleString()}</span>
+          </div>
+          <HeatmapMatrix
+            rows={robinHoodContent.adventures}
+            cols={robinHoodContent.characters}
+            rowHeader="Adventure"
+            colHeader="My character"
+            maxCount={matrixMax()}
+            hideCounts={matrixDisplayMode() === 'played'}
+            getCount={(adventure, character) => matrix()[adventure]?.[character] ?? 0}
+            getWinCount={(adventure, character) => matrixWins()[adventure]?.[character] ?? 0}
+            getCellDisplayText={(adventure, character, count) => {
+              if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
+              const wins = matrixWins()[adventure]?.[character] ?? 0
+              if (count === 0) return '—'
+              if (wins <= 0) return '✗'
+              return '✓'
+            }}
+            getCellLabel={(adventure, character, count) => {
+              const wins = matrixWins()[adventure]?.[character] ?? 0
+              if (count === 0) return `${adventure} × ${character}: unplayed`
+              return `${adventure} × ${character}: ${count} plays, ${wins} wins`
+            }}
+            rowGroupBy={(adventure) => robinHoodContent.adventureGroupByName.get(adventure)}
+            colGroupBy={(character) => robinHoodContent.characterGroupByName.get(character)}
+            onCellClick={(adventure, character) =>
+              props.onOpenPlays({
+                title: `The Adventures of Robin Hood • ${adventure} × ${character}`,
+                playIds: playIdsByPair().get(pairKey(adventure, character)) ?? [],
               })
             }
           />
