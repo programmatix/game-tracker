@@ -17,6 +17,16 @@ planets:
     box: Blackout
   - id: Strannos
     box: Strannos
+  - id: Zehronn
+    box: Zehronn
+  - id: Yendraal
+    box: Yendraal
+  - id: Kaelyfos
+    box: Kaelyfos
+  - id: Koguya
+    box: Koguya
+  - id: Gniir
+    box: Gniir
 
 tasks:
   - A
@@ -34,3 +44,8 @@ costs:
     Strannos:
       spreadsheetCell: C155
       multiplier: 0.5
+    Zehronn: 12.95
+    Yendraal: 12.95
+    Kaelyfos: 12.95
+    Koguya: 12.95
+    Gniir: 12.95

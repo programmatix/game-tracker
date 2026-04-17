@@ -167,7 +167,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   { id: 'twilightInscription', label: "Twilight Inscription", spreadsheetFamily: "Twilight Inscription", price: 17.99 },
   { id: 'undauntedNormandy', label: "Undaunted: Normandy", spreadsheetFamily: "Undaunted", price: 31.00 },
   { id: 'underFallingSkies', label: "Under Falling Skies", spreadsheetFamily: "Under Falling Skies", price: 21.40 },
-  { id: 'unsettled', label: "Unsettled", spreadsheetFamily: "Unsettled", price: 175.77 },
+  { id: 'unsettled', label: "Unsettled", spreadsheetFamily: "Unsettled", price: 240.52 },
   { id: 'unstoppable', label: "Unstoppable", spreadsheetFamily: "Unstoppable", price: 4.93 },
   { id: 'vantage', label: "Vantage", spreadsheetFamily: "Vantage", price: 56.18 },
   { id: 'wanderingGalaxy', label: "Wandering Galaxy", spreadsheetFamily: "Wandering Galaxy", price: 40.21 },

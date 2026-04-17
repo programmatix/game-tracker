@@ -32,6 +32,24 @@ type CostsRow = {
   costPerHour?: number
 }
 
+type DisplayCostsRow = CostsRow & {
+  effectiveCost: number
+  estimatedSellPrice: number
+  remainingHours?: number
+}
+
+type SaleMode = 'none' | 'sellTwoThirds' | 'sellThreeQuarters'
+
+const SALE_MODE_OPTIONS: ReadonlyArray<{
+  value: SaleMode
+  label: string
+  resaleRatio: number
+}> = [
+  { value: 'none', label: 'No sale', resaleRatio: 0 },
+  { value: 'sellTwoThirds', label: 'Sell at 2/3', resaleRatio: 2 / 3 },
+  { value: 'sellThreeQuarters', label: 'Sell at 3/4', resaleRatio: 3 / 4 },
+]
+
 type SortKey =
   | 'name'
   | 'status'
@@ -42,9 +60,11 @@ type SortKey =
   | 'hoursRemainingToTarget'
   | 'progressToTarget'
 type SortDirection = 'asc' | 'desc'
+
 const COSTS_TARGET_STORAGE_KEY = 'costs.targetCostPerHour'
 const COSTS_VISIBLE_STATUSES_STORAGE_KEY = 'costs.visibleStatuses'
 const COSTS_CHECKLIST_ONLY_STORAGE_KEY = 'costs.checklistOnly'
+const COSTS_SALE_MODE_STORAGE_KEY = 'costs.saleMode'
 
 function normalizeGameName(value: string): string {
   return value
@@ -92,6 +112,22 @@ function hoursRemainingForTarget(
   return Math.max(0, targetHours - Math.max(0, hours))
 }
 
+function isSaleMode(value: string): value is SaleMode {
+  return SALE_MODE_OPTIONS.some((option) => option.value === value)
+}
+
+function resaleRatioForMode(mode: SaleMode): number {
+  return SALE_MODE_OPTIONS.find((option) => option.value === mode)?.resaleRatio ?? 0
+}
+
+function resaleValueForCost(totalCost: number, saleMode: SaleMode): number {
+  return Math.max(0, totalCost) * resaleRatioForMode(saleMode)
+}
+
+function effectiveCostForSaleMode(totalCost: number, saleMode: SaleMode): number {
+  return Math.max(0, totalCost - resaleValueForCost(totalCost, saleMode))
+}
+
 function formatDurationHoursMinutes(hours: number): string {
   if (!Number.isFinite(hours) || hours <= 0) return '0m'
 
@@ -101,6 +137,12 @@ function formatDurationHoursMinutes(hours: number): string {
   if (wholeHours <= 0) return `${minutes}m`
   if (minutes <= 0) return `${wholeHours}h`
   return `${wholeHours}h${String(minutes).padStart(2, '0')}m`
+}
+
+function formatRoundedDuration(hours: number): string {
+  if (!Number.isFinite(hours) || hours <= 0) return '0h'
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`
+  return `${Math.round(hours)}h`
 }
 
 function clamp01(value: number): number {
@@ -157,6 +199,17 @@ function readStoredChecklistOnly(): boolean {
   }
 }
 
+function readStoredSaleMode(): SaleMode {
+  if (typeof window === 'undefined') return 'none'
+
+  try {
+    const stored = window.localStorage.getItem(COSTS_SALE_MODE_STORAGE_KEY) || ''
+    return isSaleMode(stored) ? stored : 'none'
+  } catch {
+    return 'none'
+  }
+}
+
 export default function CostsView(props: {
   plays: BggPlay[]
   assumedMinutesByObjectId: ReadonlyMap<string, number>
@@ -179,6 +232,7 @@ export default function CostsView(props: {
   const [targetCostPerHour, setTargetCostPerHour] = createSignal<number>(readStoredTarget())
   const [visibleStatuses, setVisibleStatuses] = createSignal<GameStatus[]>(readStoredVisibleStatuses())
   const [checklistOnly, setChecklistOnly] = createSignal<boolean>(readStoredChecklistOnly())
+  const [saleMode, setSaleMode] = createSignal<SaleMode>(readStoredSaleMode())
 
   createEffect(() => {
     try {
@@ -207,36 +261,38 @@ export default function CostsView(props: {
     }
   })
 
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(COSTS_SALE_MODE_STORAGE_KEY, saleMode())
+    } catch {
+      return
+    }
+  })
+
   const rows = createMemo<CostsRow[]>(() => {
     const playedByAlias = new Map<string, BggPlay[]>()
     for (const play of props.plays) {
       const name = normalizeGameName(play.item?.attributes.name || '')
       if (!name) continue
       const existing = playedByAlias.get(name)
-      if (existing) {
-        existing.push(play)
-      } else {
-        playedByAlias.set(name, [play])
-      }
+      if (existing) existing.push(play)
+      else playedByAlias.set(name, [play])
     }
 
     return costRegistry
       .filter((entry) => shouldShowGameInCostsTable(entry.id))
       .map((entry) => {
-        const status = isConfigurableGameId(entry.id)
-          ? gamePreferencesFor(entry.id).status
-          : 'active'
+        const status = isConfigurableGameId(entry.id) ? gamePreferencesFor(entry.id).status : 'active'
         const matchedPlaysById = new Map<number, BggPlay>()
         for (const alias of entry.aliases) {
           const normalizedAlias = normalizeGameName(alias)
           if (!normalizedAlias) continue
           for (const [normalizedName, plays] of playedByAlias.entries()) {
             if (!matchesNormalizedGameName(normalizedName, normalizedAlias)) continue
-            for (const play of plays) {
-              matchedPlaysById.set(play.id, play)
-            }
+            for (const play of plays) matchedPlaysById.set(play.id, play)
           }
         }
+
         const matchedPlays = [...matchedPlaysById.values()]
         const totalCost = [...entry.costs.boxCostsByName.values()].reduce((sum, cost) => sum + cost, 0)
 
@@ -259,8 +315,6 @@ export default function CostsView(props: {
           hasAssumedHours ||= resolved.assumed
         }
 
-        const costPerHour = hours > 0 ? totalCost / hours : undefined
-
         return {
           id: entry.id,
           name: entry.label,
@@ -271,7 +325,7 @@ export default function CostsView(props: {
           plays,
           hours,
           hasAssumedHours,
-          costPerHour,
+          costPerHour: hours > 0 ? totalCost / hours : undefined,
         }
       })
   })
@@ -295,14 +349,24 @@ export default function CostsView(props: {
       '£',
   )
 
-  const sortedRows = createMemo(() => {
+  const sortedRows = createMemo<DisplayCostsRow[]>(() => {
     const key = sortKey()
     const direction = sortDirection()
+    const selectedSaleMode = saleMode()
+    const target = targetCostPerHour()
 
     return filteredRows()
+      .map((row) => {
+        const effectiveCost = effectiveCostForSaleMode(row.totalCost, selectedSaleMode)
+        return {
+          ...row,
+          effectiveCost,
+          estimatedSellPrice: resaleValueForCost(row.totalCost, selectedSaleMode),
+          remainingHours: hoursRemainingForTarget(effectiveCost, row.hours, target),
+        }
+      })
       .slice()
       .sort((a, b) => {
-        const target = targetCostPerHour()
         if (key === 'name') {
           const compared = a.name.localeCompare(b.name)
           return direction === 'asc' ? compared : -compared
@@ -320,15 +384,11 @@ export default function CostsView(props: {
           return compareOptionalNumber(a.costPerHour, b.costPerHour, direction)
         }
         if (key === 'hoursRemainingToTarget') {
-          return compareOptionalNumber(
-            hoursRemainingForTarget(a.totalCost, a.hours, target),
-            hoursRemainingForTarget(b.totalCost, b.hours, target),
-            direction,
-          )
+          return compareOptionalNumber(a.remainingHours, b.remainingHours, direction)
         }
         return compareOptionalNumber(
-          progressToTarget(a.totalCost, a.hours, target),
-          progressToTarget(b.totalCost, b.hours, target),
+          progressToTarget(a.effectiveCost, a.hours, target),
+          progressToTarget(b.effectiveCost, b.hours, target),
           direction,
         )
       })
@@ -372,6 +432,15 @@ export default function CostsView(props: {
       maximumFractionDigits: 0,
     })}`
 
+  const selectedSaleOption = createMemo(
+    () => SALE_MODE_OPTIONS.find((option) => option.value === saleMode()) || SALE_MODE_OPTIONS[0],
+  )
+  const selectedSaleLabel = createMemo(() => selectedSaleOption().label)
+  const selectedSaleSuffix = createMemo(() => (saleMode() === 'none' ? '' : ` (${selectedSaleLabel()})`))
+
+  const overallResaleValue = createMemo(() => resaleValueForCost(totals().totalCost, saleMode()))
+  const overallEffectiveCost = createMemo(() => effectiveCostForSaleMode(totals().totalCost, saleMode()))
+
   const toggleSort = (nextKey: SortKey) => {
     if (sortKey() === nextKey) {
       setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
@@ -397,41 +466,38 @@ export default function CostsView(props: {
   }
 
   const progressHeading = createMemo(
-    () => `Progress to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`,
+    () => `Progress to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour${selectedSaleSuffix()}`,
   )
   const remainingHeading = createMemo(
-    () => `Hours left to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour`,
+    () => `Hours left to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/hour${selectedSaleSuffix()}`,
   )
   const visibleGameCount = createMemo(() => filteredRows().length)
+
   const overallProjection = createMemo(() => {
-    const overall = totals()
-    const targetHours = hoursNeededForTarget(overall.totalCost, targetCostPerHour())
+    const targetHours = hoursNeededForTarget(overallEffectiveCost(), targetCostPerHour())
     if (targetHours == null) return null
 
-    const remainingHours = Math.max(0, targetHours - overall.hours)
+    const remainingHours = Math.max(0, targetHours - totals().hours)
     return {
       targetHours,
       remainingHours,
       isComplete: remainingHours <= 0,
     }
   })
+
   const overallProgress = createMemo(() => {
     const projection = overallProjection()
     if (!projection) return null
 
-    const targetHours = projection.targetHours
-    const progress = targetHours <= 0 ? 1 : clamp01(totals().hours / targetHours)
+    const progress = projection.targetHours <= 0 ? 1 : clamp01(totals().hours / projection.targetHours)
     return {
       progress,
       percentLabel: formatPercent(progress),
-      chartStyle: {
-        '--progress': `${progress * 100}%`,
-      },
-      splitChartStyle: {
-        '--cost-donut-complete': `${progress * 100}%`,
-      },
+      chartStyle: { '--progress': `${progress * 100}%` },
+      splitChartStyle: { '--cost-donut-complete': `${progress * 100}%` },
     }
   })
+
   const costTimeEstimateLabel = createMemo(() => {
     const status = props.costTimeEstimateStatus
     return `Checked ${status.complete.toLocaleString()} of ${status.total.toLocaleString()} games with missing play times`
@@ -453,24 +519,25 @@ export default function CostsView(props: {
     const status = props.costTimeEstimateStatus
     return status.total > 0 && (status.active || status.failed > 0 || status.checkedWithoutEstimate > 0)
   })
+
   const renderCostProgress = (
     name: string,
-    totalCost: number,
+    effectiveCost: number,
     hours: number,
     currencySymbol: string,
+    detail?: string,
   ) => {
-    const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour())
-    const progress = progressToTarget(totalCost, hours, targetCostPerHour())
-
+    const targetHours = hoursNeededForTarget(effectiveCost, targetCostPerHour())
+    const progress = progressToTarget(effectiveCost, hours, targetCostPerHour())
     if (targetHours == null || typeof progress !== 'number') return '—'
 
     const label =
       targetHours <= 0
-        ? `${name}: already at or below ${formatTargetValue(targetCostPerHour(), currencySymbol)}/hour`
+        ? `${name}: already at or below ${formatTargetValue(targetCostPerHour(), currencySymbol)}/hour${detail ? ` • ${detail}` : ''}`
         : `${name}: ${formatHours(hours)}/${formatHours(targetHours)} hours needed for ${formatTargetValue(
             targetCostPerHour(),
             currencySymbol,
-          )}/hour`
+          )}/hour${detail ? ` • ${detail}` : ''}`
 
     return (
       <div class="costProgressCell">
@@ -514,6 +581,7 @@ export default function CostsView(props: {
           <div class="muted">{costTimeEstimateSummary()}</div>
         </div>
       </Show>
+
       <Show when={overallProjection()}>
         {(projection) => (
           <div class="monthlySummaryGrid costsSummaryGrid">
@@ -531,10 +599,10 @@ export default function CostsView(props: {
                 </div>
               </div>
               <div class="monthlySummarySubtext">
-                <span class="mono">{formatDurationHoursMinutes(totals().hours)}</span>
+                <span class="mono">{formatRoundedDuration(totals().hours)}</span>
                 {totals().hasAssumedHours ? '*' : ''}
                 {' '}logged of{' '}
-                <span class="mono">{formatDurationHoursMinutes(projection().targetHours)}</span>
+                <span class="mono">{formatRoundedDuration(projection().targetHours)}</span>
               </div>
             </section>
 
@@ -568,10 +636,7 @@ export default function CostsView(props: {
                 </div>
               </div>
               <div class="monthlySummarySubtext">
-                <Show
-                  when={!projection().isComplete}
-                  fallback={<>Already at or below the selected target.</>}
-                >
+                <Show when={!projection().isComplete} fallback={<>Already at or below the selected target.</>}>
                   <span class="costLegend">
                     <span class="costLegendSwatch costLegendSwatchComplete" />
                     Logged
@@ -587,6 +652,31 @@ export default function CostsView(props: {
           </div>
         )}
       </Show>
+
+      <div class="monthlySummaryGrid costsSummaryGrid costsSummaryGridSecondary">
+        <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">Sale assumption</div>
+          <div class="monthlySummaryValue mono">{selectedSaleLabel()}</div>
+          <div class="monthlySummarySubtext">
+            Choose whether to compare against full cost, selling at 2/3, or selling at 3/4.
+          </div>
+        </section>
+
+        <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">Estimated sell price</div>
+          <div class="monthlySummaryValue mono">{formatMoney(overallResaleValue(), overallCurrencySymbol())}</div>
+          <div class="monthlySummarySubtext">
+            Estimated resale value for the visible games under the selected assumption.
+          </div>
+        </section>
+
+        <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">Effective cost to justify</div>
+          <div class="monthlySummaryValue mono">{formatMoney(overallEffectiveCost(), overallCurrencySymbol())}</div>
+          <div class="monthlySummarySubtext">Purchase cost minus estimated sell price.</div>
+        </section>
+      </div>
+
       <div class="costsToolbar">
         <div class="costToolbarGroup">
           <div class="muted">Choose the target cost/hour to compare against.</div>
@@ -605,6 +695,25 @@ export default function CostsView(props: {
             </For>
           </div>
         </div>
+
+        <div class="costToolbarGroup">
+          <div class="muted">Sale assumption</div>
+          <div class="costTargetGroup" role="group" aria-label="Sale assumption">
+            <For each={SALE_MODE_OPTIONS}>
+              {(option) => (
+                <button
+                  type="button"
+                  class="tabButton"
+                  classList={{ tabButtonActive: saleMode() === option.value }}
+                  onClick={() => setSaleMode(option.value)}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+
         <div class="costToolbarGroup">
           <div class="muted">Show statuses</div>
           <div class="costTargetGroup" role="group" aria-label="Visible game statuses">
@@ -622,6 +731,7 @@ export default function CostsView(props: {
             </For>
           </div>
         </div>
+
         <div class="costToolbarGroup">
           <div class="muted">Games</div>
           <div class="costTargetGroup" role="group" aria-label="Visible cost games">
@@ -644,6 +754,7 @@ export default function CostsView(props: {
           </div>
         </div>
       </div>
+
       <div class="tableWrap">
         <table class="table compactTable mobileCardTable costsTable">
           <thead>
@@ -680,21 +791,13 @@ export default function CostsView(props: {
                 </button>
               </th>
               <th class="mono">
-                <button
-                  type="button"
-                  class="sortButton"
-                  onClick={() => toggleSort('hoursRemainingToTarget')}
-                >
+                <button type="button" class="sortButton" onClick={() => toggleSort('hoursRemainingToTarget')}>
                   {remainingHeading()}
                   {sortIndicator('hoursRemainingToTarget')}
                 </button>
               </th>
               <th>
-                <button
-                  type="button"
-                  class="sortButton"
-                  onClick={() => toggleSort('progressToTarget')}
-                >
+                <button type="button" class="sortButton" onClick={() => toggleSort('progressToTarget')}>
                   {progressHeading()}
                   {sortIndicator('progressToTarget')}
                 </button>
@@ -716,77 +819,81 @@ export default function CostsView(props: {
                 <For each={sortedRows()}>
                   {(row, index) => (
                     <tr>
-                      <td class="mono" data-label="#">{index() + 1}</td>
-                      <td data-label="Game">
-                        <div class="gameTitleRow">
-                          <span>{row.name}</span>
-                          <Show when={isConfigurableGameId(row.id) ? row.id : null}>
+                        <td class="mono" data-label="#">{index() + 1}</td>
+                        <td data-label="Game">
+                          <div class="gameTitleRow">
+                            <span>{row.name}</span>
+                            <Show when={isConfigurableGameId(row.id) ? row.id : null}>
+                              {(gameId) => (
+                                <GameOptionsButton
+                                  gameId={gameId()}
+                                  gameLabel={row.name}
+                                  onOpenGameOptions={props.onOpenGameOptions}
+                                />
+                              )}
+                            </Show>
+                          </div>
+                        </td>
+                        <td data-label="Status">
+                          <Show
+                            when={isConfigurableGameId(row.id) ? row.id : null}
+                            fallback={<span class="statusBadge">{row.statusLabel}</span>}
+                          >
                             {(gameId) => (
-                              <GameOptionsButton
-                                gameId={gameId()}
-                                gameLabel={row.name}
-                                onOpenGameOptions={props.onOpenGameOptions}
-                              />
+                              <select
+                                class="statusBadge statusBadgeSelect costsStatusSelect"
+                                value={row.status}
+                                aria-label={`Status for ${row.name}`}
+                                onChange={(event) => {
+                                  const status = event.currentTarget.value
+                                  if (!isGameStatus(status)) return
+                                  props.onUpdateGamePreferences(gameId(), { status })
+                                }}
+                              >
+                                <For each={GAME_STATUS_OPTIONS}>
+                                  {(option) => <option value={option.value}>{option.label}</option>}
+                                </For>
+                              </select>
                             )}
                           </Show>
-                        </div>
-                      </td>
-                      <td data-label="Status">
-                        <Show
-                          when={isConfigurableGameId(row.id) ? row.id : null}
-                          fallback={<span class="statusBadge">{row.statusLabel}</span>}
-                        >
-                          {(gameId) => (
-                            <select
-                              class="statusBadge statusBadgeSelect"
-                              value={row.status}
-                              aria-label={`Status for ${row.name}`}
-                              onChange={(event) => {
-                                const status = event.currentTarget.value
-                                if (!isGameStatus(status)) return
-                                props.onUpdateGamePreferences(gameId(), { status })
-                              }}
-                            >
-                              <For each={GAME_STATUS_OPTIONS}>
-                                {(option) => <option value={option.value}>{option.label}</option>}
-                              </For>
-                            </select>
-                          )}
-                        </Show>
-                      </td>
-                      <td class="mono" data-label="Plays">{row.plays.toLocaleString()}</td>
-                      <td class="mono" data-label="Hours">
-                        {formatHours(row.hours)}
-                        {row.hasAssumedHours ? '*' : ''}
-                      </td>
-                      <td class="mono" data-label="Total cost">
-                        {formatMoney(row.totalCost, row.currencySymbol)}
-                      </td>
-                      <td class="mono" data-label="Cost / hour">
-                        <Show when={typeof row.costPerHour === 'number'} fallback="—">
-                          {formatMoney(row.costPerHour!, row.currencySymbol)}
-                        </Show>
-                      </td>
-                      <td class="mono" data-label={remainingHeading()}>
-                        {(() => {
-                          const remainingHours = hoursRemainingForTarget(
-                            row.totalCost,
+                        </td>
+                        <td class="mono" data-label="Plays">{row.plays.toLocaleString()}</td>
+                        <td class="mono" data-label="Hours">
+                          {formatHours(row.hours)}
+                          {row.hasAssumedHours ? '*' : ''}
+                        </td>
+                        <td class="mono" data-label="Total cost">
+                          {formatMoney(row.totalCost, row.currencySymbol)}
+                        </td>
+                        <td class="mono" data-label="Cost / hour">
+                          <Show when={typeof row.costPerHour === 'number'} fallback="—">
+                            {formatMoney(row.costPerHour!, row.currencySymbol)}
+                          </Show>
+                        </td>
+                        <td class="mono" data-label={remainingHeading()}>
+                          {(() => {
+                            const remainingHours = row.remainingHours
+                            if (remainingHours == null) return '—'
+                            return (
+                              <span
+                                title={`Estimated sell price: ${formatMoney(row.estimatedSellPrice, row.currencySymbol)}`}
+                              >
+                                {formatDurationHoursMinutes(remainingHours)}
+                                {row.hasAssumedHours && remainingHours > 0 ? '*' : ''}
+                              </span>
+                            )
+                          })()}
+                        </td>
+                        <td class="costProgressTableCell" data-label={progressHeading()}>
+                          {renderCostProgress(
+                            row.name,
+                            row.effectiveCost,
                             row.hours,
-                            targetCostPerHour(),
-                          )
-                          if (remainingHours == null) return '—'
-                          return (
-                            <>
-                              {formatDurationHoursMinutes(remainingHours)}
-                              {row.hasAssumedHours && remainingHours > 0 ? '*' : ''}
-                            </>
-                          )
-                        })()}
-                      </td>
-                      <td class="costProgressTableCell" data-label={progressHeading()}>
-                        {renderCostProgress(row.name, row.totalCost, row.hours, row.currencySymbol)}
-                      </td>
-                    </tr>
+                            row.currencySymbol,
+                            `Estimated sell price: ${formatMoney(row.estimatedSellPrice, row.currencySymbol)}`,
+                          )}
+                        </td>
+                      </tr>
                   )}
                 </For>
                 <tr>
@@ -809,19 +916,22 @@ export default function CostsView(props: {
                   <td class="mono" data-label={remainingHeading()}>
                     <Show when={overallProjection()} keyed fallback="—">
                       {(projection) => (
-                        <>
+                        <span
+                          title={`Estimated sell price: ${formatMoney(overallResaleValue(), overallCurrencySymbol())}`}
+                        >
                           {formatDurationHoursMinutes(projection.remainingHours)}
                           {totals().hasAssumedHours && projection.remainingHours > 0 ? '*' : ''}
-                        </>
+                        </span>
                       )}
                     </Show>
                   </td>
                   <td class="costProgressTableCell" data-label={progressHeading()}>
                     {renderCostProgress(
                       'Overall',
-                      totals().totalCost,
+                      overallEffectiveCost(),
                       totals().hours,
                       overallCurrencySymbol(),
+                      `Estimated sell price: ${formatMoney(overallResaleValue(), overallCurrencySymbol())}`,
                     )}
                   </td>
                 </tr>
@@ -830,6 +940,7 @@ export default function CostsView(props: {
           </tbody>
         </table>
       </div>
+
       <Show when={hasAnyAssumedHours()}>
         <div class="muted">
           <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has

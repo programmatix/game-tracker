@@ -603,6 +603,11 @@
   padding-right: 24px;
 }
 
+.costsStatusSelect {
+  width: 7.5ch;
+  max-width: 7.5ch;
+}
+
 .statsTitle {
   margin: 0;
   font-size: 13px;
@@ -973,6 +978,10 @@
 
 .costsSummaryGrid {
   margin-bottom: 12px;
+}
+
+.costsSummaryGridSecondary {
+  margin-top: 4px;
 }
 
 .costsSummaryCardChart {
