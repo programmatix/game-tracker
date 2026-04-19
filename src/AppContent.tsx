@@ -41,6 +41,7 @@ import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
 import NanolithView from './games/nanolith/NanolithView'
 import AchievementsView from './AchievementsView'
 import CostsView from './CostsView'
+import TimeView from './TimeView'
 import GameOptionsView from './GameOptionsView'
 import OverallOptionsView from './OverallOptionsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
@@ -382,6 +383,16 @@ export default function AppContent(props: AppContentProps) {
 
       <Show when={props.mainTab === 'costs'}>
         <CostsView
+          plays={props.plays}
+          assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+          onOpenGameOptions={props.onOpenGameOptions}
+          onUpdateGamePreferences={props.onUpdateGamePreferences}
+          costTimeEstimateStatus={props.costTimeEstimateStatus}
+        />
+      </Show>
+
+      <Show when={props.mainTab === 'time'}>
+        <TimeView
           plays={props.plays}
           assumedMinutesByObjectId={props.assumedMinutesByObjectId}
           onOpenGameOptions={props.onOpenGameOptions}

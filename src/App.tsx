@@ -584,7 +584,7 @@ function App() {
   })
 
   createEffect(() => {
-    if (mainTab() !== 'costs' && mainTab() !== 'monthlySummary') return
+    if (mainTab() !== 'costs' && mainTab() !== 'time' && mainTab() !== 'monthlySummary') return
     enqueueThingSummaries(
       allPlays()
         .plays.filter((play) => !hasRecordedPlayLength(play.attributes))
