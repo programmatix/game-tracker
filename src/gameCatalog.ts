@@ -92,6 +92,13 @@ export const GAME_DEFINITIONS = [
     supportsAchievements: true,
   },
   {
+    id: 'nanolith',
+    label: 'Nanolith',
+    supportsMonthlyChecklist: true,
+    supportsCostsTable: true,
+    supportsAchievements: true,
+  },
+  {
     id: 'mistfall',
     label: 'Mistfall',
     supportsMonthlyChecklist: false,

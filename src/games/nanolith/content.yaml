@@ -1,0 +1,38 @@
+# Nanolith
+#
+# Observed BG Stats player color tags so far:
+#   S1
+#
+# Suggested tags:
+#   S1
+#   H: Ada／S: 1
+#   Hero: Vaa-Lith／Encounter: 1
+#   ContPrev
+#   ContNext
+#
+# The encounter list is currently modeled as Encounter 1-40.
+# This is an inference from the published 80-page encounter/campaign book.
+
+heroes:
+  - display: Ada
+    id: Ada
+    box: Core
+    aliases: [A]
+  - display: Ashitaka
+    id: Ashitaka
+    box: Core
+    aliases: [Ash]
+  - display: Cora
+    id: Cora
+    box: Core
+  - display: Vaa-Lith
+    id: VaaLith
+    box: Core
+    aliases: [Vaa, Vaalith]
+
+encounterCount: 40
+
+costs:
+  currency: "£"
+  boxes:
+    Core: 99.99

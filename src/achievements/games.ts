@@ -24,6 +24,7 @@ import { computeTaintedGrailAchievements } from '../games/tainted-grail/achievem
 import { computeIsofarianGuardAchievements } from '../games/isofarian-guard/achievements'
 import { computeArkhamHorrorLcgAchievements } from '../games/arkham-horror-lcg/achievements'
 import { computeKingdomsForlornAchievements } from '../games/kingdoms-forlorn/achievements'
+import { computeNanolithAchievements } from '../games/nanolith/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 import { shouldCalculateAchievementsForGame } from '../gamePreferences'
 
@@ -52,6 +53,7 @@ export type GameId =
   | 'isofarianGuard'
   | 'arkhamHorrorLcg'
   | 'kingdomsForlorn'
+  | 'nanolith'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -97,6 +99,7 @@ export function computeGameAchievements(
   if (gameId === 'isofarianGuard') return computeIsofarianGuardAchievements(plays, username)
   if (gameId === 'arkhamHorrorLcg') return computeArkhamHorrorLcgAchievements(plays, username)
   if (gameId === 'kingdomsForlorn') return computeKingdomsForlornAchievements(plays, username)
+  if (gameId === 'nanolith') return computeNanolithAchievements(plays, username)
   return []
 }
 
@@ -165,6 +168,7 @@ export function computeAllGameAchievementSummaries(
   maybePush('kingdomsForlorn', 'Kingdoms Forlorn', () =>
     computeKingdomsForlornAchievements(plays, username),
   )
+  maybePush('nanolith', 'Nanolith', () => computeNanolithAchievements(plays, username))
 
   return summaries
 }

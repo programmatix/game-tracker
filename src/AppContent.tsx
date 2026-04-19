@@ -38,6 +38,7 @@ import TaintedGrailView from './games/tainted-grail/TaintedGrailView'
 import IsofarianGuardView from './games/isofarian-guard/IsofarianGuardView'
 import ArkhamHorrorLcgView from './games/arkham-horror-lcg/ArkhamHorrorLcgView'
 import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
+import NanolithView from './games/nanolith/NanolithView'
 import AchievementsView from './AchievementsView'
 import CostsView from './CostsView'
 import GameOptionsView from './GameOptionsView'
@@ -164,6 +165,8 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
       return <ArkhamHorrorLcgView {...props} />
     case 'kingdomsForlorn':
       return <KingdomsForlornView {...props} />
+    case 'nanolith':
+      return <NanolithView {...props} />
     case 'elderScrolls':
       return <ElderScrollsView {...props} />
     case 'undauntedNormandy':

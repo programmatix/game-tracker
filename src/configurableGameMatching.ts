@@ -90,6 +90,10 @@ const MATCH_OVERRIDES: Readonly<Record<string, ConfigurableGameMatchOverrides>> 
   mandalorianAdventures: {
     aliases: ['Mandalorian Adventures', 'The Mandalorian: Adventures', 'The Mandalorian Adventures'],
   },
+  nanolith: {
+    aliases: ['Nanolith'],
+    objectIds: ['338164'],
+  },
   mistfall: {
     aliases: ['Mistfall', 'Mistfall: Heart of the Mists', 'Mistfall Heart of the Mists'],
   },
