@@ -25,7 +25,18 @@ type TimeRow = {
   hasAssumedHours: boolean
 }
 
-type SortKey = 'name' | 'status' | 'plays' | 'hours'
+type DisplayTimeRow = TimeRow & {
+  remainingHours: number
+  progress: number
+}
+
+type SortKey =
+  | 'name'
+  | 'status'
+  | 'plays'
+  | 'hours'
+  | 'hoursRemainingToTarget'
+  | 'progressToTarget'
 type SortDirection = 'asc' | 'desc'
 type HoursFilter =
   | 'all'
@@ -42,6 +53,7 @@ type HoursFilter =
 const TIME_VISIBLE_STATUSES_STORAGE_KEY = 'time.visibleStatuses'
 const TIME_CHECKLIST_ONLY_STORAGE_KEY = 'time.checklistOnly'
 const TIME_HOURS_FILTER_STORAGE_KEY = 'time.hoursFilter'
+const TIME_TARGET_STORAGE_KEY = 'time.targetHoursPerGame'
 
 const HOURS_FILTER_OPTIONS: ReadonlyArray<{ value: HoursFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -55,6 +67,7 @@ const HOURS_FILTER_OPTIONS: ReadonlyArray<{ value: HoursFilter; label: string }>
   { value: 'gte10', label: '>= 10h' },
   { value: 'gte20', label: '>= 20h' },
 ]
+const TIME_TARGET_OPTIONS = [5, 10, 25, 50] as const
 
 function normalizeGameName(value: string): string {
   return value
@@ -117,6 +130,21 @@ function readStoredHoursFilter(): HoursFilter {
   }
 }
 
+function isTimeTarget(value: number): value is (typeof TIME_TARGET_OPTIONS)[number] {
+  return TIME_TARGET_OPTIONS.includes(value as (typeof TIME_TARGET_OPTIONS)[number])
+}
+
+function readStoredTargetHours(): (typeof TIME_TARGET_OPTIONS)[number] {
+  if (typeof window === 'undefined') return 10
+
+  try {
+    const parsed = Number(window.localStorage.getItem(TIME_TARGET_STORAGE_KEY) || '')
+    return isTimeTarget(parsed) ? parsed : 10
+  } catch {
+    return 10
+  }
+}
+
 function formatDurationHoursMinutes(hours: number): string {
   if (!Number.isFinite(hours) || hours <= 0) return '0m'
 
@@ -130,6 +158,34 @@ function formatDurationHoursMinutes(hours: number): string {
 
 function formatHours(value: number): string {
   return value.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}
+
+function formatRoundedDuration(hours: number): string {
+  if (!Number.isFinite(hours) || hours <= 0) return '0h'
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`
+  return `${Math.round(hours)}h`
+}
+
+function formatPercent(value: number): string {
+  return `${(value * 100).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}%`
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  return Math.min(1, Math.max(0, value))
+}
+
+function hoursRemainingForTarget(hours: number, targetHours: number): number {
+  if (!Number.isFinite(targetHours) || targetHours <= 0) return 0
+  return Math.max(0, targetHours - Math.max(0, hours))
+}
+
+function progressToHoursTarget(hours: number, targetHours: number): number {
+  if (!Number.isFinite(targetHours) || targetHours <= 0) return 1
+  return clamp01(Math.max(0, hours) / targetHours)
 }
 
 function matchesHoursFilter(hours: number, filter: HoursFilter): boolean {
@@ -164,9 +220,19 @@ export default function TimeView(props: {
 }) {
   const [sortKey, setSortKey] = createSignal<SortKey>('hours')
   const [sortDirection, setSortDirection] = createSignal<SortDirection>('desc')
+  const [targetHoursPerGame, setTargetHoursPerGame] =
+    createSignal<(typeof TIME_TARGET_OPTIONS)[number]>(readStoredTargetHours())
   const [visibleStatuses, setVisibleStatuses] = createSignal<GameStatus[]>(readStoredVisibleStatuses())
   const [checklistOnly, setChecklistOnly] = createSignal<boolean>(readStoredChecklistOnly())
   const [hoursFilter, setHoursFilter] = createSignal<HoursFilter>(readStoredHoursFilter())
+
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(TIME_TARGET_STORAGE_KEY, String(targetHoursPerGame()))
+    } catch {
+      return
+    }
+  })
 
   createEffect(() => {
     try {
@@ -261,11 +327,17 @@ export default function TimeView(props: {
     }),
   )
 
-  const sortedRows = createMemo<TimeRow[]>(() => {
+  const sortedRows = createMemo<DisplayTimeRow[]>(() => {
     const key = sortKey()
     const direction = sortDirection()
+    const target = targetHoursPerGame()
 
     return filteredRows()
+      .map((row) => ({
+        ...row,
+        remainingHours: hoursRemainingForTarget(row.hours, target),
+        progress: progressToHoursTarget(row.hours, target),
+      }))
       .slice()
       .sort((a, b) => {
         if (key === 'name') {
@@ -277,7 +349,11 @@ export default function TimeView(props: {
           return direction === 'asc' ? compared : -compared
         }
         if (key === 'plays') return direction === 'asc' ? a.plays - b.plays : b.plays - a.plays
-        return direction === 'asc' ? a.hours - b.hours : b.hours - a.hours
+        if (key === 'hours') return direction === 'asc' ? a.hours - b.hours : b.hours - a.hours
+        if (key === 'hoursRemainingToTarget') {
+          return direction === 'asc' ? a.remainingHours - b.remainingHours : b.remainingHours - a.remainingHours
+        }
+        return direction === 'asc' ? a.progress - b.progress : b.progress - a.progress
       })
   })
 
@@ -305,6 +381,20 @@ export default function TimeView(props: {
     return totals().hours / count
   })
   const hasAnyAssumedHours = createMemo(() => filteredRows().some((row) => row.hasAssumedHours))
+  const overallTargetHours = createMemo(() => visibleGameCount() * targetHoursPerGame())
+  const overallRemainingHours = createMemo(() =>
+    hoursRemainingForTarget(totals().hours, overallTargetHours()),
+  )
+  const overallProgressValue = createMemo(() =>
+    visibleGameCount() <= 0 ? 0 : progressToHoursTarget(totals().hours, overallTargetHours()),
+  )
+  const overallProgressPercent = createMemo(() => formatPercent(overallProgressValue()))
+  const overallProgressChartStyle = createMemo(() => ({ '--progress': `${overallProgressValue() * 100}%` }))
+  const overallProgressSplitChartStyle = createMemo(() => ({
+    '--cost-donut-complete': `${overallProgressValue() * 100}%`,
+  }))
+  const progressHeading = createMemo(() => `Progress to ${targetHoursPerGame()}h/game`)
+  const remainingHeading = createMemo(() => `Hours left to ${targetHoursPerGame()}h/game`)
 
   const toggleSort = (nextKey: SortKey) => {
     if (sortKey() === nextKey) {
@@ -312,7 +402,11 @@ export default function TimeView(props: {
       return
     }
     setSortKey(nextKey)
-    setSortDirection(nextKey === 'name' || nextKey === 'status' ? 'asc' : 'desc')
+    setSortDirection(
+      nextKey === 'name' || nextKey === 'status' || nextKey === 'hoursRemainingToTarget'
+        ? 'asc'
+        : 'desc',
+    )
   }
 
   const sortIndicator = (key: SortKey): string => {
@@ -351,6 +445,34 @@ export default function TimeView(props: {
     const status = props.costTimeEstimateStatus
     return status.total > 0 && (status.active || status.failed > 0 || status.checkedWithoutEstimate > 0)
   })
+  const renderTimeProgress = (
+    name: string,
+    hours: number,
+    target: number,
+    hasAssumedHours: boolean,
+  ) => {
+    const progress = progressToHoursTarget(hours, target)
+    const label = `${name}: ${formatHours(hours)}/${formatHours(target)} target hours`
+
+    return (
+      <div class="costProgressCell">
+        <ProgressBar
+          value={hours}
+          target={target}
+          widthPx={156}
+          label={label}
+          showLabel={false}
+        />
+        <div class="costProgressMeta">
+          <span class="mono">{formatPercent(progress)}</span>
+          <span class="mono muted">
+            {formatHours(hours)} / {formatHours(target)}h
+            {hasAssumedHours && hours < target ? '*' : ''}
+          </span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div class="statsBlock">
@@ -377,10 +499,23 @@ export default function TimeView(props: {
       </Show>
 
       <div class="monthlySummaryGrid costsSummaryGrid">
-        <section class="monthlySummaryCard">
-          <div class="monthlySummaryLabel">Visible games</div>
-          <div class="monthlySummaryValue mono">{visibleGameCount().toLocaleString()}</div>
-          <div class="monthlySummarySubtext">Games matching the current filters.</div>
+        <section class="monthlySummaryCard monthlySummaryCardProgress costsSummaryCardChart">
+          <div class="monthlySummaryLabel">{progressHeading()}</div>
+          <div
+            class="monthlyProgressRing costSummaryRing"
+            style={overallProgressChartStyle()}
+            aria-label={`Overall progress: ${overallProgressPercent()}`}
+          >
+            <div class="monthlyProgressInner">
+              <span class="monthlyProgressValue mono">{overallProgressPercent()}</span>
+            </div>
+          </div>
+          <div class="monthlySummarySubtext">
+            <span class="mono">{formatRoundedDuration(totals().hours)}</span>
+            {totals().hasAssumedHours ? '*' : ''}
+            {' '}logged of{' '}
+            <span class="mono">{formatRoundedDuration(overallTargetHours())}</span>
+          </div>
         </section>
 
         <section class="monthlySummaryCard">
@@ -391,7 +526,10 @@ export default function TimeView(props: {
               {totals().hasAssumedHours ? '*' : ''}
             </Show>
           </div>
-          <div class="monthlySummarySubtext">Total filtered hours divided by visible games.</div>
+          <div class="monthlySummarySubtext">
+            Across <span class="mono">{visibleGameCount().toLocaleString()}</span> visible game
+            {visibleGameCount() === 1 ? '' : 's'} with a <span class="mono">{targetHoursPerGame()}h</span> target.
+          </div>
         </section>
 
         <section class="monthlySummaryCard">
@@ -404,9 +542,61 @@ export default function TimeView(props: {
             Across <span class="mono">{totals().plays.toLocaleString()}</span> filtered plays.
           </div>
         </section>
+
+        <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">{remainingHeading()}</div>
+          <div class="costSummarySplit">
+            <div
+              class="costDonutMini"
+              style={overallProgressSplitChartStyle()}
+              aria-label={`Logged versus remaining hours: ${overallProgressPercent()} logged`}
+            >
+              <div class="costDonutMiniInner">
+                <span class="costDonutMiniValue mono">{overallProgressPercent()}</span>
+              </div>
+            </div>
+            <div class="monthlySummaryValue mono">
+              {formatDurationHoursMinutes(overallRemainingHours())}
+              {totals().hasAssumedHours && overallRemainingHours() > 0 ? '*' : ''}
+            </div>
+          </div>
+          <div class="monthlySummarySubtext">
+            <Show when={visibleGameCount() > 0} fallback={<>No visible games match the current filters.</>}>
+              <Show when={overallRemainingHours() > 0} fallback={<>Target met for the visible games.</>}>
+                <span class="costLegend">
+                  <span class="costLegendSwatch costLegendSwatchComplete" />
+                  Logged
+                </span>
+                {' • '}
+                <span class="costLegend">
+                  <span class="costLegendSwatch costLegendSwatchRemaining" />
+                  Remaining
+                </span>
+              </Show>
+            </Show>
+          </div>
+        </section>
       </div>
 
       <div class="costsToolbar">
+        <div class="costToolbarGroup">
+          <div class="muted">Choose the target hours/game to compare against.</div>
+          <div class="costTargetGroup" role="group" aria-label="Time target per game">
+            <For each={TIME_TARGET_OPTIONS}>
+              {(target) => (
+                <button
+                  type="button"
+                  class="tabButton"
+                  classList={{ tabButtonActive: targetHoursPerGame() === target }}
+                  onClick={() => setTargetHoursPerGame(target)}
+                >
+                  {target}h
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+
         <div class="costToolbarGroup">
           <div class="muted">Show statuses</div>
           <div class="costTargetGroup" role="group" aria-label="Visible game statuses">
@@ -491,6 +681,18 @@ export default function TimeView(props: {
                   Hours{sortIndicator('hours')}
                 </button>
               </th>
+              <th class="mono">
+                <button type="button" class="sortButton" onClick={() => toggleSort('hoursRemainingToTarget')}>
+                  {remainingHeading()}
+                  {sortIndicator('hoursRemainingToTarget')}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sortButton" onClick={() => toggleSort('progressToTarget')}>
+                  {progressHeading()}
+                  {sortIndicator('progressToTarget')}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -498,7 +700,7 @@ export default function TimeView(props: {
               when={sortedRows().length > 0}
               fallback={
                 <tr>
-                  <td colSpan={5} class="muted">
+                  <td colSpan={7} class="muted">
                     No games match the selected filters.
                   </td>
                 </tr>
@@ -551,6 +753,13 @@ export default function TimeView(props: {
                         {formatHours(row.hours)}
                         {row.hasAssumedHours ? '*' : ''}
                       </td>
+                      <td class="mono" data-label={remainingHeading()}>
+                        {formatDurationHoursMinutes(row.remainingHours)}
+                        {row.hasAssumedHours && row.remainingHours > 0 ? '*' : ''}
+                      </td>
+                      <td class="costProgressTableCell" data-label={progressHeading()}>
+                        {renderTimeProgress(row.name, row.hours, targetHoursPerGame(), row.hasAssumedHours)}
+                      </td>
                     </tr>
                   )}
                 </For>
@@ -562,6 +771,13 @@ export default function TimeView(props: {
                   <td class="mono" data-label="Hours">
                     {formatHours(totals().hours)}
                     {totals().hasAssumedHours ? '*' : ''}
+                  </td>
+                  <td class="mono" data-label={remainingHeading()}>
+                    {formatDurationHoursMinutes(overallRemainingHours())}
+                    {totals().hasAssumedHours && overallRemainingHours() > 0 ? '*' : ''}
+                  </td>
+                  <td class="costProgressTableCell" data-label={progressHeading()}>
+                    {renderTimeProgress('Overall', totals().hours, overallTargetHours(), totals().hasAssumedHours)}
                   </td>
                 </tr>
               </>
