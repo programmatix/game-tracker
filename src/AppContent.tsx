@@ -47,6 +47,7 @@ import OverallOptionsView from './OverallOptionsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
 import MonthlySummaryView from './MonthlySummaryView'
 import FeedbackView from './feedback/FeedbackView'
+import GameCostMini from './GameCostMini'
 import GenericGameView from './GenericGameView'
 import PlaysView, { PlaysPager } from './PlaysView'
 import type { SpiritIslandSession } from './games/spirit-island/mindwanderer'
@@ -338,6 +339,14 @@ export default function AppContent(props: AppContentProps) {
 
       <Show when={props.mainTab === 'options'}>
         <OverallOptionsView onClearBggThingCache={props.onClearBggThingCache} />
+      </Show>
+
+      <Show when={isGameMainTab(props.mainTab)}>
+        <GameCostMini
+          gameId={props.mainTab}
+          plays={props.plays}
+          assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+        />
       </Show>
 
       <Show when={dedicatedGameView()}>

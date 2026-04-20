@@ -984,6 +984,19 @@
   margin-top: 4px;
 }
 
+.gameCostMiniGrid {
+  grid-template-columns: minmax(280px, 1.4fr) minmax(260px, 1fr);
+}
+
+.gameCostMiniProgressCard {
+  justify-items: center;
+  text-align: center;
+}
+
+.gameCostMiniControls {
+  align-content: start;
+}
+
 .costsSummaryCardChart {
   justify-items: center;
   text-align: center;
@@ -1783,6 +1796,10 @@
   }
 
   .monthlySummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gameCostMiniGrid {
     grid-template-columns: 1fr;
   }
 

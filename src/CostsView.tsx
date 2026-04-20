@@ -2,11 +2,25 @@ import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import type { BggPlay } from './bgg'
 import ProgressBar from './components/ProgressBar'
 import { costRegistry } from './costRegistry'
+import { COST_PER_HOUR_TARGET_OPTIONS } from './costTargets'
 import {
-  COST_PER_HOUR_TARGET_OPTIONS,
-  DEFAULT_COST_PER_HOUR_TARGET,
-  isCostPerHourTarget,
-} from './costTargets'
+  COSTS_SALE_MODE_STORAGE_KEY,
+  COSTS_TARGET_STORAGE_KEY,
+  SALE_MODE_OPTIONS,
+  clamp01,
+  effectiveCostForSaleMode,
+  formatDurationHoursMinutes,
+  formatMoney,
+  formatPercent,
+  formatRoundedDuration,
+  formatTargetValue,
+  hoursNeededForTarget,
+  progressToTarget,
+  readStoredSaleMode,
+  readStoredTarget,
+  resaleValueForCost,
+  type SaleMode,
+} from './costsShared'
 import { totalPlayMinutesWithAssumption } from './playDuration'
 import {
   GAME_STATUS_OPTIONS,
@@ -18,6 +32,7 @@ import {
 } from './gamePreferences'
 import { isConfigurableGameId } from './configurableGames'
 import GameOptionsButton from './components/GameOptionsButton'
+import { playQuantity } from './playsHelpers'
 
 type CostsRow = {
   id: string
@@ -38,18 +53,6 @@ type DisplayCostsRow = CostsRow & {
   remainingHours?: number
 }
 
-type SaleMode = 'none' | 'sellTwoThirds' | 'sellThreeQuarters'
-
-const SALE_MODE_OPTIONS: ReadonlyArray<{
-  value: SaleMode
-  label: string
-  resaleRatio: number
-}> = [
-  { value: 'none', label: 'No sale', resaleRatio: 0 },
-  { value: 'sellTwoThirds', label: 'Sell at 2/3', resaleRatio: 2 / 3 },
-  { value: 'sellThreeQuarters', label: 'Sell at 3/4', resaleRatio: 3 / 4 },
-]
-
 type SortKey =
   | 'name'
   | 'status'
@@ -61,10 +64,8 @@ type SortKey =
   | 'progressToTarget'
 type SortDirection = 'asc' | 'desc'
 
-const COSTS_TARGET_STORAGE_KEY = 'costs.targetCostPerHour'
 const COSTS_VISIBLE_STATUSES_STORAGE_KEY = 'costs.visibleStatuses'
 const COSTS_CHECKLIST_ONLY_STORAGE_KEY = 'costs.checklistOnly'
-const COSTS_SALE_MODE_STORAGE_KEY = 'costs.saleMode'
 
 function normalizeGameName(value: string): string {
   return value
@@ -80,12 +81,6 @@ function matchesNormalizedGameName(normalizedName: string, normalizedAlias: stri
   return normalizedName === normalizedAlias || normalizedName.startsWith(`${normalizedAlias} `)
 }
 
-function playQuantity(play: { attributes: Record<string, string> }): number {
-  const parsed = Number(play.attributes.quantity || '1')
-  if (!Number.isFinite(parsed) || parsed <= 0) return 1
-  return parsed
-}
-
 function compareOptionalNumber(
   a: number | undefined,
   b: number | undefined,
@@ -97,11 +92,6 @@ function compareOptionalNumber(
   return direction === 'asc' ? a - b : b - a
 }
 
-function hoursNeededForTarget(totalCost: number, targetCostPerHour: number): number | undefined {
-  if (targetCostPerHour <= 0) return undefined
-  return Math.max(0, totalCost) / targetCostPerHour
-}
-
 function hoursRemainingForTarget(
   totalCost: number,
   hours: number,
@@ -110,61 +100,6 @@ function hoursRemainingForTarget(
   const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour)
   if (targetHours == null) return undefined
   return Math.max(0, targetHours - Math.max(0, hours))
-}
-
-function isSaleMode(value: string): value is SaleMode {
-  return SALE_MODE_OPTIONS.some((option) => option.value === value)
-}
-
-function resaleRatioForMode(mode: SaleMode): number {
-  return SALE_MODE_OPTIONS.find((option) => option.value === mode)?.resaleRatio ?? 0
-}
-
-function resaleValueForCost(totalCost: number, saleMode: SaleMode): number {
-  return Math.max(0, totalCost) * resaleRatioForMode(saleMode)
-}
-
-function effectiveCostForSaleMode(totalCost: number, saleMode: SaleMode): number {
-  return Math.max(0, totalCost - resaleValueForCost(totalCost, saleMode))
-}
-
-function formatDurationHoursMinutes(hours: number): string {
-  if (!Number.isFinite(hours) || hours <= 0) return '0m'
-
-  const totalMinutes = Math.round(hours * 60)
-  const wholeHours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  if (wholeHours <= 0) return `${minutes}m`
-  if (minutes <= 0) return `${wholeHours}h`
-  return `${wholeHours}h${String(minutes).padStart(2, '0')}m`
-}
-
-function formatRoundedDuration(hours: number): string {
-  if (!Number.isFinite(hours) || hours <= 0) return '0h'
-  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`
-  return `${Math.round(hours)}h`
-}
-
-function clamp01(value: number): number {
-  if (!Number.isFinite(value)) return 0
-  return Math.min(1, Math.max(0, value))
-}
-
-function progressToTarget(totalCost: number, hours: number, targetCostPerHour: number): number | undefined {
-  const targetHours = hoursNeededForTarget(totalCost, targetCostPerHour)
-  if (targetHours == null) return undefined
-  if (targetHours <= 0) return 1
-  return Math.min(1, Math.max(0, hours) / targetHours)
-}
-
-function readStoredTarget(): number {
-  if (typeof window === 'undefined') return DEFAULT_COST_PER_HOUR_TARGET
-  try {
-    const parsed = Number(window.localStorage.getItem(COSTS_TARGET_STORAGE_KEY) || '')
-    return isCostPerHourTarget(parsed) ? parsed : DEFAULT_COST_PER_HOUR_TARGET
-  } catch {
-    return DEFAULT_COST_PER_HOUR_TARGET
-  }
 }
 
 function allGameStatuses(): GameStatus[] {
@@ -196,17 +131,6 @@ function readStoredChecklistOnly(): boolean {
     return window.localStorage.getItem(COSTS_CHECKLIST_ONLY_STORAGE_KEY) === 'true'
   } catch {
     return false
-  }
-}
-
-function readStoredSaleMode(): SaleMode {
-  if (typeof window === 'undefined') return 'none'
-
-  try {
-    const stored = window.localStorage.getItem(COSTS_SALE_MODE_STORAGE_KEY) || ''
-    return isSaleMode(stored) ? stored : 'none'
-  } catch {
-    return 'none'
   }
 }
 
@@ -414,23 +338,8 @@ export default function CostsView(props: {
     }
   })
 
-  const formatMoney = (value: number, currencySymbol: string): string =>
-    `${currencySymbol}${value.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`
   const formatHours = (value: number): string =>
     value.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-  const formatPercent = (value: number): string =>
-    `${(value * 100).toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}%`
-  const formatTargetValue = (value: number, currencySymbol: string): string =>
-    `${currencySymbol}${value.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}`
 
   const selectedSaleOption = createMemo(
     () => SALE_MODE_OPTIONS.find((option) => option.value === saleMode()) || SALE_MODE_OPTIONS[0],
