@@ -1,9 +1,11 @@
 import { For, createEffect, createMemo, createSignal } from 'solid-js'
 import type { BggPlay } from './bgg'
 import { findConfigurableGameIdForOptions } from './configurableGameMatching'
+import { COST_PER_HOUR_TARGET_OPTIONS } from './costTargets'
 import { costRegistry } from './costRegistry'
 import {
   COSTS_SALE_MODE_STORAGE_KEY,
+  COSTS_TARGET_STORAGE_KEY,
   SALE_MODE_OPTIONS,
   clamp01,
   effectiveCostForSaleMode,
@@ -27,12 +29,21 @@ export default function GameCostMini(props: {
   assumedMinutesByObjectId: ReadonlyMap<string, number>
 }) {
   const [saleMode, setSaleMode] = createSignal<SaleMode>(readStoredSaleMode())
-  const targetCostPerHour = createMemo(() => readStoredTarget())
+  const [targetCostPerHour, setTargetCostPerHour] = createSignal(readStoredTarget())
 
   createEffect(() => {
     if (typeof window === 'undefined') return
     try {
       window.localStorage.setItem(COSTS_SALE_MODE_STORAGE_KEY, saleMode())
+    } catch {
+      return
+    }
+  })
+
+  createEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem(COSTS_TARGET_STORAGE_KEY, String(targetCostPerHour()))
     } catch {
       return
     }
@@ -90,15 +101,11 @@ export default function GameCostMini(props: {
     }
   })
 
-  const selectedSaleOption = createMemo(
-    () => SALE_MODE_OPTIONS.find((option) => option.value === saleMode()) || SALE_MODE_OPTIONS[0],
-  )
-
   return (
     <section class="statsBlock">
       <div class="statsTitleRow">
         <h3 class="statsTitle">Cost progress</h3>
-        <div class="muted mono">{selectedSaleOption().label}</div>
+        <div class="muted mono">{formatTargetValue(targetCostPerHour(), summary()?.currencySymbol || '£')}/h</div>
       </div>
 
       <div class="monthlySummaryGrid gameCostMiniGrid">
@@ -130,6 +137,22 @@ export default function GameCostMini(props: {
         </section>
 
         <section class="monthlySummaryCard gameCostMiniControls">
+          <div class="monthlySummaryLabel">Target</div>
+          <div class="costTargetGroup" role="group" aria-label="Cost per hour target">
+            <For each={COST_PER_HOUR_TARGET_OPTIONS}>
+              {(target) => (
+                <button
+                  type="button"
+                  class="tabButton"
+                  classList={{ tabButtonActive: targetCostPerHour() === target }}
+                  onClick={() => setTargetCostPerHour(target)}
+                >
+                  {formatTargetValue(target, summary()?.currencySymbol || '£')}/h
+                </button>
+              )}
+            </For>
+          </div>
+
           <div class="monthlySummaryLabel">Sale assumption</div>
           <div class="costTargetGroup" role="group" aria-label="Sale assumption">
             <For each={SALE_MODE_OPTIONS}>

@@ -341,42 +341,63 @@ export default function AppContent(props: AppContentProps) {
         <OverallOptionsView onClearBggThingCache={props.onClearBggThingCache} />
       </Show>
 
-      <Show when={isGameMainTab(props.mainTab)}>
-        <GameCostMini
-          gameId={props.mainTab}
-          plays={props.plays}
-          assumedMinutesByObjectId={props.assumedMinutesByObjectId}
-        />
-      </Show>
-
       <Show when={dedicatedGameView()}>
-        {(view) => view()}
+        {(view) => (
+          <div class="gamePageInline">
+            <div class="gameCostMiniSlot">
+              <GameCostMini
+                gameId={props.mainTab}
+                plays={props.plays}
+                assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+              />
+            </div>
+            {view()}
+          </div>
+        )}
       </Show>
 
       <Show when={genericGameId()}>
         {(gameId) => (
-          <GenericGameView
-            gameId={gameId()}
-            plays={props.plays}
-            username={props.username}
-            onOpenPlays={props.onOpenPlays}
-          />
+          <div class="gamePageInline">
+            <div class="gameCostMiniSlot">
+              <GameCostMini
+                gameId={gameId()}
+                plays={props.plays}
+                assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+              />
+            </div>
+            <GenericGameView
+              gameId={gameId()}
+              plays={props.plays}
+              username={props.username}
+              onOpenPlays={props.onOpenPlays}
+            />
+          </div>
         )}
       </Show>
 
       <Show when={props.mainTab === 'spiritIsland'}>
-        <SpiritIslandView
-          plays={props.plays}
-          username={props.username}
-          authToken={props.authToken}
-          spiritIslandSessions={props.spiritIslandSessions}
-          spiritIslandSessionsLoading={props.spiritIslandSessionsLoading}
-          spiritIslandSessionsError={props.spiritIslandSessionsError}
-          pinnedAchievementIds={props.pinnedAchievementIds}
-          suppressAvailableAchievementTrackIds={props.suppressAvailableAchievementTrackIds}
-          onTogglePin={props.onTogglePin}
-          onOpenPlays={props.onOpenPlays}
-        />
+        <div class="gamePageInline">
+          <div class="gameCostMiniSlot">
+            <GameCostMini
+              gameId="spiritIsland"
+              plays={props.plays}
+              assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+            />
+          </div>
+          <SpiritIslandView
+            plays={props.plays}
+            username={props.username}
+            authToken={props.authToken}
+            spiritIslandSessions={props.spiritIslandSessions}
+            spiritIslandSessionsLoading={props.spiritIslandSessionsLoading}
+            spiritIslandSessionsError={props.spiritIslandSessionsError}
+            pinnedAchievementIds={props.pinnedAchievementIds}
+            suppressAvailableAchievementTrackIds={props.suppressAvailableAchievementTrackIds}
+            onTogglePin={props.onTogglePin}
+            onOpenPlays={props.onOpenPlays}
+          />
+        </div>
       </Show>
 
       <Show when={props.mainTab === 'achievements'}>

@@ -434,6 +434,31 @@
   gap: 14px;
 }
 
+.gamePageInline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gamePageInline > .finalGirl,
+.gamePageInline > .gameView {
+  display: contents;
+}
+
+.gameCostMiniSlot {
+  order: 2;
+}
+
+.finalGirl > .finalGirlMetaRow,
+.gameView > .gameMetaRow {
+  order: 1;
+}
+
+.finalGirl > :not(.finalGirlMetaRow),
+.gameView > :not(.gameMetaRow) {
+  order: 3;
+}
+
 .finalGirlMetaRow,
 .gameMetaRow {
   display: flex;
