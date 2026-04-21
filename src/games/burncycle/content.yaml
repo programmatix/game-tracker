@@ -6,9 +6,275 @@
 # Or shorthand tags:
 #   Exe／NeedChain／Chrak
 
+missions:
+  - display: Energy Deficient
+    id: SED
+    corp: Salida
+    complexity: 1
+    floors: 2
+
+  - display: Improbable
+    id: SI
+    corp: Salida
+    complexity: 3
+    floors: 1
+
+  - display: Mole Goals
+    id: SMG
+    corp: Salida
+    complexity: 3
+    floors: 1
+
+  - display: Power Play
+    id: SPP
+    corp: Salida
+    complexity: 2
+    floors: 2
+
+  - display: Overload
+    id: SO
+    corp: Salida
+    complexity: 2
+    floors: 3
+
+  - display: Extreme Takeover
+    id: SET
+    corp: Salida
+    complexity: 3
+    floors: 3
+
+  - display: Grid Locked
+    id: SGL
+    corp: Salida
+    complexity: 2
+    floors: 3
+
+  - display: Rolling Blackouts
+    id: SRB
+    corp: Salida
+    complexity: 2
+    floors: 3
+
+  - display: What the Hack?
+    id: OWTH
+    corp: Ocularity
+    complexity: 3
+    floors: 1
+
+  - display: Local 404th
+    id: OL404
+    corp: Ocularity
+    complexity: 3
+    floors: 2
+
+  - display: Dunkin' Drone-Nuts
+    id: ODDN
+    corp: Ocularity
+    complexity: 1
+    floors: 3
+
+  - display: Imbosters
+    id: OI
+    corp: Ocularity
+    complexity: 2
+    floors: 3
+
+  - display: Bot Farm
+    id: OBF
+    corp: Ocularity
+    complexity: 1
+    floors: 1
+
+  - display: Machine Learning
+    id: OML
+    corp: Ocularity
+    complexity: 3
+    floors: 3
+
+  - display: Dial Up
+    id: ODU
+    corp: Ocularity
+    complexity: 1
+    floors: 2
+
+  - display: Drone Home
+    id: ODH
+    corp: Ocularity
+    complexity: 1
+    floors: 3
+
+  - display: Module TSM-103C
+    id: AMTSM
+    corp: Adaptable
+    complexity: 1
+    floors: 1
+
+  - display: Ghost in the Dell
+    id: AGD
+    corp: Adaptable
+    complexity: 3
+    floors: 1
+
+  - display: Preconnaissance
+    id: AP
+    corp: Adaptable
+    complexity: 3
+    floors: 1
+
+  - display: Rescue Rangers
+    id: ARR
+    corp: Adaptable
+    complexity: 2
+    floors: 1
+
+  - display: Too Many Threats
+    id: BTMT
+    corp: Biodefend
+    complexity: 1
+    floors: 2
+
+  - display: Non-Fungible Broke Gun
+    id: BNFBG
+    corp: Biodefend
+    complexity: 2
+    floors: 3
+
+  - display: The 'Ex' In Exosuit
+    id: BEX
+    corp: Biodefend
+    complexity: 1
+    floors: 3
+
+  - display: Small Talk
+    id: BST
+    corp: Biodefend
+    complexity: 3
+    floors: 3
+
+  - display: Biomedefend
+    id: BB
+    corp: Biodefend
+    complexity: 2
+    floors: 3
+
+  - display: Arms Race
+    id: BAR
+    corp: Biodefend
+    complexity: 2
+    floors: 2
+
+  - display: Roof Riders
+    id: BRR
+    corp: Biodefend
+    complexity: 2
+    floors: 1
+
+  - display: Guardian Angle
+    id: BGA
+    corp: Biodefend
+    complexity: 1
+    floors: 1
+
+  - display: Captain Crunch
+    id: ECC
+    corp: Ebbwall
+    complexity: 2
+    floors: 3
+
+  - display: Panic! Endo Soro
+    id: EPES
+    corp: Ebbwall
+    complexity: 2
+    floors: 1
+
+  - display: Doppelclanger 
+    id: ED
+    corp: Ebbwall
+    complexity: 2
+    floors: 1
+
+  - display: Itchcraft
+    id: EI
+    corp: Ebbwall
+    complexity: 1
+    floors: 1
+
+  - display: Teacher's Pest
+    id: ETP
+    corp: Ebbwall
+    complexity: 2
+    floors: 2
+
+  - display: Persona A
+    id: EPA
+    corp: Ebbwall
+    complexity: 3
+    floors: 2
+
+  - display: Bruckheimer
+    id: EB
+    corp: Ebbwall
+    complexity: 2
+    floors: 2
+
+  - display: No CEOs, No Masters
+    id: ENCNM
+    corp: Ebbwall
+    complexity: 3
+    floors: 3
+
+  - display: Terminal Viscosity
+    id: NCTV
+    corp: Needchain
+    complexity: 1
+    floors: 1
+
+  - display: Megamarket Sweep
+    id: NCMS
+    corp: Needchain
+    complexity: 1
+    floors: 3
+
+  - display: Ruxpin Rampage
+    id: NCRR
+    corp: Needchain
+    complexity: 1
+    floors: 2
+
+  - display: Rush Shipping
+    id: NCRS
+    corp: Needchain
+    complexity: 2
+    floors: 3
+
+  - display: Pillar of Panic
+    id: NCPP
+    corp: Needchain
+    complexity: 2
+    floors: 3
+
+  - display: Toupee Day
+    id: NCTD
+    corp: Needchain
+    complexity: 2
+    floors: 3
+
+  - display: Employee of the Millenium
+    id: NCEM
+    corp: Needchain
+    complexity: 2
+    floors: 2
+
+  - display: High Frame Rate
+    id: NCHRF
+    corp: Needchain
+    complexity: 3
+    floors: 1
+
 bots:
   - display: Access
     id: Access
+    aliases: [Acc]
     group: Core
   - display: Bit
     id: Bit
@@ -19,20 +285,22 @@ bots:
     group: Core
   - display: Casing
     id: Casing
+    aliases: [Cas]
     group: Core
   - display: Crash
     id: Crash
+    aliases: [Cra]
     group: Core
   - display: Exe
     id: Exe
-    aliases: [EXE]
     group: Core
   - display: Interface
     id: Interface
-    aliases: [IF]
+    aliases: [Int]
     group: Core
   - display: Memory
     id: Memory
+    aliases: [Mem]
     group: Core
   - display: Processor
     id: Processor
@@ -40,23 +308,23 @@ bots:
     group: Core
   - display: Transmitter
     id: Transmitter
-    aliases: [Tx]
+    aliases: [Tra]
     group: Core
 
-  - display: Gyro
-    id: Gyro
-    group: The Specialists
-  - display: Subroutine
-    id: Subroutine
-    aliases: [Sub]
-    group: The Specialists
-  - display: Servo
-    id: Servo
-    group: The Specialists
-  - display: Firewall
-    id: Firewall
-    aliases: [FW]
-    group: The Specialists
+  # - display: Gyro
+  #   id: Gyro
+  #   group: The Specialists
+  # - display: Subroutine
+  #   id: Subroutine
+  #   aliases: [Sub]
+  #   group: The Specialists
+  # - display: Servo
+  #   id: Servo
+  #   group: The Specialists
+  # - display: Firewall
+  #   id: Firewall
+  #   aliases: [FW]
+  #   group: The Specialists
 
   - display: Packet
     id: Packet
@@ -109,8 +377,8 @@ captains:
     id: Crucible
     aliases: [Cr, CCr]
     group: Core
-  - display: Grimms
-    id: Grimms
+  - display: Grimmis
+    id: Grimmis
     group: Core
   - display: Leer
     id: Leer
