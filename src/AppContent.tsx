@@ -72,6 +72,7 @@ type AppContentProps = {
   mainTabOptions: ReadonlyArray<MainTabOption>
   playsView: PlaysViewMode
   selectedOptionsGameId: string | null
+  selectedMonthKey: string | null
   username: string
   authToken: string
   plays: BggPlay[]
@@ -111,6 +112,7 @@ type AppContentProps = {
   onSwitchPlaysView: (nextView: Extract<PlaysViewMode, 'plays' | 'byGame'>) => void
   onSwitchMainTab: (nextTab: MainTab) => void
   onOpenGame: (gameKey: string) => void
+  onOpenMonthlyChecklist: (monthKey: string) => void
   onOpenPlayGame: (play: BggPlay) => void
   playsByGame: PlaysByGameRow[]
   thumbnailsByObjectId: ReadonlyMap<string, string>
@@ -383,6 +385,14 @@ export default function AppContent(props: AppContentProps) {
         <MonthlyChecklistView
           plays={props.plays}
           authToken={props.authToken}
+          selectedMonthKey={props.selectedMonthKey}
+          onOpenGame={(gameId) => {
+            if (isGameTab(gameId)) {
+              props.onSwitchMainTab(gameId)
+              return
+            }
+            props.onOpenGameOptions(gameId)
+          }}
           onOpenGameOptions={props.onOpenGameOptions}
         />
       </Show>
@@ -391,6 +401,7 @@ export default function AppContent(props: AppContentProps) {
         <MonthlySummaryView
           plays={props.plays}
           assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+          onOpenMonth={props.onOpenMonthlyChecklist}
         />
       </Show>
 

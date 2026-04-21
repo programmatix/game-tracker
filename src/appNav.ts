@@ -27,6 +27,7 @@ export type AppNavState = {
   playsView: PlaysView
   selectedGameKey: string | null
   selectedOptionsGameId: string | null
+  selectedMonthKey: string | null
 }
 
 export type MainTabGroup = 'games' | 'other'
@@ -100,6 +101,12 @@ export function hashForNavState(nav: AppNavState): string {
       : '#game-options'
   }
 
+  if (nav.mainTab === 'monthlyChecklist') {
+    return nav.selectedMonthKey
+      ? `#monthlyChecklist/${encodeURIComponent(nav.selectedMonthKey)}`
+      : '#monthlyChecklist'
+  }
+
   if (nav.mainTab !== 'plays') return `#${nav.mainTab}`
 
   if (nav.playsView === 'byGame') return '#plays/byGame'
@@ -127,6 +134,7 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
           playsView: 'byGame',
           selectedGameKey: null,
           selectedOptionsGameId: null,
+          selectedMonthKey: null,
         }
       let decodedKey = ''
       try {
@@ -137,6 +145,7 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
           playsView: 'byGame',
           selectedGameKey: null,
           selectedOptionsGameId: null,
+          selectedMonthKey: null,
         }
       }
       return {
@@ -144,6 +153,7 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
         playsView: 'gameDetail',
         selectedGameKey: decodedKey,
         selectedOptionsGameId: null,
+        selectedMonthKey: null,
       }
     }
 
@@ -153,10 +163,17 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
         playsView: 'plays',
         selectedGameKey: null,
         selectedOptionsGameId: null,
+        selectedMonthKey: null,
       }
     }
 
-    return { mainTab: 'plays', playsView: viewRaw, selectedGameKey: null, selectedOptionsGameId: null }
+    return {
+      mainTab: 'plays',
+      playsView: viewRaw,
+      selectedGameKey: null,
+      selectedOptionsGameId: null,
+      selectedMonthKey: null,
+    }
   }
 
   if (head === 'game-options') {
@@ -166,6 +183,18 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
       selectedOptionsGameId,
       selectedGameKey: null,
       playsView: 'plays',
+      selectedMonthKey: null,
+    }
+  }
+
+  if (head === 'monthlyChecklist') {
+    const selectedMonthKey = /^\d{4}-\d{2}$/.test(rest[0] || '') ? (rest[0] as string) : null
+    return {
+      mainTab: 'monthlyChecklist',
+      playsView: 'plays',
+      selectedGameKey: null,
+      selectedOptionsGameId: null,
+      selectedMonthKey,
     }
   }
 

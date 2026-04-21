@@ -66,6 +66,7 @@ import {
   type PlaysCacheV1,
   writePlaysCache,
 } from './playsHelpers'
+import { isGameTab } from './gameCatalog'
 import './App.css'
 
 const USERNAME = 'stony82'
@@ -79,6 +80,7 @@ type PlaysDrilldownReturn = {
   playsView: PlaysView
   selectedGameKey: string | null
   selectedOptionsGameId: string | null
+  selectedMonthKey: string | null
 }
 
 type AppHistoryState =
@@ -97,6 +99,8 @@ function App() {
       : null
   const initialSelectedOptionsGameId: string | null =
     initialMainTab === 'gameOptions' ? (parsedHash?.selectedOptionsGameId ?? null) : null
+  const initialSelectedMonthKey: string | null =
+    initialMainTab === 'monthlyChecklist' ? (parsedHash?.selectedMonthKey ?? null) : null
 
   const [page, setPage] = createSignal(1)
   const [pageDraft, setPageDraft] = createSignal('1')
@@ -106,6 +110,7 @@ function App() {
   const [selectedOptionsGameId, setSelectedOptionsGameId] = createSignal<string | null>(
     initialSelectedOptionsGameId,
   )
+  const [selectedMonthKey, setSelectedMonthKey] = createSignal<string | null>(initialSelectedMonthKey)
   const [playsDrilldown, setPlaysDrilldown] = createSignal<PlaysDrilldownRequest | null>(null)
   const [playsDrilldownReturn, setPlaysDrilldownReturn] =
     createSignal<PlaysDrilldownReturn | null>(null)
@@ -608,6 +613,7 @@ function App() {
       playsView: playsView(),
       selectedGameKey: selectedGameKey(),
       selectedOptionsGameId: selectedOptionsGameId(),
+      selectedMonthKey: selectedMonthKey(),
     }
   }
 
@@ -616,6 +622,7 @@ function App() {
     setPlaysView(next.playsView)
     setSelectedGameKey(next.selectedGameKey)
     setSelectedOptionsGameId(next.selectedOptionsGameId)
+    setSelectedMonthKey(next.selectedMonthKey)
     resetPage()
   }
 
@@ -641,6 +648,7 @@ function App() {
       playsView: nextView,
       selectedGameKey: null,
       selectedOptionsGameId: selectedOptionsGameId(),
+      selectedMonthKey: selectedMonthKey(),
     }
     pushNavState(next)
     setPlaysView(nextView)
@@ -650,11 +658,28 @@ function App() {
   }
 
   function openGameDetail(gameKey: string) {
+    if (isGameTab(gameKey)) {
+      const next: AppNavState = {
+        mainTab: gameKey,
+        playsView: playsView(),
+        selectedGameKey: null,
+        selectedOptionsGameId: selectedOptionsGameId(),
+        selectedMonthKey: selectedMonthKey(),
+      }
+      pushNavState(next)
+      setMainTab(gameKey)
+      setSelectedGameKey(null)
+      setPlaysDrilldown(null)
+      resetPage()
+      return
+    }
+
     const next: AppNavState = {
       mainTab: 'plays',
       playsView: 'gameDetail',
       selectedGameKey: gameKey,
       selectedOptionsGameId: selectedOptionsGameId(),
+      selectedMonthKey: selectedMonthKey(),
     }
     pushNavState(next)
     setSelectedGameKey(gameKey)
@@ -688,6 +713,20 @@ function App() {
     if (mainTab() !== 'gameOptions') {
       setMainTab('gameOptions')
     }
+  }
+
+  function openMonthlyChecklist(monthKey: string) {
+    const next: AppNavState = {
+      ...currentNavState(),
+      mainTab: 'monthlyChecklist',
+      selectedMonthKey: monthKey,
+    }
+    pushNavState(next)
+    batch(() => {
+      setSelectedMonthKey(monthKey)
+      setMainTab('monthlyChecklist')
+      resetPage()
+    })
   }
 
   function updateGamePreferences(gameId: string, patch: Partial<GamePreferences>) {
@@ -912,6 +951,7 @@ function App() {
             mainTabOptions={visibleMainTabOptions()}
             playsView={playsView()}
             selectedOptionsGameId={selectedOptionsGameId()}
+            selectedMonthKey={selectedMonthKey()}
             username={USERNAME}
             authToken={bggAuthToken()}
             plays={allPlays().plays}
@@ -946,6 +986,7 @@ function App() {
                   playsView: 'byGame',
                   selectedGameKey: null,
                   selectedOptionsGameId: selectedOptionsGameId(),
+                  selectedMonthKey: selectedMonthKey(),
                 }
                 pushNavState(next)
                 setPlaysView('byGame')
@@ -956,6 +997,7 @@ function App() {
             onSwitchPlaysView={switchPlaysView}
             onSwitchMainTab={switchMainTab}
             onOpenGame={openGameDetail}
+            onOpenMonthlyChecklist={openMonthlyChecklist}
             onOpenPlayGame={(play) => openGameDetail(gameKeyFromPlay(play))}
             playsByGame={playsByGame()}
             thumbnailsByObjectId={thumbnailsByObjectId()}

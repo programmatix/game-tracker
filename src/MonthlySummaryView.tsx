@@ -88,7 +88,14 @@ function formatMinutes(minutes: number): string {
 export default function MonthlySummaryView(props: {
   plays: BggPlay[]
   assumedMinutesByObjectId: ReadonlyMap<string, number>
+  onOpenMonth: (monthKey: string) => void
 }) {
+  const onMonthKeyDown = (event: KeyboardEvent, monthKey: string) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    props.onOpenMonth(monthKey)
+  }
+
   const rowsByMonthKey = createMemo(() => {
     const rows = new Map<string, MonthlySummaryRow>()
 
@@ -291,10 +298,24 @@ export default function MonthlySummaryView(props: {
                       const monthLabel = formatShortMonthKey(row.monthKey)
 
                       return (
-                        <g>
+                        <g
+                          role="button"
+                          tabindex="0"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => props.onOpenMonth(row.monthKey)}
+                          onKeyDown={(event) => onMonthKeyDown(event, row.monthKey)}
+                        >
                           <title>
                             {`${row.monthLabel}: ${formatHours(row.minutes)}h across ${row.plays.toLocaleString()} play${row.plays === 1 ? '' : 's'}`}
                           </title>
+                          <rect
+                            x={x - 8}
+                            y={marginTop}
+                            width={barWidth + 16}
+                            height={plotHeight + marginBottom}
+                            rx="10"
+                            fill="transparent"
+                          />
                           <rect
                             x={x}
                             y={y}
@@ -369,7 +390,11 @@ export default function MonthlySummaryView(props: {
               <For each={rows()}>
                 {(row) => (
                   <tr>
-                    <td data-label="Month">{row.monthLabel}</td>
+                    <td data-label="Month">
+                      <button class="linkButton" type="button" onClick={() => props.onOpenMonth(row.monthKey)}>
+                        {row.monthLabel}
+                      </button>
+                    </td>
                     <td class="mono" data-label="Hours played" title={formatMinutes(row.minutes)}>
                       {formatHours(row.minutes)}
                       <Show when={row.hasAssumedHours}>

@@ -6,6 +6,7 @@ import {
   normalizeConfigurableGameMatchName,
 } from './configurableGameMatching'
 import { shouldShowGameInMonthlyChecklist } from './gamePreferences'
+import GameLink from './components/GameLink'
 import GameOptionsButton from './components/GameOptionsButton'
 import { isArkhamHorrorLcgPlay } from './games/arkham-horror-lcg/arkhamHorrorLcgEntries'
 import { thingAssumedPlayTimeMinutes } from './playDuration'
@@ -271,7 +272,9 @@ function buildMonthDots(
 export default function MonthlyChecklistView(props: {
   plays: BggPlay[]
   authToken?: string
+  onOpenGame: (gameId: string) => void
   onOpenGameOptions: (gameId: string) => void
+  selectedMonthKey?: string | null
 }) {
   const [onlyUnplayed, setOnlyUnplayed] = createSignal(false)
   const activeChecklist = createMemo(() =>
@@ -301,6 +304,15 @@ export default function MonthlyChecklistView(props: {
     }
   })
   const [selectedMonthIndex, setSelectedMonthIndex] = createSignal(nowMonthIndex())
+
+  createEffect(() => {
+    const monthKey = props.selectedMonthKey
+    if (!monthKey) return
+    const nextIndex = monthIndexFromKey(monthKey)
+    if (nextIndex !== null && nextIndex !== selectedMonthIndex()) {
+      setSelectedMonthIndex(nextIndex)
+    }
+  })
 
   createEffect(() => {
     const bounds = monthBounds()
@@ -731,7 +743,19 @@ export default function MonthlyChecklistView(props: {
                   <tr classList={{ monthlyChecklistRowPlayed: row.played }}>
                     <td data-label="Game">
                       <div class="gameTitleRow">
-                        <span classList={{ monthlyChecklistGamePlayed: row.played }}>{row.label}</span>
+                        <Show
+                          when={row.optionsGameId}
+                          fallback={<span classList={{ monthlyChecklistGamePlayed: row.played }}>{row.label}</span>}
+                        >
+                          {(gameId) => (
+                            <GameLink
+                              label={row.label}
+                              gameKey={gameId()}
+                              onOpenGame={props.onOpenGame}
+                              class={row.played ? 'monthlyChecklistGamePlayed' : undefined}
+                            />
+                          )}
+                        </Show>
                         <Show when={row.optionsGameId}>
                           {(gameId) => (
                             <GameOptionsButton
@@ -829,7 +853,15 @@ export default function MonthlyChecklistView(props: {
                 <tr>
                   <td data-label="Game">
                     <div class="gameTitleRow">
-                      <span>{row.label}</span>
+                      <Show when={row.optionsGameId} fallback={<span>{row.label}</span>}>
+                        {(gameId) => (
+                          <GameLink
+                            label={row.label}
+                            gameKey={gameId()}
+                            onOpenGame={props.onOpenGame}
+                          />
+                        )}
+                      </Show>
                       <Show when={row.optionsGameId}>
                         {(gameId) => (
                           <GameOptionsButton
