@@ -459,6 +459,11 @@
   order: 3;
 }
 
+.finalGirl > .achievementsPanelTop,
+.gameView > .achievementsPanelTop {
+  order: 1;
+}
+
 .finalGirlMetaRow,
 .gameMetaRow {
   display: flex;

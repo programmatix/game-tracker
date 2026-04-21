@@ -9,6 +9,7 @@ import {
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
   buildPlayCountTrack,
+  slugifyTrackId,
   sumQuantities,
 } from '../../achievements/gameUtils'
 import { normalizeAchievementItemLabel } from '../../achievements/progress'
@@ -57,6 +58,28 @@ export function computeKingdomsForlornAchievements(plays: BggPlay[], username: s
         amount: entry.isWin ? entry.quantity : 0,
       })),
   })
+
+  const knightQuestPlaysByKnight = new Map<
+    string,
+    { items: { id: string; label: string }[]; countsByItemId: Record<string, number> }
+  >()
+
+  if (kingdomsForlornContent.quests.length > 0) {
+    for (const knight of kingdomsForlornContent.knights) {
+      const knightKey = normalizeKey(knight)
+      const preferredItems = kingdomsForlornContent.quests.map((quest) =>
+        buildAchievementItem(`${knight} vs ${quest}`),
+      )
+      const observed = entries
+        .filter((entry) => normalizeKey(entry.myKnight || '') === knightKey && Boolean(entry.quest))
+        .map((entry) => ({
+          item: buildAchievementItem(`${knight} vs ${entry.quest!}`),
+          amount: entry.quantity,
+        }))
+
+      knightQuestPlaysByKnight.set(knight, buildCanonicalCounts({ preferredItems, observed }))
+    }
+  }
 
   const tracks: AchievementTrack[] = [
     {
@@ -181,6 +204,27 @@ export function computeKingdomsForlornAchievements(plays: BggPlay[], username: s
         levels: [1, 3, 10],
       }),
     )
+  }
+
+  if (kingdomsForlornContent.quests.length > 0) {
+    for (const knight of kingdomsForlornContent.knights) {
+      const matchup = knightQuestPlaysByKnight.get(knight)
+      if (!matchup || matchup.items.length === 0) continue
+      const knightSlug = slugifyTrackId(knight)
+
+      tracks.push(
+        buildPerItemTrack({
+          trackId: `knightQuestPlays:${knightSlug}`,
+          achievementBaseId: `play-each-quest-for-${knightSlug}`,
+          verb: 'Play',
+          itemNoun: `quest for ${knight}`,
+          unitSingular: 'time',
+          items: matchup.items,
+          countsByItemId: matchup.countsByItemId,
+          levels: [1],
+        }),
+      )
+    }
   }
 
   return buildUnlockedAchievementsForGame({

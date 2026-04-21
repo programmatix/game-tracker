@@ -8,6 +8,7 @@ import {
   buildIndividualItemTracks,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -115,6 +116,8 @@ export function computeArkhamHorrorLcgAchievements(plays: BggPlay[], username: s
         items: scenarioPlays.items,
         countsByItemId: scenarioPlays.countsByItemId,
         levels: [1, 2, 5],
+        typeLabel: buildPerItemTypeLabel('Play', 'scenario', 'time'),
+        futureLevelsToShow: 5,
       }),
     )
   }

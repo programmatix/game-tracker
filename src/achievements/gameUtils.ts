@@ -176,6 +176,14 @@ export function buildPerItemAchievementBaseId(verb: 'Play' | 'Defeat', itemNoun:
   return `${verbKey}-each-${nounKey}`
 }
 
+export function buildPerItemTypeLabel(
+  verb: 'Play' | 'Defeat',
+  itemNoun: string,
+  unitSingular: string,
+): string {
+  return `${verb} <${itemNoun}> by ${pluralize(2, unitSingular)}`
+}
+
 export function buildNamedCountTrack(input: {
   trackId: string
   achievementBaseId: string
@@ -183,6 +191,8 @@ export function buildNamedCountTrack(input: {
   current: number
   unitSingular: string
   titleForLevel: (level: number) => string
+  formatProgress?: (value: number, target: number, unit: string) => string
+  formatRemaining?: (remaining: number, unit: string) => string
   levels?: number[]
 }): AchievementTrack {
   const levels = input.levels ?? defaultAchievementLevels()
@@ -194,7 +204,13 @@ export function buildNamedCountTrack(input: {
     levels,
     titleForLevel: input.titleForLevel,
     progressForLevel: (level) =>
-      computeCounterProgress({ current: input.current, target: level, unitSingular: input.unitSingular }),
+      computeCounterProgress({
+        current: input.current,
+        target: level,
+        unitSingular: input.unitSingular,
+        formatProgress: input.formatProgress,
+        formatRemaining: input.formatRemaining,
+      }),
   }
 }
 
@@ -218,7 +234,7 @@ export function buildIndividualItemTracks(input: {
       buildNamedCountTrack({
         trackId: `${input.trackIdPrefix}:${item.id}`,
         achievementBaseId: `${verbKey}-${nounKey}-${item.id}`,
-        typeLabel: `${input.verb} <${input.itemNoun}> by ${pluralize(2, input.unitSingular)}`,
+        typeLabel: buildPerItemTypeLabel(input.verb, input.itemNoun, input.unitSingular),
         current,
         unitSingular: input.unitSingular,
         titleForLevel: (level) =>
@@ -238,6 +254,8 @@ export function buildPerItemTrack(input: {
   unitSingular: string
   items: AchievementItem[]
   countsByItemId: Record<string, number>
+  typeLabel?: string
+  futureLevelsToShow?: number
   levels?: number[]
 }): AchievementTrack {
   const levels = input.levels ?? defaultAchievementLevels()
@@ -246,8 +264,9 @@ export function buildPerItemTrack(input: {
   return {
     trackId: input.trackId,
     achievementBaseId: input.achievementBaseId,
-    typeLabel: `${input.verb} each ${noun} by ${pluralize(2, input.unitSingular)}`,
+    typeLabel: input.typeLabel ?? `${input.verb} each ${noun} by ${pluralize(2, input.unitSingular)}`,
     kind: 'perItem',
+    futureLevelsToShow: input.futureLevelsToShow,
     levels,
     titleForLevel: (level) =>
       `${input.verb} each ${noun} ${level} ${pluralize(level, input.unitSingular)}`,

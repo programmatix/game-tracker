@@ -9,6 +9,7 @@ import {
   buildItemIdLookup,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   groupAchievementItemsByLabel,
   slugifyTrackId,
@@ -186,6 +187,8 @@ export function computeMistfallAchievements(plays: BggPlay[], username: string) 
         unitSingular: 'time',
         items: heroes.items,
         countsByItemId: heroes.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Play', 'hero', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'heroPlays',

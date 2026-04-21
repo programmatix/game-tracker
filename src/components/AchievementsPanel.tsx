@@ -50,6 +50,19 @@ function compareAchievementsByRemaining(a: Achievement, b: Achievement) {
   return a.title.localeCompare(b.title)
 }
 
+function getAchievementProgressRatio(achievement: Achievement) {
+  if (achievement.progressTarget <= 0) return achievement.status === 'completed' ? 1 : 0
+  return achievement.progressValue / achievement.progressTarget
+}
+
+function compareAchievementsByProgressDescending(a: Achievement, b: Achievement) {
+  const ratioDiff = getAchievementProgressRatio(b) - getAchievementProgressRatio(a)
+  if (Math.abs(ratioDiff) > Number.EPSILON) return ratioDiff
+  if (b.progressValue !== a.progressValue) return b.progressValue - a.progressValue
+  if (a.remainingPlays !== b.remainingPlays) return a.remainingPlays - b.remainingPlays
+  return a.title.localeCompare(b.title)
+}
+
 function compareAchievementsWithinType(a: Achievement, b: Achievement) {
   const aCompleted = a.status === 'completed'
   const bCompleted = b.status === 'completed'
@@ -132,7 +145,7 @@ function AchievementTableRow(props: {
       <Show when={props.showRemainingColumn}>
         <td class="mono">
           <Show when={props.achievement.status === 'available'} fallback={<span class="muted">—</span>}>
-            {props.achievement.remainingPlays.toLocaleString()}
+            {props.achievement.remainingLabel ?? props.achievement.remainingPlays.toLocaleString()}
           </Show>
         </td>
       </Show>
@@ -226,9 +239,17 @@ export default function AchievementsPanel(props: {
 }) {
   const isPinned = (achievementId: string) => props.pinnedAchievementIds.has(achievementId)
 
-  const filteredAchievements = createMemo(() => {
+  const visibleAchievements = createMemo(() => {
     const suppress = props.suppressAvailableTrackIds
     if (!suppress || suppress.size === 0) return props.achievements
+    return props.achievements.filter(
+      (achievement) => !(achievement.status === 'available' && suppress.has(achievement.trackId)),
+    )
+  })
+
+  const filteredAchievements = createMemo(() => {
+    const suppress = props.suppressAvailableTrackIds
+    if (!suppress || suppress.size === 0) return visibleAchievements()
     return props.achievements.filter(
       (achievement) =>
         !(
@@ -239,50 +260,50 @@ export default function AchievementsPanel(props: {
     )
   })
 
-  const sorted = createMemo(() =>
-    sortUnlockedAchievements(filteredAchievements(), {
-      pinnedAchievementIds: props.pinnedAchievementIds,
-    }),
+  const sortedForAllAchievements = createMemo(() => sortUnlockedAchievements(visibleAchievements()))
+  const pinnedAchievements = createMemo(() =>
+    filteredAchievements()
+      .filter((achievement) => isPinned(achievement.id))
+      .slice()
+      .sort(compareAchievementsByProgressDescending),
   )
-  const nextLocked = createMemo(() => {
-    const available = sorted().available
-    const pinned = available.filter((achievement) => isPinned(achievement.id))
-    const unpinned = available.filter((achievement) => !isPinned(achievement.id))
-    const remainingSlots = Math.max(0, props.nextLimit - pinned.length)
-    return [...pinned, ...unpinned.slice(0, remainingSlots)]
-  })
   const [sortMode, setSortMode] = createSignal<AchievementSortMode>('type')
   const [separateCompleted, setSeparateCompleted] = createSignal(false)
 
-  const availableByType = createMemo(() => groupAchievementsByType(sorted().available))
-  const completedByType = createMemo(() => groupAchievementsByType(sorted().completed))
+  const availableByType = createMemo(() => groupAchievementsByType(sortedForAllAchievements().available))
+  const completedByType = createMemo(() => groupAchievementsByType(sortedForAllAchievements().completed))
   const combinedByType = createMemo(() =>
-    groupAchievementsByType([...sorted().available, ...sorted().completed]).map((group) => ({
+    groupAchievementsByType([
+      ...sortedForAllAchievements().available,
+      ...sortedForAllAchievements().completed,
+    ]).map((group) => ({
       ...group,
       achievements: group.achievements.slice().sort(compareAchievementsWithinType),
     })),
   )
   const combinedByRemaining = createMemo(() =>
-    [...sorted().available, ...sorted().completed].slice().sort(compareAchievementsByRemaining),
+    [...sortedForAllAchievements().available, ...sortedForAllAchievements().completed]
+      .slice()
+      .sort(compareAchievementsByRemaining),
   )
 
   return (
-    <div class="statsBlock">
+    <div class="statsBlock achievementsPanelTop">
       <div class="statsTitleRow">
-        <h3 class="statsTitle">{props.title ?? 'Achievements'}</h3>
+        <h3 class="statsTitle">Pinned achievements</h3>
         <div class="muted mono">
-          <span>Locked:</span> {sorted().available.length.toLocaleString()}
+          <span>Pinned:</span> {pinnedAchievements().length.toLocaleString()}
           {' • '}
-          <span>Completed:</span> {sorted().completed.length.toLocaleString()}
+          <span>Completed:</span> {sortedForAllAchievements().completed.length.toLocaleString()}
         </div>
       </div>
 
       <Show
-        when={nextLocked().length > 0}
-        fallback={<div class="muted">No locked achievements.</div>}
+        when={pinnedAchievements().length > 0}
+        fallback={<div class="muted">No pinned achievements.</div>}
       >
         <AchievementsTable
-          achievements={nextLocked()}
+          achievements={pinnedAchievements()}
           showGameName={props.showGameName}
           onTogglePin={props.onTogglePin}
           isPinned={isPinned}
@@ -346,7 +367,7 @@ export default function AchievementsPanel(props: {
 
           <Show when={separateCompleted()}>
             <Show
-              when={sorted().available.length > 0}
+              when={sortedForAllAchievements().available.length > 0}
               fallback={<div class="muted">No locked achievements.</div>}
             >
               <h4 class="achievementsSectionTitle">Locked</h4>
@@ -364,7 +385,7 @@ export default function AchievementsPanel(props: {
                 }
               >
                 <AchievementsTable
-                  achievements={sorted().available}
+                  achievements={sortedForAllAchievements().available}
                   showGameName={props.showGameName}
                   onTogglePin={props.onTogglePin}
                   isPinned={isPinned}
@@ -374,7 +395,7 @@ export default function AchievementsPanel(props: {
               </Show>
             </Show>
 
-            <Show when={sorted().completed.length > 0}>
+            <Show when={sortedForAllAchievements().completed.length > 0}>
               <h4 class="achievementsSectionTitle">Completed</h4>
               <Show
                 when={sortMode() === 'remaining'}
@@ -390,7 +411,7 @@ export default function AchievementsPanel(props: {
                 }
               >
                 <AchievementsTable
-                  achievements={sorted().completed}
+                  achievements={sortedForAllAchievements().completed}
                   showGameName={props.showGameName}
                   onTogglePin={props.onTogglePin}
                   isPinned={isPinned}

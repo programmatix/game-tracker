@@ -100,7 +100,7 @@ export default function CountTable(props: {
                               <Show when={achievement().remainingPlays > 0}>
                                 <span class="mono muted">
                                   {' '}
-                                  ({achievement().remainingPlays.toLocaleString()} left)
+                                  ({achievement().remainingLabel ?? achievement().remainingPlays.toLocaleString()} left)
                                 </span>
                               </Show>
                             </span>

@@ -19,6 +19,7 @@ export type Achievement = {
   title: string
   level: number
   remainingPlays: number
+  remainingLabel?: string
   playsSoFar: number
   progressValue: number
   progressTarget: number
@@ -29,6 +30,7 @@ export type Achievement = {
 export type AchievementProgress = {
   isComplete: boolean
   remainingPlays: number
+  remainingLabel?: string
   playsSoFar: number
   progressValue: number
   progressTarget: number
@@ -41,6 +43,7 @@ export type AchievementTrack = {
   typeLabel?: string
   kind: AchievementKind
   showAllFutureLevels?: boolean
+  futureLevelsToShow?: number
   titleForLevel: (level: number) => string
   progressForLevel: (level: number) => AchievementProgress
   completionForLevel?: (level: number) => AchievementCompletion | undefined

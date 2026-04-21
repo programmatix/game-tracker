@@ -20,9 +20,12 @@ export function computeCounterProgress(input: {
   current: number
   target: number
   unitSingular: string
+  formatProgress?: (value: number, target: number, unit: string) => string
+  formatRemaining?: (remaining: number, unit: string) => string
 }): {
   isComplete: boolean
   remainingPlays: number
+  remainingLabel?: string
   playsSoFar: number
   progressValue: number
   progressTarget: number
@@ -36,10 +39,13 @@ export function computeCounterProgress(input: {
   return {
     isComplete: current >= target,
     remainingPlays,
+    remainingLabel: input.formatRemaining?.(remainingPlays, unit),
     playsSoFar: current,
     progressValue,
     progressTarget: target,
-    progressLabel: `${progressValue}/${target} ${unit}`,
+    progressLabel:
+      input.formatProgress?.(progressValue, target, unit) ??
+      `${progressValue.toLocaleString()}/${target.toLocaleString()} ${unit}`,
   }
 }
 
@@ -51,6 +57,7 @@ export function computePerItemProgress(input: {
 }): {
   isComplete: boolean
   remainingPlays: number
+  remainingLabel?: string
   playsSoFar: number
   progressValue: number
   progressTarget: number
@@ -63,6 +70,7 @@ export function computePerItemProgress(input: {
     return {
       isComplete: false,
       remainingPlays: 0,
+      remainingLabel: '0',
       playsSoFar: 0,
       progressValue: 0,
       progressTarget: 0,
@@ -84,6 +92,7 @@ export function computePerItemProgress(input: {
   return {
     isComplete: met === total,
     remainingPlays,
+    remainingLabel: remainingPlays.toLocaleString(),
     playsSoFar,
     progressValue: met,
     progressTarget: total,

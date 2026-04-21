@@ -57,6 +57,7 @@ function buildCostTrack(input: {
       return {
         isComplete: currentHours >= targetHours,
         remainingPlays: remainingHours,
+        remainingLabel: formatDurationHoursMinutes(remainingHours),
         playsSoFar: currentHours,
         progressValue,
         progressTarget: targetHours <= 0 ? 1 : targetHours,
@@ -85,6 +86,9 @@ export function computeStandardAchievementsForGame(input: {
         current: hours,
         unitSingular: 'hour',
         titleForLevel: (level) => `Play for ${level} hours`,
+        formatProgress: (value, target) =>
+          `${formatDurationHoursMinutes(value)} / ${formatDurationHoursMinutes(target)}`,
+        formatRemaining: (remaining) => formatDurationHoursMinutes(remaining),
         levels: PLAY_TIME_LEVELS,
       }),
       showAllFutureLevels: true,

@@ -9,6 +9,7 @@ import {
   buildItemIdLookup,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   groupAchievementItemsByLabel,
   slugifyTrackId,
@@ -198,6 +199,8 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         unitSingular: 'time',
         items: villainPlays.items,
         countsByItemId: villainPlays.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Play', 'villain', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'villainPlays',
@@ -256,6 +259,8 @@ export function computeFinalGirlAchievements(plays: BggPlay[], username: string)
         unitSingular: 'win',
         items: villainWins.items,
         countsByItemId: villainWins.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Defeat', 'villain', 'win'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'villainWins',

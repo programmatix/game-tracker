@@ -8,6 +8,7 @@ export type KingdomsForlornEntry = {
   kingdom: string
   knights: string[]
   myKnight?: string
+  quest?: string
   quantity: number
   isWin: boolean
   continuedFromPrevious: boolean
@@ -67,6 +68,7 @@ export function getKingdomsForlornEntries(
           win: player.attributes.win === '1',
           kingdom: parsed.kingdom,
           knight: parsed.knight,
+          quest: parsed.quest,
           continuePrevious: parsed.continuePrevious,
           continueNext: parsed.continueNext,
         }
@@ -76,6 +78,7 @@ export function getKingdomsForlornEntries(
       const kingdomCandidates = parsedPlayers.map((player) => player.kingdom).filter(Boolean) as string[]
       const knightCandidates = parsedPlayers.map((player) => player.knight).filter(Boolean) as string[]
       const myKnight = myPlayer?.knight?.trim() || undefined
+      const quest = myPlayer?.quest?.trim() || undefined
       const knights = [...new Set(knightCandidates)]
 
       return {
@@ -83,6 +86,7 @@ export function getKingdomsForlornEntries(
         kingdom: myPlayer?.kingdom?.trim() || chooseMostCommonOrFirst(kingdomCandidates) || '',
         knights,
         myKnight,
+        quest,
         quantity: playQuantity(play),
         isWin: myPlayer?.win === true,
         continuedFromPrevious: parsedPlayers.some((player) => player.continuePrevious),
@@ -90,37 +94,43 @@ export function getKingdomsForlornEntries(
       }
     })
 
-  let previousResolved: { kingdom?: string; myKnight?: string } | null = null
+  let previousResolved: { kingdom?: string; myKnight?: string; quest?: string } | null = null
   for (const entry of result) {
     if (entry.continuedFromPrevious && previousResolved) {
       if (!entry.kingdom && previousResolved.kingdom) entry.kingdom = previousResolved.kingdom
       if (!entry.myKnight && previousResolved.myKnight) entry.myKnight = previousResolved.myKnight
+      if (!entry.quest && previousResolved.quest) entry.quest = previousResolved.quest
     }
     if (entry.myKnight && !entry.knights.includes(entry.myKnight)) entry.knights.push(entry.myKnight)
-    if (entry.kingdom || entry.myKnight) {
+    if (entry.kingdom || entry.myKnight || entry.quest) {
       const priorKingdom: string | undefined = previousResolved ? previousResolved.kingdom : undefined
       const priorMyKnight: string | undefined = previousResolved ? previousResolved.myKnight : undefined
+      const priorQuest: string | undefined = previousResolved ? previousResolved.quest : undefined
       previousResolved = {
         kingdom: entry.kingdom || priorKingdom,
         myKnight: entry.myKnight || priorMyKnight,
+        quest: entry.quest || priorQuest,
       }
     }
   }
 
-  let nextResolved: { kingdom?: string; myKnight?: string } | null = null
+  let nextResolved: { kingdom?: string; myKnight?: string; quest?: string } | null = null
   for (let index = result.length - 1; index >= 0; index -= 1) {
     const entry = result[index]!
     if (entry.continuedToNext && nextResolved) {
       if (!entry.kingdom && nextResolved.kingdom) entry.kingdom = nextResolved.kingdom
       if (!entry.myKnight && nextResolved.myKnight) entry.myKnight = nextResolved.myKnight
+      if (!entry.quest && nextResolved.quest) entry.quest = nextResolved.quest
     }
     if (entry.myKnight && !entry.knights.includes(entry.myKnight)) entry.knights.push(entry.myKnight)
-    if (entry.kingdom || entry.myKnight) {
+    if (entry.kingdom || entry.myKnight || entry.quest) {
       const priorKingdom: string | undefined = nextResolved ? nextResolved.kingdom : undefined
       const priorMyKnight: string | undefined = nextResolved ? nextResolved.myKnight : undefined
+      const priorQuest: string | undefined = nextResolved ? nextResolved.quest : undefined
       nextResolved = {
         kingdom: entry.kingdom || priorKingdom,
         myKnight: entry.myKnight || priorMyKnight,
+        quest: entry.quest || priorQuest,
       }
     }
   }

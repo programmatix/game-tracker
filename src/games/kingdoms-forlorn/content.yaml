@@ -29,6 +29,23 @@ knights:
     box: Collection
     aliases: [Flower, FK]
 
+quests:
+  - display: Quest 1
+    id: Q1
+    aliases: [Quest1]
+  - display: Quest 2
+    id: Q2
+    aliases: [Quest2]
+  - display: Quest 3
+    id: Q3
+    aliases: [Quest3]
+  - display: Quest 4
+    id: Q4
+    aliases: [Quest4]
+  - display: Quest 5
+    id: Q5
+    aliases: [Quest5]
+
 kingdoms:
   - display: Barony of Bountiful Harvest
     id: Barony

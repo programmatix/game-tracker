@@ -21,8 +21,10 @@ type ParsedList = {
 
 export type KingdomsForlornContent = {
   knights: string[]
+  quests: string[]
   kingdoms: string[]
   knightsById: Map<string, string>
+  questsById: Map<string, string>
   kingdomsById: Map<string, string>
   knightGroupByName: Map<string, string>
   kingdomGroupByName: Map<string, string>
@@ -95,12 +97,15 @@ export function parseKingdomsForlornContent(text: string): KingdomsForlornConten
 
   const costs = parseBoxCostConfig(yaml)
   const knights = parseNamedList(yaml.knights as KingdomsForlornYamlItem[])
+  const quests = Array.isArray(yaml.quests) ? parseNamedList(yaml.quests as KingdomsForlornYamlItem[]) : parseNamedList([])
   const kingdoms = parseNamedList(yaml.kingdoms as KingdomsForlornYamlItem[])
 
   return {
     knights: knights.labels,
+    quests: quests.labels,
     kingdoms: kingdoms.labels,
     knightsById: knights.byId,
+    questsById: quests.byId,
     kingdomsById: kingdoms.byId,
     knightGroupByName: knights.groupByLabel,
     kingdomGroupByName: kingdoms.groupByLabel,

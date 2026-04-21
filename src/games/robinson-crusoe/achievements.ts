@@ -8,6 +8,7 @@ import {
   buildIndividualItemTracks,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -72,6 +73,8 @@ export function computeRobinsonCrusoeAchievements(plays: BggPlay[], username: st
         items: scenarioPlays.items,
         countsByItemId: scenarioPlays.countsByItemId,
         levels: [1, 3, 10],
+        typeLabel: buildPerItemTypeLabel('Play', 'scenario', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioPlays',
@@ -115,6 +118,8 @@ export function computeRobinsonCrusoeAchievements(plays: BggPlay[], username: st
         items: scenarioWins.items,
         countsByItemId: scenarioWins.countsByItemId,
         levels: [1, 3, 10],
+        typeLabel: buildPerItemTypeLabel('Defeat', 'scenario', 'win'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioWins',

@@ -8,6 +8,7 @@ import {
   buildIndividualItemTracks,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -68,6 +69,8 @@ export function computeStarTrekCaptainsChairAchievements(plays: BggPlay[], usern
         unitSingular: 'time',
         items: scenarios.items,
         countsByItemId: scenarios.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Play', 'scenario', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioPlays',
@@ -100,6 +103,17 @@ export function computeStarTrekCaptainsChairAchievements(plays: BggPlay[], usern
   if (scenarioWins.items.length > 0) {
     const scenarioWinLabelById = new Map(scenarioWins.items.map((item) => [item.id, item.label]))
     tracks.push(
+      buildPerItemTrack({
+        trackId: 'scenarioWins',
+        achievementBaseId: buildPerItemAchievementBaseId('Defeat', 'scenario'),
+        verb: 'Defeat',
+        itemNoun: 'scenario',
+        unitSingular: 'win',
+        items: scenarioWins.items,
+        countsByItemId: scenarioWins.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Defeat', 'scenario', 'win'),
+        futureLevelsToShow: 5,
+      }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioWins',
         verb: 'Defeat',

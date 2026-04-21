@@ -8,6 +8,7 @@ import {
   buildIndividualItemTracks,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -76,6 +77,8 @@ export function computeMageKnightAchievements(plays: BggPlay[], username: string
         unitSingular: 'time',
         items: heroes.items,
         countsByItemId: heroes.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Play', 'hero', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'heroPlays',
@@ -148,6 +151,8 @@ export function computeMageKnightAchievements(plays: BggPlay[], username: string
         unitSingular: 'time',
         items: scenarios.items,
         countsByItemId: scenarios.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Play', 'scenario', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioPlays',
@@ -180,6 +185,17 @@ export function computeMageKnightAchievements(plays: BggPlay[], username: string
   if (scenarioWins.items.length > 0) {
     const scenarioWinLabelById = new Map(scenarioWins.items.map((item) => [item.id, item.label]))
     tracks.push(
+      buildPerItemTrack({
+        trackId: 'scenarioWins',
+        achievementBaseId: buildPerItemAchievementBaseId('Defeat', 'scenario'),
+        verb: 'Defeat',
+        itemNoun: 'scenario',
+        unitSingular: 'win',
+        items: scenarioWins.items,
+        countsByItemId: scenarioWins.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Defeat', 'scenario', 'win'),
+        futureLevelsToShow: 5,
+      }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioWins',
         verb: 'Defeat',

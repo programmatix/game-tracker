@@ -7,6 +7,7 @@ import {
   buildCanonicalCounts,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -105,6 +106,8 @@ export function computeNanolithAchievements(plays: BggPlay[], username: string) 
         unitSingular: 'time',
         items: heroPlays.items,
         countsByItemId: heroPlays.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Play', 'hero', 'time'),
+        futureLevelsToShow: 5,
       }),
     )
   }

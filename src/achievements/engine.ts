@@ -24,13 +24,16 @@ export function buildUnlockedAchievementsForTrack(input: {
   track: AchievementTrack
 }): Achievement[] {
   const achievements: Achievement[] = []
-  const stopAfterFirstIncomplete = input.track.showAllFutureLevels !== true
-  let isStillUnlocking = true
+  const futureLevelsToShow =
+    input.track.showAllFutureLevels === true
+      ? Number.POSITIVE_INFINITY
+      : Math.max(1, input.track.futureLevelsToShow ?? 1)
+  let remainingFutureLevels = futureLevelsToShow
 
   for (const level of input.track.levels) {
-    if (!isStillUnlocking) break
-
     const progress = input.track.progressForLevel(level)
+    if (!progress.isComplete && remainingFutureLevels <= 0) break
+
     const status = progress.isComplete ? 'completed' : 'available'
     const completion =
       status === 'completed' ? input.track.completionForLevel?.(level) : undefined
@@ -46,6 +49,7 @@ export function buildUnlockedAchievementsForTrack(input: {
       title: input.track.titleForLevel(level),
       level,
       remainingPlays: progress.remainingPlays,
+      remainingLabel: progress.remainingLabel,
       playsSoFar: progress.playsSoFar,
       progressValue: progress.progressValue,
       progressTarget: progress.progressTarget,
@@ -53,7 +57,7 @@ export function buildUnlockedAchievementsForTrack(input: {
       completion,
     })
 
-    if (stopAfterFirstIncomplete && !progress.isComplete) isStillUnlocking = false
+    if (!progress.isComplete) remainingFutureLevels -= 1
   }
 
   return achievements

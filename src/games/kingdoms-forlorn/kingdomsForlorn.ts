@@ -4,6 +4,7 @@ import { kingdomsForlornContent } from './content'
 export type KingdomsForlornPlayerTags = {
   kingdom?: string
   knight?: string
+  quest?: string
   continuePrevious: boolean
   continueNext: boolean
   extraTags: string[]
@@ -32,6 +33,22 @@ function resolveKnight(value: string): string | undefined {
   return kingdomsForlornContent.knightsById.get(normalizeId(token))
 }
 
+function normalizeQuestToken(value: string): string {
+  const token = normalizeToken(value)
+  if (!token) return ''
+  const direct = /^q\s*[:：]?\s*(\d+)\b/i.exec(token)
+  if (direct) return `Q${direct[1]}`
+  const named = /^quest\s*[:：]?\s*(\d+)\b/i.exec(token)
+  if (named) return `Q${named[1]}`
+  return token
+}
+
+function resolveQuest(value: string): string | undefined {
+  const token = normalizeQuestToken(value)
+  if (!token) return undefined
+  return kingdomsForlornContent.questsById.get(normalizeId(token))
+}
+
 function isContinuePreviousToken(value: string): boolean {
   const normalized = normalizeId(value)
   return normalized === 'contprev' || normalized === 'continueprevious'
@@ -52,6 +69,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
   let knight = resolveKnight(
     getBgStatsValue(parsedKv, ['K', 'Knight', 'Char', 'Character', 'Hero', 'Player']) || '',
   )
+  let quest = resolveQuest(getBgStatsValue(parsedKv, ['Q', 'Quest', 'Scenario']) || '')
   let continuePrevious = false
   let continueNext = false
   const extraTags: string[] = []
@@ -81,12 +99,19 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
       continue
     }
 
+    const questFromTag = resolveQuest(normalized)
+    if (!quest && questFromTag) {
+      quest = questFromTag
+      continue
+    }
+
     extraTags.push(normalized)
   }
 
   return {
     kingdom,
     knight,
+    quest,
     continuePrevious,
     continueNext,
     extraTags,

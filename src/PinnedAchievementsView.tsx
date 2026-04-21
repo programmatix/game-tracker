@@ -248,7 +248,7 @@ export default function PinnedAchievementsView(props: {
                             </td>
                             <td class="mono">
                               <Show when={achievement.status === 'available'} fallback={<span class="muted">—</span>}>
-                                {achievement.remainingPlays.toLocaleString()}
+                                {achievement.remainingLabel ?? achievement.remainingPlays.toLocaleString()}
                               </Show>
                             </td>
                             <td>

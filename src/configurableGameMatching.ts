@@ -42,6 +42,11 @@ export function normalizeConfigurableGameMatchName(value: string): string {
     .trim()
 }
 
+function matchesNormalizedAlias(normalizedName: string, normalizedAlias: string): boolean {
+  if (!normalizedName || !normalizedAlias) return false
+  return normalizedName === normalizedAlias || normalizedName.startsWith(`${normalizedAlias} `)
+}
+
 const MATCH_OVERRIDES: Readonly<Record<string, ConfigurableGameMatchOverrides>> = {
   arkhamHorrorLcg: {
     aliases: [
@@ -206,5 +211,21 @@ export function findConfigurableGameIdForOptions(input: {
 
   const normalizedName = normalizeConfigurableGameMatchName(input.name || '')
   if (!normalizedName) return null
-  return gameIdByName.get(normalizedName) || null
+  const matchedByName = gameIdByName.get(normalizedName)
+  if (matchedByName) return matchedByName
+
+  let bestPrefixMatch: { gameId: string; aliasLength: number } | null = null
+
+  for (const game of CONFIGURABLE_GAME_MATCH_DEFINITIONS) {
+    for (const alias of game.aliases) {
+      const normalizedAlias = normalizeConfigurableGameMatchName(alias)
+      if (!matchesNormalizedAlias(normalizedName, normalizedAlias)) continue
+
+      if (!bestPrefixMatch || normalizedAlias.length > bestPrefixMatch.aliasLength) {
+        bestPrefixMatch = { gameId: game.id, aliasLength: normalizedAlias.length }
+      }
+    }
+  }
+
+  return bestPrefixMatch?.gameId || null
 }

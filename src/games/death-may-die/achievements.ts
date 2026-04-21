@@ -8,6 +8,7 @@ import {
   buildIndividualItemTracks,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -156,6 +157,8 @@ export function computeDeathMayDieAchievements(plays: BggPlay[], username: strin
         unitSingular: 'time',
         items: scenarios.items,
         countsByItemId: scenarios.countsByItemId,
+        typeLabel: buildPerItemTypeLabel('Play', 'scenario', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'scenarioPlays',

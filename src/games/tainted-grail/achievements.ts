@@ -8,6 +8,7 @@ import {
   buildIndividualItemTracks,
   buildPerItemAchievementBaseId,
   buildPerItemTrack,
+  buildPerItemTypeLabel,
   buildPlayCountTrack,
   sumQuantities,
 } from '../../achievements/gameUtils'
@@ -72,6 +73,8 @@ export function computeTaintedGrailAchievements(plays: BggPlay[], username: stri
         items: chapterPlays.items,
         countsByItemId: chapterPlays.countsByItemId,
         levels: [1, 3, 10],
+        typeLabel: buildPerItemTypeLabel('Play', 'chapter', 'time'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'chapterPlays',
@@ -115,6 +118,8 @@ export function computeTaintedGrailAchievements(plays: BggPlay[], username: stri
         items: chapterWins.items,
         countsByItemId: chapterWins.countsByItemId,
         levels: [1, 3, 10],
+        typeLabel: buildPerItemTypeLabel('Defeat', 'chapter', 'win'),
+        futureLevelsToShow: 5,
       }),
       ...buildIndividualItemTracks({
         trackIdPrefix: 'chapterWins',
