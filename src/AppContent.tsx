@@ -1,4 +1,4 @@
-import { Show, createMemo } from 'solid-js'
+import { Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import type { User } from 'firebase/auth'
 import type { BggPlay } from './bgg'
 import {
@@ -43,11 +43,13 @@ import AchievementsView from './AchievementsView'
 import PinnedAchievementsView from './PinnedAchievementsView'
 import CostsView from './CostsView'
 import TimeView from './TimeView'
+import FulfilmentView from './FulfilmentView'
 import GameOptionsView from './GameOptionsView'
 import OverallOptionsView from './OverallOptionsView'
 import MonthlyChecklistView from './MonthlyChecklistView'
 import MonthlySummaryView from './MonthlySummaryView'
 import FeedbackView from './feedback/FeedbackView'
+import FeedbackComposer from './feedback/FeedbackComposer'
 import GameCostMini from './GameCostMini'
 import GenericGameView from './GenericGameView'
 import PlaysView, { PlaysPager } from './PlaysView'
@@ -74,6 +76,7 @@ type AppContentProps = {
   plays: BggPlay[]
   gamePreferencesById: ResolvedGamePreferencesById
   pinnedAchievementIds: ReadonlySet<string>
+  pinnedAchievementsLoading: boolean
   suppressAvailableAchievementTrackIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
   onOpenGameOptions: (gameId: string) => void
@@ -180,6 +183,7 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
 }
 
 export default function AppContent(props: AppContentProps) {
+  const [isQuickFeedbackOpen, setIsQuickFeedbackOpen] = createSignal(false)
   const sharedGameViewProps: SharedGameViewProps = {
     get plays() {
       return props.plays
@@ -213,8 +217,44 @@ export default function AppContent(props: AppContentProps) {
     return isConfigurableGameId(props.mainTab) ? props.mainTab : null
   })
 
+  createEffect(() => {
+    if (!isQuickFeedbackOpen()) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsQuickFeedbackOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    onCleanup(() => window.removeEventListener('keydown', onKeyDown))
+  })
+
   return (
     <>
+      <Show when={isQuickFeedbackOpen()}>
+        <div
+          class="feedbackModalBackdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsQuickFeedbackOpen(false)
+            }
+          }}
+        >
+          <div class="panel feedbackModal" role="dialog" aria-modal="true" aria-labelledby="quick-feedback-title">
+            <FeedbackComposer
+              user={props.feedbackUser}
+              title="Add feedback"
+              titleId="quick-feedback-title"
+              submitLabel="Submit"
+              autoFocus
+              onCancel={() => setIsQuickFeedbackOpen(false)}
+              onSubmitted={() => setIsQuickFeedbackOpen(false)}
+            />
+          </div>
+        </div>
+      </Show>
+
       <div class="panelHeader playsHeader">
         <div class="panelHeaderLeft">
           <h2 class="mobileOnly">Views</h2>
@@ -326,6 +366,16 @@ export default function AppContent(props: AppContentProps) {
             Game options
           </button>
         </Show>
+
+        <Show when={props.mainTab !== 'feedback'}>
+          <button
+            class="linkButton"
+            type="button"
+            onClick={() => setIsQuickFeedbackOpen(true)}
+          >
+            Add feedback
+          </button>
+        </Show>
       </div>
 
       <Show when={props.mainTab === 'monthlyChecklist'}>
@@ -340,6 +390,13 @@ export default function AppContent(props: AppContentProps) {
         <MonthlySummaryView
           plays={props.plays}
           assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+        />
+      </Show>
+
+      <Show when={props.mainTab === 'fulfilment'}>
+        <FulfilmentView
+          gamePreferencesById={props.gamePreferencesById}
+          onOpenGameOptions={props.onOpenGameOptions}
         />
       </Show>
 
@@ -423,6 +480,7 @@ export default function AppContent(props: AppContentProps) {
           pinnedAchievementIds={props.pinnedAchievementIds}
           suppressAvailableAchievementTrackIds={props.suppressAvailableAchievementTrackIds}
           onTogglePin={props.onTogglePin}
+          onOpenGame={props.onOpenGame}
         />
       </Show>
 
@@ -432,7 +490,9 @@ export default function AppContent(props: AppContentProps) {
           username={props.username}
           spiritIslandSessions={props.spiritIslandSessions}
           pinnedAchievementIds={props.pinnedAchievementIds}
+          loading={props.pinnedAchievementsLoading}
           onTogglePin={props.onTogglePin}
+          onOpenGame={props.onOpenGame}
         />
       </Show>
 
@@ -440,6 +500,7 @@ export default function AppContent(props: AppContentProps) {
         <CostsView
           plays={props.plays}
           assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+          onOpenGame={props.onOpenGame}
           onOpenGameOptions={props.onOpenGameOptions}
           onUpdateGamePreferences={props.onUpdateGamePreferences}
           costTimeEstimateStatus={props.costTimeEstimateStatus}
@@ -450,6 +511,7 @@ export default function AppContent(props: AppContentProps) {
         <TimeView
           plays={props.plays}
           assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+          onOpenGame={props.onOpenGame}
           onOpenGameOptions={props.onOpenGameOptions}
           onUpdateGamePreferences={props.onUpdateGamePreferences}
           costTimeEstimateStatus={props.costTimeEstimateStatus}

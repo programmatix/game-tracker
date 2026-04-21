@@ -1,7 +1,6 @@
 import type { User } from 'firebase/auth'
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import {
-  createFeedback,
   deleteFeedback,
   deleteResolvedFeedback,
   subscribeAllFeedback,
@@ -11,6 +10,7 @@ import {
   type FeedbackStatus,
   updateFeedbackStatus,
 } from './feedbackFirebase'
+import FeedbackComposer from './FeedbackComposer'
 
 type Props = {
   user: User | null
@@ -28,12 +28,8 @@ function formatFeedbackStatus(status: FeedbackStatus): string {
 }
 
 export default function FeedbackView(props: Props) {
-  const [message, setMessage] = createSignal('')
   const [feedbackItems, setFeedbackItems] = createSignal<FeedbackItem[]>([])
   const [allFeedbackItems, setAllFeedbackItems] = createSignal<FeedbackItem[]>([])
-  const [submitError, setSubmitError] = createSignal<string | null>(null)
-  const [submitStatus, setSubmitStatus] = createSignal<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [isUpdatingStatusId, setIsUpdatingStatusId] = createSignal<string | null>(null)
   const [isDeletingId, setIsDeletingId] = createSignal<string | null>(null)
   const [isDeletingResolved, setIsDeletingResolved] = createSignal(false)
@@ -41,7 +37,6 @@ export default function FeedbackView(props: Props) {
   const [confirmDeleteResolved, setConfirmDeleteResolved] = createSignal(false)
   const [resolveError, setResolveError] = createSignal<string | null>(null)
 
-  const canSubmit = createMemo(() => Boolean(props.user && message().trim()))
   const visibleFeedbackItems = createMemo(() =>
     props.isAdmin ? allFeedbackItems() : feedbackItems(),
   )
@@ -80,26 +75,6 @@ export default function FeedbackView(props: Props) {
       unsubscribeAll()
     })
   })
-
-  async function onSubmitFeedback(event: SubmitEvent) {
-    event.preventDefault()
-    const user = props.user
-    if (!user) return
-
-    setSubmitError(null)
-    setSubmitStatus(null)
-    setIsSubmitting(true)
-    try {
-      await createFeedback(user, message())
-      setMessage('')
-      setSubmitStatus('Feedback submitted.')
-    } catch (error) {
-      const errorText = error instanceof Error ? error.message : String(error)
-      setSubmitError(errorText || 'Failed to submit feedback.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   async function onUpdateFeedbackStatus(item: FeedbackItem, status: AdminFeedbackStatus) {
     const user = props.user
@@ -157,34 +132,7 @@ export default function FeedbackView(props: Props) {
 
   return (
     <div class="feedbackView">
-      <div class="feedbackBlock">
-        <h3 class="statsTitle">Submit feedback</h3>
-        <Show when={props.user} fallback={<div class="muted">Sign in to submit feedback.</div>}>
-          <form class="feedbackForm" onSubmit={onSubmitFeedback}>
-            <label class="feedbackField">
-              <span class="muted">Message</span>
-              <textarea
-                class="feedbackTextarea"
-                rows="4"
-                placeholder="Describe the issue or suggestion"
-                value={message()}
-                onInput={(event) => setMessage(event.currentTarget.value)}
-              />
-            </label>
-            <div class="feedbackActions">
-              <button type="submit" disabled={!canSubmit() || isSubmitting()}>
-                {isSubmitting() ? 'Submitting…' : 'Submit feedback'}
-              </button>
-              <Show when={submitStatus()}>
-                {(status) => <span class="muted">{status()}</span>}
-              </Show>
-            </div>
-            <Show when={submitError()}>
-              {(errorText) => <div class="error">{errorText()}</div>}
-            </Show>
-          </form>
-        </Show>
-      </div>
+      <FeedbackComposer user={props.user} />
 
       <div class="feedbackBlock">
         <div class="feedbackActions">

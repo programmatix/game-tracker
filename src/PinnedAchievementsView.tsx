@@ -2,6 +2,7 @@ import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import type { BggPlay } from './bgg'
 import type { Achievement } from './achievements/types'
 import { computeAllGameAchievementSummaries } from './achievements/games'
+import GameLink from './components/GameLink'
 import ProgressBar from './components/ProgressBar'
 import {
   GAME_STATUS_OPTIONS,
@@ -78,7 +79,9 @@ export default function PinnedAchievementsView(props: {
   username: string
   spiritIslandSessions?: SpiritIslandSession[]
   pinnedAchievementIds: ReadonlySet<string>
+  loading: boolean
   onTogglePin: (achievementId: string) => void
+  onOpenGame: (gameKey: string) => void
 }) {
   const [visibleStatuses, setVisibleStatuses] = createSignal<GameStatus[]>(readStoredVisibleStatuses())
   const [checklistOnly, setChecklistOnly] = createSignal<boolean>(readStoredChecklistOnly())
@@ -188,87 +191,103 @@ export default function PinnedAchievementsView(props: {
       </div>
 
       <Show
-        when={filteredGames().length > 0}
-        fallback={<div class="muted">No pinned achievements match the selected filters.</div>}
+        when={!props.loading}
+        fallback={
+          <div class="pinnedAchievementsLoading" role="status" aria-live="polite" aria-busy="true">
+            <span class="loadingSpinner" aria-hidden="true"></span>
+            <span class="muted">Loading pinned achievements…</span>
+          </div>
+        }
       >
-        <div class="pinnedAchievementsSections">
-          <For each={filteredGames()}>
-            {(game) => (
-              <section class="gameOptionsCard">
-                <div class="pinnedAchievementsSectionHeader">
-                  <div>
-                    <h4>{game.gameName}</h4>
-                    <div class="muted pinnedAchievementsMeta">
-                      <span class="statusBadge">{game.statusLabel}</span>
-                      <span>{game.achievements.length.toLocaleString()} pinned</span>
+        <Show
+          when={filteredGames().length > 0}
+          fallback={<div class="muted">No pinned achievements match the selected filters.</div>}
+        >
+          <div class="pinnedAchievementsSections">
+            <For each={filteredGames()}>
+              {(game) => (
+                <section class="gameOptionsCard">
+                  <div class="pinnedAchievementsSectionHeader">
+                    <div>
+                      <h4>
+                        <GameLink
+                          label={game.gameName}
+                          gameKey={game.gameId}
+                          onOpenGame={props.onOpenGame}
+                        />
+                      </h4>
+                      <div class="muted pinnedAchievementsMeta">
+                        <span class="statusBadge">{game.statusLabel}</span>
+                        <span>{game.achievements.length.toLocaleString()} pinned</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="tableWrap compact">
-                  <table class="table compactTable">
-                    <thead>
-                      <tr>
-                        <th class="pinCell" aria-label="Pinned"></th>
-                        <th>Achievement</th>
-                        <th class="mono">Status</th>
-                        <th class="mono">Remaining</th>
-                        <th>Progress</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <For each={game.achievements}>
-                        {(achievement) => (
-                          <tr class="achievementRow">
-                            <td class="pinCell">
-                              <button
-                                class="pinButton pinButtonActive"
-                                type="button"
-                                onClick={() => props.onTogglePin(achievement.id)}
-                                aria-label={`Unpin achievement ${achievement.title}`}
-                              >
-                                ★
-                              </button>
-                            </td>
-                            <td>
-                              <div>{achievement.title}</div>
-                              <Show when={achievement.completion}>
-                                <div class="achievementCompletion muted">
-                                  <span>{achievement.completion!.detail}</span>
-                                  <Show when={achievement.completion!.playDate}>
-                                    <span class="mono"> {'—'} {achievement.completion!.playDate}</span>
-                                  </Show>
-                                </div>
-                              </Show>
-                            </td>
-                            <td class="mono">
-                              <span class="statusBadge">
-                                {achievement.status === 'completed' ? 'Unlocked' : 'In progress'}
-                              </span>
-                            </td>
-                            <td class="mono">
-                              <Show when={achievement.status === 'available'} fallback={<span class="muted">—</span>}>
-                                {achievement.remainingLabel ?? achievement.remainingPlays.toLocaleString()}
-                              </Show>
-                            </td>
-                            <td>
-                              <ProgressBar
-                                value={achievement.progressValue}
-                                target={achievement.progressTarget}
-                                widthPx={240}
-                                label={achievement.progressLabel}
-                              />
-                            </td>
-                          </tr>
-                        )}
-                      </For>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
-          </For>
-        </div>
+                  <div class="tableWrap compact">
+                    <table class="table compactTable">
+                      <thead>
+                        <tr>
+                          <th class="pinCell" aria-label="Pinned"></th>
+                          <th>Achievement</th>
+                          <th class="mono">Status</th>
+                          <th class="mono">Remaining</th>
+                          <th>Progress</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <For each={game.achievements}>
+                          {(achievement) => (
+                            <tr class="achievementRow">
+                              <td class="pinCell">
+                                <button
+                                  class="pinButton pinButtonActive"
+                                  type="button"
+                                  onClick={() => props.onTogglePin(achievement.id)}
+                                  aria-label={`Unpin achievement ${achievement.title}`}
+                                >
+                                  ★
+                                </button>
+                              </td>
+                              <td>
+                                <div>{achievement.title}</div>
+                                <Show when={achievement.completion}>
+                                  <div class="achievementCompletion muted">
+                                    <span>{achievement.completion!.detail}</span>
+                                    <Show when={achievement.completion!.playDate}>
+                                      <span class="mono"> {'—'} {achievement.completion!.playDate}</span>
+                                    </Show>
+                                  </div>
+                                </Show>
+                              </td>
+                              <td class="mono">
+                                <span class="statusBadge">
+                                  {achievement.status === 'completed' ? 'Unlocked' : 'In progress'}
+                                </span>
+                              </td>
+                              <td class="mono">
+                                <Show when={achievement.status === 'available'} fallback={<span class="muted">—</span>}>
+                                  {achievement.remainingLabel ?? achievement.remainingPlays.toLocaleString()}
+                                </Show>
+                              </td>
+                              <td>
+                                <ProgressBar
+                                  value={achievement.progressValue}
+                                  target={achievement.progressTarget}
+                                  widthPx={240}
+                                  label={achievement.progressLabel}
+                                />
+                              </td>
+                            </tr>
+                          )}
+                        </For>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+            </For>
+          </div>
+        </Show>
       </Show>
     </div>
   )

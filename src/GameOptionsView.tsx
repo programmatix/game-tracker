@@ -1,4 +1,4 @@
-import { createMemo } from 'solid-js'
+import { Show, createMemo } from 'solid-js'
 import {
   CONFIGURABLE_GAME_DEFINITIONS,
   CONFIGURABLE_GAME_OPTIONS,
@@ -66,6 +66,31 @@ function GameOptionsSelectRow(props: GameOptionsSelectRowProps) {
   )
 }
 
+type GameOptionsInputRowProps = {
+  title: string
+  description: string
+  value: string
+  type?: 'month'
+  onChange: (value: string) => void
+}
+
+function GameOptionsInputRow(props: GameOptionsInputRowProps) {
+  return (
+    <label class="gameOptionRow">
+      <div class="gameOptionCopy">
+        <div class="gameOptionTitle">{props.title}</div>
+        <div class="muted">{props.description}</div>
+      </div>
+      <input
+        class="gameOptionSelect"
+        type={props.type || 'text'}
+        value={props.value}
+        onChange={(event) => props.onChange(event.currentTarget.value)}
+      />
+    </label>
+  )
+}
+
 export default function GameOptionsView(props: {
   selectedGameId: string | null
   gamePreferencesById: ResolvedGamePreferencesById
@@ -106,14 +131,32 @@ export default function GameOptionsView(props: {
         <div class="gameOptionsRows">
           <GameOptionsSelectRow
             title="Status"
-            description="Track whether this game is active, in transit, returned, being sold, or already sold."
+            description="Track whether this game is active, parked, in transit, returned, being sold, or already sold."
             value={selectedPreferences().status}
             options={GAME_STATUS_OPTIONS}
             onChange={(status) => {
               if (!isGameStatus(status)) return
-              props.onUpdateGamePreferences(selectedGameId(), { status })
+              props.onUpdateGamePreferences(selectedGameId(), {
+                status,
+                estimatedDeliveryMonth:
+                  status === 'waitingOnShipping' ? selectedPreferences().estimatedDeliveryMonth : undefined,
+              })
             }}
           />
+
+          <Show when={selectedPreferences().status === 'waitingOnShipping'}>
+            <GameOptionsInputRow
+              title="Estimated delivery month"
+              description="Optional. This is used by the Fulfilment page to group incoming games."
+              type="month"
+              value={selectedPreferences().estimatedDeliveryMonth || ''}
+              onChange={(estimatedDeliveryMonth) =>
+                props.onUpdateGamePreferences(selectedGameId(), {
+                  estimatedDeliveryMonth: estimatedDeliveryMonth || undefined,
+                })
+              }
+            />
+          </Show>
 
           <GameOptionsRow
             checked={selectedPreferences().showInMonthlyChecklist}

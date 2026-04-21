@@ -10,6 +10,7 @@ export default function AchievementsView(props: {
   spiritIslandSessions?: SpiritIslandSession[]
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  onOpenGame: (gameKey: string) => void
   suppressAvailableAchievementTrackIds?: ReadonlySet<string>
 }) {
   const achievements = createMemo(() => {
@@ -28,6 +29,7 @@ export default function AchievementsView(props: {
         showGameName
         pinnedAchievementIds={props.pinnedAchievementIds}
         onTogglePin={props.onTogglePin}
+        onOpenGame={props.onOpenGame}
         suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
       />
     </div>

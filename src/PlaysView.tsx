@@ -2,6 +2,7 @@ import { For, Show } from 'solid-js'
 import type { BggPlay } from './bgg'
 import type { PlaysView as PlaysViewMode } from './appNav'
 import type { PlaysByGameRow } from './playsHelpers'
+import GameLink from './components/GameLink'
 import GameOptionsButton from './components/GameOptionsButton'
 import { findGameTabForOptions } from './gameOptionsLookup'
 import {
@@ -269,9 +270,7 @@ export default function PlaysView(props: PlaysPanelProps) {
 
                         <div class="gameInfo">
                           <div class="gameTitleRow">
-                            <button class="gameButton" type="button" onClick={() => props.onOpenGame(row.key)}>
-                              {row.name}
-                            </button>
+                            <GameLink label={row.name} gameKey={row.key} onOpenGame={props.onOpenGame} />
                             <Show when={findGameTabForOptions({ name: row.name, objectId: row.objectid || null })}>
                               {(gameId) => (
                                 <GameOptionsButton

@@ -114,6 +114,7 @@ function App() {
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
   const [firebaseSaveErrorToast, setFirebaseSaveErrorToast] = createSignal<string | null>(null)
   const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(new Set<string>())
+  const [pinnedAchievementsLoading, setPinnedAchievementsLoading] = createSignal(false)
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(new Map<string, string>())
   const [assumedMinutesByObjectId, setAssumedMinutesByObjectId] = createSignal(
     new Map<string, number>(),
@@ -180,6 +181,7 @@ function App() {
     lastAchievementsSnapshotSavedAtMs = 0
     if (!user) {
       batch(() => {
+        setPinnedAchievementsLoading(false)
         setPinnedAchievementIds(new Set<string>())
         setGamePreferencesStore({})
       })
@@ -187,15 +189,20 @@ function App() {
     }
 
     let cancelled = false
+    setPinnedAchievementsLoading(true)
     void Promise.all([fetchPinnedAchievementIds(user), fetchStoredGamePreferences(user)]).then(
       ([remotePinnedIds, remoteGamePreferences]) => {
         if (cancelled) return
         batch(() => {
           setPinnedAchievementIds(remotePinnedIds)
           setGamePreferencesStore(remoteGamePreferences)
+          setPinnedAchievementsLoading(false)
         })
       },
-    )
+    ).catch(() => {
+      if (cancelled) return
+      setPinnedAchievementsLoading(false)
+    })
 
     onCleanup(() => {
       cancelled = true
@@ -910,6 +917,7 @@ function App() {
             plays={allPlays().plays}
             gamePreferencesById={resolvedGamePreferencesById()}
             pinnedAchievementIds={pinnedAchievementIds()}
+            pinnedAchievementsLoading={pinnedAchievementsLoading()}
             suppressAvailableAchievementTrackIds={suppressAvailableTrackIds()}
             onTogglePin={toggleAchievementPin}
             onOpenGameOptions={openGameOptions}

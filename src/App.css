@@ -535,6 +535,10 @@
   gap: 14px;
 }
 
+.fulfilmentView {
+  gap: 14px;
+}
+
 .gameOptionsPicker {
   width: fit-content;
   max-width: 100%;
@@ -572,6 +576,11 @@
   gap: 10px;
 }
 
+.fulfilmentGroups {
+  display: grid;
+  gap: 12px;
+}
+
 .gameOptionRow {
   display: flex;
   justify-content: space-between;
@@ -590,10 +599,18 @@
 .gameOptionCopy {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .gameOptionTitle {
   font-weight: 650;
+}
+
+.fulfilmentRowAside {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  flex: 0 0 auto;
 }
 
 .gameOptionRow input {
@@ -932,6 +949,29 @@
 .pinnedAchievementsSections {
   display: grid;
   gap: 14px;
+}
+
+.pinnedAchievementsLoading {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  justify-items: center;
+}
+
+.loadingSpinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.16);
+  border-top-color: var(--accent);
+  animation: loadingSpinnerSpin 0.8s linear infinite;
+}
+
+@keyframes loadingSpinnerSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .pinnedAchievementsSectionHeader {
@@ -1699,6 +1739,23 @@
   min-width: 760px;
 }
 
+.feedbackModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(3, 7, 18, 0.72);
+}
+
+.feedbackModal {
+  width: min(680px, 100%);
+  max-height: min(90vh, 720px);
+  overflow: auto;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+}
+
 .statusPill {
   display: inline-flex;
   align-items: center;
@@ -1740,6 +1797,10 @@
   }
   .statsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .feedbackModalBackdrop {
+    padding: 12px;
   }
 }
 
@@ -1870,6 +1931,20 @@
 
   .gameCostMiniGrid {
     grid-template-columns: 1fr;
+  }
+
+  .gameOptionRow {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .gameOptionSelect,
+  .fulfilmentRowAside {
+    width: 100%;
+  }
+
+  .fulfilmentRowAside {
+    justify-items: start;
   }
 
   .table {

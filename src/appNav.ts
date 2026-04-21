@@ -10,6 +10,7 @@ export type MainTab =
   | GameTab
   | 'monthlyChecklist'
   | 'monthlySummary'
+  | 'fulfilment'
   | 'options'
   | 'gameOptions'
   | 'achievements'
@@ -34,6 +35,7 @@ export type MainTabOption = { value: MainTab; label: string; group: MainTabGroup
 export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
   'monthlySummary',
+  'fulfilment',
   ...SEPARATE_TAB_GAME_IDS.map((gameId) => gameId as MainTab),
   'options',
   'gameOptions',
@@ -57,6 +59,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
   { value: 'pinned', label: 'Pinned', group: 'other' },
   { value: 'costs', label: 'Costs', group: 'other' },
   { value: 'time', label: 'Time', group: 'other' },
+  { value: 'fulfilment', label: 'Fulfilment', group: 'other' },
   { value: 'feedback', label: 'Feedback', group: 'other' },
   { value: 'options', label: 'Options', group: 'other' },
   { value: 'gameOptions', label: 'Game options', group: 'other' },

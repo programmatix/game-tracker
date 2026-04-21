@@ -31,6 +31,7 @@ import {
   shouldShowGameInCostsTable,
 } from './gamePreferences'
 import { isConfigurableGameId } from './configurableGames'
+import GameLink from './components/GameLink'
 import GameOptionsButton from './components/GameOptionsButton'
 import { playQuantity } from './playsHelpers'
 
@@ -137,6 +138,7 @@ function readStoredChecklistOnly(): boolean {
 export default function CostsView(props: {
   plays: BggPlay[]
   assumedMinutesByObjectId: ReadonlyMap<string, number>
+  onOpenGame: (gameKey: string) => void
   onOpenGameOptions: (gameId: string) => void
   onUpdateGamePreferences: (gameId: string, patch: { status: GameStatus }) => void
   costTimeEstimateStatus: {
@@ -731,7 +733,7 @@ export default function CostsView(props: {
                         <td class="mono" data-label="#">{index() + 1}</td>
                         <td data-label="Game">
                           <div class="gameTitleRow">
-                            <span>{row.name}</span>
+                            <GameLink label={row.name} gameKey={row.id} onOpenGame={props.onOpenGame} />
                             <Show when={isConfigurableGameId(row.id) ? row.id : null}>
                               {(gameId) => (
                                 <GameOptionsButton

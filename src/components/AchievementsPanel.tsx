@@ -1,6 +1,7 @@
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import type { Achievement } from '../achievements/types'
 import { sortUnlockedAchievements } from '../achievements/engine'
+import GameLink from './GameLink'
 import ProgressBar from './ProgressBar'
 
 function AchievementCompletionRow(props: { achievement: Achievement }) {
@@ -76,11 +77,25 @@ function AchievementLabel(props: {
   achievement: Achievement
   showGameName?: boolean
   isPinned: () => boolean
+  onOpenGame?: (gameKey: string) => void
 }) {
   return (
     <>
       <Show when={props.showGameName}>
-        <span class="muted">{props.achievement.gameName} — </span>
+        <span class="muted">
+          <Show when={props.onOpenGame} fallback={<>{props.achievement.gameName}</>}>
+            {(onOpenGame) => (
+              <GameLink
+                label={props.achievement.gameName}
+                gameKey={props.achievement.gameId}
+                onOpenGame={onOpenGame()}
+                inline
+                class="muted"
+              />
+            )}
+          </Show>{' '}
+          —{' '}
+        </span>
       </Show>
       <span>{props.achievement.title}</span>
       <Show when={props.isPinned() && props.achievement.status === 'completed'}>
@@ -96,6 +111,7 @@ function AchievementTableRow(props: {
   isPinned: () => boolean
   showGameName?: boolean
   onTogglePin: (achievementId: string) => void
+  onOpenGame?: (gameKey: string) => void
   progressWidthPx: number
   showRemainingColumn: boolean
 }) {
@@ -140,6 +156,7 @@ function AchievementTableRow(props: {
           achievement={props.achievement}
           showGameName={props.showGameName}
           isPinned={props.isPinned}
+          onOpenGame={props.onOpenGame}
         />
       </td>
       <Show when={props.showRemainingColumn}>
@@ -165,6 +182,7 @@ function AchievementsTable(props: {
   achievements: Achievement[]
   showGameName?: boolean
   onTogglePin: (achievementId: string) => void
+  onOpenGame?: (gameKey: string) => void
   isPinned: (achievementId: string) => boolean
   progressWidthPx: number
   showRemainingColumn: boolean
@@ -190,6 +208,7 @@ function AchievementsTable(props: {
                 isPinned={() => props.isPinned(achievement.id)}
                 showGameName={props.showGameName}
                 onTogglePin={props.onTogglePin}
+                onOpenGame={props.onOpenGame}
                 progressWidthPx={props.progressWidthPx}
                 showRemainingColumn={props.showRemainingColumn}
               />
@@ -205,6 +224,7 @@ function AchievementsByType(props: {
   groups: AchievementTypeGroup[]
   showGameName?: boolean
   onTogglePin: (achievementId: string) => void
+  onOpenGame?: (gameKey: string) => void
   isPinned: (achievementId: string) => boolean
   progressWidthPx: number
   showRemainingColumn: boolean
@@ -218,6 +238,7 @@ function AchievementsByType(props: {
             achievements={group.achievements}
             showGameName={props.showGameName}
             onTogglePin={props.onTogglePin}
+            onOpenGame={props.onOpenGame}
             isPinned={props.isPinned}
             progressWidthPx={props.progressWidthPx}
             showRemainingColumn={props.showRemainingColumn}
@@ -235,6 +256,7 @@ export default function AchievementsPanel(props: {
   showGameName?: boolean
   pinnedAchievementIds: ReadonlySet<string>
   onTogglePin: (achievementId: string) => void
+  onOpenGame?: (gameKey: string) => void
   suppressAvailableTrackIds?: ReadonlySet<string>
 }) {
   const isPinned = (achievementId: string) => props.pinnedAchievementIds.has(achievementId)
@@ -306,6 +328,7 @@ export default function AchievementsPanel(props: {
           achievements={pinnedAchievements()}
           showGameName={props.showGameName}
           onTogglePin={props.onTogglePin}
+          onOpenGame={props.onOpenGame}
           isPinned={isPinned}
           progressWidthPx={220}
           showRemainingColumn
@@ -347,6 +370,7 @@ export default function AchievementsPanel(props: {
                     groups={combinedByType()}
                     showGameName={props.showGameName}
                     onTogglePin={props.onTogglePin}
+                    onOpenGame={props.onOpenGame}
                     isPinned={isPinned}
                     progressWidthPx={240}
                     showRemainingColumn
@@ -357,6 +381,7 @@ export default function AchievementsPanel(props: {
                   achievements={combinedByRemaining()}
                   showGameName={props.showGameName}
                   onTogglePin={props.onTogglePin}
+                  onOpenGame={props.onOpenGame}
                   isPinned={isPinned}
                   progressWidthPx={240}
                   showRemainingColumn
@@ -378,6 +403,7 @@ export default function AchievementsPanel(props: {
                     groups={availableByType()}
                     showGameName={props.showGameName}
                     onTogglePin={props.onTogglePin}
+                    onOpenGame={props.onOpenGame}
                     isPinned={isPinned}
                     progressWidthPx={240}
                     showRemainingColumn
@@ -388,6 +414,7 @@ export default function AchievementsPanel(props: {
                   achievements={sortedForAllAchievements().available}
                   showGameName={props.showGameName}
                   onTogglePin={props.onTogglePin}
+                  onOpenGame={props.onOpenGame}
                   isPinned={isPinned}
                   progressWidthPx={240}
                   showRemainingColumn
@@ -404,6 +431,7 @@ export default function AchievementsPanel(props: {
                     groups={completedByType()}
                     showGameName={props.showGameName}
                     onTogglePin={props.onTogglePin}
+                    onOpenGame={props.onOpenGame}
                     isPinned={isPinned}
                     progressWidthPx={240}
                     showRemainingColumn={false}
@@ -414,6 +442,7 @@ export default function AchievementsPanel(props: {
                   achievements={sortedForAllAchievements().completed}
                   showGameName={props.showGameName}
                   onTogglePin={props.onTogglePin}
+                  onOpenGame={props.onOpenGame}
                   isPinned={isPinned}
                   progressWidthPx={240}
                   showRemainingColumn={false}

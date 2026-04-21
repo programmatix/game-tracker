@@ -1,11 +1,13 @@
 import { For, Show } from 'solid-js'
 import type { Achievement } from '../achievements/types'
+import GameLink from './GameLink'
 import ProgressBar from './ProgressBar'
 
 export default function NewAchievementsBanner(props: {
   unlocked: Achievement[]
   nextAfterDismiss?: Achievement
   onDismissAll: () => void
+  onOpenGame?: (gameKey: string) => void
 }) {
   return (
     <div class="newAchievementsBanner" role="status" aria-live="polite">
@@ -35,7 +37,20 @@ export default function NewAchievementsBanner(props: {
               {(achievement) => (
                 <tr>
                   <td>
-                    <span class="muted">{achievement.gameName} — </span>
+                    <span class="muted">
+                      <Show when={props.onOpenGame} fallback={<>{achievement.gameName}</>}>
+                        {(onOpenGame) => (
+                          <GameLink
+                            label={achievement.gameName}
+                            gameKey={achievement.gameId}
+                            onOpenGame={onOpenGame()}
+                            inline
+                            class="muted"
+                          />
+                        )}
+                      </Show>{' '}
+                      —{' '}
+                    </span>
                     <span>{achievement.title}</span>
                   </td>
                   <td class="mono">{achievement.progressLabel}</td>
@@ -54,7 +69,20 @@ export default function NewAchievementsBanner(props: {
             </div>
             <div class="newAchievementsBannerNextRow">
               <div>
-                <span class="muted">{next().gameName} — </span>
+                <span class="muted">
+                  <Show when={props.onOpenGame} fallback={<>{next().gameName}</>}>
+                    {(onOpenGame) => (
+                      <GameLink
+                        label={next().gameName}
+                        gameKey={next().gameId}
+                        onOpenGame={onOpenGame()}
+                        inline
+                        class="muted"
+                      />
+                    )}
+                  </Show>{' '}
+                  —{' '}
+                </span>
                 <span>{next().title}</span>
               </div>
               <ProgressBar
@@ -70,4 +98,3 @@ export default function NewAchievementsBanner(props: {
     </div>
   )
 }
-

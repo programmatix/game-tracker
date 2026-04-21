@@ -6,10 +6,13 @@ import {
   isConfigurableGameId,
   normalizeConfigurableGameId,
 } from './configurableGames'
+import { isMonthKey } from './monthKey'
 
 export const GAME_STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
-  { value: 'waitingOnShipping', label: 'Waiting on shipping' },
+  { value: 'parkedUntilFirstPlay', label: 'Parked until first play' },
+  { value: 'parkedUntilReplay', label: 'Parked until replay' },
+  { value: 'waitingOnShipping', label: 'Awaiting shipping' },
   { value: 'returned', label: 'Returned' },
   { value: 'selling', label: 'Selling' },
   { value: 'sold', label: 'Sold' },
@@ -23,6 +26,7 @@ export type GamePreferences = {
   showInCostsTable: boolean
   calculateAchievements: boolean
   status: GameStatus
+  estimatedDeliveryMonth?: string
 }
 
 export type StoredGamePreferences = Partial<GamePreferences>
@@ -33,6 +37,12 @@ export type ResolvedGamePreferencesById = Record<string, GamePreferences>
 
 const [storedGamePreferencesById, setStoredGamePreferencesById] =
   createSignal<StoredGamePreferencesById>({})
+
+function normalizeEstimatedDeliveryMonth(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return isMonthKey(trimmed) ? trimmed : undefined
+}
 
 export function isGameStatus(value: unknown): value is GameStatus {
   return GAME_STATUS_OPTIONS.some((option) => option.value === value)
@@ -79,6 +89,9 @@ export function resolveGamePreferences(
         ? raw.calculateAchievements
         : defaults.calculateAchievements,
     status: isGameStatus(raw?.status) ? raw.status : defaults.status,
+    estimatedDeliveryMonth: raw?.status === 'waitingOnShipping'
+      ? normalizeEstimatedDeliveryMonth(raw?.estimatedDeliveryMonth)
+      : undefined,
   }
 }
 
@@ -119,6 +132,11 @@ export function normalizeStoredGamePreferencesById(input: unknown): StoredGamePr
     }
     if (isGameStatus(rawRecord.status)) {
       next.status = rawRecord.status
+    }
+    const estimatedDeliveryMonth =
+      next.status === 'waitingOnShipping' ? normalizeEstimatedDeliveryMonth(rawRecord.estimatedDeliveryMonth) : undefined
+    if (estimatedDeliveryMonth) {
+      next.estimatedDeliveryMonth = estimatedDeliveryMonth
     }
 
     if (Object.keys(next).length > 0) normalized[game.id] = next

@@ -264,7 +264,7 @@ export function buildPerItemTrack(input: {
   return {
     trackId: input.trackId,
     achievementBaseId: input.achievementBaseId,
-    typeLabel: input.typeLabel ?? `${input.verb} each ${noun} by ${pluralize(2, input.unitSingular)}`,
+    typeLabel: input.typeLabel ?? buildPerItemTypeLabel(input.verb, noun, input.unitSingular),
     kind: 'perItem',
     futureLevelsToShow: input.futureLevelsToShow,
     levels,
