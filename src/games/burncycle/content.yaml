@@ -370,43 +370,51 @@ captains:
   - display: Brigade
     id: Brigade
     group: Core
+    alias: [cBr]
   - display: Chrak
     id: Chrak
     group: Core
+    alias: [cCh]
   - display: Crucible
     id: Crucible
-    aliases: [Cr, CCr]
+    alias: [cCr]
     group: Core
   - display: Grimmis
     id: Grimmis
     group: Core
+    alias: [cGr]
   - display: Leer
     id: Leer
     group: Core
+    alias: [cLe]
   - display: Zuk
     id: Zuk
     group: Core
+    alias: [cZu]
 
   - display: iBoss
     id: iBoss
-    aliases: [IBoss]
+    alias: [cIB]
     group: BioDefend
   - display: Tendril
     id: Tendril
     group: BioDefend
+    alias: [cTn]
 
   - display: Fauxbia
     id: Fauxbia
     group: Ebbwall
+    alias: [cFa]
   - display: Latticewerk
     id: Latticewerk
     aliases: [Lattice]
     group: Ebbwall
+    alias: [cLa]
 
   - display: Stamp
     id: Stamp
     group: Robophobia
-
+    alias: [cSt]
 costs:
   currency: "£"
   boxes:

@@ -40,6 +40,7 @@ import ArkhamHorrorLcgView from './games/arkham-horror-lcg/ArkhamHorrorLcgView'
 import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
 import NanolithView from './games/nanolith/NanolithView'
 import AchievementsView from './AchievementsView'
+import PinnedAchievementsView from './PinnedAchievementsView'
 import CostsView from './CostsView'
 import TimeView from './TimeView'
 import GameOptionsView from './GameOptionsView'
@@ -421,6 +422,16 @@ export default function AppContent(props: AppContentProps) {
           spiritIslandSessions={props.spiritIslandSessions}
           pinnedAchievementIds={props.pinnedAchievementIds}
           suppressAvailableAchievementTrackIds={props.suppressAvailableAchievementTrackIds}
+          onTogglePin={props.onTogglePin}
+        />
+      </Show>
+
+      <Show when={props.mainTab === 'pinned'}>
+        <PinnedAchievementsView
+          plays={props.plays}
+          username={props.username}
+          spiritIslandSessions={props.spiritIslandSessions}
+          pinnedAchievementIds={props.pinnedAchievementIds}
           onTogglePin={props.onTogglePin}
         />
       </Show>

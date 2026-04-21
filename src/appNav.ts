@@ -13,6 +13,7 @@ export type MainTab =
   | 'options'
   | 'gameOptions'
   | 'achievements'
+  | 'pinned'
   | 'costs'
   | 'time'
   | 'feedback'
@@ -37,6 +38,7 @@ export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'options',
   'gameOptions',
   'achievements',
+  'pinned',
   'costs',
   'time',
   'feedback',
@@ -52,6 +54,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
     group: 'games' as const,
   })),
   { value: 'achievements', label: 'Achievements', group: 'other' },
+  { value: 'pinned', label: 'Pinned', group: 'other' },
   { value: 'costs', label: 'Costs', group: 'other' },
   { value: 'time', label: 'Time', group: 'other' },
   { value: 'feedback', label: 'Feedback', group: 'other' },
