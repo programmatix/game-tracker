@@ -24,6 +24,7 @@ export function buildUnlockedAchievementsForTrack(input: {
   track: AchievementTrack
 }): Achievement[] {
   const achievements: Achievement[] = []
+  const stopAfterFirstIncomplete = input.track.showAllFutureLevels !== true
   let isStillUnlocking = true
 
   for (const level of input.track.levels) {
@@ -52,7 +53,7 @@ export function buildUnlockedAchievementsForTrack(input: {
       completion,
     })
 
-    if (!progress.isComplete) isStillUnlocking = false
+    if (stopAfterFirstIncomplete && !progress.isComplete) isStillUnlocking = false
   }
 
   return achievements

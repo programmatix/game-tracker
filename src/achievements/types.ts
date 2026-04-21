@@ -40,6 +40,7 @@ export type AchievementTrack = {
   achievementBaseId: string
   typeLabel?: string
   kind: AchievementKind
+  showAllFutureLevels?: boolean
   titleForLevel: (level: number) => string
   progressForLevel: (level: number) => AchievementProgress
   completionForLevel?: (level: number) => AchievementCompletion | undefined

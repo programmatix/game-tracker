@@ -41,6 +41,180 @@ function groupAchievementsByType(achievements: Achievement[]): AchievementTypeGr
   }))
 }
 
+function compareAchievementsByRemaining(a: Achievement, b: Achievement) {
+  const aCompleted = a.status === 'completed'
+  const bCompleted = b.status === 'completed'
+  if (aCompleted !== bCompleted) return aCompleted ? 1 : -1
+  if (a.remainingPlays !== b.remainingPlays) return a.remainingPlays - b.remainingPlays
+  if (a.playsSoFar !== b.playsSoFar) return b.playsSoFar - a.playsSoFar
+  return a.title.localeCompare(b.title)
+}
+
+function compareAchievementsWithinType(a: Achievement, b: Achievement) {
+  const aCompleted = a.status === 'completed'
+  const bCompleted = b.status === 'completed'
+  if (aCompleted !== bCompleted) return aCompleted ? 1 : -1
+  if (!aCompleted && !bCompleted) return compareAchievementsByRemaining(a, b)
+  if (b.level !== a.level) return b.level - a.level
+  return a.title.localeCompare(b.title)
+}
+
+function AchievementLabel(props: {
+  achievement: Achievement
+  showGameName?: boolean
+  isPinned: () => boolean
+}) {
+  return (
+    <>
+      <Show when={props.showGameName}>
+        <span class="muted">{props.achievement.gameName} — </span>
+      </Show>
+      <span>{props.achievement.title}</span>
+      <Show when={props.isPinned() && props.achievement.status === 'completed'}>
+        <span class="achievementTag">Unlocked</span>
+      </Show>
+      <AchievementCompletionRow achievement={props.achievement} />
+    </>
+  )
+}
+
+function AchievementTableRow(props: {
+  achievement: Achievement
+  isPinned: () => boolean
+  showGameName?: boolean
+  onTogglePin: (achievementId: string) => void
+  progressWidthPx: number
+  showRemainingColumn: boolean
+}) {
+  const togglePin = (source: 'row' | 'button' | 'keyboard') => {
+    console.log('achievement pin toggle requested', {
+      source,
+      achievementId: props.achievement.id,
+      title: props.achievement.title,
+      currentlyPinned: props.isPinned(),
+    })
+    props.onTogglePin(props.achievement.id)
+  }
+
+  return (
+    <tr
+      class="achievementRow"
+      tabIndex={0}
+      onClick={() => togglePin('row')}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        togglePin('keyboard')
+      }}
+      aria-label={`${props.isPinned() ? 'Unpin' : 'Pin'} achievement ${props.achievement.title}`}
+    >
+      <td class="pinCell">
+        <button
+          class="pinButton"
+          classList={{ pinButtonActive: props.isPinned() }}
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            togglePin('button')
+          }}
+          aria-label={props.isPinned() ? 'Unpin achievement' : 'Pin achievement'}
+        >
+          {props.isPinned() ? '★' : '☆'}
+        </button>
+      </td>
+      <td>
+        <AchievementLabel
+          achievement={props.achievement}
+          showGameName={props.showGameName}
+          isPinned={props.isPinned}
+        />
+      </td>
+      <Show when={props.showRemainingColumn}>
+        <td class="mono">
+          <Show when={props.achievement.status === 'available'} fallback={<span class="muted">—</span>}>
+            {props.achievement.remainingPlays.toLocaleString()}
+          </Show>
+        </td>
+      </Show>
+      <td>
+        <ProgressBar
+          value={props.achievement.progressValue}
+          target={props.achievement.progressTarget}
+          widthPx={props.progressWidthPx}
+          label={props.achievement.progressLabel}
+        />
+      </td>
+    </tr>
+  )
+}
+
+function AchievementsTable(props: {
+  achievements: Achievement[]
+  showGameName?: boolean
+  onTogglePin: (achievementId: string) => void
+  isPinned: (achievementId: string) => boolean
+  progressWidthPx: number
+  showRemainingColumn: boolean
+}) {
+  return (
+    <div class="tableWrap compact">
+      <table class="table compactTable">
+        <thead>
+          <tr>
+            <th class="pinCell" aria-label="Pinned"></th>
+            <th>Achievement</th>
+            <Show when={props.showRemainingColumn}>
+              <th class="mono">Remaining</th>
+            </Show>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          <For each={props.achievements}>
+            {(achievement) => (
+              <AchievementTableRow
+                achievement={achievement}
+                isPinned={() => props.isPinned(achievement.id)}
+                showGameName={props.showGameName}
+                onTogglePin={props.onTogglePin}
+                progressWidthPx={props.progressWidthPx}
+                showRemainingColumn={props.showRemainingColumn}
+              />
+            )}
+          </For>
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function AchievementsByType(props: {
+  groups: AchievementTypeGroup[]
+  showGameName?: boolean
+  onTogglePin: (achievementId: string) => void
+  isPinned: (achievementId: string) => boolean
+  progressWidthPx: number
+  showRemainingColumn: boolean
+}) {
+  return (
+    <For each={props.groups}>
+      {(group) => (
+        <div class="achievementTypeGroup">
+          <h5 class="achievementsTypeTitle">{group.typeLabel}</h5>
+          <AchievementsTable
+            achievements={group.achievements}
+            showGameName={props.showGameName}
+            onTogglePin={props.onTogglePin}
+            isPinned={props.isPinned}
+            progressWidthPx={props.progressWidthPx}
+            showRemainingColumn={props.showRemainingColumn}
+          />
+        </div>
+      )}
+    </For>
+  )
+}
+
 export default function AchievementsPanel(props: {
   title?: string
   achievements: Achievement[]
@@ -77,10 +251,20 @@ export default function AchievementsPanel(props: {
     const remainingSlots = Math.max(0, props.nextLimit - pinned.length)
     return [...pinned, ...unpinned.slice(0, remainingSlots)]
   })
-  const [sortMode, setSortMode] = createSignal<AchievementSortMode>('remaining')
-  const [includeCompletedInTypeView, setIncludeCompletedInTypeView] = createSignal(true)
+  const [sortMode, setSortMode] = createSignal<AchievementSortMode>('type')
+  const [separateCompleted, setSeparateCompleted] = createSignal(false)
+
   const availableByType = createMemo(() => groupAchievementsByType(sorted().available))
   const completedByType = createMemo(() => groupAchievementsByType(sorted().completed))
+  const combinedByType = createMemo(() =>
+    groupAchievementsByType([...sorted().available, ...sorted().completed]).map((group) => ({
+      ...group,
+      achievements: group.achievements.slice().sort(compareAchievementsWithinType),
+    })),
+  )
+  const combinedByRemaining = createMemo(() =>
+    [...sorted().available, ...sorted().completed].slice().sort(compareAchievementsByRemaining),
+  )
 
   return (
     <div class="statsBlock">
@@ -97,58 +281,14 @@ export default function AchievementsPanel(props: {
         when={nextLocked().length > 0}
         fallback={<div class="muted">No locked achievements.</div>}
       >
-        <div class="tableWrap compact">
-          <table class="table compactTable">
-            <thead>
-              <tr>
-                <th class="pinCell" aria-label="Pinned"></th>
-                <th>Next</th>
-                <th class="mono">Remaining</th>
-                <th>Progress</th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={nextLocked()}>
-                {(achievement) => (
-                  <tr>
-                    <td class="pinCell">
-                      <button
-                        class="pinButton"
-                        classList={{ pinButtonActive: isPinned(achievement.id) }}
-                        type="button"
-                        onClick={() => props.onTogglePin(achievement.id)}
-                        aria-label={
-                          isPinned(achievement.id) ? 'Unpin achievement' : 'Pin achievement'
-                        }
-                      >
-                        {isPinned(achievement.id) ? '★' : '☆'}
-                      </button>
-                    </td>
-                    <td>
-                      <Show when={props.showGameName}>
-                        <span class="muted">{achievement.gameName} — </span>
-                      </Show>
-                      <span>{achievement.title}</span>
-                      <Show when={isPinned(achievement.id) && achievement.status === 'completed'}>
-                        <span class="achievementTag">Unlocked</span>
-                      </Show>
-                      <AchievementCompletionRow achievement={achievement} />
-                    </td>
-                    <td class="mono">{achievement.remainingPlays.toLocaleString()}</td>
-                    <td>
-                      <ProgressBar
-                        value={achievement.progressValue}
-                        target={achievement.progressTarget}
-                        widthPx={220}
-                        label={achievement.progressLabel}
-                      />
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
-        </div>
+        <AchievementsTable
+          achievements={nextLocked()}
+          showGameName={props.showGameName}
+          onTogglePin={props.onTogglePin}
+          isPinned={isPinned}
+          progressWidthPx={220}
+          showRemainingColumn
+        />
       </Show>
 
       <details class="details">
@@ -166,260 +306,98 @@ export default function AchievementsPanel(props: {
                 <option value="type">Type</option>
               </select>
             </label>
-            <Show when={sortMode() === 'type'}>
-              <label class="checkboxLabel">
-                <input
-                  type="checkbox"
-                  checked={includeCompletedInTypeView()}
-                  onChange={(event) => setIncludeCompletedInTypeView(event.currentTarget.checked)}
-                />
-                Include completed
-              </label>
-            </Show>
+            <label class="checkboxLabel">
+              <input
+                type="checkbox"
+                checked={separateCompleted()}
+                onChange={(event) => setSeparateCompleted(event.currentTarget.checked)}
+              />
+              Separate completed
+            </label>
           </div>
-          <Show
-            when={sorted().available.length > 0}
-            fallback={<div class="muted">No locked achievements.</div>}
-          >
-            <h4 class="achievementsSectionTitle">Locked</h4>
-            <Show
-              when={sortMode() === 'remaining'}
-              fallback={
-                <For each={availableByType()}>
-                  {(group) => (
-                    <div class="achievementTypeGroup">
-                      <h5 class="achievementsTypeTitle">{group.typeLabel}</h5>
-                      <div class="tableWrap compact">
-                        <table class="table compactTable">
-                          <thead>
-                            <tr>
-                              <th class="pinCell" aria-label="Pinned"></th>
-                              <th>Achievement</th>
-                              <th class="mono">Remaining</th>
-                              <th>Progress</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <For each={group.achievements}>
-                              {(achievement) => (
-                                <tr>
-                                  <td class="pinCell">
-                                    <button
-                                      class="pinButton"
-                                      classList={{ pinButtonActive: isPinned(achievement.id) }}
-                                      type="button"
-                                      onClick={() => props.onTogglePin(achievement.id)}
-                                      aria-label={
-                                        isPinned(achievement.id)
-                                          ? 'Unpin achievement'
-                                          : 'Pin achievement'
-                                      }
-                                    >
-                                      {isPinned(achievement.id) ? '★' : '☆'}
-                                    </button>
-                                  </td>
-                                  <td>
-                                    <Show when={props.showGameName}>
-                                      <span class="muted">{achievement.gameName} — </span>
-                                    </Show>
-                                    <span>{achievement.title}</span>
-                                    <Show
-                                      when={isPinned(achievement.id) && achievement.status === 'completed'}
-                                    >
-                                      <span class="achievementTag">Unlocked</span>
-                                    </Show>
-                                    <AchievementCompletionRow achievement={achievement} />
-                                  </td>
-                                  <td class="mono">{achievement.remainingPlays.toLocaleString()}</td>
-                                  <td>
-                                    <ProgressBar
-                                      value={achievement.progressValue}
-                                      target={achievement.progressTarget}
-                                      widthPx={240}
-                                      label={achievement.progressLabel}
-                                    />
-                                  </td>
-                                </tr>
-                              )}
-                            </For>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </For>
-              }
-            >
-              <div class="tableWrap compact">
-                <table class="table compactTable">
-                  <thead>
-                    <tr>
-                      <th class="pinCell" aria-label="Pinned"></th>
-                      <th>Achievement</th>
-                      <th class="mono">Remaining</th>
-                      <th>Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <For each={sorted().available}>
-                      {(achievement) => (
-                        <tr>
-                          <td class="pinCell">
-                            <button
-                              class="pinButton"
-                              classList={{ pinButtonActive: isPinned(achievement.id) }}
-                              type="button"
-                              onClick={() => props.onTogglePin(achievement.id)}
-                              aria-label={
-                                isPinned(achievement.id) ? 'Unpin achievement' : 'Pin achievement'
-                              }
-                            >
-                              {isPinned(achievement.id) ? '★' : '☆'}
-                            </button>
-                          </td>
-                          <td>
-                            <Show when={props.showGameName}>
-                              <span class="muted">{achievement.gameName} — </span>
-                            </Show>
-                            <span>{achievement.title}</span>
-                            <Show when={isPinned(achievement.id) && achievement.status === 'completed'}>
-                              <span class="achievementTag">Unlocked</span>
-                            </Show>
-                            <AchievementCompletionRow achievement={achievement} />
-                          </td>
-                          <td class="mono">{achievement.remainingPlays.toLocaleString()}</td>
-                          <td>
-                            <ProgressBar
-                              value={achievement.progressValue}
-                              target={achievement.progressTarget}
-                              widthPx={240}
-                              label={achievement.progressLabel}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </For>
-                  </tbody>
-                </table>
-              </div>
+
+          <Show when={!separateCompleted()}>
+            <Show when={combinedByRemaining().length > 0} fallback={<div class="muted">No achievements.</div>}>
+              <h4 class="achievementsSectionTitle">Achievements</h4>
+              <Show
+                when={sortMode() === 'remaining'}
+                fallback={
+                  <AchievementsByType
+                    groups={combinedByType()}
+                    showGameName={props.showGameName}
+                    onTogglePin={props.onTogglePin}
+                    isPinned={isPinned}
+                    progressWidthPx={240}
+                    showRemainingColumn
+                  />
+                }
+              >
+                <AchievementsTable
+                  achievements={combinedByRemaining()}
+                  showGameName={props.showGameName}
+                  onTogglePin={props.onTogglePin}
+                  isPinned={isPinned}
+                  progressWidthPx={240}
+                  showRemainingColumn
+                />
+              </Show>
             </Show>
           </Show>
 
-          <Show
-            when={
-              sorted().completed.length > 0 &&
-              (sortMode() === 'remaining' || includeCompletedInTypeView())
-            }
-          >
-            <h4 class="achievementsSectionTitle">Completed</h4>
+          <Show when={separateCompleted()}>
             <Show
-              when={sortMode() === 'remaining'}
-              fallback={
-                <For each={completedByType()}>
-                  {(group) => (
-                    <div class="achievementTypeGroup">
-                      <h5 class="achievementsTypeTitle">{group.typeLabel}</h5>
-                      <div class="tableWrap compact">
-                        <table class="table compactTable">
-                          <thead>
-                            <tr>
-                              <th class="pinCell" aria-label="Pinned"></th>
-                              <th>Achievement</th>
-                              <th>Progress</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <For each={group.achievements}>
-                              {(achievement) => (
-                                <tr>
-                                  <td class="pinCell">
-                                    <button
-                                      class="pinButton"
-                                      classList={{ pinButtonActive: isPinned(achievement.id) }}
-                                      type="button"
-                                      onClick={() => props.onTogglePin(achievement.id)}
-                                      aria-label={
-                                        isPinned(achievement.id)
-                                          ? 'Unpin achievement'
-                                          : 'Pin achievement'
-                                      }
-                                    >
-                                      {isPinned(achievement.id) ? '★' : '☆'}
-                                    </button>
-                                  </td>
-                                  <td>
-                                    <Show when={props.showGameName}>
-                                      <span class="muted">{achievement.gameName} — </span>
-                                    </Show>
-                                    <span>{achievement.title}</span>
-                                    <AchievementCompletionRow achievement={achievement} />
-                                  </td>
-                                  <td>
-                                    <ProgressBar
-                                      value={achievement.progressValue}
-                                      target={achievement.progressTarget}
-                                      widthPx={240}
-                                      label={achievement.progressLabel}
-                                    />
-                                  </td>
-                                </tr>
-                              )}
-                            </For>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </For>
-              }
+              when={sorted().available.length > 0}
+              fallback={<div class="muted">No locked achievements.</div>}
             >
-              <div class="tableWrap compact">
-                <table class="table compactTable">
-                  <thead>
-                    <tr>
-                      <th class="pinCell" aria-label="Pinned"></th>
-                      <th>Achievement</th>
-                      <th>Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <For each={sorted().completed}>
-                      {(achievement) => (
-                        <tr>
-                          <td class="pinCell">
-                            <button
-                              class="pinButton"
-                              classList={{ pinButtonActive: isPinned(achievement.id) }}
-                              type="button"
-                              onClick={() => props.onTogglePin(achievement.id)}
-                              aria-label={
-                                isPinned(achievement.id) ? 'Unpin achievement' : 'Pin achievement'
-                              }
-                            >
-                              {isPinned(achievement.id) ? '★' : '☆'}
-                            </button>
-                          </td>
-                          <td>
-                            <Show when={props.showGameName}>
-                              <span class="muted">{achievement.gameName} — </span>
-                            </Show>
-                            <span>{achievement.title}</span>
-                            <AchievementCompletionRow achievement={achievement} />
-                          </td>
-                          <td>
-                            <ProgressBar
-                              value={achievement.progressValue}
-                              target={achievement.progressTarget}
-                              widthPx={240}
-                              label={achievement.progressLabel}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </For>
-                  </tbody>
-                </table>
-              </div>
+              <h4 class="achievementsSectionTitle">Locked</h4>
+              <Show
+                when={sortMode() === 'remaining'}
+                fallback={
+                  <AchievementsByType
+                    groups={availableByType()}
+                    showGameName={props.showGameName}
+                    onTogglePin={props.onTogglePin}
+                    isPinned={isPinned}
+                    progressWidthPx={240}
+                    showRemainingColumn
+                  />
+                }
+              >
+                <AchievementsTable
+                  achievements={sorted().available}
+                  showGameName={props.showGameName}
+                  onTogglePin={props.onTogglePin}
+                  isPinned={isPinned}
+                  progressWidthPx={240}
+                  showRemainingColumn
+                />
+              </Show>
+            </Show>
+
+            <Show when={sorted().completed.length > 0}>
+              <h4 class="achievementsSectionTitle">Completed</h4>
+              <Show
+                when={sortMode() === 'remaining'}
+                fallback={
+                  <AchievementsByType
+                    groups={completedByType()}
+                    showGameName={props.showGameName}
+                    onTogglePin={props.onTogglePin}
+                    isPinned={isPinned}
+                    progressWidthPx={240}
+                    showRemainingColumn={false}
+                  />
+                }
+              >
+                <AchievementsTable
+                  achievements={sorted().completed}
+                  showGameName={props.showGameName}
+                  onTogglePin={props.onTogglePin}
+                  isPinned={isPinned}
+                  progressWidthPx={240}
+                  showRemainingColumn={false}
+                />
+              </Show>
             </Show>
           </Show>
         </div>

@@ -1,9 +1,8 @@
-import { Show, createMemo, createResource, createSignal } from 'solid-js'
+import { For, Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import CountTable from '../../components/CountTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
-import HeatmapMatrix from '../../components/HeatmapMatrix'
 import AchievementsPanel from '../../components/AchievementsPanel'
 import GameThingThumb from '../../components/GameThingThumb'
 import { computeGameAchievements } from '../../achievements/games'
@@ -25,8 +24,6 @@ import {
 import { burncycleContent } from './content'
 import { BURNCYCLE_OBJECT_ID, getBurncycleEntries } from './burncycleEntries'
 
-type MatrixDisplayMode = 'count' | 'played'
-
 function knownBots(entry: ReturnType<typeof getBurncycleEntries>[number]): string[] {
   return [...new Set(entry.bots.filter((bot) => bot !== 'Unknown bot'))]
 }
@@ -40,8 +37,6 @@ export default function BurncycleView(props: {
   onTogglePin: (achievementId: string) => void
   onOpenPlays: (request: PlaysDrilldownRequest) => void
 }) {
-  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<MatrixDisplayMode>('played')
-
   const [thing] = createResource(
     () => ({ id: BURNCYCLE_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
@@ -131,6 +126,21 @@ export default function BurncycleView(props: {
     return counts
   })
 
+  const missionCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) incrementCount(counts, entry.mission, entry.quantity)
+    return counts
+  })
+
+  const missionWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.mission, entry.quantity)
+    }
+    return counts
+  })
+
   const playIdsByBot = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
@@ -157,38 +167,10 @@ export default function BurncycleView(props: {
     return ids
   })
 
-  const matrix = createMemo(() => {
-    const counts: Record<string, Record<string, number>> = {}
+  const playIdsByMission = createMemo(() => {
+    const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
-      counts[entry.corporation] ||= {}
-      for (const bot of knownBots(entry)) {
-        incrementCount(counts[entry.corporation]!, bot, entry.quantity)
-      }
-    }
-    return counts
-  })
-
-  const matrixWins = createMemo(() => {
-    const counts: Record<string, Record<string, number>> = {}
-    for (const entry of entries()) {
-      if (!entry.isWin) continue
-      counts[entry.corporation] ||= {}
-      for (const bot of knownBots(entry)) {
-        incrementCount(counts[entry.corporation]!, bot, entry.quantity)
-      }
-    }
-    return counts
-  })
-
-  const playIdsByPair = createMemo(() => {
-    const ids = new Map<string, number[]>()
-    for (const entry of entries()) {
-      for (const bot of knownBots(entry)) {
-        const key = `${entry.corporation}|||${bot}`
-        const existing = ids.get(key)
-        if (existing) existing.push(entry.play.id)
-        else ids.set(key, [entry.play.id])
-      }
+      ;(ids[entry.mission] ||= []).push(entry.play.id)
     }
     return ids
   })
@@ -308,6 +290,39 @@ export default function BurncycleView(props: {
     ),
   )
 
+  const missionGroupOrder = createMemo(() => {
+    const order: string[] = []
+    const seen = new Set<string>()
+    for (const mission of burncycleContent.missions) {
+      const group = burncycleContent.missionCorpByName.get(mission)?.trim() || ''
+      if (!group || seen.has(group)) continue
+      seen.add(group)
+      order.push(group)
+    }
+    return order
+  })
+
+  const missionKeys = createMemo(() =>
+    sortKeysByGroupThenCountDesc(
+      mergeCanonicalKeys(sortKeysByCountDesc(missionCounts()), burncycleContent.missions),
+      missionCounts(),
+      (mission) => burncycleContent.missionCorpByName.get(mission),
+      missionGroupOrder(),
+    ),
+  )
+
+  const missionRows = createMemo(() =>
+    missionKeys().map((mission) => ({
+      mission,
+      corp: burncycleContent.missionCorpByName.get(mission) || 'Unknown corporation',
+      played: (missionCounts()[mission] ?? 0) > 0,
+      plays: missionCounts()[mission] ?? 0,
+      wins: missionWins()[mission] ?? 0,
+      complexity: burncycleContent.missionComplexityByName.get(mission),
+      floors: burncycleContent.missionFloorsByName.get(mission),
+    })),
+  )
+
   const corporationKeys = createMemo(() =>
     sortKeysByGroupThenCountDesc(
       mergeCanonicalKeys(sortKeysByCountDesc(corporationCounts()), burncycleContent.corporations),
@@ -325,16 +340,6 @@ export default function BurncycleView(props: {
       groupOrder(),
     ),
   )
-
-  const maxCellCount = createMemo(() => {
-    let max = 0
-    for (const row of Object.values(matrix())) {
-      for (const value of Object.values(row)) {
-        if (value > max) max = value
-      }
-    }
-    return max
-  })
 
   const nextForTrackPrefix = (prefix: string, label: string) => {
     const itemId = slugifyAchievementItemId(label)
@@ -390,53 +395,6 @@ export default function BurncycleView(props: {
         </div>
       </div>
 
-      <div class="statsBlock">
-        <div class="statsTitleRow">
-          <h3 class="statsTitle">Corporation × Bot</h3>
-          <div class="segmented" role="group" aria-label="Matrix display mode">
-            <button
-              type="button"
-              class="segmentedBtn"
-              classList={{ segmentedBtnActive: matrixDisplayMode() === 'played' }}
-              onClick={() => setMatrixDisplayMode('played')}
-            >
-              Played
-            </button>
-            <button
-              type="button"
-              class="segmentedBtn"
-              classList={{ segmentedBtnActive: matrixDisplayMode() === 'count' }}
-              onClick={() => setMatrixDisplayMode('count')}
-            >
-              Counts
-            </button>
-          </div>
-        </div>
-        <HeatmapMatrix
-          rows={corporationKeys()}
-          cols={botKeys()}
-          rowHeader="Corporation"
-          colHeader="Bot"
-          maxCount={Math.max(1, maxCellCount())}
-          hideCounts={matrixDisplayMode() === 'played'}
-          getCount={(corporation, bot) => matrix()[corporation]?.[bot] ?? 0}
-          getWinCount={(corporation, bot) => matrixWins()[corporation]?.[bot] ?? 0}
-          getCellDisplayText={(_corporation, _bot, count) => {
-            if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
-            return count > 0 ? '✓' : ''
-          }}
-          rowGroupBy={(corporation) => burncycleContent.corporationGroupByName.get(corporation)}
-          colGroupBy={(bot) => burncycleContent.botGroupByName.get(bot)}
-          onCellClick={(corporation, bot) => {
-            const key = `${corporation}|||${bot}`
-            handlePlaysForIds(
-              `burncycle plays: ${corporation} × ${bot}`,
-              playIdsByPair().get(key) || [],
-            )
-          }}
-        />
-      </div>
-
       <Show when={hasCostTable()}>
         <CostPerPlayTable
           rows={costRows()}
@@ -450,6 +408,75 @@ export default function BurncycleView(props: {
           }
         />
       </Show>
+
+      <div class="statsBlock">
+        <h3 class="statsTitle">Mission Coverage</h3>
+        <div class="tableWrap compact">
+          <table class="table compactTable">
+            <thead>
+              <tr>
+                <th>Mission</th>
+                <th>Corp</th>
+                <th class="mono">Played</th>
+                <th class="mono">Plays</th>
+                <th class="mono">Wins</th>
+                <th class="mono">Complexity</th>
+                <th class="mono">Floors</th>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={missionRows()}>
+                {(row, index) => {
+                  const prevCorp = () => (index() > 0 ? missionRows()[index() - 1]?.corp ?? '' : '')
+                  const shouldRenderGroupHeader = () => index() === 0 || row.corp !== prevCorp()
+
+                  return (
+                    <>
+                      <Show when={shouldRenderGroupHeader()}>
+                        <tr>
+                          <th class="heatmapRowGroupHead" colSpan={7}>
+                            {row.corp}
+                          </th>
+                        </tr>
+                      </Show>
+                      <tr>
+                        <td>{row.mission}</td>
+                        <td class="muted">{row.corp}</td>
+                        <td class="mono">{row.played ? '✓' : ''}</td>
+                        <td class="mono">
+                          <Show
+                            when={row.plays > 0}
+                            fallback={row.plays.toLocaleString()}
+                          >
+                            <button
+                              type="button"
+                              class="countLink"
+                              onClick={() =>
+                                handlePlaysForIds(
+                                  `burncycle plays: ${row.mission}`,
+                                  playIdsByMission()[row.mission] || [],
+                                )
+                              }
+                              title="View plays"
+                            >
+                              {row.plays.toLocaleString()}
+                            </button>
+                          </Show>
+                        </td>
+                        <td class="mono">{row.wins.toLocaleString()}</td>
+                        <td class="mono">
+                          {row.complexity == null ? '—' : row.complexity.toLocaleString()}
+                        </td>
+                        <td class="mono">{row.floors == null ? '—' : row.floors.toLocaleString()}</td>
+                      </tr>
+                    </>
+                  )
+                }}
+              </For>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <CountTable
         title="Corporations"

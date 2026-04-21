@@ -180,13 +180,27 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
 
 export default function AppContent(props: AppContentProps) {
   const sharedGameViewProps: SharedGameViewProps = {
-    plays: props.plays,
-    username: props.username,
-    authToken: props.authToken,
-    pinnedAchievementIds: props.pinnedAchievementIds,
-    suppressAvailableAchievementTrackIds: props.suppressAvailableAchievementTrackIds,
-    onTogglePin: props.onTogglePin,
-    onOpenPlays: props.onOpenPlays,
+    get plays() {
+      return props.plays
+    },
+    get username() {
+      return props.username
+    },
+    get authToken() {
+      return props.authToken
+    },
+    get pinnedAchievementIds() {
+      return props.pinnedAchievementIds
+    },
+    get suppressAvailableAchievementTrackIds() {
+      return props.suppressAvailableAchievementTrackIds
+    },
+    get onTogglePin() {
+      return props.onTogglePin
+    },
+    get onOpenPlays() {
+      return props.onOpenPlays
+    },
   }
 
   const dedicatedGameView = createMemo(() => renderSharedGameView(props.mainTab, sharedGameViewProps))

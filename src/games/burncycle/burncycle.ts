@@ -2,6 +2,7 @@ import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } f
 import { burncycleContent } from './content'
 
 export type BurncyclePlayerTags = {
+  mission?: string
   bots: string[]
   corporation?: string
   captain?: string
@@ -23,6 +24,12 @@ function resolveBot(value: string): string | undefined {
   const token = normalizeToken(value)
   if (!token) return undefined
   return burncycleContent.botsById.get(normalizeId(token)) ?? token
+}
+
+function resolveMission(value: string): string | undefined {
+  const token = normalizeToken(value)
+  if (!token) return undefined
+  return burncycleContent.missionsById.get(normalizeId(token))
 }
 
 function resolveCorporation(value: string): string | undefined {
@@ -68,6 +75,7 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
   const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
 
   const botKv = getBgStatsValue(parsedKv, ['B', 'Bot', 'A', 'Agent'])
+  const missionKv = getBgStatsValue(parsedKv, ['M', 'Mission', 'S', 'Scenario'])
   const corporationKv = getBgStatsValue(parsedKv, ['C', 'Corp', 'Corporation'])
   const captainKv = getBgStatsValue(parsedKv, ['CP', 'Cap', 'Captain'])
 
@@ -79,6 +87,7 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
   }
 
   addBot(botKv)
+  let mission = missionKv ? resolveMission(missionKv) : undefined
   let corporation = corporationKv ? resolveCorporation(corporationKv) : undefined
   let captain = captainKv ? resolveCaptain(captainKv) : undefined
 
@@ -87,6 +96,15 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
   for (const tag of tags) {
     const normalized = normalizeToken(tag)
     if (!normalized) continue
+
+    if (!mission) {
+      const resolvedMission = resolveMission(normalized)
+      if (resolvedMission) {
+        mission = resolvedMission
+        used.add(normalized)
+        continue
+      }
+    }
 
     if (!captain && /^c[a-z0-9]/i.test(normalized)) {
       const compactCaptain = normalized.slice(1)
@@ -122,5 +140,10 @@ export function parseBurncyclePlayerColor(color: string): BurncyclePlayerTags {
     .filter(Boolean)
     .filter((tag) => !used.has(tag))
 
-  return { bots, corporation, captain, extraTags }
+  if (!corporation && mission) {
+    const missionCorporation = burncycleContent.missionCorpByName.get(mission)
+    if (missionCorporation) corporation = missionCorporation
+  }
+
+  return { mission, bots, corporation, captain, extraTags }
 }

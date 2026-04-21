@@ -27,6 +27,7 @@ import { computeKingdomsForlornAchievements } from '../games/kingdoms-forlorn/ac
 import { computeNanolithAchievements } from '../games/nanolith/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 import { shouldCalculateAchievementsForGame } from '../gamePreferences'
+import { computeStandardAchievementsForGame } from './standard'
 
 export type GameId =
   | 'finalGirl'
@@ -65,6 +66,22 @@ export type ComputeAchievementsOptions = {
   spiritIslandSessions?: SpiritIslandSession[]
 }
 
+function withStandardAchievements(
+  gameId: GameId,
+  gameName: string,
+  plays: BggPlay[],
+  achievements: Achievement[],
+): Achievement[] {
+  return [
+    ...achievements,
+    ...computeStandardAchievementsForGame({
+      gameId,
+      gameName,
+      plays,
+    }),
+  ]
+}
+
 export function computeGameAchievements(
   gameId: GameId,
   plays: BggPlay[],
@@ -73,33 +90,146 @@ export function computeGameAchievements(
 ) {
   if (!shouldCalculateAchievementsForGame(gameId)) return []
 
-  if (gameId === 'finalGirl') return computeFinalGirlAchievements(plays, username)
+  if (gameId === 'finalGirl')
+    return withStandardAchievements(gameId, 'Final Girl', plays, computeFinalGirlAchievements(plays, username))
   if (gameId === 'spiritIsland')
-    return computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions)
-  if (gameId === 'mistfall') return computeMistfallAchievements(plays, username)
-  if (gameId === 'deathMayDie') return computeDeathMayDieAchievements(plays, username)
-  if (gameId === 'bullet') return computeBulletAchievements(plays, username)
-  if (gameId === 'tooManyBones') return computeTooManyBonesAchievements(plays, username)
-  if (gameId === 'skytearHorde') return computeSkytearHordeAchievements(plays, username)
-  if (gameId === 'cloudspire') return computeCloudspireAchievements(plays, username)
-  if (gameId === 'burncycle') return computeBurncycleAchievements(plays, username)
-  if (gameId === 'paleo') return computePaleoAchievements(plays, username)
-  if (gameId === 'robinsonCrusoe') return computeRobinsonCrusoeAchievements(plays, username)
-  if (gameId === 'robinHood') return computeRobinHoodAchievements(plays, username)
-  if (gameId === 'earthborneRangers') return computeEarthborneRangersAchievements(plays, username)
-  if (gameId === 'deckers') return computeDeckersAchievements(plays, username)
-  if (gameId === 'elderScrolls') return computeElderScrollsAchievements(plays, username)
-  if (gameId === 'starTrekCaptainsChair') return computeStarTrekCaptainsChairAchievements(plays, username)
-  if (gameId === 'unsettled') return computeUnsettledAchievements(plays, username)
-  if (gameId === 'mageKnight') return computeMageKnightAchievements(plays, username)
+    return withStandardAchievements(
+      gameId,
+      'Spirit Island',
+      plays,
+      computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions),
+    )
+  if (gameId === 'mistfall')
+    return withStandardAchievements(gameId, 'Mistfall', plays, computeMistfallAchievements(plays, username))
+  if (gameId === 'deathMayDie')
+    return withStandardAchievements(
+      gameId,
+      'Cthulhu: Death May Die',
+      plays,
+      computeDeathMayDieAchievements(plays, username),
+    )
+  if (gameId === 'bullet')
+    return withStandardAchievements(gameId, 'Bullet', plays, computeBulletAchievements(plays, username))
+  if (gameId === 'tooManyBones')
+    return withStandardAchievements(
+      gameId,
+      'Too Many Bones',
+      plays,
+      computeTooManyBonesAchievements(plays, username),
+    )
+  if (gameId === 'skytearHorde')
+    return withStandardAchievements(
+      gameId,
+      'Skytear Horde',
+      plays,
+      computeSkytearHordeAchievements(plays, username),
+    )
+  if (gameId === 'cloudspire')
+    return withStandardAchievements(
+      gameId,
+      'Cloudspire',
+      plays,
+      computeCloudspireAchievements(plays, username),
+    )
+  if (gameId === 'burncycle')
+    return withStandardAchievements(gameId, 'burncycle', plays, computeBurncycleAchievements(plays, username))
+  if (gameId === 'paleo')
+    return withStandardAchievements(gameId, 'Paleo', plays, computePaleoAchievements(plays, username))
+  if (gameId === 'robinsonCrusoe')
+    return withStandardAchievements(
+      gameId,
+      'Robinson Crusoe',
+      plays,
+      computeRobinsonCrusoeAchievements(plays, username),
+    )
+  if (gameId === 'robinHood')
+    return withStandardAchievements(
+      gameId,
+      'The Adventures of Robin Hood',
+      plays,
+      computeRobinHoodAchievements(plays, username),
+    )
+  if (gameId === 'earthborneRangers')
+    return withStandardAchievements(
+      gameId,
+      'Earthborne Rangers',
+      plays,
+      computeEarthborneRangersAchievements(plays, username),
+    )
+  if (gameId === 'deckers')
+    return withStandardAchievements(gameId, 'Deckers', plays, computeDeckersAchievements(plays, username))
+  if (gameId === 'elderScrolls')
+    return withStandardAchievements(
+      gameId,
+      'The Elder Scrolls: Betrayal of the Second Era',
+      plays,
+      computeElderScrollsAchievements(plays, username),
+    )
+  if (gameId === 'starTrekCaptainsChair')
+    return withStandardAchievements(
+      gameId,
+      "Star Trek: Captain's Chair",
+      plays,
+      computeStarTrekCaptainsChairAchievements(plays, username),
+    )
+  if (gameId === 'unsettled')
+    return withStandardAchievements(
+      gameId,
+      'Unsettled',
+      plays,
+      computeUnsettledAchievements(plays, username),
+    )
+  if (gameId === 'mageKnight')
+    return withStandardAchievements(
+      gameId,
+      'Mage Knight',
+      plays,
+      computeMageKnightAchievements(plays, username),
+    )
   if (gameId === 'mandalorianAdventures')
-    return computeMandalorianAdventuresAchievements(plays, username)
-  if (gameId === 'oathsworn') return computeOathswornAchievements(plays, username)
-  if (gameId === 'taintedGrail') return computeTaintedGrailAchievements(plays, username)
-  if (gameId === 'isofarianGuard') return computeIsofarianGuardAchievements(plays, username)
-  if (gameId === 'arkhamHorrorLcg') return computeArkhamHorrorLcgAchievements(plays, username)
-  if (gameId === 'kingdomsForlorn') return computeKingdomsForlornAchievements(plays, username)
-  if (gameId === 'nanolith') return computeNanolithAchievements(plays, username)
+    return withStandardAchievements(
+      gameId,
+      'The Mandalorian: Adventures',
+      plays,
+      computeMandalorianAdventuresAchievements(plays, username),
+    )
+  if (gameId === 'oathsworn')
+    return withStandardAchievements(
+      gameId,
+      'Oathsworn: Into the Deepwood',
+      plays,
+      computeOathswornAchievements(plays, username),
+    )
+  if (gameId === 'taintedGrail')
+    return withStandardAchievements(
+      gameId,
+      'Tainted Grail: The Fall of Avalon',
+      plays,
+      computeTaintedGrailAchievements(plays, username),
+    )
+  if (gameId === 'isofarianGuard')
+    return withStandardAchievements(
+      gameId,
+      'The Isofarian Guard',
+      plays,
+      computeIsofarianGuardAchievements(plays, username),
+    )
+  if (gameId === 'arkhamHorrorLcg')
+    return withStandardAchievements(
+      gameId,
+      'Arkham Horror: The Card Game',
+      plays,
+      computeArkhamHorrorLcgAchievements(plays, username),
+    )
+  if (gameId === 'kingdomsForlorn')
+    return withStandardAchievements(
+      gameId,
+      'Kingdoms Forlorn',
+      plays,
+      computeKingdomsForlornAchievements(plays, username),
+    )
+  if (gameId === 'nanolith')
+    return withStandardAchievements(gameId, 'Nanolith', plays, computeNanolithAchievements(plays, username))
   return []
 }
 
@@ -115,7 +245,11 @@ export function computeAllGameAchievementSummaries(
     compute: () => Achievement[],
   ) => {
     if (!shouldCalculateAchievementsForGame(gameId)) return
-    summaries.push({ gameId, gameName, achievements: compute() })
+    summaries.push({
+      gameId,
+      gameName,
+      achievements: withStandardAchievements(gameId, gameName, plays, compute()),
+    })
   }
 
   maybePush('finalGirl', 'Final Girl', () => computeFinalGirlAchievements(plays, username))

@@ -5,6 +5,7 @@ export const BURNCYCLE_OBJECT_ID = '322656'
 
 export type BurncycleEntry = {
   play: BggPlay
+  mission: string
   bot: string
   bots: string[]
   corporation: string
@@ -16,6 +17,7 @@ export type BurncycleEntry = {
 type ParsedPlayer = {
   username: string
   isWin: boolean
+  mission?: string
   bots: string[]
   corporation?: string
   captain?: string
@@ -70,6 +72,7 @@ export function getBurncycleEntries(plays: BggPlay[], username: string): Burncyc
       return {
         username: (player.attributes.username || '').toLowerCase(),
         isWin: player.attributes.win === '1',
+        mission: parsed.mission,
         bots: parsed.bots,
         corporation: parsed.corporation,
         captain: parsed.captain,
@@ -77,6 +80,9 @@ export function getBurncycleEntries(plays: BggPlay[], username: string): Burncyc
     })
 
     const myPlayer = parsedPlayers.find((player) => player.username === user)
+    const mission =
+      myPlayer?.mission ||
+      chooseMostCommonOrFirst(parsedPlayers.map((player) => player.mission).filter(Boolean) as string[])
     const bots = [
       ...new Set(
         (
@@ -99,6 +105,7 @@ export function getBurncycleEntries(plays: BggPlay[], username: string): Burncyc
 
     result.push({
       play,
+      mission: mission || 'Unknown mission',
       bot: bots[0] || 'Unknown bot',
       bots: bots.length > 0 ? bots : ['Unknown bot'],
       corporation: corporation || 'Unknown corporation',

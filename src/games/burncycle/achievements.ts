@@ -75,6 +75,20 @@ export function computeBurncycleAchievements(plays: BggPlay[], username: string)
       .map((e) => ({ item: buildAchievementItem(e.captain), amount: e.isWin ? e.quantity : 0 })),
   })
 
+  const missionPlays = buildCanonicalCounts({
+    preferredItems: burncycleContent.missions.map((mission) => buildAchievementItem(mission)),
+    observed: entries
+      .filter((e) => e.mission !== 'Unknown mission')
+      .map((e) => ({ item: buildAchievementItem(e.mission), amount: e.quantity })),
+  })
+
+  const missionWins = buildCanonicalCounts({
+    preferredItems: burncycleContent.missions.map((mission) => buildAchievementItem(mission)),
+    observed: entries
+      .filter((e) => e.mission !== 'Unknown mission')
+      .map((e) => ({ item: buildAchievementItem(e.mission), amount: e.isWin ? e.quantity : 0 })),
+  })
+
   const boxCounts = buildCanonicalCounts({
     preferredItems: [...new Set(burncycleContent.botGroupByName.values())].map((box) =>
       buildAchievementItem(box),
@@ -278,6 +292,84 @@ export function computeBurncycleAchievements(plays: BggPlay[], username: string)
         levels: [1, 3, 10],
       }),
     )
+  }
+
+  if (missionPlays.items.length > 0) {
+    tracks.push(
+      {
+        ...buildPerItemTrack({
+          trackId: 'missionPlays',
+          achievementBaseId: 'play-all-missions',
+          verb: 'Play',
+          itemNoun: 'mission',
+          unitSingular: 'time',
+          items: missionPlays.items,
+          countsByItemId: missionPlays.countsByItemId,
+          levels: [1],
+        }),
+        typeLabel: 'Mission coverage',
+      },
+    )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: missionPlays.items,
+      groupByItemLabel: burncycleContent.missionCorpByName,
+    })) {
+      tracks.push(
+        {
+          ...buildPerItemTrack({
+            trackId: `missionPlaysByCorporation:${slugifyTrackId(grouped.group)}`,
+            achievementBaseId: `play-all-missions-in-${slugifyTrackId(grouped.group)}`,
+            verb: 'Play',
+            itemNoun: `mission in ${grouped.group}`,
+            unitSingular: 'time',
+            items: grouped.items,
+            countsByItemId: missionPlays.countsByItemId,
+            levels: [1],
+          }),
+          typeLabel: 'Mission coverage',
+        },
+      )
+    }
+  }
+
+  if (missionWins.items.length > 0) {
+    tracks.push(
+      {
+        ...buildPerItemTrack({
+          trackId: 'missionWins',
+          achievementBaseId: 'win-all-missions',
+          verb: 'Defeat',
+          itemNoun: 'mission',
+          unitSingular: 'win',
+          items: missionWins.items,
+          countsByItemId: missionWins.countsByItemId,
+          levels: [1],
+        }),
+        typeLabel: 'Mission coverage',
+      },
+    )
+
+    for (const grouped of groupAchievementItemsByLabel({
+      items: missionWins.items,
+      groupByItemLabel: burncycleContent.missionCorpByName,
+    })) {
+      tracks.push(
+        {
+          ...buildPerItemTrack({
+            trackId: `missionWinsByCorporation:${slugifyTrackId(grouped.group)}`,
+            achievementBaseId: `win-all-missions-in-${slugifyTrackId(grouped.group)}`,
+            verb: 'Defeat',
+            itemNoun: `mission in ${grouped.group}`,
+            unitSingular: 'win',
+            items: grouped.items,
+            countsByItemId: missionWins.countsByItemId,
+            levels: [1],
+          }),
+          typeLabel: 'Mission coverage',
+        },
+      )
+    }
   }
 
   if (boxCounts.items.length > 0) {

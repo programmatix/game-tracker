@@ -17,9 +17,7 @@ import {
 } from './bgg'
 import { authUser, signOutUser } from './auth/auth'
 import {
-  fetchAchievementStore,
   saveAchievementsSnapshot,
-  saveSeenCompletedAchievementIds,
 } from './achievements/achievementsFirebase'
 import {
   fetchPinnedAchievementIds,
@@ -29,13 +27,7 @@ import {
   fetchStoredGamePreferences,
   saveStoredGamePreferences,
 } from './gamePreferencesFirebase'
-import {
-  computeNewlyUnlockedAchievements,
-  computeTrackIdsForAchievements,
-} from './achievements/newlyUnlocked'
-import { pickBestAvailableAchievementForTrackIds } from './achievements/nextAchievement'
 import { computeAllGameAchievementSummaries } from './achievements/games'
-import NewAchievementsBanner from './components/NewAchievementsBanner'
 import type { PlaysDrilldownRequest } from './playsDrilldown'
 import {
   fetchSpiritIslandSessions,
@@ -122,9 +114,6 @@ function App() {
   const [isFetchingPlays, setIsFetchingPlays] = createSignal(false)
   const [firebaseSaveErrorToast, setFirebaseSaveErrorToast] = createSignal<string | null>(null)
   const [pinnedAchievementIds, setPinnedAchievementIds] = createSignal(new Set<string>())
-  const [seenCompletedAchievementIds, setSeenCompletedAchievementIds] = createSignal(
-    new Set<string>(),
-  )
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(new Map<string, string>())
   const [assumedMinutesByObjectId, setAssumedMinutesByObjectId] = createSignal(
     new Map<string, number>(),
@@ -192,23 +181,17 @@ function App() {
     if (!user) {
       batch(() => {
         setPinnedAchievementIds(new Set<string>())
-        setSeenCompletedAchievementIds(new Set<string>())
         setGamePreferencesStore({})
       })
       return
     }
 
     let cancelled = false
-    void Promise.all([
-      fetchPinnedAchievementIds(user),
-      fetchAchievementStore(user),
-      fetchStoredGamePreferences(user),
-    ]).then(
-      ([remotePinnedIds, store, remoteGamePreferences]) => {
+    void Promise.all([fetchPinnedAchievementIds(user), fetchStoredGamePreferences(user)]).then(
+      ([remotePinnedIds, remoteGamePreferences]) => {
         if (cancelled) return
         batch(() => {
           setPinnedAchievementIds(remotePinnedIds)
-          setSeenCompletedAchievementIds(store.seenCompletedAchievementIds)
           setGamePreferencesStore(remoteGamePreferences)
         })
       },
@@ -302,28 +285,7 @@ function App() {
     })
     return summaries.flatMap((summary) => summary.achievements)
   })
-  const newlyUnlockedAchievements = createMemo(() =>
-    computeNewlyUnlockedAchievements(allAchievements(), seenCompletedAchievementIds()),
-  )
-  const newlyUnlockedTrackIds = createMemo(() =>
-    computeTrackIdsForAchievements(newlyUnlockedAchievements()),
-  )
-  const suppressAvailableTrackIds = createMemo(() => new Set<string>(newlyUnlockedTrackIds()))
-  const nextAchievementAfterDismiss = createMemo(() =>
-    pickBestAvailableAchievementForTrackIds(allAchievements(), newlyUnlockedTrackIds()),
-  )
-
-  function dismissNewlyUnlockedAchievements() {
-    const nextSeen = new Set(seenCompletedAchievementIds())
-    for (const achievement of newlyUnlockedAchievements()) nextSeen.add(achievement.id)
-    setSeenCompletedAchievementIds(nextSeen)
-    const user = authUser()
-    if (user) {
-      void saveSeenCompletedAchievementIds(user, nextSeen).catch(() => {
-        showFirebaseSaveErrorToast('Failed to save dismissed achievements to Firebase.')
-      })
-    }
-  }
+  const suppressAvailableTrackIds = createMemo(() => new Set<string>())
 
   createEffect(() => {
     const user = authUser()
@@ -342,8 +304,15 @@ function App() {
 
   function toggleAchievementPin(achievementId: string) {
     const next = new Set(pinnedAchievementIds())
-    if (next.has(achievementId)) next.delete(achievementId)
+    const wasPinned = next.has(achievementId)
+    if (wasPinned) next.delete(achievementId)
     else next.add(achievementId)
+    console.log('toggleAchievementPin', {
+      achievementId,
+      wasPinned,
+      isPinnedNow: next.has(achievementId),
+      pinnedCount: next.size,
+    })
     setPinnedAchievementIds(next)
     const user = authUser()
     if (user) {
@@ -898,15 +867,6 @@ function App() {
           <Show when={playsError()}>{(message) => <div class="muted">Fetch error: {message()}</div>}</Show>
         </div>
       </header>
-
-      <Show when={newlyUnlockedAchievements().length > 0}>
-        <NewAchievementsBanner
-          unlocked={newlyUnlockedAchievements()}
-          nextAfterDismiss={nextAchievementAfterDismiss()}
-          onDismissAll={dismissNewlyUnlockedAchievements}
-        />
-      </Show>
-
       <main class="main">
         <aside class="panel sidebarNav desktopOnly">
           <div class="sidebarNavHeader">
