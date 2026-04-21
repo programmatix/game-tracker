@@ -28,8 +28,19 @@ const poundsFormatter = new Intl.NumberFormat('en-GB', {
 
 export default function FulfilmentView(props: {
   gamePreferencesById: ResolvedGamePreferencesById
+  onOpenGame: (gameId: string) => void
   onOpenGameOptions: (gameId: string) => void
 }) {
+  const currentMonthIndex = createMemo(() => {
+    const now = new Date()
+    return now.getFullYear() * 12 + now.getMonth()
+  })
+
+  const isOverdue = (row: FulfilmentRow) => {
+    const monthIndex = row.estimatedDeliveryMonth ? monthIndexFromKey(row.estimatedDeliveryMonth) : null
+    return monthIndex !== null && monthIndex < currentMonthIndex()
+  }
+
   const rows = createMemo<FulfilmentRow[]>(() =>
     CONFIGURABLE_GAME_DEFINITIONS.map<PendingFulfilmentRow>((game) => {
       const preferences = props.gamePreferencesById[game.id]
@@ -138,7 +149,7 @@ export default function FulfilmentView(props: {
           <For each={groupedRows()}>
             {(group) => (
               <section class="gameOptionsCard">
-                <div class="gameOptionsCardHeader">
+                <div class="gameOptionsCardHeader" classList={{ fulfilmentOverdue: group.rows.some(isOverdue) }}>
                   <h4>{group.monthLabel}</h4>
                   <div class="muted">{group.rows.length.toLocaleString()} game{group.rows.length === 1 ? '' : 's'}</div>
                 </div>
@@ -146,10 +157,19 @@ export default function FulfilmentView(props: {
                 <div class="gameOptionsRows">
                   <For each={group.rows}>
                     {(row) => (
-                      <div class="gameOptionRow">
+                      <div class="gameOptionRow" classList={{ fulfilmentOverdue: isOverdue(row) }}>
                         <div class="gameOptionCopy">
-                          <div class="gameOptionTitle">{row.label}</div>
-                          <div class="muted mono">{row.gameId}</div>
+                          <button
+                            class="linkButton fulfilmentGameLink"
+                            classList={{ fulfilmentGameLinkOverdue: isOverdue(row) }}
+                            type="button"
+                            onClick={() => props.onOpenGame(row.gameId)}
+                          >
+                            {row.label}
+                          </button>
+                          <Show when={isOverdue(row)}>
+                            <div class="fulfilmentOverdueLabel">Overdue</div>
+                          </Show>
                         </div>
 
                         <div class="fulfilmentRowAside">
@@ -157,7 +177,7 @@ export default function FulfilmentView(props: {
                             <div class="muted mono">{poundsFormatter.format(row.price || 0)}</div>
                           </Show>
                           <button class="linkButton" type="button" onClick={() => props.onOpenGameOptions(row.gameId)}>
-                            Edit
+                            Options
                           </button>
                         </div>
                       </div>
@@ -180,8 +200,13 @@ export default function FulfilmentView(props: {
                   {(row) => (
                     <div class="gameOptionRow">
                       <div class="gameOptionCopy">
-                        <div class="gameOptionTitle">{row.label}</div>
-                        <div class="muted mono">{row.gameId}</div>
+                        <button
+                          class="linkButton fulfilmentGameLink"
+                          type="button"
+                          onClick={() => props.onOpenGame(row.gameId)}
+                        >
+                          {row.label}
+                        </button>
                       </div>
 
                       <div class="fulfilmentRowAside">
@@ -189,7 +214,7 @@ export default function FulfilmentView(props: {
                           <div class="muted mono">{poundsFormatter.format(row.price || 0)}</div>
                         </Show>
                         <button class="linkButton" type="button" onClick={() => props.onOpenGameOptions(row.gameId)}>
-                          Set month
+                          Options
                         </button>
                       </div>
                     </div>

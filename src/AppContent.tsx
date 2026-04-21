@@ -13,6 +13,7 @@ import type { PlaysDrilldownRequest } from './playsDrilldown'
 import type { PlaysView as PlaysViewMode } from './appNav'
 import type { PlaysByGameRow } from './playsHelpers'
 import { isConfigurableGameId } from './configurableGames'
+import { isGameTab } from './gameCatalog'
 import FinalGirlView from './games/final-girl/FinalGirlView'
 import DeathMayDieView from './games/death-may-die/DeathMayDieView'
 import MistfallView from './games/mistfall/MistfallView'
@@ -396,6 +397,13 @@ export default function AppContent(props: AppContentProps) {
       <Show when={props.mainTab === 'fulfilment'}>
         <FulfilmentView
           gamePreferencesById={props.gamePreferencesById}
+          onOpenGame={(gameId) => {
+            if (isGameTab(gameId)) {
+              props.onSwitchMainTab(gameId)
+              return
+            }
+            props.onOpenGameOptions(gameId)
+          }}
           onOpenGameOptions={props.onOpenGameOptions}
         />
       </Show>

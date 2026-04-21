@@ -30,6 +30,10 @@ pnpm firebase:deploy:hosting
 - The username is currently hardcoded in `src/App.tsx`.
 - The app fetches plays from the BGG XML API and caches them in `localStorage` (set `BGG_TOKEN` in `.env` if needed).
 
+## General rules
+
+- Whenever a game name is shown, let it be clickable to get to the game detail page, and show the options cog.
+
 ## Scripts
 
 See `scripts/bgg-plays.md` for how to fetch plays from BGG.
