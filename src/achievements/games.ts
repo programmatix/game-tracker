@@ -25,6 +25,7 @@ import { computeIsofarianGuardAchievements } from '../games/isofarian-guard/achi
 import { computeArkhamHorrorLcgAchievements } from '../games/arkham-horror-lcg/achievements'
 import { computeKingdomsForlornAchievements } from '../games/kingdoms-forlorn/achievements'
 import { computeNanolithAchievements } from '../games/nanolith/achievements'
+import { computeLeviathanWildsAchievements } from '../games/leviathan-wilds/achievements'
 import type { SpiritIslandSession } from '../games/spirit-island/mindwanderer'
 import { shouldCalculateAchievementsForGame } from '../gamePreferences'
 import { computeStandardAchievementsForGame } from './standard'
@@ -55,6 +56,7 @@ export type GameId =
   | 'arkhamHorrorLcg'
   | 'kingdomsForlorn'
   | 'nanolith'
+  | 'leviathanWilds'
 
 export type GameAchievementSummary = {
   gameId: GameId
@@ -230,6 +232,13 @@ export function computeGameAchievements(
     )
   if (gameId === 'nanolith')
     return withStandardAchievements(gameId, 'Nanolith', plays, computeNanolithAchievements(plays, username))
+  if (gameId === 'leviathanWilds')
+    return withStandardAchievements(
+      gameId,
+      'Leviathan Wilds',
+      plays,
+      computeLeviathanWildsAchievements(plays, username),
+    )
   return []
 }
 
@@ -303,6 +312,9 @@ export function computeAllGameAchievementSummaries(
     computeKingdomsForlornAchievements(plays, username),
   )
   maybePush('nanolith', 'Nanolith', () => computeNanolithAchievements(plays, username))
+  maybePush('leviathanWilds', 'Leviathan Wilds', () =>
+    computeLeviathanWildsAchievements(plays, username),
+  )
 
   return summaries
 }

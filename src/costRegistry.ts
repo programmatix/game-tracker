@@ -11,6 +11,7 @@ import rawFinalGirlContentText from './games/final-girl/content.yaml?raw'
 import { parseOwnedFinalGirlContent } from './games/final-girl/ownedContent'
 import { isofarianGuardContent } from './games/isofarian-guard/content'
 import { kingdomsForlornContent } from './games/kingdoms-forlorn/content'
+import { leviathanWildsContent } from './games/leviathan-wilds/content'
 import { mageKnightContent } from './games/mage-knight/content'
 import { mandalorianAdventuresContent } from './games/mandalorian-adventures/content'
 import { oathswornContent } from './games/oathsworn/content'
@@ -169,6 +170,12 @@ const legacyCostRegistry: ReadonlyArray<CostRegistryEntry> = [
     label: 'Kingdoms Forlorn',
     aliases: ['Kingdoms Forlorn', 'Kingdoms Forlorn: Dragons, Devils and Kings'],
     costs: familyCostConfig('kingdomsForlorn', toBoxCostConfig(kingdomsForlornContent)),
+  },
+  {
+    id: 'leviathanWilds',
+    label: 'Leviathan Wilds',
+    aliases: ['Leviathan Wilds'],
+    costs: familyCostConfig('leviathanWilds', toBoxCostConfig(leviathanWildsContent)),
   },
   {
     id: 'taintedGrail',

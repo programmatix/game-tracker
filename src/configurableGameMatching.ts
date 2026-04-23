@@ -89,6 +89,9 @@ const MATCH_OVERRIDES: Readonly<Record<string, ConfigurableGameMatchOverrides>> 
     aliases: ['Kingdoms Forlorn', 'Kingdoms Forlorn: Dragons, Devils and Kings'],
     objectIds: ['297510'],
   },
+  leviathanWilds: {
+    objectIds: ['358737'],
+  },
   mageKnight: {
     aliases: ['Mage Knight', 'Mage Knight Board Game', 'Mage Knight: Ultimate Edition'],
   },

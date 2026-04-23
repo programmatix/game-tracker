@@ -40,6 +40,7 @@ import IsofarianGuardView from './games/isofarian-guard/IsofarianGuardView'
 import ArkhamHorrorLcgView from './games/arkham-horror-lcg/ArkhamHorrorLcgView'
 import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
 import NanolithView from './games/nanolith/NanolithView'
+import LeviathanWildsView from './games/leviathan-wilds/LeviathanWildsView'
 import AchievementsView from './AchievementsView'
 import PinnedAchievementsView from './PinnedAchievementsView'
 import CostsView from './CostsView'
@@ -176,6 +177,8 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
       return <KingdomsForlornView {...props} />
     case 'nanolith':
       return <NanolithView {...props} />
+    case 'leviathanWilds':
+      return <LeviathanWildsView {...props} />
     case 'elderScrolls':
       return <ElderScrollsView {...props} />
     case 'undauntedNormandy':

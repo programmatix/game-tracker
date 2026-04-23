@@ -78,6 +78,13 @@ export const GAME_DEFINITIONS = [
     supportsAchievements: true,
   },
   {
+    id: 'leviathanWilds',
+    label: 'Leviathan Wilds',
+    supportsMonthlyChecklist: true,
+    supportsCostsTable: true,
+    supportsAchievements: true,
+  },
+  {
     id: 'mageKnight',
     label: 'Mage Knight',
     supportsMonthlyChecklist: true,

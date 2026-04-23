@@ -69,6 +69,14 @@ scenarios:
     id: Scen5
     aliases: [S5, Scenario5, 5]
     group: Core
+  - display: Scenario 6
+    id: Scen6
+    aliases: [S6, Scenario6, 6]
+    group: Core
+  - display: Scenario 7
+    id: Scen7
+    aliases: [S7, Scenario7, 7]
+    group: Core
 
 costs:
   currency: "£"

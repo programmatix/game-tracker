@@ -1,0 +1,136 @@
+# Leviathan Wilds
+#
+# BG Stats tags currently seen:
+#   Comments: L2／Difficulty Normal
+#   Player color: Fix／Roughneck
+# Recommended comments format:
+#   L: Sage／Difficulty: Normal
+# Or compact:
+#   L2／Difficulty Hard
+
+leviathans:
+  - display: Sage
+    id: L1
+    aliases: [1, Sage]
+    group: Core
+  - display: Sentinel
+    id: L2
+    aliases: [2, Sentinel]
+    group: Core
+  - display: Storm
+    id: L3
+    aliases: [3, Storm]
+    group: Core
+  - display: Watcher
+    id: L4
+    aliases: [4, Watcher]
+    group: Core
+  - display: Weaver
+    id: L5
+    aliases: [5, Weaver]
+    group: Core
+  - display: Avalanche
+    id: L6
+    aliases: [6, Avalanche]
+    group: Core
+  - display: Hive
+    id: L7
+    aliases: [7, Hive]
+    group: Core
+  - display: Collector
+    id: L8
+    aliases: [8, Collector]
+    group: Core
+  - display: Fury
+    id: L9
+    aliases: [9, Fury]
+    group: Core
+  - display: Bloom
+    id: L10
+    aliases: [10, Bloom]
+    group: Core
+  - display: Forsaken
+    id: L11
+    aliases: [11, Forsaken]
+    group: Core
+  - display: Tunneler
+    id: L12
+    aliases: [12, Tunneler, Tunneller]
+    group: Core
+  - display: Twins
+    id: L13
+    aliases: [13, Twins]
+    group: Core
+  - display: Vortex
+    id: L14
+    aliases: [14, Vortex]
+    group: Core
+  - display: Hunger
+    id: L15
+    aliases: [15, Hunger]
+    group: Core
+  - display: Deep
+    id: L16
+    aliases: [16, Deep]
+    group: Core
+  - display: Tyrant
+    id: L17
+    aliases: [17, Tyrant]
+    group: Core
+
+characters:
+  - display: Fix
+    id: Fix
+    group: Core
+  - display: Kestrel
+    id: Kestrel
+    group: Core
+  - display: Hazard
+    id: Hazard
+    group: Core
+  - display: Savvy
+    id: Savvy
+    group: Core
+  - display: Brick
+    id: Brick
+    group: Core
+  - display: Cheer
+    id: Cheer
+    group: Core
+  - display: Mystic
+    id: Mystic
+    group: Core
+  - display: Edge
+    id: Edge
+    group: Core
+
+classes:
+  - display: Roughneck
+    id: Roughneck
+    group: Core
+  - display: Mender
+    id: Mender
+    group: Core
+  - display: Breaker
+    id: Breaker
+    group: Core
+  - display: Freeclimber
+    id: Freeclimber
+    group: Core
+  - display: Gambler
+    id: Gambler
+    group: Core
+  - display: Magus
+    id: Magus
+    group: Core
+  - display: Gadgeteer
+    id: Gadgeteer
+    group: Core
+  - display: Herald
+    id: Herald
+    group: Core
+
+costs:
+  currency: "£"
+  boxes:
+    Leviathan Wilds: 89.23
