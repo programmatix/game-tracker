@@ -656,26 +656,28 @@
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.88);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
 .statusBadgeSelect {
-  min-width: 0;
+  min-width: 8.5ch;
   max-width: 100%;
   appearance: none;
   cursor: pointer;
-  padding-right: 24px;
+  padding-right: 28px;
 }
 
 .costsStatusSelect {
-  width: 7.5ch;
-  max-width: 7.5ch;
+  width: 8.5ch;
+  max-width: none;
 }
 
 .statsTitle {
@@ -2013,6 +2015,15 @@
     color: var(--muted);
     font-size: 11px;
     letter-spacing: 0.01em;
+  }
+
+  .table.mobileCardTable td[data-label='Status'] {
+    grid-template-columns: 1fr;
+  }
+
+  .table.mobileCardTable td[data-label='Status'] .statusBadge,
+  .table.mobileCardTable td[data-label='Status'] .costsStatusSelect {
+    justify-self: start;
   }
 
   .table.mobileCardTable td:last-child {

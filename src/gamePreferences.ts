@@ -25,6 +25,8 @@ export type GamePreferences = {
   showAsSeparateTab: boolean
   showInCostsTable: boolean
   calculateAchievements: boolean
+  isCampaignGame: boolean
+  isScenarioGame: boolean
   status: GameStatus
   estimatedDeliveryMonth?: string
 }
@@ -59,6 +61,8 @@ export function defaultGamePreferencesFor(gameId: string): GamePreferences {
     showAsSeparateTab: game.defaultShowAsSeparateTab,
     showInCostsTable: game.supportsCostsTable,
     calculateAchievements: game.supportsAchievements,
+    isCampaignGame: game.defaultIsCampaignGame,
+    isScenarioGame: game.defaultIsScenarioGame,
     status: 'active',
   }
 }
@@ -88,6 +92,10 @@ export function resolveGamePreferences(
       game.supportsAchievements && typeof raw?.calculateAchievements === 'boolean'
         ? raw.calculateAchievements
         : defaults.calculateAchievements,
+    isCampaignGame:
+      typeof raw?.isCampaignGame === 'boolean' ? raw.isCampaignGame : defaults.isCampaignGame,
+    isScenarioGame:
+      typeof raw?.isScenarioGame === 'boolean' ? raw.isScenarioGame : defaults.isScenarioGame,
     status: isGameStatus(raw?.status) ? raw.status : defaults.status,
     estimatedDeliveryMonth: raw?.status === 'waitingOnShipping'
       ? normalizeEstimatedDeliveryMonth(raw?.estimatedDeliveryMonth)
@@ -129,6 +137,12 @@ export function normalizeStoredGamePreferencesById(input: unknown): StoredGamePr
     }
     if (typeof rawRecord.calculateAchievements === 'boolean') {
       next.calculateAchievements = rawRecord.calculateAchievements
+    }
+    if (typeof rawRecord.isCampaignGame === 'boolean') {
+      next.isCampaignGame = rawRecord.isCampaignGame
+    }
+    if (typeof rawRecord.isScenarioGame === 'boolean') {
+      next.isScenarioGame = rawRecord.isScenarioGame
     }
     if (isGameStatus(rawRecord.status)) {
       next.status = rawRecord.status

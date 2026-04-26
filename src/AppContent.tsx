@@ -523,6 +523,7 @@ export default function AppContent(props: AppContentProps) {
         <CampaignsView
           plays={props.plays}
           username={props.username}
+          assumedMinutesByObjectId={props.assumedMinutesByObjectId}
           onOpenGame={props.onOpenGame}
           onOpenGameOptions={props.onOpenGameOptions}
           onUpdateGamePreferences={props.onUpdateGamePreferences}

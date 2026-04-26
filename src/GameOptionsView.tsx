@@ -192,6 +192,24 @@ export default function GameOptionsView(props: {
           />
 
           <GameOptionsRow
+            checked={selectedPreferences().isCampaignGame}
+            title="Campaign game"
+            description="Show this on the Campaigns page as a campaign-style progression game."
+            onChange={(checked) =>
+              props.onUpdateGamePreferences(selectedGameId(), { isCampaignGame: checked })
+            }
+          />
+
+          <GameOptionsRow
+            checked={selectedPreferences().isScenarioGame}
+            title="Scenario game"
+            description="Show this on the Campaigns page as a scenario-style progression game."
+            onChange={(checked) =>
+              props.onUpdateGamePreferences(selectedGameId(), { isScenarioGame: checked })
+            }
+          />
+
+          <GameOptionsRow
             checked={selectedPreferences().calculateAchievements}
             disabled={!selectedGame().supportsAchievements}
             title="Calculate achievements"

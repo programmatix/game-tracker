@@ -1,4 +1,8 @@
 import { GAME_DEFINITIONS } from './gameCatalog'
+import {
+  DEFAULT_CAMPAIGN_GAME_IDS,
+  DEFAULT_SCENARIO_GAME_IDS,
+} from './gameProgressCategories'
 import { normalizePurchaseGameFamilyId, PURCHASE_GAME_FAMILIES } from './purchaseGameFamilies'
 
 export type ConfigurableGameDefinition = {
@@ -10,7 +14,12 @@ export type ConfigurableGameDefinition = {
   defaultShowAsSeparateTab: boolean
   supportsCostsTable: boolean
   supportsAchievements: boolean
+  defaultIsCampaignGame: boolean
+  defaultIsScenarioGame: boolean
 }
+
+const defaultCampaignGameIds = new Set<string>(DEFAULT_CAMPAIGN_GAME_IDS)
+const defaultScenarioGameIds = new Set<string>(DEFAULT_SCENARIO_GAME_IDS)
 
 const configurableGameDefinitionsFromTabs: ReadonlyArray<ConfigurableGameDefinition> =
   GAME_DEFINITIONS.map((game) => ({
@@ -22,6 +31,8 @@ const configurableGameDefinitionsFromTabs: ReadonlyArray<ConfigurableGameDefinit
     defaultShowAsSeparateTab: true,
     supportsCostsTable: game.supportsCostsTable,
     supportsAchievements: game.supportsAchievements,
+    defaultIsCampaignGame: defaultCampaignGameIds.has(game.id),
+    defaultIsScenarioGame: defaultScenarioGameIds.has(game.id),
   }))
 
 const configurableTabIds = new Set(configurableGameDefinitionsFromTabs.map((game) => game.id))
@@ -36,6 +47,8 @@ const configurablePurchaseOnlyDefinitions: ReadonlyArray<ConfigurableGameDefinit
     defaultShowAsSeparateTab: false,
     supportsCostsTable: true,
     supportsAchievements: false,
+    defaultIsCampaignGame: false,
+    defaultIsScenarioGame: false,
   }))
 
 export const CONFIGURABLE_GAME_DEFINITIONS: ReadonlyArray<ConfigurableGameDefinition> = [

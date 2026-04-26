@@ -21,9 +21,11 @@ import type { BggPlay } from './bgg'
 type CampaignRow = ReturnType<typeof buildCampaignProgressRows>[number] & {
   status: GameStatus
   statusLabel: string
+  isCampaignGame: boolean
+  isScenarioGame: boolean
 }
 
-type SortKey = 'name' | 'status' | 'plays' | 'progress'
+type SortKey = 'name' | 'type' | 'status' | 'plays' | 'hours' | 'progress'
 type SortDirection = 'asc' | 'desc'
 
 const CAMPAIGNS_VISIBLE_STATUSES_STORAGE_KEY = 'campaigns.visibleStatuses'
@@ -36,9 +38,21 @@ function formatPercent(value: number): string {
   })}%`
 }
 
+function formatHours(value: number): string {
+  return value.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}
+
+function formatTypeLabel(row: { isCampaignGame: boolean; isScenarioGame: boolean }): string {
+  if (row.isCampaignGame && row.isScenarioGame) return 'Campaign + Scenario'
+  if (row.isCampaignGame) return 'Campaign'
+  if (row.isScenarioGame) return 'Scenario'
+  return '—'
+}
+
 export default function CampaignsView(props: {
   plays: BggPlay[]
   username: string
+  assumedMinutesByObjectId: ReadonlyMap<string, number>
   onOpenGame: (gameKey: string) => void
   onOpenGameOptions: (gameId: string) => void
   onUpdateGamePreferences: (gameId: string, patch: { status: GameStatus }) => void
@@ -75,12 +89,19 @@ export default function CampaignsView(props: {
   })
 
   const rows = createMemo<CampaignRow[]>(() =>
-    buildCampaignProgressRows(props.plays, props.username).map((row) => {
-      const status = gamePreferencesFor(row.id).status
+    buildCampaignProgressRows(
+      props.plays,
+      props.username,
+      props.assumedMinutesByObjectId,
+    ).map((row) => {
+      const preferences = gamePreferencesFor(row.id)
+      const status = preferences.status
       return {
         ...row,
         status,
         statusLabel: gameStatusLabel(status),
+        isCampaignGame: preferences.isCampaignGame,
+        isScenarioGame: preferences.isScenarioGame,
       }
     }),
   )
@@ -88,6 +109,7 @@ export default function CampaignsView(props: {
   const visibleStatusSet = createMemo(() => new Set(visibleStatuses()))
   const filteredRows = createMemo(() =>
     rows().filter((row) => {
+      if (!row.isCampaignGame && !row.isScenarioGame) return false
       if (!visibleStatusSet().has(row.status)) return false
       if (!checklistOnly()) return true
       return gamePreferencesFor(row.id).showInMonthlyChecklist
@@ -103,8 +125,10 @@ export default function CampaignsView(props: {
       .slice()
       .sort((a, b) => {
         if (key === 'name') return a.name.localeCompare(b.name) * directionMultiplier
+        if (key === 'type') return formatTypeLabel(a).localeCompare(formatTypeLabel(b)) * directionMultiplier
         if (key === 'status') return a.statusLabel.localeCompare(b.statusLabel) * directionMultiplier
         if (key === 'plays') return (a.plays - b.plays) * directionMultiplier
+        if (key === 'hours') return (a.hours - b.hours) * directionMultiplier
         if (a.progress !== b.progress) return (a.progress - b.progress) * directionMultiplier
         if (a.remainingCount !== b.remainingCount) {
           return (a.remainingCount - b.remainingCount) * directionMultiplier
@@ -119,11 +143,19 @@ export default function CampaignsView(props: {
     let totalCount = 0
     let completedGames = 0
     let inProgressGames = 0
+    let campaignGames = 0
+    let scenarioGames = 0
+    let hours = 0
+    let hasAssumedHours = false
 
     for (const row of filteredRows()) {
       plays += row.plays
+      hours += row.hours
+      hasAssumedHours ||= row.hasAssumedHours
       completedCount += row.completedCount
       totalCount += row.totalCount
+      if (row.isCampaignGame) campaignGames += 1
+      if (row.isScenarioGame) scenarioGames += 1
       if (row.progress >= 1) completedGames += 1
       else if (row.progress > 0) inProgressGames += 1
     }
@@ -134,6 +166,10 @@ export default function CampaignsView(props: {
       totalCount,
       completedGames,
       inProgressGames,
+      campaignGames,
+      scenarioGames,
+      hours,
+      hasAssumedHours,
       visibleGames: filteredRows().length,
     }
   })
@@ -154,7 +190,7 @@ export default function CampaignsView(props: {
     }
 
     setSortKey(nextKey)
-    setSortDirection(nextKey === 'name' || nextKey === 'status' ? 'asc' : 'desc')
+    setSortDirection(nextKey === 'name' || nextKey === 'type' || nextKey === 'status' ? 'asc' : 'desc')
   }
 
   const sortIndicator = (key: SortKey): string => {
@@ -178,11 +214,22 @@ export default function CampaignsView(props: {
     </div>
   )
 
+  const renderTypeCell = (row: CampaignRow) => (
+    <div class="achievementTypeGroup">
+      <Show when={row.isCampaignGame}>
+        <span class="achievementTag">Campaign</span>
+      </Show>
+      <Show when={row.isScenarioGame}>
+        <span class="achievementTag">Scenario</span>
+      </Show>
+    </div>
+  )
+
   return (
     <div class="statsBlock">
-      <h3 class="statsTitle">Campaigns</h3>
+      <h3 class="statsTitle">Campaigns & scenarios</h3>
       <div class="muted">
-        Campaign-first tabs from `project/ModularVsCampaignReview.md`, ranked by completion.
+        Progress trackers selected in Game options, ranked by completion.
       </div>
 
       <div class="monthlySummaryGrid costsSummaryGrid">
@@ -204,7 +251,7 @@ export default function CampaignsView(props: {
         </section>
 
         <section class="monthlySummaryCard">
-          <div class="monthlySummaryLabel">Campaigns complete</div>
+          <div class="monthlySummaryLabel">Games complete</div>
           <div class="monthlySummaryValue mono">
             {totals().completedGames.toLocaleString()} / {totals().visibleGames.toLocaleString()}
           </div>
@@ -214,21 +261,32 @@ export default function CampaignsView(props: {
         </section>
 
         <section class="monthlySummaryCard">
+          <div class="monthlySummaryLabel">Tagged games</div>
+          <div class="monthlySummaryValue mono">
+            {totals().campaignGames.toLocaleString()} campaign / {totals().scenarioGames.toLocaleString()} scenario
+          </div>
+          <div class="monthlySummarySubtext">
+            A game can be tagged as both.
+          </div>
+        </section>
+
+        <section class="monthlySummaryCard">
           <div class="monthlySummaryLabel">Tracked steps</div>
           <div class="monthlySummaryValue mono">
             {totals().completedCount.toLocaleString()} / {totals().totalCount.toLocaleString()}
           </div>
           <div class="monthlySummarySubtext">
-            Scenario, day, chapter, encounter, and adventure coverage.
+            Across the currently visible tracked games.
           </div>
         </section>
 
         <section class="monthlySummaryCard">
-          <div class="monthlySummaryLabel">Filtered plays</div>
-          <div class="monthlySummaryValue mono">{totals().plays.toLocaleString()}</div>
-          <div class="monthlySummarySubtext">
-            Across the currently visible campaign games.
+          <div class="monthlySummaryLabel">Logged hours</div>
+          <div class="monthlySummaryValue mono">
+            {formatHours(totals().hours)}
+            {totals().hasAssumedHours ? '*' : ''}
           </div>
+          <div class="monthlySummarySubtext">Across the currently visible tracked games.</div>
         </section>
       </div>
 
@@ -240,7 +298,7 @@ export default function CampaignsView(props: {
           }
           checklistOnly={checklistOnly()}
           onSetChecklistOnly={setChecklistOnly}
-          checklistGroupAriaLabel="Visible campaign games"
+          checklistGroupAriaLabel="Visible campaign and scenario games"
         />
       </div>
 
@@ -255,6 +313,11 @@ export default function CampaignsView(props: {
                 </button>
               </th>
               <th>
+                <button type="button" class="sortButton" onClick={() => toggleSort('type')}>
+                  Type{sortIndicator('type')}
+                </button>
+              </th>
+              <th>
                 <button type="button" class="sortButton" onClick={() => toggleSort('status')}>
                   Status{sortIndicator('status')}
                 </button>
@@ -262,6 +325,11 @@ export default function CampaignsView(props: {
               <th class="mono">
                 <button type="button" class="sortButton" onClick={() => toggleSort('plays')}>
                   Plays{sortIndicator('plays')}
+                </button>
+              </th>
+              <th class="mono">
+                <button type="button" class="sortButton" onClick={() => toggleSort('hours')}>
+                  Hours{sortIndicator('hours')}
                 </button>
               </th>
               <th>
@@ -276,7 +344,7 @@ export default function CampaignsView(props: {
               when={sortedRows().length > 0}
               fallback={
                 <tr>
-                  <td colSpan={5} class="muted">
+                  <td colSpan={7} class="muted">
                     No games match the selected filters.
                   </td>
                 </tr>
@@ -297,6 +365,7 @@ export default function CampaignsView(props: {
                           />
                         </div>
                       </td>
+                      <td data-label="Type">{renderTypeCell(row)}</td>
                       <td data-label="Status">
                         <select
                           class="statusBadge statusBadgeSelect costsStatusSelect"
@@ -314,6 +383,10 @@ export default function CampaignsView(props: {
                         </select>
                       </td>
                       <td class="mono" data-label="Plays">{row.plays.toLocaleString()}</td>
+                      <td class="mono" data-label="Hours">
+                        {formatHours(row.hours)}
+                        {row.hasAssumedHours ? '*' : ''}
+                      </td>
                       <td class="costProgressTableCell" data-label="Completion">
                         {renderCampaignProgress(row)}
                       </td>
@@ -325,6 +398,13 @@ export default function CampaignsView(props: {
           </tbody>
         </table>
       </div>
+
+      <Show when={totals().hasAssumedHours}>
+        <div class="muted">
+          <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has
+          no recorded length.
+        </div>
+      </Show>
     </div>
   )
 }
