@@ -4,6 +4,8 @@ import GameOptionsButton from './components/GameOptionsButton'
 import ProgressBar from './components/ProgressBar'
 import StandardGameFilters from './components/StandardGameFilters'
 import { buildCampaignProgressRows } from './campaignProgress'
+import { CONFIGURABLE_GAME_DEFINITIONS } from './configurableGames'
+import { costRegistry } from './costRegistry'
 import {
   GAME_STATUS_OPTIONS,
   gamePreferencesFor,
@@ -17,8 +19,21 @@ import {
   toggleVisibleGameStatus,
 } from './gameFilters'
 import type { BggPlay } from './bgg'
+import { totalPlayMinutesWithAssumption } from './playDuration'
+import { playQuantity } from './playsHelpers'
 
-type CampaignRow = ReturnType<typeof buildCampaignProgressRows>[number] & {
+type CampaignRow = {
+  id: string
+  name: string
+  plays: number
+  hours: number
+  hasAssumedHours: boolean
+  hasProgressTracker: boolean
+  completedCount: number
+  totalCount: number
+  remainingCount: number
+  progress: number
+  progressLabel: string
   status: GameStatus
   statusLabel: string
   isCampaignGame: boolean
@@ -30,6 +45,8 @@ type SortDirection = 'asc' | 'desc'
 
 const CAMPAIGNS_VISIBLE_STATUSES_STORAGE_KEY = 'campaigns.visibleStatuses'
 const CAMPAIGNS_CHECKLIST_ONLY_STORAGE_KEY = 'campaigns.checklistOnly'
+const CAMPAIGNS_SHOW_CAMPAIGN_STORAGE_KEY = 'campaigns.showCampaign'
+const CAMPAIGNS_SHOW_SCENARIO_STORAGE_KEY = 'campaigns.showScenario'
 
 function formatPercent(value: number): string {
   return `${(value * 100).toLocaleString(undefined, {
@@ -40,6 +57,33 @@ function formatPercent(value: number): string {
 
 function formatHours(value: number): string {
   return value.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}
+
+function readStoredBoolean(storageKey: string, fallback: boolean): boolean {
+  if (typeof window === 'undefined') return fallback
+
+  try {
+    const stored = window.localStorage.getItem(storageKey)
+    if (stored === 'true') return true
+    if (stored === 'false') return false
+    return fallback
+  } catch {
+    return fallback
+  }
+}
+
+function normalizeGameName(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+}
+
+function matchesNormalizedGameName(normalizedName: string, normalizedAlias: string): boolean {
+  if (!normalizedName || !normalizedAlias) return false
+  return normalizedName === normalizedAlias || normalizedName.startsWith(`${normalizedAlias} `)
 }
 
 function formatTypeLabel(row: { isCampaignGame: boolean; isScenarioGame: boolean }): string {
@@ -65,6 +109,12 @@ export default function CampaignsView(props: {
   const [checklistOnly, setChecklistOnly] = createSignal<boolean>(
     readStoredChecklistOnly(CAMPAIGNS_CHECKLIST_ONLY_STORAGE_KEY),
   )
+  const [showCampaignGames, setShowCampaignGames] = createSignal<boolean>(
+    readStoredBoolean(CAMPAIGNS_SHOW_CAMPAIGN_STORAGE_KEY, true),
+  )
+  const [showScenarioGames, setShowScenarioGames] = createSignal<boolean>(
+    readStoredBoolean(CAMPAIGNS_SHOW_SCENARIO_STORAGE_KEY, true),
+  )
 
   createEffect(() => {
     try {
@@ -88,28 +138,121 @@ export default function CampaignsView(props: {
     }
   })
 
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(
+        CAMPAIGNS_SHOW_CAMPAIGN_STORAGE_KEY,
+        String(showCampaignGames()),
+      )
+    } catch {
+      return
+    }
+  })
+
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(
+        CAMPAIGNS_SHOW_SCENARIO_STORAGE_KEY,
+        String(showScenarioGames()),
+      )
+    } catch {
+      return
+    }
+  })
+
   const rows = createMemo<CampaignRow[]>(() =>
-    buildCampaignProgressRows(
-      props.plays,
-      props.username,
-      props.assumedMinutesByObjectId,
-    ).map((row) => {
-      const preferences = gamePreferencesFor(row.id)
-      const status = preferences.status
-      return {
-        ...row,
-        status,
-        statusLabel: gameStatusLabel(status),
-        isCampaignGame: preferences.isCampaignGame,
-        isScenarioGame: preferences.isScenarioGame,
+    {
+      const progressRowsById = new Map(
+        buildCampaignProgressRows(
+          props.plays,
+          props.username,
+          props.assumedMinutesByObjectId,
+        ).map((row) => [row.id as string, row] as const),
+      )
+
+      const playedByAlias = new Map<string, BggPlay[]>()
+      for (const play of props.plays) {
+        const name = normalizeGameName(play.item?.attributes.name || '')
+        if (!name) continue
+        const existing = playedByAlias.get(name)
+        if (existing) existing.push(play)
+        else playedByAlias.set(name, [play])
       }
-    }),
+
+      return CONFIGURABLE_GAME_DEFINITIONS.map((game) => {
+        const preferences = gamePreferencesFor(game.id)
+        const status = preferences.status
+        const progressRow = progressRowsById.get(game.id)
+        if (progressRow) {
+          return {
+            ...progressRow,
+            id: progressRow.id,
+            hasProgressTracker: true,
+            status,
+            statusLabel: gameStatusLabel(status),
+            isCampaignGame: preferences.isCampaignGame,
+            isScenarioGame: preferences.isScenarioGame,
+          }
+        }
+
+        const registryEntry = costRegistry.find((entry) => entry.id === game.id)
+        const matchedPlaysById = new Map<number, BggPlay>()
+        for (const alias of registryEntry?.aliases || [game.label]) {
+          const normalizedAlias = normalizeGameName(alias)
+          if (!normalizedAlias) continue
+          for (const [normalizedName, plays] of playedByAlias.entries()) {
+            if (!matchesNormalizedGameName(normalizedName, normalizedAlias)) continue
+            for (const play of plays) matchedPlaysById.set(play.id, play)
+          }
+        }
+
+        let plays = 0
+        let hours = 0
+        let hasAssumedHours = false
+        for (const play of matchedPlaysById.values()) {
+          const quantity = playQuantity(play)
+          const assumedMinutesPerPlay = play.item?.attributes.objectid
+            ? props.assumedMinutesByObjectId.get(play.item.attributes.objectid)
+            : undefined
+          const resolved = totalPlayMinutesWithAssumption({
+            attributes: play.attributes,
+            quantity,
+            assumedMinutesPerPlay,
+          })
+          plays += quantity
+          hours += resolved.minutes / 60
+          hasAssumedHours ||= resolved.assumed
+        }
+
+        return {
+          id: game.id,
+          name: game.label,
+          plays,
+          hours,
+          hasAssumedHours,
+          hasProgressTracker: false,
+          completedCount: 0,
+          totalCount: 0,
+          remainingCount: 0,
+          progress: 0,
+          progressLabel: 'No detailed tracker yet',
+          status,
+          statusLabel: gameStatusLabel(status),
+          isCampaignGame: preferences.isCampaignGame,
+          isScenarioGame: preferences.isScenarioGame,
+        }
+      })
+    },
   )
 
   const visibleStatusSet = createMemo(() => new Set(visibleStatuses()))
   const filteredRows = createMemo(() =>
     rows().filter((row) => {
       if (!row.isCampaignGame && !row.isScenarioGame) return false
+      const matchesType =
+        (showCampaignGames() && row.isCampaignGame) ||
+        (showScenarioGames() && row.isScenarioGame)
+      if (!matchesType) return false
       if (!visibleStatusSet().has(row.status)) return false
       if (!checklistOnly()) return true
       return gamePreferencesFor(row.id).showInMonthlyChecklist
@@ -156,8 +299,8 @@ export default function CampaignsView(props: {
       totalCount += row.totalCount
       if (row.isCampaignGame) campaignGames += 1
       if (row.isScenarioGame) scenarioGames += 1
-      if (row.progress >= 1) completedGames += 1
-      else if (row.progress > 0) inProgressGames += 1
+      if (row.hasProgressTracker && row.progress >= 1) completedGames += 1
+      else if (row.hasProgressTracker && row.progress > 0) inProgressGames += 1
     }
 
     return {
@@ -199,6 +342,10 @@ export default function CampaignsView(props: {
   }
 
   const renderCampaignProgress = (row: CampaignRow) => (
+    <Show
+      when={row.hasProgressTracker && row.totalCount > 0}
+      fallback={<span class="mono muted">No tracker yet</span>}
+    >
     <div class="costProgressCell">
       <ProgressBar
         value={row.completedCount}
@@ -212,6 +359,7 @@ export default function CampaignsView(props: {
         <span class="mono muted">{row.progressLabel}</span>
       </div>
     </div>
+    </Show>
   )
 
   const renderTypeCell = (row: CampaignRow) => (
@@ -291,6 +439,28 @@ export default function CampaignsView(props: {
       </div>
 
       <div class="costsToolbar">
+        <div class="costToolbarGroup">
+          <div class="muted">Types</div>
+          <div class="costTargetGroup" role="group" aria-label="Visible campaign and scenario types">
+            <button
+              type="button"
+              class="tabButton"
+              classList={{ tabButtonActive: showCampaignGames() }}
+              onClick={() => setShowCampaignGames((current) => !current)}
+            >
+              Campaign
+            </button>
+            <button
+              type="button"
+              class="tabButton"
+              classList={{ tabButtonActive: showScenarioGames() }}
+              onClick={() => setShowScenarioGames((current) => !current)}
+            >
+              Scenario
+            </button>
+          </div>
+        </div>
+
         <StandardGameFilters
           visibleStatuses={visibleStatuses()}
           onToggleStatus={(status) =>
@@ -303,7 +473,7 @@ export default function CampaignsView(props: {
       </div>
 
       <div class="tableWrap">
-        <table class="table compactTable mobileCardTable costsTable">
+        <table class="table compactTable mobileCardTable costsTable campaignsTable">
           <thead>
             <tr>
               <th class="mono">#</th>
@@ -366,9 +536,9 @@ export default function CampaignsView(props: {
                         </div>
                       </td>
                       <td data-label="Type">{renderTypeCell(row)}</td>
-                      <td data-label="Status">
+                      <td class="campaignStatusCell" data-label="Status">
                         <select
-                          class="statusBadge statusBadgeSelect costsStatusSelect"
+                          class="statusBadge statusBadgeSelect costsStatusSelect campaignStatusSelect"
                           value={row.status}
                           aria-label={`Status for ${row.name}`}
                           onChange={(event) => {
