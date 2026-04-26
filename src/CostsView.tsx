@@ -31,6 +31,12 @@ import {
   shouldShowGameInCostsTable,
 } from './gamePreferences'
 import { isConfigurableGameId } from './configurableGames'
+import StandardGameFilters from './components/StandardGameFilters'
+import {
+  readStoredChecklistOnly,
+  readStoredVisibleGameStatuses,
+  toggleVisibleGameStatus,
+} from './gameFilters'
 import GameLink from './components/GameLink'
 import GameOptionsButton from './components/GameOptionsButton'
 import { playQuantity } from './playsHelpers'
@@ -103,38 +109,6 @@ function hoursRemainingForTarget(
   return Math.max(0, targetHours - Math.max(0, hours))
 }
 
-function allGameStatuses(): GameStatus[] {
-  return GAME_STATUS_OPTIONS.map((option) => option.value)
-}
-
-function readStoredVisibleStatuses(): GameStatus[] {
-  if (typeof window === 'undefined') return allGameStatuses()
-
-  try {
-    const raw = window.localStorage.getItem(COSTS_VISIBLE_STATUSES_STORAGE_KEY)
-    if (!raw) return allGameStatuses()
-
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return allGameStatuses()
-    if (parsed.length === 0) return []
-
-    const visibleStatuses = parsed.filter(isGameStatus)
-    return visibleStatuses.length > 0 ? Array.from(new Set(visibleStatuses)) : allGameStatuses()
-  } catch {
-    return allGameStatuses()
-  }
-}
-
-function readStoredChecklistOnly(): boolean {
-  if (typeof window === 'undefined') return false
-
-  try {
-    return window.localStorage.getItem(COSTS_CHECKLIST_ONLY_STORAGE_KEY) === 'true'
-  } catch {
-    return false
-  }
-}
-
 export default function CostsView(props: {
   plays: BggPlay[]
   assumedMinutesByObjectId: ReadonlyMap<string, number>
@@ -156,8 +130,12 @@ export default function CostsView(props: {
   const [sortKey, setSortKey] = createSignal<SortKey>('costPerHour')
   const [sortDirection, setSortDirection] = createSignal<SortDirection>('asc')
   const [targetCostPerHour, setTargetCostPerHour] = createSignal<number>(readStoredTarget())
-  const [visibleStatuses, setVisibleStatuses] = createSignal<GameStatus[]>(readStoredVisibleStatuses())
-  const [checklistOnly, setChecklistOnly] = createSignal<boolean>(readStoredChecklistOnly())
+  const [visibleStatuses, setVisibleStatuses] = createSignal<GameStatus[]>(
+    readStoredVisibleGameStatuses(COSTS_VISIBLE_STATUSES_STORAGE_KEY),
+  )
+  const [checklistOnly, setChecklistOnly] = createSignal<boolean>(
+    readStoredChecklistOnly(COSTS_CHECKLIST_ONLY_STORAGE_KEY),
+  )
   const [saleMode, setSaleMode] = createSignal<SaleMode>(readStoredSaleMode())
 
   createEffect(() => {
@@ -367,13 +345,7 @@ export default function CostsView(props: {
   }
 
   const toggleStatusFilter = (status: GameStatus) => {
-    setVisibleStatuses((current) => {
-      const next = current.includes(status)
-        ? current.filter((value) => value !== status)
-        : [...current, status]
-
-      return GAME_STATUS_OPTIONS.map((option) => option.value).filter((value) => next.includes(value))
-    })
+    setVisibleStatuses((current) => toggleVisibleGameStatus(current, status))
   }
 
   const progressHeading = createMemo(
@@ -625,45 +597,13 @@ export default function CostsView(props: {
           </div>
         </div>
 
-        <div class="costToolbarGroup">
-          <div class="muted">Show statuses</div>
-          <div class="costTargetGroup" role="group" aria-label="Visible game statuses">
-            <For each={GAME_STATUS_OPTIONS}>
-              {(status) => (
-                <button
-                  type="button"
-                  class="tabButton"
-                  classList={{ tabButtonActive: visibleStatuses().includes(status.value) }}
-                  onClick={() => toggleStatusFilter(status.value)}
-                >
-                  {status.label}
-                </button>
-              )}
-            </For>
-          </div>
-        </div>
-
-        <div class="costToolbarGroup">
-          <div class="muted">Games</div>
-          <div class="costTargetGroup" role="group" aria-label="Visible cost games">
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: !checklistOnly() }}
-              onClick={() => setChecklistOnly(false)}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              class="tabButton"
-              classList={{ tabButtonActive: checklistOnly() }}
-              onClick={() => setChecklistOnly(true)}
-            >
-              Checklist only
-            </button>
-          </div>
-        </div>
+        <StandardGameFilters
+          visibleStatuses={visibleStatuses()}
+          onToggleStatus={toggleStatusFilter}
+          checklistOnly={checklistOnly()}
+          onSetChecklistOnly={setChecklistOnly}
+          checklistGroupAriaLabel="Visible cost games"
+        />
       </div>
 
       <div class="tableWrap">

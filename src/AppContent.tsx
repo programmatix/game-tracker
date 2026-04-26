@@ -43,6 +43,7 @@ import NanolithView from './games/nanolith/NanolithView'
 import LeviathanWildsView from './games/leviathan-wilds/LeviathanWildsView'
 import AchievementsView from './AchievementsView'
 import PinnedAchievementsView from './PinnedAchievementsView'
+import CampaignsView from './CampaignsView'
 import CostsView from './CostsView'
 import TimeView from './TimeView'
 import FulfilmentView from './FulfilmentView'
@@ -515,6 +516,16 @@ export default function AppContent(props: AppContentProps) {
           loading={props.pinnedAchievementsLoading}
           onTogglePin={props.onTogglePin}
           onOpenGame={props.onOpenGame}
+        />
+      </Show>
+
+      <Show when={props.mainTab === 'campaigns'}>
+        <CampaignsView
+          plays={props.plays}
+          username={props.username}
+          onOpenGame={props.onOpenGame}
+          onOpenGameOptions={props.onOpenGameOptions}
+          onUpdateGamePreferences={props.onUpdateGamePreferences}
         />
       </Show>
 
