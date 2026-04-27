@@ -1,4 +1,4 @@
-import { Show, createMemo, createResource } from 'solid-js'
+import { Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import AchievementsPanel from '../../components/AchievementsPanel'
@@ -6,6 +6,7 @@ import CampaignProgressTable from '../../components/CampaignProgressTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
 import CountTable from '../../components/CountTable'
 import GameThingThumb from '../../components/GameThingThumb'
+import HeatmapMatrix from '../../components/HeatmapMatrix'
 import { computeGameAchievements } from '../../achievements/games'
 import {
   pickBestAvailableAchievementForTrackIds,
@@ -42,6 +43,7 @@ export default function KingdomsForlornView(props: {
     () => ({ id: KINGDOMS_FORLORN_OBJECT_ID, authToken: props.authToken?.trim() || '' }),
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
   )
+  const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<'played' | 'count'>('played')
 
   const entries = createMemo(() => getKingdomsForlornEntries(props.plays, props.username))
   const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
@@ -200,6 +202,31 @@ export default function KingdomsForlornView(props: {
     return { hoursByStep, hasAssumedHoursByStep }
   })
 
+  const questCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.quest) continue
+      incrementCount(counts, entry.quest, entry.quantity)
+    }
+    return counts
+  })
+  const questWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.quest || !entry.isWin) continue
+      incrementCount(counts, entry.quest, entry.quantity)
+    }
+    return counts
+  })
+  const playIdsByQuest = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      if (!entry.quest) continue
+      ;(ids[entry.quest] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
+
   const continuationCount = createMemo(() =>
     entries().reduce(
       (sum, entry) => sum + (entry.continuedFromPrevious || entry.continuedToNext ? entry.quantity : 0),
@@ -294,9 +321,42 @@ export default function KingdomsForlornView(props: {
   const knightKeys = createMemo(() =>
     mergeCanonicalKeys(sortKeysByCountDesc(myKnightCounts()), kingdomsForlornContent.knights),
   )
+  const questKeys = createMemo(() =>
+    mergeCanonicalKeys(sortKeysByCountDesc(questCounts()), kingdomsForlornContent.quests),
+  )
   const campaignKeys = createMemo(() =>
     mergeCanonicalKeys(sortKeysByCountDesc(campaignCounts()), kingdomsForlornContent.campaigns),
   )
+  const pairMatrix = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    const wins: Record<string, Record<string, number>> = {}
+    const playIds = new Map<string, number[]>()
+
+    for (const entry of entries()) {
+      if (!entry.kingdom || !entry.myKnight) continue
+      ;(counts[entry.kingdom] ||= {})
+      incrementCount(counts[entry.kingdom]!, entry.myKnight, entry.quantity)
+      if (entry.isWin) {
+        ;(wins[entry.kingdom] ||= {})
+        incrementCount(wins[entry.kingdom]!, entry.myKnight, entry.quantity)
+      }
+      const key = pairKey(entry.kingdom, entry.myKnight)
+      const existing = playIds.get(key)
+      if (existing) existing.push(entry.play.id)
+      else playIds.set(key, [entry.play.id])
+    }
+
+    return { counts, wins, playIds }
+  })
+  const pairMatrixMax = createMemo(() => {
+    let max = 0
+    for (const row of Object.values(pairMatrix().counts)) {
+      for (const count of Object.values(row)) {
+        if (count > max) max = count
+      }
+    }
+    return max
+  })
   const campaignSections = createMemo(() =>
     kingdomsForlornContent.campaigns.map((campaign) => {
       const steps = kingdomsForlornContent.stepNamesByCampaignName.get(campaign) ?? []
@@ -451,6 +511,20 @@ export default function KingdomsForlornView(props: {
           }}
         />
 
+        <Show when={kingdomsForlornContent.quests.length > 0}>
+          <CountTable
+            title="Quests"
+            plays={questCounts()}
+            wins={questWins()}
+            keys={questKeys()}
+            onPlaysClick={(quest) => {
+              const playIds = uniquePlayIds(playIdsByQuest()[quest] ?? [])
+              if (playIds.length === 0) return
+              props.onOpenPlays({ title: `Kingdoms Forlorn • ${quest}`, playIds })
+            }}
+          />
+        </Show>
+
         <Show when={hasCostTable()}>
           <CostPerPlayTable
             rows={costRows()}
@@ -495,6 +569,63 @@ export default function KingdomsForlornView(props: {
             props.onOpenPlays({ title: `Kingdoms Forlorn • ${knight}`, playIds })
           }}
         />
+
+        <div class="statsBlock">
+          <div class="statsTitleRow">
+            <h3 class="statsTitle">Kingdom × Knight</h3>
+            <div class="tabs">
+              <button
+                type="button"
+                class="tabButton"
+                classList={{ tabButtonActive: matrixDisplayMode() === 'played' }}
+                onClick={() => setMatrixDisplayMode('played')}
+              >
+                Played/Unplayed
+              </button>
+              <button
+                type="button"
+                class="tabButton"
+                classList={{ tabButtonActive: matrixDisplayMode() === 'count' }}
+                onClick={() => setMatrixDisplayMode('count')}
+              >
+                Play counts
+              </button>
+            </div>
+          </div>
+          <div class="muted">Which knight you brought into each kingdom, with drilldown to the matching plays.</div>
+          <HeatmapMatrix
+            rows={kingdomsForlornContent.kingdoms}
+            cols={kingdomsForlornContent.knights}
+            rowHeader="Kingdom"
+            colHeader="Knight"
+            maxCount={pairMatrixMax()}
+            hideCounts={matrixDisplayMode() === 'played'}
+            getCount={(kingdom, knight) => pairMatrix().counts[kingdom]?.[knight] ?? 0}
+            getWinCount={(kingdom, knight) => pairMatrix().wins[kingdom]?.[knight] ?? 0}
+            getCellDisplayText={(kingdom, knight, count) => {
+              if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
+              const wins = pairMatrix().wins[kingdom]?.[knight] ?? 0
+              if (count === 0) return '—'
+              if (wins <= 0) return '✗'
+              return '✓'
+            }}
+            getCellLabel={(kingdom, knight, count) => {
+              const wins = pairMatrix().wins[kingdom]?.[knight] ?? 0
+              if (count === 0) return `${kingdom} × ${knight}: unplayed`
+              return `${kingdom} × ${knight}: ${count} plays, ${wins} wins`
+            }}
+            rowGroupBy={(kingdom) => kingdomsForlornContent.kingdomGroupByName.get(kingdom)}
+            colGroupBy={(knight) => kingdomsForlornContent.knightGroupByName.get(knight)}
+            onCellClick={(kingdom, knight) => {
+              const playIds = pairMatrix().playIds.get(pairKey(kingdom, knight)) ?? []
+              if (playIds.length === 0) return
+              props.onOpenPlays({
+                title: `Kingdoms Forlorn • ${kingdom} × ${knight}`,
+                playIds,
+              })
+            }}
+          />
+        </div>
       </Show>
 
       <AchievementsPanel
