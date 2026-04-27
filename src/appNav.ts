@@ -10,6 +10,7 @@ export type MainTab =
   | GameTab
   | 'monthlyChecklist'
   | 'monthlySummary'
+  | 'games'
   | 'campaigns'
   | 'fulfilment'
   | 'options'
@@ -37,6 +38,7 @@ export type MainTabOption = { value: MainTab; label: string; group: MainTabGroup
 export const MAIN_TABS: ReadonlyArray<MainTab> = [
   'monthlyChecklist',
   'monthlySummary',
+  'games',
   'campaigns',
   'fulfilment',
   ...SEPARATE_TAB_GAME_IDS.map((gameId) => gameId as MainTab),
@@ -58,6 +60,7 @@ export const MAIN_TAB_OPTIONS: ReadonlyArray<MainTabOption> = [
     label: game.label,
     group: 'games' as const,
   })),
+  { value: 'games', label: 'Games', group: 'other' },
   { value: 'campaigns', label: 'Campaigns', group: 'other' },
   { value: 'achievements', label: 'Achievements', group: 'other' },
   { value: 'pinned', label: 'Pinned', group: 'other' },
@@ -200,6 +203,8 @@ export function parseNavStateFromHash(hash: string): Partial<AppNavState> | null
       selectedMonthKey,
     }
   }
+
+  if (head === 'review') return { mainTab: 'games' }
 
   if (isMainTab(head)) return { mainTab: head as MainTab }
 

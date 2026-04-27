@@ -46,6 +46,7 @@ import PinnedAchievementsView from './PinnedAchievementsView'
 import CampaignsView from './CampaignsView'
 import CostsView from './CostsView'
 import TimeView from './TimeView'
+import ReviewView from './ReviewView'
 import FulfilmentView from './FulfilmentView'
 import GameOptionsView from './GameOptionsView'
 import OverallOptionsView from './OverallOptionsView'
@@ -527,6 +528,18 @@ export default function AppContent(props: AppContentProps) {
           onOpenGame={props.onOpenGame}
           onOpenGameOptions={props.onOpenGameOptions}
           onUpdateGamePreferences={props.onUpdateGamePreferences}
+        />
+      </Show>
+
+      <Show when={props.mainTab === 'games'}>
+        <ReviewView
+          plays={props.plays}
+          username={props.username}
+          assumedMinutesByObjectId={props.assumedMinutesByObjectId}
+          onOpenGame={props.onOpenGame}
+          onOpenGameOptions={props.onOpenGameOptions}
+          onUpdateGamePreferences={props.onUpdateGamePreferences}
+          costTimeEstimateStatus={props.costTimeEstimateStatus}
         />
       </Show>
 

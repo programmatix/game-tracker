@@ -257,6 +257,35 @@
   max-width: 100%;
 }
 
+.reviewView {
+  display: grid;
+  gap: 14px;
+}
+
+.reviewGameCell,
+.reviewMetricCell,
+.reviewTypeBadges {
+  display: grid;
+  gap: 8px;
+}
+
+.reviewTypeBadges {
+  grid-auto-flow: column;
+  justify-content: start;
+}
+
+.reviewTypeBadge {
+  margin-left: 0;
+}
+
+.reviewMetricNumber {
+  font-size: 1em;
+}
+
+.reviewTable td {
+  vertical-align: top;
+}
+
 .linkButton {
   border: 0;
   background: transparent;
