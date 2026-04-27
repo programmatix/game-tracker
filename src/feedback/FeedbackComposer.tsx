@@ -1,5 +1,5 @@
 import type { User } from 'firebase/auth'
-import { Show, createSignal, onMount } from 'solid-js'
+import { Show, createEffect, createSignal, onMount } from 'solid-js'
 import { createFeedback } from './feedbackFirebase'
 
 type Props = {
@@ -8,17 +8,24 @@ type Props = {
   titleId?: string
   submitLabel?: string
   placeholder?: string
+  initialMessage?: string
   autoFocus?: boolean
   onCancel?: () => void
   onSubmitted?: () => void
 }
 
 export default function FeedbackComposer(props: Props) {
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createSignal(props.initialMessage || '')
   const [submitError, setSubmitError] = createSignal<string | null>(null)
   const [submitStatus, setSubmitStatus] = createSignal<string | null>(null)
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   let textareaRef: HTMLTextAreaElement | undefined
+
+  createEffect(() => {
+    setMessage(props.initialMessage || '')
+    setSubmitError(null)
+    setSubmitStatus(null)
+  })
 
   onMount(() => {
     if (props.autoFocus) {

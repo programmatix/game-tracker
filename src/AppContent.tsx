@@ -2,6 +2,7 @@ import { Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-j
 import type { User } from 'firebase/auth'
 import type { BggPlay } from './bgg'
 import {
+  hashForNavState,
   isGameMainTab,
   MAIN_TAB_GROUPS,
   PLAYS_VIEW_OPTIONS,
@@ -74,6 +75,7 @@ type AppContentProps = {
   mainTab: MainTab
   mainTabOptions: ReadonlyArray<MainTabOption>
   playsView: PlaysViewMode
+  selectedGameKey: string | null
   selectedOptionsGameId: string | null
   selectedMonthKey: string | null
   username: string
@@ -192,6 +194,7 @@ function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
 
 export default function AppContent(props: AppContentProps) {
   const [isQuickFeedbackOpen, setIsQuickFeedbackOpen] = createSignal(false)
+  const [feedbackDraft, setFeedbackDraft] = createSignal('')
   const sharedGameViewProps: SharedGameViewProps = {
     get plays() {
       return props.plays
@@ -225,12 +228,37 @@ export default function AppContent(props: AppContentProps) {
     return isConfigurableGameId(props.mainTab) ? props.mainTab : null
   })
 
+  const currentPageHash = createMemo(() =>
+    window.location.hash ||
+    hashForNavState({
+      mainTab: props.mainTab,
+      playsView: props.playsView,
+      selectedGameKey: props.selectedGameKey,
+      selectedOptionsGameId: props.selectedOptionsGameId,
+      selectedMonthKey: props.selectedMonthKey,
+    }),
+  )
+  const currentPageFeedbackDraft = createMemo(() => `Page: ${currentPageHash()}\n\n`)
+  const currentGameFeedbackDraft = createMemo(() =>
+    props.selectedOptionsGameId ? `Game: ${props.selectedOptionsGameId}\n\n` : '',
+  )
+
+  function closeFeedbackDialog() {
+    setIsQuickFeedbackOpen(false)
+    setFeedbackDraft('')
+  }
+
+  function openFeedbackComposer() {
+    setFeedbackDraft(props.mainTab === 'gameOptions' ? currentGameFeedbackDraft() : currentPageFeedbackDraft())
+    setIsQuickFeedbackOpen(true)
+  }
+
   createEffect(() => {
     if (!isQuickFeedbackOpen()) return
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsQuickFeedbackOpen(false)
+        closeFeedbackDialog()
       }
     }
 
@@ -245,7 +273,7 @@ export default function AppContent(props: AppContentProps) {
           class="feedbackModalBackdrop"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
-              setIsQuickFeedbackOpen(false)
+              closeFeedbackDialog()
             }
           }}
         >
@@ -255,9 +283,10 @@ export default function AppContent(props: AppContentProps) {
               title="Add feedback"
               titleId="quick-feedback-title"
               submitLabel="Submit"
+              initialMessage={feedbackDraft()}
               autoFocus
-              onCancel={() => setIsQuickFeedbackOpen(false)}
-              onSubmitted={() => setIsQuickFeedbackOpen(false)}
+              onCancel={closeFeedbackDialog}
+              onSubmitted={closeFeedbackDialog}
             />
           </div>
         </div>
@@ -375,15 +404,6 @@ export default function AppContent(props: AppContentProps) {
           </button>
         </Show>
 
-        <Show when={props.mainTab !== 'feedback'}>
-          <button
-            class="linkButton"
-            type="button"
-            onClick={() => setIsQuickFeedbackOpen(true)}
-          >
-            Add feedback
-          </button>
-        </Show>
       </div>
 
       <Show when={props.mainTab === 'monthlyChecklist'}>
@@ -590,6 +610,14 @@ export default function AppContent(props: AppContentProps) {
 
       <Show when={props.mainTab === 'feedback'}>
         <FeedbackView user={props.feedbackUser} isAdmin={props.isFeedbackAdmin} />
+      </Show>
+
+      <Show when={props.mainTab !== 'feedback'}>
+        <div class="pageFeedbackBar">
+          <button type="button" class="pageFeedbackButton" onClick={openFeedbackComposer}>
+            Leave feedback
+          </button>
+        </div>
       </Show>
     </>
   )

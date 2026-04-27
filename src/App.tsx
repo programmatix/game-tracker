@@ -950,6 +950,7 @@ function App() {
             mainTab={mainTab()}
             mainTabOptions={visibleMainTabOptions()}
             playsView={playsView()}
+            selectedGameKey={selectedGameKey()}
             selectedOptionsGameId={selectedOptionsGameId()}
             selectedMonthKey={selectedMonthKey()}
             username={USERNAME}
