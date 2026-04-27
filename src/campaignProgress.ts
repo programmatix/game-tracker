@@ -177,17 +177,25 @@ const CAMPAIGN_PROGRESS_DEFINITIONS: ReadonlyArray<CampaignProgressDefinition> =
   {
     id: 'kingdomsForlorn',
     name: 'Kingdoms Forlorn',
-    unitLabel: kingdomsForlornContent.quests.length > 0 ? 'quests' : 'kingdoms',
+    unitLabel: kingdomsForlornContent.quests.length > 0 ? 'quest steps' : 'campaign steps',
     build: (plays, username) => {
       const entries = getKingdomsForlornEntries(plays, username)
       const knownValues =
         kingdomsForlornContent.quests.length > 0
-          ? kingdomsForlornContent.quests
-          : kingdomsForlornContent.kingdoms
+          ? kingdomsForlornContent.campaigns.flatMap((campaign) =>
+              kingdomsForlornContent.quests.map((quest) => `${campaign}|||${quest}`),
+            )
+          : kingdomsForlornContent.campaigns.flatMap((campaign) =>
+              kingdomsForlornContent.kingdoms.map((kingdom) => `${campaign}|||${kingdom}`),
+            )
       const observedValues =
         kingdomsForlornContent.quests.length > 0
-          ? entries.map((entry) => entry.quest || '')
-          : entries.map((entry) => entry.kingdom)
+          ? entries
+              .filter((entry) => entry.campaign && entry.quest)
+              .map((entry) => `${entry.campaign}|||${entry.quest}`)
+          : entries
+              .filter((entry) => entry.campaign && entry.kingdom)
+              .map((entry) => `${entry.campaign}|||${entry.kingdom}`)
 
       return {
         plays: sumQuantities(entries),

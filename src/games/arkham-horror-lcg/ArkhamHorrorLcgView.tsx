@@ -1,6 +1,7 @@
 import { Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
+import CampaignProgressTable from '../../components/CampaignProgressTable'
 import CountTable from '../../components/CountTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
 import AchievementsPanel from '../../components/AchievementsPanel'
@@ -81,6 +82,14 @@ export default function ArkhamHorrorLcgView(props: {
   const scenarioCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) incrementCount(counts, entry.scenario, entry.quantity)
+    return counts
+  })
+  const scenarioWins = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.isWin) continue
+      incrementCount(counts, entry.scenario, entry.quantity)
+    }
     return counts
   })
 
@@ -198,6 +207,20 @@ export default function ArkhamHorrorLcgView(props: {
     }
     return { hoursByBox, hasAssumedHoursByBox }
   })
+  const scenarioPlayHours = createMemo(() => {
+    const hoursByScenario: Record<string, number> = {}
+    const hasAssumedHoursByScenario: Record<string, boolean> = {}
+    for (const entry of entries()) {
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      incrementCount(hoursByScenario, entry.scenario, resolved.minutes / 60)
+      if (resolved.assumed) hasAssumedHoursByScenario[entry.scenario] = true
+    }
+    return { hoursByScenario, hasAssumedHoursByScenario }
+  })
 
   const playIdsByBox = createMemo(() => {
     const ids: Record<string, number[]> = {}
@@ -255,6 +278,31 @@ export default function ArkhamHorrorLcgView(props: {
       arkhamHorrorLcgContent.campaigns,
     ),
   )
+  const campaignSections = createMemo(() =>
+    arkhamHorrorLcgContent.campaigns
+      .map((campaign) => {
+        const scenarios = arkhamHorrorLcgContent.scenarioNamesByCampaignName.get(campaign) ?? []
+        if (scenarios.length === 0) return null
+        const playedCount = scenarios.filter((scenario) => (scenarioCounts()[scenario] ?? 0) > 0).length
+        return {
+          key: campaign,
+          label: campaign,
+          group: arkhamHorrorLcgContent.campaignGroupByName.get(campaign),
+          summary: `${playedCount.toLocaleString()} / ${scenarios.length.toLocaleString()} scenarios played`,
+          playIds: uniquePlayIds(playIdsByCampaign()[campaign] ?? []),
+          steps: scenarios.map((scenario) => ({
+            key: scenario,
+            label: scenario,
+            plays: scenarioCounts()[scenario] ?? 0,
+            wins: scenarioWins()[scenario] ?? 0,
+            hours: scenarioPlayHours().hoursByScenario[scenario] ?? 0,
+            hasAssumedHours: scenarioPlayHours().hasAssumedHoursByScenario[scenario] === true,
+            playIds: uniquePlayIds(playIdsByScenario()[scenario] ?? []),
+          })),
+        }
+      })
+      .filter((section): section is NonNullable<typeof section> => Boolean(section)),
+  )
 
   const investigatorKeys = createMemo(() =>
     sortKeysByGroupThenCountDesc(
@@ -302,8 +350,7 @@ export default function ArkhamHorrorLcgView(props: {
             </button>
           </div>
           <div class="muted">
-            Track campaign and scenario progression, plus investigator and difficulty tags from BG Stats player
-            colors.
+            Track each campaign line separately, with investigator and difficulty tags layered on top.
           </div>
         </div>
       </div>
@@ -347,6 +394,28 @@ export default function ArkhamHorrorLcgView(props: {
           <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has no recorded length.
         </div>
       </Show>
+
+      <CampaignProgressTable
+        title="Campaign Scenarios"
+        stepLabel="Scenario"
+        sections={campaignSections()}
+        onCampaignPlaysClick={(campaign) => {
+          const playIds = uniquePlayIds(playIdsByCampaign()[campaign] ?? [])
+          if (playIds.length === 0) return
+          props.onOpenPlays({
+            title: `Arkham Horror LCG • ${campaign}`,
+            playIds,
+          })
+        }}
+        onStepPlaysClick={(_campaign, scenario) => {
+          const playIds = uniquePlayIds(playIdsByScenario()[scenario] ?? [])
+          if (playIds.length === 0) return
+          props.onOpenPlays({
+            title: `Arkham Horror LCG • ${scenario}`,
+            playIds,
+          })
+        }}
+      />
 
       <CountTable
         title="Campaigns"

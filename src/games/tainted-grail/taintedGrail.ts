@@ -2,6 +2,7 @@ import { getBgStatsValue, parseBgStatsKeyValueSegments, splitBgStatsSegments } f
 import { taintedGrailContent } from './content'
 
 export type TaintedGrailPlayerTags = {
+  campaign?: string
   chapter?: string
   continuePrevious: boolean
   continueNext: boolean
@@ -19,14 +20,31 @@ function normalizeId(value: string): string {
     .replace(/[^a-z0-9]+/g, '')
 }
 
-function resolveChapter(value: string): string | undefined {
+function resolveCampaign(value: string): string | undefined {
   const token = normalizeToken(value)
   if (!token) return undefined
-  return taintedGrailContent.chaptersById.get(normalizeId(token)) ?? token
+  return taintedGrailContent.campaignsById.get(normalizeId(token))
 }
 
-function isKnownChapterToken(value: string): boolean {
-  return taintedGrailContent.chaptersById.has(normalizeId(value))
+function resolveChapter(value: string, campaign?: string): string | undefined {
+  const token = normalizeToken(value)
+  if (!token) return undefined
+  const normalized = normalizeId(token)
+  if (campaign) {
+    const campaignLookup = taintedGrailContent.chapterLookupByCampaignName.get(campaign)
+    const resolved = campaignLookup?.get(normalized)
+    if (resolved) return resolved
+  }
+  return taintedGrailContent.chaptersById.get(normalized) ?? token
+}
+
+function isKnownChapterToken(value: string, campaign?: string): boolean {
+  const normalized = normalizeId(value)
+  if (campaign) {
+    const campaignLookup = taintedGrailContent.chapterLookupByCampaignName.get(campaign)
+    if (campaignLookup?.has(normalized)) return true
+  }
+  return taintedGrailContent.chaptersById.has(normalized)
 }
 
 function isContinuePreviousToken(value: string): boolean {
@@ -43,12 +61,25 @@ export function parseTaintedGrailPlayerColor(color: string): TaintedGrailPlayerT
   const parsedKv = parseBgStatsKeyValueSegments(color)
   const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
 
+  const campaignKv = getBgStatsValue(parsedKv, ['P', 'Camp', 'Campaign', 'Story'])
+  let campaign = campaignKv ? resolveCampaign(campaignKv) : undefined
   const chapterKv = getBgStatsValue(parsedKv, ['C', 'Ch', 'Chap', 'Chapter'])
-  let chapter = chapterKv ? resolveChapter(chapterKv) : undefined
+  let chapter = chapterKv ? resolveChapter(chapterKv, campaign) : undefined
   let continuePrevious = false
   let continueNext = false
 
   const used = new Set<string>()
+  if (!campaign) {
+    for (const tag of tags) {
+      const normalized = normalizeToken(tag)
+      if (!normalized) continue
+      const resolvedCampaign = resolveCampaign(normalized)
+      if (!resolvedCampaign) continue
+      campaign = resolvedCampaign
+      if (chapterKv && !chapter) chapter = resolveChapter(chapterKv, campaign)
+      break
+    }
+  }
   for (const tag of tags) {
     const normalized = normalizeToken(tag)
     if (!normalized) continue
@@ -60,8 +91,17 @@ export function parseTaintedGrailPlayerColor(color: string): TaintedGrailPlayerT
       continueNext = true
       continue
     }
-    if (!chapter && isKnownChapterToken(normalized)) {
-      chapter = resolveChapter(normalized)
+    if (!campaign) {
+      const resolvedCampaign = resolveCampaign(normalized)
+      if (resolvedCampaign) {
+        campaign = resolvedCampaign
+        if (chapterKv && !chapter) chapter = resolveChapter(chapterKv, campaign)
+        used.add(normalized)
+        continue
+      }
+    }
+    if (!chapter && isKnownChapterToken(normalized, campaign)) {
+      chapter = resolveChapter(normalized, campaign)
       used.add(normalized)
       break
     }
@@ -72,5 +112,5 @@ export function parseTaintedGrailPlayerColor(color: string): TaintedGrailPlayerT
     .filter(Boolean)
     .filter((tag) => !used.has(tag))
 
-  return { chapter, continuePrevious, continueNext, extraTags }
+  return { campaign, chapter, continuePrevious, continueNext, extraTags }
 }

@@ -20,12 +20,17 @@ type ParsedList = {
 }
 
 export type KingdomsForlornContent = {
+  campaigns: string[]
   knights: string[]
   quests: string[]
   kingdoms: string[]
+  campaignsById: Map<string, string>
   knightsById: Map<string, string>
   questsById: Map<string, string>
   kingdomsById: Map<string, string>
+  campaignGroupByName: Map<string, string>
+  campaignBoxByName: Map<string, string>
+  stepNamesByCampaignName: Map<string, string[]>
   knightGroupByName: Map<string, string>
   kingdomGroupByName: Map<string, string>
   knightBoxByName: Map<string, string>
@@ -99,14 +104,26 @@ export function parseKingdomsForlornContent(text: string): KingdomsForlornConten
   const knights = parseNamedList(yaml.knights as KingdomsForlornYamlItem[])
   const quests = Array.isArray(yaml.quests) ? parseNamedList(yaml.quests as KingdomsForlornYamlItem[]) : parseNamedList([])
   const kingdoms = parseNamedList(yaml.kingdoms as KingdomsForlornYamlItem[])
+  const campaigns = knights.labels.slice()
+  const campaignsById = new Map(knights.byId)
+  const campaignGroupByName = new Map(knights.groupByLabel)
+  const campaignBoxByName = new Map(knights.boxByLabel)
+  const stepNamesByCampaignName = new Map<string, string[]>(
+    campaigns.map((campaign) => [campaign, quests.labels.length > 0 ? quests.labels.slice() : kingdoms.labels.slice()]),
+  )
 
   return {
+    campaigns,
     knights: knights.labels,
     quests: quests.labels,
     kingdoms: kingdoms.labels,
+    campaignsById,
     knightsById: knights.byId,
     questsById: quests.byId,
     kingdomsById: kingdoms.byId,
+    campaignGroupByName,
+    campaignBoxByName,
+    stepNamesByCampaignName,
     knightGroupByName: knights.groupByLabel,
     kingdomGroupByName: kingdoms.groupByLabel,
     knightBoxByName: knights.boxByLabel,

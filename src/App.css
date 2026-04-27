@@ -237,6 +237,27 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+.campaignProgressCampaignHead {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.campaignProgressCampaignRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.campaignProgressCampaignButton {
+  font: inherit;
+}
+
+.campaignProgressCampaignSummary {
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .sidebarTabButton {
   width: 100%;
   justify-content: flex-start;

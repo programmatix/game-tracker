@@ -1,88 +1,167 @@
-# Tainted Grail: The Fall of Avalon
+# Tainted Grail
 #
-# Compact ids/aliases are used to parse BG Stats player-color tags.
-# Current observed format:
-#   C1
-# Also supports key/value style such as:
-#   C: 1
-#   Chapter: 1
+# Multiple campaigns share chapter numbers, so chapter ids are namespaced internally.
+# BG Stats tags can still stay compact:
+#   FoA／C1
+#   AoL／C1
+#   TLK／C1
+# or key/value:
+#   Campaign: AoL／Chapter: 1
 
-chapters:
-  - display: Chapter 1
-    id: C1
-    aliases: [1, Chapter1, Chapter 1]
+campaigns:
+  - display: The Fall of Avalon
+    id: FallOfAvalon
+    aliases: [FoA, Core]
     group: Core
     box: Core
-  - display: Chapter 2
-    id: C2
-    aliases: [2, Chapter2, Chapter 2]
-    group: Core
-    box: Core
-  - display: Chapter 3
-    id: C3
-    aliases: [3, Chapter3, Chapter 3]
-    group: Core
-    box: Core
-  - display: Chapter 4
-    id: C4
-    aliases: [4, Chapter4, Chapter 4]
-    group: Core
-    box: Core
-  - display: Chapter 5
-    id: C5
-    aliases: [5, Chapter5, Chapter 5]
-    group: Core
-    box: Core
-  - display: Chapter 6
-    id: C6
-    aliases: [6, Chapter6, Chapter 6]
-    group: Core
-    box: Core
-  - display: Chapter 7
-    id: C7
-    aliases: [7, Chapter7, Chapter 7]
-    group: Core
-    box: Core
-  - display: Chapter 8
-    id: C8
-    aliases: [8, Chapter8, Chapter 8]
-    group: Core
-    box: Core
-  - display: Chapter 9
-    id: C9
-    aliases: [9, Chapter9, Chapter 9]
-    group: Core
-    box: Core
-  - display: Chapter 10
-    id: C10
-    aliases: [10, Chapter10, Chapter 10]
-    group: Core
-    box: Core
-  - display: Chapter 11
-    id: C11
-    aliases: [11, Chapter11, Chapter 11]
-    group: Core
-    box: Core
-  - display: Chapter 12
-    id: C12
-    aliases: [12, Chapter12, Chapter 12]
-    group: Core
-    box: Core
-  - display: Chapter 13
-    id: C13
-    aliases: [13, Chapter13, Chapter 13]
-    group: Core
-    box: Core
-  - display: Chapter 14
-    id: C14
-    aliases: [14, Chapter14, Chapter 14]
-    group: Core
-    box: Core
-  - display: Chapter 15
-    id: C15
-    aliases: [15, Chapter15, Chapter 15]
-    group: Core
-    box: Core
+    chapters:
+      - display: Chapter 1
+        id: C1
+        aliases: [1, Chapter1, Chapter 1]
+      - display: Chapter 2
+        id: C2
+        aliases: [2, Chapter2, Chapter 2]
+      - display: Chapter 3
+        id: C3
+        aliases: [3, Chapter3, Chapter 3]
+      - display: Chapter 4
+        id: C4
+        aliases: [4, Chapter4, Chapter 4]
+      - display: Chapter 5
+        id: C5
+        aliases: [5, Chapter5, Chapter 5]
+      - display: Chapter 6
+        id: C6
+        aliases: [6, Chapter6, Chapter 6]
+      - display: Chapter 7
+        id: C7
+        aliases: [7, Chapter7, Chapter 7]
+      - display: Chapter 8
+        id: C8
+        aliases: [8, Chapter8, Chapter 8]
+      - display: Chapter 9
+        id: C9
+        aliases: [9, Chapter9, Chapter 9]
+      - display: Chapter 10
+        id: C10
+        aliases: [10, Chapter10, Chapter 10]
+      - display: Chapter 11
+        id: C11
+        aliases: [11, Chapter11, Chapter 11]
+      - display: Chapter 12
+        id: C12
+        aliases: [12, Chapter12, Chapter 12]
+      - display: Chapter 13
+        id: C13
+        aliases: [13, Chapter13, Chapter 13]
+      - display: Chapter 14
+        id: C14
+        aliases: [14, Chapter14, Chapter 14]
+      - display: Chapter 15
+        id: C15
+        aliases: [15, Chapter15, Chapter 15]
+  - display: Age of Legends
+    id: AgeOfLegends
+    aliases: [AoL]
+    group: Expansion Campaigns
+    box: Expansions
+    chapters:
+      - display: Chapter 1
+        id: AoLC1
+        aliases: [AoL1, Age1]
+      - display: Chapter 2
+        id: AoLC2
+        aliases: [AoL2, Age2]
+      - display: Chapter 3
+        id: AoLC3
+        aliases: [AoL3, Age3]
+      - display: Chapter 4
+        id: AoLC4
+        aliases: [AoL4, Age4]
+      - display: Chapter 5
+        id: AoLC5
+        aliases: [AoL5, Age5]
+      - display: Chapter 6
+        id: AoLC6
+        aliases: [AoL6, Age6]
+      - display: Chapter 7
+        id: AoLC7
+        aliases: [AoL7, Age7]
+      - display: Chapter 8
+        id: AoLC8
+        aliases: [AoL8, Age8]
+      - display: Chapter 9
+        id: AoLC9
+        aliases: [AoL9, Age9]
+      - display: Chapter 10
+        id: AoLC10
+        aliases: [AoL10, Age10]
+      - display: Chapter 11
+        id: AoLC11
+        aliases: [AoL11, Age11]
+      - display: Chapter 12
+        id: AoLC12
+        aliases: [AoL12, Age12]
+      - display: Chapter 13
+        id: AoLC13
+        aliases: [AoL13, Age13]
+      - display: Chapter 14
+        id: AoLC14
+        aliases: [AoL14, Age14]
+      - display: Chapter 15
+        id: AoLC15
+        aliases: [AoL15, Age15]
+  - display: The Last Knight
+    id: TheLastKnight
+    aliases: [TLK, LastKnight]
+    group: Expansion Campaigns
+    box: Expansions
+    chapters:
+      - display: Chapter 1
+        id: TLKC1
+        aliases: [TLK1, Last1]
+      - display: Chapter 2
+        id: TLKC2
+        aliases: [TLK2, Last2]
+      - display: Chapter 3
+        id: TLKC3
+        aliases: [TLK3, Last3]
+      - display: Chapter 4
+        id: TLKC4
+        aliases: [TLK4, Last4]
+      - display: Chapter 5
+        id: TLKC5
+        aliases: [TLK5, Last5]
+      - display: Chapter 6
+        id: TLKC6
+        aliases: [TLK6, Last6]
+      - display: Chapter 7
+        id: TLKC7
+        aliases: [TLK7, Last7]
+      - display: Chapter 8
+        id: TLKC8
+        aliases: [TLK8, Last8]
+      - display: Chapter 9
+        id: TLKC9
+        aliases: [TLK9, Last9]
+      - display: Chapter 10
+        id: TLKC10
+        aliases: [TLK10, Last10]
+      - display: Chapter 11
+        id: TLKC11
+        aliases: [TLK11, Last11]
+      - display: Chapter 12
+        id: TLKC12
+        aliases: [TLK12, Last12]
+      - display: Chapter 13
+        id: TLKC13
+        aliases: [TLK13, Last13]
+      - display: Chapter 14
+        id: TLKC14
+        aliases: [TLK14, Last14]
+      - display: Chapter 15
+        id: TLKC15
+        aliases: [TLK15, Last15]
 
 costs:
   currency: "£"

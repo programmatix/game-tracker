@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
+import { Show, Suspense, createEffect, createMemo, createSignal, lazy, onCleanup } from 'solid-js'
 import type { User } from 'firebase/auth'
 import type { BggPlay } from './bgg'
 import {
@@ -15,33 +15,6 @@ import type { PlaysView as PlaysViewMode } from './appNav'
 import type { PlaysByGameRow } from './playsHelpers'
 import { isConfigurableGameId } from './configurableGames'
 import { isGameTab } from './gameCatalog'
-import FinalGirlView from './games/final-girl/FinalGirlView'
-import DeathMayDieView from './games/death-may-die/DeathMayDieView'
-import MistfallView from './games/mistfall/MistfallView'
-import SpiritIslandView from './games/spirit-island/SpiritIslandView'
-import BulletView from './games/bullet/BulletView'
-import TooManyBonesView from './games/too-many-bones/TooManyBonesView'
-import MageKnightView from './games/mage-knight/MageKnightView'
-import UndauntedNormandyView from './games/undaunted-normandy/UndauntedNormandyView'
-import UnsettledView from './games/unsettled/UnsettledView'
-import SkytearHordeView from './games/skytear-horde/SkytearHordeView'
-import CloudspireView from './games/cloudspire/CloudspireView'
-import BurncycleView from './games/burncycle/BurncycleView'
-import MandalorianAdventuresView from './games/mandalorian-adventures/MandalorianAdventuresView'
-import PaleoView from './games/paleo/PaleoView'
-import RobinsonCrusoeView from './games/robinson-crusoe/RobinsonCrusoeView'
-import RobinHoodView from './games/robin-hood/RobinHoodView'
-import EarthborneRangersView from './games/earthborne-rangers/EarthborneRangersView'
-import ElderScrollsView from './games/elder-scrolls/ElderScrollsView'
-import StarTrekCaptainsChairView from './games/star-trek-captains-chair/StarTrekCaptainsChairView'
-import DeckersView from './games/deckers/DeckersView'
-import OathswornView from './games/oathsworn/OathswornView'
-import TaintedGrailView from './games/tainted-grail/TaintedGrailView'
-import IsofarianGuardView from './games/isofarian-guard/IsofarianGuardView'
-import ArkhamHorrorLcgView from './games/arkham-horror-lcg/ArkhamHorrorLcgView'
-import KingdomsForlornView from './games/kingdoms-forlorn/KingdomsForlornView'
-import NanolithView from './games/nanolith/NanolithView'
-import LeviathanWildsView from './games/leviathan-wilds/LeviathanWildsView'
 import AchievementsView from './AchievementsView'
 import PinnedAchievementsView from './PinnedAchievementsView'
 import CampaignsView from './CampaignsView'
@@ -60,6 +33,38 @@ import GenericGameView from './GenericGameView'
 import PlaysView, { PlaysPager } from './PlaysView'
 import type { SpiritIslandSession } from './games/spirit-island/mindwanderer'
 import type { GamePreferences, ResolvedGamePreferencesById } from './gamePreferences'
+
+const FinalGirlView = lazy(() => import('./games/final-girl/FinalGirlView'))
+const DeathMayDieView = lazy(() => import('./games/death-may-die/DeathMayDieView'))
+const MistfallView = lazy(() => import('./games/mistfall/MistfallView'))
+const SpiritIslandView = lazy(() => import('./games/spirit-island/SpiritIslandView'))
+const BulletView = lazy(() => import('./games/bullet/BulletView'))
+const TooManyBonesView = lazy(() => import('./games/too-many-bones/TooManyBonesView'))
+const MageKnightView = lazy(() => import('./games/mage-knight/MageKnightView'))
+const UndauntedNormandyView = lazy(() => import('./games/undaunted-normandy/UndauntedNormandyView'))
+const UnsettledView = lazy(() => import('./games/unsettled/UnsettledView'))
+const SkytearHordeView = lazy(() => import('./games/skytear-horde/SkytearHordeView'))
+const CloudspireView = lazy(() => import('./games/cloudspire/CloudspireView'))
+const BurncycleView = lazy(() => import('./games/burncycle/BurncycleView'))
+const MandalorianAdventuresView = lazy(
+  () => import('./games/mandalorian-adventures/MandalorianAdventuresView'),
+)
+const PaleoView = lazy(() => import('./games/paleo/PaleoView'))
+const RobinsonCrusoeView = lazy(() => import('./games/robinson-crusoe/RobinsonCrusoeView'))
+const RobinHoodView = lazy(() => import('./games/robin-hood/RobinHoodView'))
+const EarthborneRangersView = lazy(() => import('./games/earthborne-rangers/EarthborneRangersView'))
+const ElderScrollsView = lazy(() => import('./games/elder-scrolls/ElderScrollsView'))
+const StarTrekCaptainsChairView = lazy(
+  () => import('./games/star-trek-captains-chair/StarTrekCaptainsChairView'),
+)
+const DeckersView = lazy(() => import('./games/deckers/DeckersView'))
+const OathswornView = lazy(() => import('./games/oathsworn/OathswornView'))
+const TaintedGrailView = lazy(() => import('./games/tainted-grail/TaintedGrailView'))
+const IsofarianGuardView = lazy(() => import('./games/isofarian-guard/IsofarianGuardView'))
+const ArkhamHorrorLcgView = lazy(() => import('./games/arkham-horror-lcg/ArkhamHorrorLcgView'))
+const KingdomsForlornView = lazy(() => import('./games/kingdoms-forlorn/KingdomsForlornView'))
+const NanolithView = lazy(() => import('./games/nanolith/NanolithView'))
+const LeviathanWildsView = lazy(() => import('./games/leviathan-wilds/LeviathanWildsView'))
 
 type SharedGameViewProps = {
   plays: BggPlay[]
@@ -131,6 +136,10 @@ type AppContentProps = {
   drilldownPlaysCount: number
   drilldownPagedPlays: BggPlay[]
   playTimeDisplay: (play: BggPlay) => string
+}
+
+function GameViewLoadingFallback() {
+  return <div class="gameView">Loading…</div>
 }
 
 function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
@@ -467,7 +476,7 @@ export default function AppContent(props: AppContentProps) {
                 assumedMinutesByObjectId={props.assumedMinutesByObjectId}
               />
             </div>
-            {view()}
+            <Suspense fallback={<GameViewLoadingFallback />}>{view()}</Suspense>
           </div>
         )}
       </Show>
@@ -501,18 +510,20 @@ export default function AppContent(props: AppContentProps) {
               assumedMinutesByObjectId={props.assumedMinutesByObjectId}
             />
           </div>
-          <SpiritIslandView
-            plays={props.plays}
-            username={props.username}
-            authToken={props.authToken}
-            spiritIslandSessions={props.spiritIslandSessions}
-            spiritIslandSessionsLoading={props.spiritIslandSessionsLoading}
-            spiritIslandSessionsError={props.spiritIslandSessionsError}
-            pinnedAchievementIds={props.pinnedAchievementIds}
-            suppressAvailableAchievementTrackIds={props.suppressAvailableAchievementTrackIds}
-            onTogglePin={props.onTogglePin}
-            onOpenPlays={props.onOpenPlays}
-          />
+          <Suspense fallback={<GameViewLoadingFallback />}>
+            <SpiritIslandView
+              plays={props.plays}
+              username={props.username}
+              authToken={props.authToken}
+              spiritIslandSessions={props.spiritIslandSessions}
+              spiritIslandSessionsLoading={props.spiritIslandSessionsLoading}
+              spiritIslandSessionsError={props.spiritIslandSessionsError}
+              pinnedAchievementIds={props.pinnedAchievementIds}
+              suppressAvailableAchievementTrackIds={props.suppressAvailableAchievementTrackIds}
+              onTogglePin={props.onTogglePin}
+              onOpenPlays={props.onOpenPlays}
+            />
+          </Suspense>
         </div>
       </Show>
 

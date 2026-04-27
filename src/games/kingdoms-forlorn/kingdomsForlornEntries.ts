@@ -5,6 +5,7 @@ export const KINGDOMS_FORLORN_OBJECT_ID = '297510'
 
 export type KingdomsForlornEntry = {
   play: BggPlay
+  campaign: string
   kingdom: string
   knights: string[]
   myKnight?: string
@@ -83,6 +84,7 @@ export function getKingdomsForlornEntries(
 
       return {
         play,
+        campaign: myKnight || '',
         kingdom: myPlayer?.kingdom?.trim() || chooseMostCommonOrFirst(kingdomCandidates) || '',
         knights,
         myKnight,
@@ -101,6 +103,7 @@ export function getKingdomsForlornEntries(
       if (!entry.myKnight && previousResolved.myKnight) entry.myKnight = previousResolved.myKnight
       if (!entry.quest && previousResolved.quest) entry.quest = previousResolved.quest
     }
+    entry.campaign = entry.myKnight || ''
     if (entry.myKnight && !entry.knights.includes(entry.myKnight)) entry.knights.push(entry.myKnight)
     if (entry.kingdom || entry.myKnight || entry.quest) {
       const priorKingdom: string | undefined = previousResolved ? previousResolved.kingdom : undefined
@@ -122,6 +125,7 @@ export function getKingdomsForlornEntries(
       if (!entry.myKnight && nextResolved.myKnight) entry.myKnight = nextResolved.myKnight
       if (!entry.quest && nextResolved.quest) entry.quest = nextResolved.quest
     }
+    entry.campaign = entry.myKnight || ''
     if (entry.myKnight && !entry.knights.includes(entry.myKnight)) entry.knights.push(entry.myKnight)
     if (entry.kingdom || entry.myKnight || entry.quest) {
       const priorKingdom: string | undefined = nextResolved ? nextResolved.kingdom : undefined
@@ -136,6 +140,7 @@ export function getKingdomsForlornEntries(
   }
 
   for (const entry of result) {
+    entry.campaign = entry.myKnight || 'Unknown campaign'
     if (!entry.kingdom) entry.kingdom = 'Unknown kingdom'
     if (entry.knights.length === 0) entry.knights = entry.myKnight ? [entry.myKnight] : ['Unknown knight']
   }

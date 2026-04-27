@@ -7,6 +7,7 @@ export type ArkhamHorrorLcgContent = {
   campaignsById: Map<string, string>
   campaignGroupByName: Map<string, string>
   campaignBoxByName: Map<string, string>
+  scenarioNamesByCampaignName: Map<string, string[]>
   difficulties: string[]
   difficultiesById: Map<string, string>
   scenarios: string[]
@@ -98,6 +99,7 @@ export function parseArkhamHorrorLcgContent(text: string): ArkhamHorrorLcgConten
   const campaignsById = new Map<string, string>()
   const campaignGroupByName = new Map<string, string>()
   const campaignBoxByName = new Map<string, string>()
+  const scenarioNamesByCampaignName = new Map<string, string[]>()
   const difficulties: string[] = []
   const difficultiesById = new Map<string, string>()
   const scenarios: string[] = []
@@ -127,7 +129,12 @@ export function parseArkhamHorrorLcgContent(text: string): ArkhamHorrorLcgConten
     yaml.scenarios,
     (item, display) => {
       const campaign = typeof item.campaign === 'string' ? item.campaign.trim() : ''
-      if (campaign) scenarioCampaignByName.set(display, campaign)
+      if (campaign) {
+        scenarioCampaignByName.set(display, campaign)
+        const existing = scenarioNamesByCampaignName.get(campaign)
+        if (existing) existing.push(display)
+        else scenarioNamesByCampaignName.set(campaign, [display])
+      }
       const box = typeof item.box === 'string' ? item.box.trim() : ''
       if (box) scenarioBoxByName.set(display, box)
     },
@@ -152,6 +159,7 @@ export function parseArkhamHorrorLcgContent(text: string): ArkhamHorrorLcgConten
     campaignsById,
     campaignGroupByName,
     campaignBoxByName,
+    scenarioNamesByCampaignName,
     difficulties,
     difficultiesById,
     scenarios,
