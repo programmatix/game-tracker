@@ -4,6 +4,7 @@ import { arkhamHorrorLcgContent } from './content'
 export type ArkhamHorrorLcgPlayerTags = {
   campaign?: string
   scenario?: string
+  scenarioMatchedByGenericAlias: boolean
   difficulty?: string
   investigators: string[]
   continuePrevious: boolean
@@ -32,6 +33,11 @@ function resolveScenario(value: string): string | undefined {
   const token = normalizeToken(value)
   if (!token) return undefined
   return arkhamHorrorLcgContent.scenariosById.get(normalizeId(token))
+}
+
+function isGenericScenarioAlias(value: string): boolean {
+  const normalized = normalizeId(value)
+  return /^s\d+[a-z]?$/.test(normalized) || /^scenario\d+[a-z]?$/.test(normalized)
 }
 
 function resolveDifficulty(value: string): string | undefined {
@@ -68,7 +74,9 @@ export function parseArkhamHorrorLcgPlayerColor(color: string): ArkhamHorrorLcgP
   const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
 
   let campaign = resolveCampaign(getBgStatsValue(parsedKv, ['C', 'Camp', 'Campaign']) || '')
-  let scenario = resolveScenario(getBgStatsValue(parsedKv, ['S', 'Scen', 'Scenario']) || '')
+  const keyValueScenarioToken = getBgStatsValue(parsedKv, ['S', 'Scen', 'Scenario']) || ''
+  let scenario = resolveScenario(keyValueScenarioToken)
+  let scenarioMatchedByGenericAlias = Boolean(scenario) && isGenericScenarioAlias(keyValueScenarioToken)
   let difficulty = resolveDifficulty(getBgStatsValue(parsedKv, ['D', 'Diff', 'Difficulty']) || '')
   const investigators: string[] = []
   pushUnique(investigators, resolveInvestigator(getBgStatsValue(parsedKv, ['I', 'Inv', 'Investigator']) || ''))
@@ -108,6 +116,7 @@ export function parseArkhamHorrorLcgPlayerColor(color: string): ArkhamHorrorLcgP
       const resolved = resolveScenario(tag)
       if (resolved) {
         scenario = resolved
+        scenarioMatchedByGenericAlias = isGenericScenarioAlias(tag)
         used.add(tag)
         continue
       }
@@ -127,6 +136,7 @@ export function parseArkhamHorrorLcgPlayerColor(color: string): ArkhamHorrorLcgP
   return {
     campaign,
     scenario,
+    scenarioMatchedByGenericAlias,
     difficulty,
     investigators,
     continuePrevious,

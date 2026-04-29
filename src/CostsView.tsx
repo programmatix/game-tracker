@@ -607,7 +607,8 @@ export default function CostsView(props: {
       </div>
 
       <div class="tableWrap">
-        <table class="table compactTable mobileCardTable costsTable">
+        <div class="tableScrollX">
+          <table class="table compactTable mobileCardTable costsTable">
           <thead>
             <tr>
               <th class="mono">#</th>
@@ -789,7 +790,8 @@ export default function CostsView(props: {
               </>
             </Show>
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       <Show when={hasAnyAssumedHours()}>

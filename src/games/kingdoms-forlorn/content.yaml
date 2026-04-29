@@ -18,16 +18,36 @@ knights:
     group: Core
     box: Collection
     aliases: [SS]
-  - display: Eggknight
-    id: Eggknight
+  - display: Renholder, the Mage Knight
+    id: Renholder
     group: Core
     box: Collection
-    aliases: [Egg, EK]
-  - display: Flower Knight
-    id: FlowerKnight
+    aliases: [Mage, RM]
+  - display: Fleischritter, the Butcher Knight
+    id: Fleischritter
     group: Core
     box: Collection
-    aliases: [Flower, FK]
+    aliases: [Butcher, FB]
+  - display: Reiner, the Excommunicated
+    id: Reiner
+    group: Core
+    box: Collection
+    aliases: [Excommunicated, RX]
+  - display: Paracelsa, Quester of False Saints
+    id: Paracelsa
+    group: Core
+    box: Collection
+    aliases: [FalseSaints, PQ]
+  - display: Stoneface
+    id: Stoneface
+    group: Expansion
+    box: Collection
+    aliases: [SF]
+  - display: Ser Ubar
+    id: Ubar
+    group: Expansion
+    box: Collection
+    aliases: [SU]
 
 quests:
   - display: Quest 1

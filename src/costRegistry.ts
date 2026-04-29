@@ -251,7 +251,7 @@ const legacyCostRegistry: ReadonlyArray<CostRegistryEntry> = [
 const legacyIds = new Set(legacyCostRegistry.map((entry) => entry.id))
 
 const purchaseOnlyCostRegistry: ReadonlyArray<CostRegistryEntry> = PURCHASE_GAME_FAMILIES.filter(
-  (family) => !legacyIds.has(family.id),
+  (family) => !legacyIds.has(family.id) && family.supportsCostsTable !== false,
 ).map((family) => ({
   id: family.id,
   label: family.label,

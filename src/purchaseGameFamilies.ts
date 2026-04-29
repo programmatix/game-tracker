@@ -3,6 +3,8 @@ export type PurchaseGameFamily = {
   label: string
   spreadsheetFamily: string
   aliases?: ReadonlyArray<string>
+  objectIds?: ReadonlyArray<string>
+  supportsCostsTable?: boolean
   price: number
 }
 
@@ -11,7 +13,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   { id: '20Strong', label: "20 Strong", spreadsheetFamily: "20 Strong", price: 55.10 },
   { id: '7thCitadel', label: "7th Citadel", spreadsheetFamily: "7th Citadel", price: 75.49 },
   { id: 'agemonia', label: "Agemonia", spreadsheetFamily: "Agemonia", price: 130.48 },
-  { id: 'arkhamHorrorLcg', label: "Arkham Horror LCG", spreadsheetFamily: "Arkham Horror LCG", price: 891.19 },
+  { id: 'arkhamHorrorLcg', label: "Arkham Horror LCG", spreadsheetFamily: "Arkham Horror LCG", price: 781.19 },
   { id: 'arydia', label: "Arydia", spreadsheetFamily: "Arydia", price: 179.45 },
   { id: 'assaultOnDoomrockExpansion', label: "Assault on Doomrock + Expansion", spreadsheetFamily: "Assault on Doomrock + Expansion", price: 42.30 },
   { id: 'bombBusters', label: "Bomb Busters", spreadsheetFamily: "Bomb Busters", price: 22.94 },
@@ -33,7 +35,14 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   { id: 'diceThrone', label: "Dice Throne", spreadsheetFamily: "Dice Throne", price: 47.06 },
   { id: 'distantSkies', label: "Distant Skies", spreadsheetFamily: "Distant Skies", aliases: ["Sleeping Gods: Distant Skies"], price: 73.95 },
   { id: 'dragonEclipse', label: "Dragon Eclipse", spreadsheetFamily: "Dragon Eclipse", price: 71.79 },
-  { id: 'dragonholt', label: "Dragonholt", spreadsheetFamily: "Dragonholt", price: 29.49 },
+  {
+    id: 'dragonholt',
+    label: "Dragonholt",
+    spreadsheetFamily: "Dragonholt",
+    aliases: ["Legacy of Dragonholt"],
+    objectIds: ["234669"],
+    price: 29.49,
+  },
   { id: 'earthborneRangers', label: "Earthborne Rangers", spreadsheetFamily: "Earthborne Rangers", price: 62.00 },
   { id: 'elderScrolls', label: "Elder Scrolls", spreadsheetFamily: "Elder Scrolls Betrayal", price: 379.41 },
   { id: 'etherfield', label: "Etherfield", spreadsheetFamily: "Etherfield", price: 71.65 },
@@ -54,6 +63,12 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   },
   { id: 'finalGirl', label: "Final Girl", spreadsheetFamily: "Final Girl", price: 200.13 },
   { id: 'fleshAndBlood', label: "Flesh and Blood", spreadsheetFamily: "Flesh and Blood", price: 15.50 },
+  {
+    id: 'folkloreTheAffliction',
+    label: "Folklore: The Affliction",
+    spreadsheetFamily: "Folklore the Affliction",
+    price: 36.37,
+  },
   {
     id: 'gloomOfKilforth',
     label: "Gloom of Kilforth",
@@ -85,6 +100,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
     price: 5.71,
   },
   { id: 'isofarianGuard', label: "Isofarian Guard", spreadsheetFamily: "Isofarian Guard", price: 153.00 },
+  { id: 'issVanguard', label: "ISS Vanguard", spreadsheetFamily: "ISS Vanguard", price: 110.09 },
   { id: 'keyforge', label: "Keyforge", spreadsheetFamily: "Keyforge", price: 11.69 },
   {
     id: 'kinfireChronicles',
@@ -118,10 +134,27 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   },
   { id: 'oathsworn', label: "Oathsworn", spreadsheetFamily: "Oathsworn", price: 119.99 },
   { id: 'onward', label: "Onward", spreadsheetFamily: "Onward", price: 63.91 },
+  {
+    id: 'placeForAllMyBooks',
+    label: "A Place for All My Books",
+    spreadsheetFamily: "A Place for All My Books",
+    objectIds: ["431481"],
+    supportsCostsTable: false,
+    price: 0.00,
+  },
   { id: 'paleo', label: "Paleo", spreadsheetFamily: "Paleo", price: 38.85 },
   { id: 'pericle', label: "Pericle", spreadsheetFamily: "Pericle", price: 137.15 },
   { id: 'phantomEpoch', label: "Phantom Epoch", spreadsheetFamily: "Phantom Epoch", price: 135.00 },
   { id: 'puzzleStrike2', label: "Puzzle Strike 2", spreadsheetFamily: "Puzzle Strike 2", price: 44.99 },
+  {
+    id: 'quacksOfQuedlinburgMegaBox',
+    label: "The Quacks of Quedlinburg: MegaBox",
+    spreadsheetFamily: "The Quacks of Quedlinburg: MegaBox",
+    aliases: ["The Quacks of Quedlinburg: Mega Box"],
+    objectIds: ["349955"],
+    supportsCostsTable: false,
+    price: 0.00,
+  },
   { id: 'radiance', label: "Radiance", spreadsheetFamily: "Radiance", price: 42.38 },
   { id: 'radlands', label: "Radlands", spreadsheetFamily: "Radlands", price: 18.00 },
   { id: 'robinsonCrusoe', label: "Robinson Crusoe", spreadsheetFamily: "Robinson Crusoe", price: 51.78 },

@@ -167,7 +167,7 @@ export const CONFIGURABLE_GAME_MATCH_DEFINITIONS: ReadonlyArray<ConfigurableGame
         ...(family?.aliases || []),
         ...(overrides?.aliases || []),
       ]),
-      objectIds: uniqueStrings(overrides?.objectIds || []),
+      objectIds: uniqueStrings([...(family?.objectIds || []), ...(overrides?.objectIds || [])]),
       useArkhamSpecialMatcher: overrides?.useArkhamSpecialMatcher === true,
     }
   }).sort((left, right) => left.label.localeCompare(right.label))

@@ -43,7 +43,8 @@ export type ProgressTrackedGameId =
   | (typeof SCENARIO_GAME_IDS)[number]
 
 export type CampaignProgressRow = {
-  id: ProgressTrackedGameId
+  id: string
+  gameId: ProgressTrackedGameId
   name: string
   plays: number
   hours: number
@@ -60,6 +61,17 @@ type CampaignProgressDefinition = {
   name: string
   unitLabel: string
   build: (plays: BggPlay[], username: string) => { plays: number; completedCount: number; totalCount: number }
+}
+
+type CampaignDefinitionProgressConfig<T extends { play: BggPlay; quantity: number; campaign: string }> = {
+  id: ProgressTrackedGameId
+  name: string
+  unitLabel: string
+  campaigns: readonly string[]
+  stepsByCampaign: ReadonlyMap<string, readonly string[]>
+  entries: readonly T[]
+  getStep: (entry: T) => string
+  assumedMinutesByObjectId: ReadonlyMap<string, number>
 }
 
 function sumQuantities<T extends { quantity: number }>(entries: readonly T[]): number {
@@ -123,6 +135,42 @@ function countKnownCoverage(values: readonly string[], knownValues: readonly str
 
 function buildProgressLabel(completedCount: number, totalCount: number, unitLabel: string): string {
   return `${completedCount.toLocaleString()} / ${totalCount.toLocaleString()} ${unitLabel}`
+}
+
+function buildCampaignDefinitionProgressRows<T extends { play: BggPlay; quantity: number; campaign: string }>(
+  config: CampaignDefinitionProgressConfig<T>,
+): CampaignProgressRow[] {
+  const campaigns = config.campaigns.slice()
+  const knownCampaigns = new Set(campaigns)
+  for (const entry of config.entries) {
+    const campaign = entry.campaign.trim()
+    if (!campaign || knownCampaigns.has(campaign)) continue
+    knownCampaigns.add(campaign)
+    campaigns.push(campaign)
+  }
+
+  return campaigns.map((campaign) => {
+    const entries = config.entries.filter((entry) => entry.campaign.trim() === campaign)
+    const knownSteps = config.stepsByCampaign.get(campaign) || []
+    const completedCount = countKnownCoverage(entries.map(config.getStep), knownSteps)
+    const totalCount = knownSteps.length
+    const hoursSummary = summarizePlayHours(entries, config.assumedMinutesByObjectId)
+    const progress = totalCount > 0 ? completedCount / totalCount : 0
+
+    return {
+      id: `${config.id}:${campaign}`,
+      gameId: config.id,
+      name: `${config.name} • ${campaign}`,
+      plays: sumQuantities(entries),
+      hours: hoursSummary.hours,
+      hasAssumedHours: hoursSummary.hasAssumedHours,
+      completedCount,
+      totalCount,
+      remainingCount: Math.max(0, totalCount - completedCount),
+      progress,
+      progressLabel: buildProgressLabel(completedCount, totalCount, config.unitLabel),
+    }
+  })
 }
 
 const CAMPAIGN_PROGRESS_DEFINITIONS: ReadonlyArray<CampaignProgressDefinition> = [
@@ -335,6 +383,7 @@ export function buildCampaignProgressRows(
 
     return {
       id: definition.id,
+      gameId: definition.id,
       name: definition.name,
       plays: counts.plays,
       hours: hoursSummary.hours,
@@ -346,4 +395,76 @@ export function buildCampaignProgressRows(
       progressLabel: buildProgressLabel(completedCount, totalCount, definition.unitLabel),
     }
   })
+}
+
+export function buildCampaignProgressRowsWithCampaignBreakdown(
+  plays: BggPlay[],
+  username: string,
+  assumedMinutesByObjectId: ReadonlyMap<string, number>,
+): CampaignProgressRow[] {
+  const rowsByGameId = new Map(buildCampaignProgressRows(plays, username, assumedMinutesByObjectId).map((row) => [row.gameId, row]))
+
+  const arkhamRows = buildCampaignDefinitionProgressRows({
+    id: 'arkhamHorrorLcg',
+    name: 'Arkham Horror LCG',
+    unitLabel: 'scenarios',
+    campaigns: arkhamHorrorLcgContent.campaigns,
+    stepsByCampaign: arkhamHorrorLcgContent.scenarioNamesByCampaignName,
+    entries: getArkhamHorrorLcgEntries(plays, username),
+    getStep: (entry) => entry.scenario,
+    assumedMinutesByObjectId,
+  })
+
+  const isofarianChaptersByCampaign = new Map(
+    isofarianGuardContent.campaigns.map((campaign) => [
+      campaign,
+      isofarianGuardContent.chapters.filter(
+        (chapter) => isofarianGuardContent.chapterCampaignByName.get(chapter) === campaign,
+      ),
+    ] as const),
+  )
+  const isofarianRows = buildCampaignDefinitionProgressRows({
+    id: 'isofarianGuard',
+    name: 'Isofarian Guard',
+    unitLabel: 'chapters',
+    campaigns: isofarianGuardContent.campaigns,
+    stepsByCampaign: isofarianChaptersByCampaign,
+    entries: getIsofarianGuardEntries(plays, username),
+    getStep: (entry) => entry.chapter,
+    assumedMinutesByObjectId,
+  })
+
+  const kingdomsRows = buildCampaignDefinitionProgressRows({
+    id: 'kingdomsForlorn',
+    name: 'Kingdoms Forlorn',
+    unitLabel: kingdomsForlornContent.quests.length > 0 ? 'quest steps' : 'campaign steps',
+    campaigns: kingdomsForlornContent.campaigns,
+    stepsByCampaign: kingdomsForlornContent.stepNamesByCampaignName,
+    entries: getKingdomsForlornEntries(plays, username),
+    getStep: (entry) => entry.quest || entry.kingdom,
+    assumedMinutesByObjectId,
+  })
+
+  const taintedRows = buildCampaignDefinitionProgressRows({
+    id: 'taintedGrail',
+    name: 'Tainted Grail',
+    unitLabel: 'chapters',
+    campaigns: taintedGrailContent.campaigns,
+    stepsByCampaign: taintedGrailContent.chapterNamesByCampaignName,
+    entries: getTaintedGrailEntries(plays, username),
+    getStep: (entry) => entry.chapter,
+    assumedMinutesByObjectId,
+  })
+
+  for (const row of [...arkhamRows, ...isofarianRows, ...kingdomsRows, ...taintedRows]) {
+    rowsByGameId.delete(row.gameId)
+  }
+
+  return [
+    ...arkhamRows,
+    ...isofarianRows,
+    ...kingdomsRows,
+    ...taintedRows,
+    ...rowsByGameId.values(),
+  ]
 }

@@ -45,7 +45,7 @@ const configurablePurchaseOnlyDefinitions: ReadonlyArray<ConfigurableGameDefinit
     defaultShowInMonthlyChecklist: false,
     supportsSeparateTab: true,
     defaultShowAsSeparateTab: false,
-    supportsCostsTable: true,
+    supportsCostsTable: family.supportsCostsTable ?? true,
     supportsAchievements: false,
     defaultIsCampaignGame: false,
     defaultIsScenarioGame: false,

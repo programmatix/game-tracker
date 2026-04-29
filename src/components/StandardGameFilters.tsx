@@ -7,9 +7,33 @@ export default function StandardGameFilters(props: {
   checklistOnly: boolean
   onSetChecklistOnly: (value: boolean) => void
   checklistGroupAriaLabel: string
+  mobileSortOptions?: readonly { value: string; label: string }[]
+  mobileSortValue?: string
+  onSetMobileSortValue?: (value: string) => void
+  groupMultipleCampaigns?: boolean
+  onSetGroupMultipleCampaigns?: (value: boolean) => void
 }) {
   return (
     <>
+      {props.mobileSortOptions && props.mobileSortOptions.length > 0 && (
+        <div class="costToolbarGroup mobileOnly">
+          <label class="tabSelectLabel" for="standard-game-mobile-sort">
+            Sort by
+          </label>
+          <select
+            id="standard-game-mobile-sort"
+            class="tabSelect"
+            value={props.mobileSortValue}
+            aria-label="Sort games"
+            onChange={(event) => props.onSetMobileSortValue?.(event.currentTarget.value)}
+          >
+            <For each={props.mobileSortOptions}>
+              {(option) => <option value={option.value}>{option.label}</option>}
+            </For>
+          </select>
+        </div>
+      )}
+
       <div class="costToolbarGroup">
         <div class="muted">Show statuses</div>
         <div class="costTargetGroup" role="group" aria-label="Visible game statuses">
@@ -49,6 +73,30 @@ export default function StandardGameFilters(props: {
           </button>
         </div>
       </div>
+
+      {typeof props.groupMultipleCampaigns === 'boolean' && props.onSetGroupMultipleCampaigns ? (
+        <div class="costToolbarGroup">
+          <div class="muted">Campaign rows</div>
+          <div class="costTargetGroup" role="group" aria-label="Campaign row grouping">
+            <button
+              type="button"
+              class="tabButton"
+              classList={{ tabButtonActive: props.groupMultipleCampaigns }}
+              onClick={() => props.onSetGroupMultipleCampaigns?.(true)}
+            >
+              Grouped
+            </button>
+            <button
+              type="button"
+              class="tabButton"
+              classList={{ tabButtonActive: !props.groupMultipleCampaigns }}
+              onClick={() => props.onSetGroupMultipleCampaigns?.(false)}
+            >
+              Individual
+            </button>
+          </div>
+        </div>
+      ) : null}
     </>
   )
 }

@@ -82,6 +82,7 @@ type SortKey =
   | 'hoursRemainingToTimeTarget'
 
 type SortDirection = 'asc' | 'desc'
+type MobileSortValue = `${SortKey}:${SortDirection}`
 type HoursFilter = 'any' | '0' | 'lt5' | 'lt10' | 'lt20'
 
 const REVIEW_VISIBLE_STATUSES_STORAGE_KEY = 'review.visibleStatuses'
@@ -193,6 +194,10 @@ function matchesHoursFilter(hours: number, filter: HoursFilter): boolean {
   if (filter === 'lt5') return hours < 5
   if (filter === 'lt10') return hours < 10
   return hours < 20
+}
+
+function reviewSortValue(key: SortKey, direction: SortDirection): MobileSortValue {
+  return `${key}:${direction}`
 }
 
 export default function ReviewView(props: {
@@ -553,6 +558,35 @@ export default function ReviewView(props: {
     return sortDirection() === 'asc' ? ' ▲' : ' ▼'
   }
 
+  const mobileSortOptions = createMemo<ReadonlyArray<{ value: MobileSortValue; label: string }>>(() => [
+    { value: reviewSortValue('hoursRemainingToCostTarget', 'asc'), label: 'Cost target hours, low to high' },
+    { value: reviewSortValue('hoursRemainingToCostTarget', 'desc'), label: 'Cost target hours, high to low' },
+    { value: reviewSortValue('hoursRemainingToTimeTarget', 'asc'), label: 'Time target hours, low to high' },
+    { value: reviewSortValue('hoursRemainingToTimeTarget', 'desc'), label: 'Time target hours, high to low' },
+    { value: reviewSortValue('name', 'asc'), label: 'Game, A to Z' },
+    { value: reviewSortValue('name', 'desc'), label: 'Game, Z to A' },
+    { value: reviewSortValue('status', 'asc'), label: 'Status, A to Z' },
+    { value: reviewSortValue('status', 'desc'), label: 'Status, Z to A' },
+    { value: reviewSortValue('plays', 'desc'), label: 'Plays, high to low' },
+    { value: reviewSortValue('plays', 'asc'), label: 'Plays, low to high' },
+    { value: reviewSortValue('hours', 'desc'), label: 'Hours, high to low' },
+    { value: reviewSortValue('hours', 'asc'), label: 'Hours, low to high' },
+    { value: reviewSortValue('totalCost', 'desc'), label: 'Total cost, high to low' },
+    { value: reviewSortValue('totalCost', 'asc'), label: 'Total cost, low to high' },
+    { value: reviewSortValue('costPerHour', 'asc'), label: 'Cost / hour, low to high' },
+    { value: reviewSortValue('costPerHour', 'desc'), label: 'Cost / hour, high to low' },
+  ])
+
+  const mobileSortValue = createMemo(() => reviewSortValue(sortKey(), sortDirection()))
+
+  const setMobileSortValue = (value: string) => {
+    const [nextKey, nextDirection] = value.split(':') as [SortKey | undefined, SortDirection | undefined]
+    if (!nextKey || !nextDirection) return
+    if (!mobileSortOptions().some((option) => option.value === value)) return
+    setSortKey(nextKey)
+    setSortDirection(nextDirection)
+  }
+
   const costTargetHeading = createMemo(
     () => `Hours left to ${formatTargetValue(targetCostPerHour(), overallCurrencySymbol())}/h${selectedSaleSuffix()}`,
   )
@@ -786,11 +820,15 @@ export default function ReviewView(props: {
           checklistOnly={checklistOnly()}
           onSetChecklistOnly={setChecklistOnly}
           checklistGroupAriaLabel="Visible review games"
+          mobileSortOptions={mobileSortOptions()}
+          mobileSortValue={mobileSortValue()}
+          onSetMobileSortValue={setMobileSortValue}
         />
       </div>
 
       <div class="tableWrap">
-        <table class="table compactTable mobileCardTable costsTable reviewTable">
+        <div class="tableScrollX">
+          <table class="table compactTable mobileCardTable costsTable reviewTable">
           <thead>
             <tr>
               <th class="mono">#</th>
@@ -1035,7 +1073,8 @@ export default function ReviewView(props: {
               </>
             </Show>
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       <Show when={hasAnyAssumedHours()}>

@@ -54,14 +54,10 @@ function compareArkhamPlaysAsc(a: BggPlay, b: BggPlay): number {
 function hasMeaningfulArkhamTags(play: BggPlay): boolean {
   return play.players.some((player) => {
     const parsed = parseArkhamHorrorLcgPlayerColor(player.attributes.color || '')
-    return Boolean(
-      parsed.campaign ||
-        parsed.scenario ||
-        parsed.difficulty ||
-        parsed.investigators.length > 0 ||
-        parsed.continuePrevious ||
-        parsed.continueNext,
-    )
+    if (parsed.campaign) return true
+    if (parsed.investigators.length > 0) return true
+    if (parsed.scenario && !parsed.scenarioMatchedByGenericAlias) return true
+    return false
   })
 }
 
