@@ -1,5 +1,8 @@
 import type { BggPlay } from '../../bgg'
-import { parseKingdomsForlornPlayerColor } from './kingdomsForlorn'
+import {
+  parseKingdomsForlornPlayerColor,
+  type KingdomsForlornExpeditionStep,
+} from './kingdomsForlorn'
 
 export const KINGDOMS_FORLORN_OBJECT_ID = '297510'
 
@@ -10,6 +13,10 @@ export type KingdomsForlornEntry = {
   knights: string[]
   myKnight?: string
   quest?: string
+  expeditionStep?: KingdomsForlornExpeditionStep
+  monster?: string
+  monsterTier?: number
+  unknownTags: string[]
   quantity: number
   isWin: boolean
   continuedFromPrevious: boolean
@@ -70,6 +77,10 @@ export function getKingdomsForlornEntries(
           kingdom: parsed.kingdom,
           knight: parsed.knight,
           quest: parsed.quest,
+          expeditionStep: parsed.expeditionStep,
+          monster: parsed.monster,
+          monsterTier: parsed.monsterTier,
+          extraTags: parsed.extraTags,
           continuePrevious: parsed.continuePrevious,
           continueNext: parsed.continueNext,
         }
@@ -80,7 +91,31 @@ export function getKingdomsForlornEntries(
       const knightCandidates = parsedPlayers.map((player) => player.knight).filter(Boolean) as string[]
       const myKnight = myPlayer?.knight?.trim() || undefined
       const quest = myPlayer?.quest?.trim() || undefined
+      const expeditionStep =
+        myPlayer?.expeditionStep ||
+        chooseMostCommonOrFirst(
+          parsedPlayers.map((player) => player.expeditionStep).filter(Boolean) as string[],
+        )
+      const monster =
+        myPlayer?.monster?.trim() ||
+        chooseMostCommonOrFirst(parsedPlayers.map((player) => player.monster).filter(Boolean) as string[])
+      const monsterTier =
+        myPlayer?.monsterTier ??
+        Number(chooseMostCommonOrFirst(
+          parsedPlayers
+            .map((player) => player.monsterTier)
+            .filter((tier): tier is number => tier !== undefined)
+            .map(String),
+        ))
       const knights = [...new Set(knightCandidates)]
+      const unknownTags = [
+        ...new Set(
+          parsedPlayers
+            .flatMap((player) => player.extraTags)
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+        ),
+      ]
 
       return {
         play,
@@ -89,6 +124,10 @@ export function getKingdomsForlornEntries(
         knights,
         myKnight,
         quest,
+        expeditionStep: expeditionStep as KingdomsForlornExpeditionStep | undefined,
+        monster,
+        monsterTier: Number.isFinite(monsterTier) ? monsterTier : undefined,
+        unknownTags,
         quantity: playQuantity(play),
         isWin: myPlayer?.win === true,
         continuedFromPrevious: parsedPlayers.some((player) => player.continuePrevious),

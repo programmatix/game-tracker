@@ -8,11 +8,10 @@
 #   ContNext
 
 knights:
-  - display: Kara, the Wilder
+  - display: Kara
     id: Kara
     group: Core
     box: Collection
-    aliases: [Wilder, KW]
   - display: Ser Sonch
     id: Sonch
     group: Core
@@ -22,49 +21,37 @@ knights:
     id: Renholder
     group: Core
     box: Collection
-    aliases: [Mage, RM]
+    aliases: [Ren]
   - display: Fleischritter, the Butcher Knight
     id: Fleischritter
     group: Core
     box: Collection
-    aliases: [Butcher, FB]
-  - display: Reiner, the Excommunicated
-    id: Reiner
-    group: Core
-    box: Collection
-    aliases: [Excommunicated, RX]
-  - display: Paracelsa, Quester of False Saints
+    aliases: [Flei]
+  - display: Paracelsa
     id: Paracelsa
     group: Core
     box: Collection
-    aliases: [FalseSaints, PQ]
+    aliases: [Para]
   - display: Stoneface
     id: Stoneface
     group: Expansion
     box: Collection
-    aliases: [SF]
   - display: Ser Ubar
     id: Ubar
     group: Expansion
     box: Collection
-    aliases: [SU]
 
 quests:
   - display: Quest 1
     id: Q1
-    aliases: [Quest1]
   - display: Quest 2
     id: Q2
-    aliases: [Quest2]
   - display: Quest 3
     id: Q3
-    aliases: [Quest3]
   - display: Quest 4
     id: Q4
-    aliases: [Quest4]
   - display: Quest 5
     id: Q5
-    aliases: [Quest5]
 
 kingdoms:
   - display: Barony of Bountiful Harvest

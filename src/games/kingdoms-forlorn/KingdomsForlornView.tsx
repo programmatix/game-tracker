@@ -1,4 +1,4 @@
-import { Show, createMemo, createResource, createSignal } from 'solid-js'
+import { For, Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import AchievementsPanel from '../../components/AchievementsPanel'
@@ -14,9 +14,12 @@ import {
 } from '../../achievements/nextAchievement'
 import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from '../../playDuration'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
+import { bggPlayUrl } from '../../playsHelpers'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
 import { kingdomsForlornContent } from './content'
+import { kingdomForlornExpeditionStepLabel, type KingdomsForlornExpeditionStep } from './kingdomsForlorn'
 import { getKingdomsForlornEntries, KINGDOMS_FORLORN_OBJECT_ID } from './kingdomsForlornEntries'
+import type { KingdomsForlornEntry } from './kingdomsForlornEntries'
 
 function normalizeLabel(value: string): string {
   return value.trim().toLowerCase()
@@ -28,6 +31,355 @@ function uniquePlayIds(values: readonly number[]): number[] {
 
 function pairKey(left: string, right: string): string {
   return `${left.trim()}|||${right.trim()}`
+}
+
+const EXPEDITION_STEP_ORDER: KingdomsForlornExpeditionStep[] = ['D1', 'EC', 'D2', 'FC']
+
+type KingdomsForlornExpeditionSection = {
+  key: string
+  label: string
+  summary: string
+  entries: KingdomsForlornEntry[]
+}
+
+type KingdomsForlornExpeditionDisplayItem =
+  | { kind: 'expedition'; key: string; section: KingdomsForlornExpeditionSection }
+  | { kind: 'unknown'; key: string; entry: KingdomsForlornEntry }
+
+function expeditionStepSortValue(step: KingdomsForlornExpeditionStep): number {
+  return EXPEDITION_STEP_ORDER.indexOf(step)
+}
+
+function entryPlayDate(entry: KingdomsForlornEntry): string {
+  return entry.play.attributes.date || ''
+}
+
+function entryTimeSortKey(entry: KingdomsForlornEntry): string {
+  return `${entryPlayDate(entry)}:${String(entry.play.id).padStart(12, '0')}`
+}
+
+function playerSummary(play: BggPlay): string {
+  return play.players
+    .map((player) => player.attributes.username || player.attributes.name || 'Unknown')
+    .filter(Boolean)
+    .join(', ')
+}
+
+function isUnknownValue(value: string | undefined): boolean {
+  if (!value) return true
+  const normalized = value.trim().toLowerCase()
+  return normalized === 'unknown' || normalized.startsWith('unknown ')
+}
+
+function hasKnownParty(entry: KingdomsForlornEntry): boolean {
+  return entry.knights.some((knight) => !isUnknownValue(knight))
+}
+
+function requiresMonster(entry: KingdomsForlornEntry): boolean {
+  return entry.expeditionStep === 'EC' || entry.expeditionStep === 'FC'
+}
+
+function buildExpeditionLabel(index: number, entries: KingdomsForlornEntry[]): string {
+  const first = entries[0]
+  const last = entries[entries.length - 1]
+  const knight = first?.myKnight || first?.campaign
+  const dateRange =
+    first && last && entryPlayDate(first) !== entryPlayDate(last)
+      ? `${entryPlayDate(first)} to ${entryPlayDate(last)}`
+      : entryPlayDate(first || last!)
+  return [`Expedition ${index}`, knight, dateRange].filter(Boolean).join(' • ')
+}
+
+function sectionTimeSortKey(section: KingdomsForlornExpeditionSection): string {
+  return section.entries.reduce((best, entry) => {
+    const key = entryTimeSortKey(entry)
+    return key > best ? key : best
+  }, '')
+}
+
+function buildExpeditionSummary(entries: KingdomsForlornEntry[]): string {
+  const stepNames = entries
+    .map((entry) => entry.expeditionStep)
+    .filter(Boolean)
+    .map((step) => step!)
+  const uniqueSteps = [...new Set(stepNames)]
+  const playCount = entries.reduce((sum, entry) => sum + entry.quantity, 0)
+  const steps = uniqueSteps.length > 0 ? uniqueSteps.join(', ') : 'No expedition steps'
+  const monsters = [
+    ...new Set(
+      entries
+        .filter((entry) => entry.expeditionStep === 'EC' || entry.expeditionStep === 'FC')
+        .map((entry) => entry.monster)
+        .filter(Boolean) as string[],
+    ),
+  ]
+  return [
+    `${playCount.toLocaleString()} plays`,
+    steps,
+    monsters.length > 0 ? `Monsters: ${monsters.join(', ')}` : undefined,
+  ]
+    .filter(Boolean)
+    .join(' • ')
+}
+
+function groupKingdomsForlornExpeditions(entries: KingdomsForlornEntry[]): {
+  sections: KingdomsForlornExpeditionSection[]
+  unknownEntries: KingdomsForlornEntry[]
+  displayItems: KingdomsForlornExpeditionDisplayItem[]
+} {
+  const sections: KingdomsForlornExpeditionSection[] = []
+  const unknownEntries: KingdomsForlornEntry[] = []
+  let current: KingdomsForlornEntry[] = []
+  let previousStepSort = -1
+
+  function closeCurrent() {
+    if (current.length === 0) return
+    const index = sections.length + 1
+    sections.push({
+      key: `expedition-${index}-${current[0]!.play.id}`,
+      label: buildExpeditionLabel(index, current),
+      summary: buildExpeditionSummary(current),
+      entries: current,
+    })
+    current = []
+    previousStepSort = -1
+  }
+
+  for (const entry of entries) {
+    const step = entry.expeditionStep
+    if (!step) {
+      unknownEntries.push(entry)
+      continue
+    }
+
+    const stepSort = expeditionStepSortValue(step)
+    if (step === 'D1' || (current.length > 0 && stepSort <= previousStepSort)) closeCurrent()
+    current.push(entry)
+    previousStepSort = stepSort
+  }
+
+  closeCurrent()
+
+  const displayItems: KingdomsForlornExpeditionDisplayItem[] = [
+    ...sections.map((section) => ({ kind: 'expedition' as const, key: section.key, section })),
+    ...unknownEntries.map((entry) => ({
+      kind: 'unknown' as const,
+      key: `unknown-${entry.play.id}`,
+      entry,
+    })),
+  ].sort((a, b) => {
+    const aKey = a.kind === 'expedition' ? sectionTimeSortKey(a.section) : entryTimeSortKey(a.entry)
+    const bKey = b.kind === 'expedition' ? sectionTimeSortKey(b.section) : entryTimeSortKey(b.entry)
+    return bKey.localeCompare(aKey)
+  })
+
+  return { sections, unknownEntries, displayItems }
+}
+
+function KingdomsForlornExtractedBadge(props: {
+  label: string
+  value: string
+  tone?: 'normal' | 'missing' | 'unknown'
+}) {
+  return (
+    <span
+      class="kfExtractedBadge"
+      classList={{
+        kfExtractedBadgeMissing: props.tone === 'missing',
+        kfExtractedBadgeUnknown: props.tone === 'unknown',
+      }}
+    >
+      <span class="kfExtractedBadgeLabel">{props.label}</span>
+      <span>{props.value}</span>
+    </span>
+  )
+}
+
+function KingdomsForlornPlayBadges(props: { entry: KingdomsForlornEntry }) {
+  const entry = () => props.entry
+  return (
+    <div class="kfExtractedBadges">
+      <Show
+        when={entry().expeditionStep}
+        fallback={<KingdomsForlornExtractedBadge label="Step" value="Missing" tone="missing" />}
+      >
+        {(step) => (
+          <KingdomsForlornExtractedBadge
+            label="Step"
+            value={`${step()} ${kingdomForlornExpeditionStepLabel(step())}`}
+          />
+        )}
+      </Show>
+
+      <Show
+        when={!isUnknownValue(entry().kingdom)}
+        fallback={<KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} tone="unknown" />}
+      >
+        <KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} />
+      </Show>
+
+      <Show
+        when={entry().quest}
+        fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
+      >
+        {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
+      </Show>
+
+      <Show
+        when={!isUnknownValue(entry().myKnight)}
+        fallback={<KingdomsForlornExtractedBadge label="My knight" value="Unknown" tone="unknown" />}
+      >
+        <KingdomsForlornExtractedBadge label="My knight" value={entry().myKnight!} />
+      </Show>
+
+      <Show
+        when={hasKnownParty(entry())}
+        fallback={<KingdomsForlornExtractedBadge label="Party" value="Unknown" tone="unknown" />}
+      >
+        <KingdomsForlornExtractedBadge
+          label="Party"
+          value={entry()
+            .knights.filter((knight) => !isUnknownValue(knight))
+            .join(', ')}
+        />
+      </Show>
+
+      <Show
+        when={entry().monster}
+        fallback={
+          <Show when={requiresMonster(entry())}>
+            <KingdomsForlornExtractedBadge label="Monster" value="Missing" tone="missing" />
+          </Show>
+        }
+      >
+        {(monster) => <KingdomsForlornExtractedBadge label="Monster" value={monster()} />}
+      </Show>
+
+      <Show
+        when={entry().monsterTier}
+        fallback={
+          <Show when={requiresMonster(entry())}>
+            <KingdomsForlornExtractedBadge label="Monster tier" value="Missing" tone="missing" />
+          </Show>
+        }
+      >
+        {(monsterTier) => (
+          <KingdomsForlornExtractedBadge label="Monster tier" value={`Tier ${monsterTier()}`} />
+        )}
+      </Show>
+
+      <KingdomsForlornExtractedBadge label="Result" value={entry().isWin ? 'Win' : 'Loss'} />
+
+      <Show when={entry().continuedFromPrevious || entry().continuedToNext}>
+        <KingdomsForlornExtractedBadge
+          label="Continues"
+          value={[
+            entry().continuedFromPrevious ? 'from previous' : undefined,
+            entry().continuedToNext ? 'to next' : undefined,
+          ]
+            .filter(Boolean)
+            .join(', ')}
+        />
+      </Show>
+
+      <For each={entry().unknownTags}>
+        {(tag) => <KingdomsForlornExtractedBadge label="Raw tag" value={tag} tone="unknown" />}
+      </For>
+    </div>
+  )
+}
+
+function KingdomsForlornAllPlaysList(props: { entries: KingdomsForlornEntry[] }) {
+  return (
+    <div class="kfAllPlaysList">
+      <For each={props.entries}>
+        {(entry) => (
+          <div class="kfAllPlayRow">
+            <div class="kfAllPlayMeta">
+              <a class="mono" href={bggPlayUrl(entry.play.id)} target="_blank" rel="noreferrer">
+                #{entry.play.id}
+              </a>
+              <span class="mono">{entry.play.attributes.date || 'No date'}</span>
+              <span>{playerSummary(entry.play)}</span>
+            </div>
+            <KingdomsForlornPlayBadges entry={entry} />
+          </div>
+        )}
+      </For>
+    </div>
+  )
+}
+
+function KingdomsForlornExpeditionsView(props: {
+  groups: ReturnType<typeof groupKingdomsForlornExpeditions>
+  onBack: () => void
+  onOpenPlays: (request: PlaysDrilldownRequest) => void
+}) {
+  return (
+    <div class="finalGirl">
+      <div class="statsBlock kfAllPlaysView">
+        <div class="statsTitleRow">
+          <h3 class="statsTitle">Kingdoms Forlorn Expeditions</h3>
+          <button class="linkButton" type="button" onClick={props.onBack}>
+            Back to overview
+          </button>
+        </div>
+        <div class="muted">
+          Expeditions are sorted newest first. Unknown plays are interspersed by date so nearby tagged plays
+          are easier to compare. Red badges show unknown, missing, or unparsed raw tags.
+        </div>
+
+        <For each={props.groups.displayItems}>
+          {(item) =>
+            item.kind === 'expedition' ? (
+              <div class="kfExpeditionGroup">
+                <div class="statsTitleRow">
+                  <h4 class="statsTitle">{item.section.label}</h4>
+                  <button
+                    class="linkButton"
+                    type="button"
+                    onClick={() =>
+                      props.onOpenPlays({
+                        title: `Kingdoms Forlorn • ${item.section.label}`,
+                        playIds: uniquePlayIds(item.section.entries.map((entry) => entry.play.id)),
+                      })
+                    }
+                  >
+                    Open plays
+                  </button>
+                </div>
+                <div class="muted">{item.section.summary}</div>
+                <KingdomsForlornAllPlaysList entries={item.section.entries.slice().reverse()} />
+              </div>
+            ) : (
+              <div class="kfExpeditionGroup kfExpeditionGroupUnknown">
+                <div class="statsTitleRow">
+                  <h4 class="statsTitle">Unknown Expedition</h4>
+                  <button
+                    class="linkButton"
+                    type="button"
+                    onClick={() =>
+                      props.onOpenPlays({
+                        title: 'Kingdoms Forlorn • Unknown expedition play',
+                        playIds: [item.entry.play.id],
+                      })
+                    }
+                  >
+                    Open play
+                  </button>
+                </div>
+                <div class="muted">
+                  This play has no parsed <span class="mono">D1</span>, <span class="mono">EC</span>,{' '}
+                  <span class="mono">D2</span>, or <span class="mono">FC</span> tag.
+                </div>
+                <KingdomsForlornAllPlaysList entries={[item.entry]} />
+              </div>
+            )
+          }
+        </For>
+      </div>
+    </div>
+  )
 }
 
 export default function KingdomsForlornView(props: {
@@ -44,8 +396,11 @@ export default function KingdomsForlornView(props: {
     ({ id, authToken }) => fetchThingSummary(id, authToken ? { authToken } : undefined),
   )
   const [matrixDisplayMode, setMatrixDisplayMode] = createSignal<'played' | 'count'>('played')
+  const [showExpeditionsView, setShowExpeditionsView] = createSignal(false)
 
   const entries = createMemo(() => getKingdomsForlornEntries(props.plays, props.username))
+  const expeditionGroups = createMemo(() => groupKingdomsForlornExpeditions(entries()))
+  const expeditionCount = createMemo(() => expeditionGroups().sections.length)
   const allPlayIds = createMemo(() => [...new Set(entries().map((entry) => entry.play.id))])
   const achievements = createMemo(() =>
     computeGameAchievements('kingdomsForlorn', props.plays, props.username),
@@ -233,6 +588,12 @@ export default function KingdomsForlornView(props: {
       0,
     ),
   )
+  const missingMonsterTierCount = createMemo(() =>
+    entries().reduce(
+      (sum, entry) => sum + (requiresMonster(entry) && entry.monsterTier === undefined ? entry.quantity : 0),
+      0,
+    ),
+  )
   const taggedPlays = createMemo(() =>
     entries().reduce(
       (sum, entry) => sum + (entry.campaign === 'Unknown campaign' && !entry.quest ? 0 : entry.quantity),
@@ -324,6 +685,23 @@ export default function KingdomsForlornView(props: {
   const questKeys = createMemo(() =>
     mergeCanonicalKeys(sortKeysByCountDesc(questCounts()), kingdomsForlornContent.quests),
   )
+  const monsterCounts = createMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const entry of entries()) {
+      if (!entry.monster) continue
+      incrementCount(counts, entry.monster, entry.quantity)
+    }
+    return counts
+  })
+  const monsterKeys = createMemo(() => sortKeysByCountDesc(monsterCounts()))
+  const playIdsByMonster = createMemo(() => {
+    const ids: Record<string, number[]> = {}
+    for (const entry of entries()) {
+      if (!entry.monster) continue
+      ;(ids[entry.monster] ||= []).push(entry.play.id)
+    }
+    return ids
+  })
   const campaignKeys = createMemo(() =>
     mergeCanonicalKeys(sortKeysByCountDesc(campaignCounts()), kingdomsForlornContent.campaigns),
   )
@@ -390,7 +768,10 @@ export default function KingdomsForlornView(props: {
   }
 
   return (
-    <div class="finalGirl">
+    <Show
+      when={showExpeditionsView()}
+      fallback={
+        <div class="finalGirl">
       <div class="finalGirlMetaRow">
         <GameThingThumb
           objectId={KINGDOMS_FORLORN_OBJECT_ID}
@@ -405,6 +786,14 @@ export default function KingdomsForlornView(props: {
             <div class="metaPlays">
               Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
             </div>
+            <button
+              class="linkButton"
+              type="button"
+              disabled={entries().length === 0}
+              onClick={() => setShowExpeditionsView(true)}
+            >
+              View expeditions
+            </button>
             <button
               class="linkButton"
               type="button"
@@ -457,6 +846,10 @@ export default function KingdomsForlornView(props: {
             </div>
           </div>
           <div class="meta">
+            <div class="metaLabel">Expeditions</div>
+            <div class="metaValue mono">{expeditionCount().toLocaleString()}</div>
+          </div>
+          <div class="meta">
             <div class="metaLabel">Tagged plays</div>
             <div class="metaValue mono">{taggedPlays().toLocaleString()}</div>
           </div>
@@ -467,6 +860,10 @@ export default function KingdomsForlornView(props: {
           <div class="meta">
             <div class="metaLabel">Continuations</div>
             <div class="metaValue mono">{continuationCount().toLocaleString()}</div>
+          </div>
+          <div class="meta">
+            <div class="metaLabel">Missing monster tiers</div>
+            <div class="metaValue mono">{missingMonsterTierCount().toLocaleString()}</div>
           </div>
         </div>
 
@@ -538,6 +935,19 @@ export default function KingdomsForlornView(props: {
               const playIds = uniquePlayIds(playIdsByBox()[box] ?? [])
               if (playIds.length === 0) return
               props.onOpenPlays({ title: `Kingdoms Forlorn • ${box}`, playIds })
+            }}
+          />
+        </Show>
+
+        <Show when={monsterKeys().length > 0}>
+          <CountTable
+            title="Monsters"
+            plays={monsterCounts()}
+            keys={monsterKeys()}
+            onPlaysClick={(monster) => {
+              const playIds = playIdsByMonster()[monster] ?? []
+              if (playIds.length === 0) return
+              props.onOpenPlays({ title: `Kingdoms Forlorn • ${monster}`, playIds })
             }}
           />
         </Show>
@@ -637,5 +1047,13 @@ export default function KingdomsForlornView(props: {
         suppressAvailableTrackIds={props.suppressAvailableAchievementTrackIds}
       />
     </div>
+      }
+    >
+      <KingdomsForlornExpeditionsView
+        groups={expeditionGroups()}
+        onBack={() => setShowExpeditionsView(false)}
+        onOpenPlays={props.onOpenPlays}
+      />
+    </Show>
   )
 }
