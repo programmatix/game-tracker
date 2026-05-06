@@ -14,8 +14,9 @@ import {
 } from '../../achievements/nextAchievement'
 import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from '../../playDuration'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import { bggPlayUrl } from '../../playsHelpers'
+import { BGG_LINK_TOOLTIP, bggPlayUrl } from '../../playsHelpers'
 import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
+import { formatPlayLength } from '../../formatPlayLength'
 import { kingdomsForlornContent } from './content'
 import { kingdomForlornExpeditionStepLabel, type KingdomsForlornExpeditionStep } from './kingdomsForlorn'
 import { getKingdomsForlornEntries, KINGDOMS_FORLORN_OBJECT_ID } from './kingdomsForlornEntries'
@@ -67,6 +68,10 @@ function playerSummary(play: BggPlay): string {
     .map((player) => player.attributes.username || player.attributes.name || 'Unknown')
     .filter(Boolean)
     .join(', ')
+}
+
+function playLengthLabel(play: BggPlay): string {
+  return formatPlayLength(play.attributes.length) || 'No length'
 }
 
 function isUnknownValue(value: string | undefined): boolean {
@@ -371,10 +376,17 @@ function KingdomsForlornAllPlaysList(props: {
         {(entry) => (
           <div class="kfAllPlayRow">
             <div class="kfAllPlayMeta">
-              <a class="mono" href={bggPlayUrl(entry.play.id)} target="_blank" rel="noreferrer">
+              <a
+                class="mono"
+                href={bggPlayUrl(entry.play.id)}
+                target="_blank"
+                rel="noreferrer"
+                title={BGG_LINK_TOOLTIP}
+              >
                 #{entry.play.id}
               </a>
               <span class="mono">{entry.play.attributes.date || 'No date'}</span>
+              <span class="mono">{playLengthLabel(entry.play)}</span>
               <span>{playerSummary(entry.play)}</span>
             </div>
             <KingdomsForlornPlayBadges

@@ -32,14 +32,6 @@ knights:
     group: Core
     box: Collection
     aliases: [Para]
-  - display: Stoneface
-    id: Stoneface
-    group: Expansion
-    box: Collection
-  - display: Ser Ubar
-    id: Ubar
-    group: Expansion
-    box: Collection
 
 quests:
   - display: Quest 1
@@ -81,6 +73,21 @@ monsters:
     group: Core
     box: Collection
     aliases: [FirW]
+  - display: Winged Nightmare
+    id: WingedNightmare
+    group: Core
+    box: Collection
+    aliases: [WinN]
+  - display: Eggknight
+    id: Eggknight
+    group: Core
+    box: Collection
+    aliases: [EggK, Egg Knight]
+  - display: Rat Wolves
+    id: RatWolves
+    group: Core
+    box: Collection
+    aliases: [RatW]
   - display: Bog Witch
     id: BogWitch
     group: Core
@@ -105,7 +112,7 @@ monsters:
     id: KnightOfTheFen
     group: Core
     box: Collection
-    aliases: [KFen]
+    aliases: [KniF]
   - display: Devil of the Ancient Dusk
     id: DevilOfTheAncientDusk
     group: Core
@@ -146,6 +153,11 @@ monsters:
     group: Core
     box: Collection
     aliases: [WATr]
+  - display: The Ironcast Dead
+    id: IroncastDead
+    group: Core
+    box: Collection
+    aliases: [IrnC, Ironcast Dead]
   - display: Knighteater
     id: Knighteater
     group: Expansion

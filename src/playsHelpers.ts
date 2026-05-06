@@ -97,6 +97,9 @@ export function bggPlayUrl(playId: number): string {
   return `https://boardgamegeek.com/play/details/${playId}`
 }
 
+export const BGG_LINK_TOOLTIP =
+  'Changes made on BoardGameGeek are not synced back to BG Stats easily. Make changes in BG Stats instead.'
+
 export function hasRecordedPlayLength(attributes: Record<string, string>): boolean {
   const parsed = Number(attributes.length || '0')
   return Number.isFinite(parsed) && parsed > 0

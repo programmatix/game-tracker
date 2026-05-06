@@ -6,6 +6,7 @@ import GameLink from './components/GameLink'
 import GameOptionsButton from './components/GameOptionsButton'
 import { findGameTabForOptions } from './gameOptionsLookup'
 import {
+  BGG_LINK_TOOLTIP,
   bggPlayUrl,
   getBggPlayerResult,
   getOtherPlayersSummary,
@@ -72,7 +73,12 @@ function PlaysTable(props: {
             {(play) => (
               <tr>
                 <td class="mono" data-label="Link">
-                  <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
+                  <a
+                    href={bggPlayUrl(play.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={BGG_LINK_TOOLTIP}
+                  >
                     Open
                   </a>
                 </td>
@@ -325,7 +331,12 @@ export default function PlaysView(props: PlaysPanelProps) {
                 {(play) => (
                   <tr>
                     <td class="mono" data-label="Link">
-                      <a href={bggPlayUrl(play.id)} target="_blank" rel="noreferrer">
+                      <a
+                        href={bggPlayUrl(play.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={BGG_LINK_TOOLTIP}
+                      >
                         Open
                       </a>
                     </td>

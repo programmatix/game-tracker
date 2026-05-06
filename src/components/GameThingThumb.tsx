@@ -1,4 +1,5 @@
 import { Show } from 'solid-js'
+import { BGG_LINK_TOOLTIP } from '../playsHelpers'
 
 export default function GameThingThumb(props: {
   objectId: string
@@ -15,7 +16,7 @@ export default function GameThingThumb(props: {
           href={`https://boardgamegeek.com/boardgame/${props.objectId}`}
           target="_blank"
           rel="noreferrer"
-          title="View on BoardGameGeek"
+          title={BGG_LINK_TOOLTIP}
         >
           <img class="gameThingThumb" src={src()} alt={props.alt} loading={props.loading ?? 'lazy'} />
         </a>
