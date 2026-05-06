@@ -68,121 +68,81 @@ kingdoms:
     aliases: [Stone, Principality, PS, PoS]
 
 monsters:
+  - display: Pumpkinhead Monstrosities
+    id: PumpkinheadMonstrosities
+    group: Core
+    box: Collection
+    aliases: [PumM, Pump]
+  - display: White Ape Troll
+    id: WhiteApeTroll
+    group: Core
+    box: Collection
+    aliases: [Wape]
   - display: Firstmen Warriors
     id: FirstmenWarriors
     group: Core
     box: Collection
     aliases: [FirW]
+  - display: Rat Wolves
+    id: Ratwolves
+    group: Core
+    box: Collection
+    aliases: [RatW]
+  - display: Paleblood Worms
+    id: PalebloodWorms
+    group: Core
+    box: Collection
+    aliases: [PalW]
   - display: Winged Nightmare
     id: WingedNightmare
     group: Core
     box: Collection
     aliases: [WinN]
-  - display: Eggknight
-    id: Eggknight
+  - display: Haunts of Utrebant
+    id: HauntsOfUtrebant
     group: Core
     box: Collection
-    aliases: [EggK, Egg Knight]
-  - display: Rat Wolves
-    id: RatWolves
-    group: Core
-    box: Collection
-    aliases: [RatW]
-  - display: Bog Witch
-    id: BogWitch
-    group: Core
-    box: Collection
-    aliases: [BogW]
-  - display: Flower Knight
-    id: FlowerKnight
-    group: Core
-    box: Collection
-    aliases: [FloK]
-  - display: Red Clergyman
-    id: RedClergyman
-    group: Core
-    box: Collection
-    aliases: [RedC]
-  - display: Stonemason Knight
-    id: StonemasonKnight
-    group: Core
-    box: Collection
-    aliases: [StoK]
+    aliases: [HauU]
   - display: Knight of the Fen
     id: KnightOfTheFen
     group: Core
     box: Collection
     aliases: [KniF]
-  - display: Devil of the Ancient Dusk
-    id: DevilOfTheAncientDusk
+  - display: Eggknight
+    id: Eggknight
     group: Core
     box: Collection
-    aliases: [DAdu]
-  - display: Bloodrenched Devil
-    id: BloodrenchedDevil
+    aliases: [EggK]
+  - display: Puppet King Edelhardt
+    id: PuppetKingEdelhardt
     group: Core
     box: Collection
-    aliases: [BloD]
-  - display: Holy Dragon
-    id: HolyDragon
-    group: Core
-    box: Collection
-    aliases: [HolD, Holy Dragon of the Ceaseless Hunger]
-  - display: Toadragon
-    id: Toadragon
-    group: Core
-    box: Collection
-    aliases: [Toad, Toadragon of the Great Marsh]
-  - display: Swandra
-    id: Swandra
-    group: Core
-    box: Collection
-    aliases: [Swan]
+    aliases: [PupK]
   - display: King Laid Low
     id: KingLaidLow
     group: Core
     box: Collection
-    aliases: [King]
-  - display: Pumpkinhead Monstrosity
-    id: PumpkinheadMonstrosity
+    aliases: [KinL]
+  - display: Devil of the Smelted Fears
+    id: DevilOfTheSmeltedFears
     group: Core
     box: Collection
-    aliases: [Pump, Pumpkinhead Monstrosity Mob]
-  - display: White Ape Troll
-    id: WhiteApeTroll
+    aliases: [DevS]
+  - display: Devil of the Ancient Dusk
+    id: DevilOfTheAncientDusk
     group: Core
     box: Collection
-    aliases: [WATr]
-  - display: The Ironcast Dead
-    id: IroncastDead
-    group: Core
-    box: Collection
-    aliases: [IrnC, Ironcast Dead]
-  - display: Knighteater
-    id: Knighteater
-    group: Expansion
-    box: Collection
-    aliases: [Knig, Knigheater]
-  - display: Firstmen Lictor Hunters
-    id: FirstmenLictorHunters
-    group: Expansion
-    box: Collection
-    aliases: [FirL]
-  - display: Young Devour Dragon
-    id: YoungDevourDragon
-    group: Expansion
-    box: Collection
-    aliases: [YouD]
-  - display: Hag of Brecht
-    id: HagOfBrecht
-    group: Expansion
-    box: Collection
-    aliases: [HagB]
+    aliases: [DevA]
   - display: Panzerdragon Veldr
     id: PanzerdragonVeldr
-    group: Expansion
+    group: Core
     box: Collection
     aliases: [PanV]
+  - display: Toadragon of the Great Marsh
+    id: Toadragon
+    group: Core
+    box: Collection
+    aliases: [Toad]
 
 costs:
   currency: "£"

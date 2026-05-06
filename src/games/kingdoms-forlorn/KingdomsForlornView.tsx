@@ -2,7 +2,6 @@ import { For, Show, createMemo, createResource, createSignal } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import AchievementsPanel from '../../components/AchievementsPanel'
-import CampaignProgressTable from '../../components/CampaignProgressTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
 import CountTable from '../../components/CountTable'
 import GameThingThumb from '../../components/GameThingThumb'
@@ -35,6 +34,7 @@ function pairKey(left: string, right: string): string {
 }
 
 const EXPEDITION_STEP_ORDER: KingdomsForlornExpeditionStep[] = ['D1', 'EC', 'D2', 'FC']
+const MONSTER_TIER_KEYS = ['1', '2', '3', '4']
 
 type KingdomsForlornExpeditionSection = {
   key: string
@@ -500,7 +500,6 @@ export default function KingdomsForlornView(props: {
     computeGameAchievements('kingdomsForlorn', props.plays, props.username),
   )
   const assumedMinutesPerPlay = createMemo(() => thingAssumedPlayTimeMinutes(thing()?.raw) ?? undefined)
-  const stepLabel = createMemo(() => (kingdomsForlornContent.quests.length > 0 ? 'Quest' : 'Kingdom'))
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
   const totalHours = createMemo(() =>
@@ -530,12 +529,6 @@ export default function KingdomsForlornView(props: {
     const hours = totalHours()
     if (hours <= 0) return undefined
     return hours / plays
-  })
-
-  const campaignCounts = createMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.campaign, entry.quantity)
-    return counts
   })
 
   const kingdomCounts = createMemo(() => {
@@ -590,14 +583,6 @@ export default function KingdomsForlornView(props: {
     return ids
   })
 
-  const playIdsByCampaign = createMemo(() => {
-    const ids: Record<string, number[]> = {}
-    for (const entry of entries()) {
-      ;(ids[entry.campaign] ||= []).push(entry.play.id)
-    }
-    return ids
-  })
-
   const stepCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
@@ -629,49 +614,6 @@ export default function KingdomsForlornView(props: {
       const existing = ids.get(key)
       if (existing) existing.push(entry.play.id)
       else ids.set(key, [entry.play.id])
-    }
-    return ids
-  })
-  const stepPlayHours = createMemo(() => {
-    const hoursByStep: Record<string, number> = {}
-    const hasAssumedHoursByStep: Record<string, boolean> = {}
-    for (const entry of entries()) {
-      const campaign = entry.campaign
-      const step = kingdomsForlornContent.quests.length > 0 ? entry.quest || '' : entry.kingdom
-      if (!campaign || !step) continue
-      const resolved = totalPlayMinutesWithAssumption({
-        attributes: entry.play.attributes,
-        quantity: entry.quantity,
-        assumedMinutesPerPlay: assumedMinutesPerPlay(),
-      })
-      const key = pairKey(campaign, step)
-      incrementCount(hoursByStep, key, resolved.minutes / 60)
-      if (resolved.assumed) hasAssumedHoursByStep[key] = true
-    }
-    return { hoursByStep, hasAssumedHoursByStep }
-  })
-
-  const questCounts = createMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const entry of entries()) {
-      if (!entry.quest) continue
-      incrementCount(counts, entry.quest, entry.quantity)
-    }
-    return counts
-  })
-  const questWins = createMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const entry of entries()) {
-      if (!entry.quest || !entry.isWin) continue
-      incrementCount(counts, entry.quest, entry.quantity)
-    }
-    return counts
-  })
-  const playIdsByQuest = createMemo(() => {
-    const ids: Record<string, number[]> = {}
-    for (const entry of entries()) {
-      if (!entry.quest) continue
-      ;(ids[entry.quest] ||= []).push(entry.play.id)
     }
     return ids
   })
@@ -789,7 +731,7 @@ export default function KingdomsForlornView(props: {
     mergeCanonicalKeys(sortKeysByCountDesc(myKnightCounts()), kingdomsForlornContent.knights),
   )
   const questKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(questCounts()), kingdomsForlornContent.quests),
+    kingdomsForlornContent.quests.length > 0 ? kingdomsForlornContent.quests : sortKeysByCountDesc(stepCounts()),
   )
   const monsterCounts = createMemo(() => {
     const counts: Record<string, number> = {}
@@ -802,17 +744,45 @@ export default function KingdomsForlornView(props: {
   const monsterKeys = createMemo(() =>
     mergeCanonicalKeys(sortKeysByCountDesc(monsterCounts()), kingdomsForlornContent.monsters),
   )
-  const playIdsByMonster = createMemo(() => {
-    const ids: Record<string, number[]> = {}
-    for (const entry of entries()) {
-      if (!entry.monster) continue
-      ;(ids[entry.monster] ||= []).push(entry.play.id)
+  const campaignQuestMatrixMax = createMemo(() => {
+    let max = 0
+    for (const campaign of knightKeys()) {
+      for (const quest of questKeys()) {
+        max = Math.max(max, stepCounts()[pairKey(campaign, quest)] ?? 0)
+      }
     }
-    return ids
+    return max
   })
-  const campaignKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(campaignCounts()), kingdomsForlornContent.campaigns),
-  )
+  const monsterTierMatrix = createMemo(() => {
+    const counts: Record<string, Record<string, number>> = {}
+    const wins: Record<string, Record<string, number>> = {}
+    const playIds = new Map<string, number[]>()
+
+    for (const entry of entries()) {
+      if (!entry.monster || entry.monsterTier === undefined) continue
+      const tier = String(entry.monsterTier)
+      if (!MONSTER_TIER_KEYS.includes(tier)) continue
+      ;(counts[entry.monster] ||= {})
+      incrementCount(counts[entry.monster]!, tier, entry.quantity)
+      if (entry.isWin) {
+        ;(wins[entry.monster] ||= {})
+        incrementCount(wins[entry.monster]!, tier, entry.quantity)
+      }
+      const key = pairKey(entry.monster, tier)
+      const existing = playIds.get(key)
+      if (existing) existing.push(entry.play.id)
+      else playIds.set(key, [entry.play.id])
+    }
+
+    return { counts, wins, playIds }
+  })
+  const monsterTierMatrixMax = createMemo(() => {
+    let max = 0
+    for (const row of Object.values(monsterTierMatrix().counts)) {
+      for (const count of Object.values(row)) max = Math.max(max, count)
+    }
+    return max
+  })
   const pairMatrix = createMemo(() => {
     const counts: Record<string, Record<string, number>> = {}
     const wins: Record<string, Record<string, number>> = {}
@@ -843,33 +813,6 @@ export default function KingdomsForlornView(props: {
     }
     return max
   })
-  const campaignSections = createMemo(() =>
-    kingdomsForlornContent.campaigns.map((campaign) => {
-      const steps = kingdomsForlornContent.stepNamesByCampaignName.get(campaign) ?? []
-      const playedCount = steps.filter((step) => (stepCounts()[pairKey(campaign, step)] ?? 0) > 0).length
-
-      return {
-        key: campaign,
-        label: campaign,
-        group: kingdomsForlornContent.campaignGroupByName.get(campaign),
-        summary: `${playedCount.toLocaleString()} / ${steps.length.toLocaleString()} ${stepLabel().toLowerCase()}s played`,
-        playIds: uniquePlayIds(playIdsByCampaign()[campaign] ?? []),
-        steps: steps.map((step) => {
-          const key = pairKey(campaign, step)
-          return {
-            key,
-            label: step,
-            plays: stepCounts()[key] ?? 0,
-            wins: stepWins()[key] ?? 0,
-            hours: stepPlayHours().hoursByStep[key] ?? 0,
-            hasAssumedHours: stepPlayHours().hasAssumedHoursByStep[key] === true,
-            playIds: uniquePlayIds(playIdsByCampaignStep().get(key) ?? []),
-          }
-        }),
-      }
-    }),
-  )
-
   function getNextAchievement(trackIdPrefix: string, label: string) {
     const id = slugifyAchievementItemId(label)
     return pickBestAvailableAchievementForTrackIds(achievements(), [`${trackIdPrefix}:${id}`])
@@ -981,53 +924,41 @@ export default function KingdomsForlornView(props: {
           </div>
         </Show>
 
-        <CampaignProgressTable
-          title="Knight Campaign Progress"
-          stepLabel={stepLabel()}
-          sections={campaignSections()}
-          onCampaignPlaysClick={(campaign) => {
-            const playIds = uniquePlayIds(playIdsByCampaign()[campaign] ?? [])
-            if (playIds.length === 0) return
-            props.onOpenPlays({
-              title: `Kingdoms Forlorn • ${campaign}`,
-              playIds,
-            })
-          }}
-          onStepPlaysClick={(_campaign, campaignStepKey) => {
-            const playIds = uniquePlayIds(playIdsByCampaignStep().get(campaignStepKey) ?? [])
-            if (playIds.length === 0) return
-            props.onOpenPlays({
-              title: `Kingdoms Forlorn • ${campaignStepKey.replace('|||', ' • ')}`,
-              playIds,
-            })
-          }}
-        />
-
-        <CountTable
-          title="Campaign Knights"
-          plays={campaignCounts()}
-          keys={campaignKeys()}
-          groupBy={(campaign) => kingdomsForlornContent.campaignGroupByName.get(campaign)}
-          getNextAchievement={(campaign) => getNextAchievement('knightPlays', campaign)}
-          onPlaysClick={(campaign) => {
-            const playIds = uniquePlayIds(playIdsByCampaign()[campaign] ?? [])
-            if (playIds.length === 0) return
-            props.onOpenPlays({ title: `Kingdoms Forlorn • ${campaign}`, playIds })
-          }}
-        />
-
         <Show when={kingdomsForlornContent.quests.length > 0}>
-          <CountTable
-            title="Quests"
-            plays={questCounts()}
-            wins={questWins()}
-            keys={questKeys()}
-            onPlaysClick={(quest) => {
-              const playIds = uniquePlayIds(playIdsByQuest()[quest] ?? [])
-              if (playIds.length === 0) return
-              props.onOpenPlays({ title: `Kingdoms Forlorn • ${quest}`, playIds })
-            }}
-          />
+          <div class="statsBlock">
+            <h3 class="statsTitle">Knight Campaign Progress</h3>
+            <HeatmapMatrix
+              rows={knightKeys()}
+              cols={questKeys()}
+              rowHeader="Character"
+              colHeader="Quest"
+              maxCount={campaignQuestMatrixMax()}
+              hideCounts
+              getCount={(knight, quest) => stepCounts()[pairKey(knight, quest)] ?? 0}
+              getWinCount={(knight, quest) => stepWins()[pairKey(knight, quest)] ?? 0}
+              getColLabel={(quest) => quest.replace(/^Quest\s+/i, '')}
+              getCellDisplayText={(knight, quest, count) => {
+                if (count === 0) return '—'
+                const wins = stepWins()[pairKey(knight, quest)] ?? 0
+                return wins > 0 ? '✓' : '✗'
+              }}
+              getCellLabel={(knight, quest, count) => {
+                const wins = stepWins()[pairKey(knight, quest)] ?? 0
+                if (count === 0) return `${knight} × ${quest}: unplayed`
+                return `${knight} × ${quest}: ${count} plays, ${wins} wins`
+              }}
+              rowGroupBy={(knight) => kingdomsForlornContent.knightGroupByName.get(knight)}
+              onCellClick={(knight, quest) => {
+                const key = pairKey(knight, quest)
+                const playIds = uniquePlayIds(playIdsByCampaignStep().get(key) ?? [])
+                if (playIds.length === 0) return
+                props.onOpenPlays({
+                  title: `Kingdoms Forlorn • ${knight} • ${quest}`,
+                  playIds,
+                })
+              }}
+            />
+          </div>
         </Show>
 
         <Show when={hasCostTable()}>
@@ -1048,17 +979,38 @@ export default function KingdomsForlornView(props: {
         </Show>
 
         <Show when={monsterKeys().length > 0}>
-          <CountTable
-            title="Monsters"
-            plays={monsterCounts()}
-            keys={monsterKeys()}
-            groupBy={(monster) => kingdomsForlornContent.monsterGroupByName.get(monster)}
-            onPlaysClick={(monster) => {
-              const playIds = playIdsByMonster()[monster] ?? []
-              if (playIds.length === 0) return
-              props.onOpenPlays({ title: `Kingdoms Forlorn • ${monster}`, playIds })
-            }}
-          />
+          <div class="statsBlock">
+            <h3 class="statsTitle">Monster Fights</h3>
+            <HeatmapMatrix
+              rows={monsterKeys()}
+              cols={MONSTER_TIER_KEYS}
+              rowHeader="Monster"
+              colHeader="Tier"
+              maxCount={monsterTierMatrixMax()}
+              hideCounts
+              getCount={(monster, tier) => monsterTierMatrix().counts[monster]?.[tier] ?? 0}
+              getWinCount={(monster, tier) => monsterTierMatrix().wins[monster]?.[tier] ?? 0}
+              getCellDisplayText={(monster, tier, count) => {
+                if (count === 0) return '—'
+                const wins = monsterTierMatrix().wins[monster]?.[tier] ?? 0
+                return wins > 0 ? '✓' : '✗'
+              }}
+              getCellLabel={(monster, tier, count) => {
+                const wins = monsterTierMatrix().wins[monster]?.[tier] ?? 0
+                if (count === 0) return `${monster} tier ${tier}: unplayed`
+                return `${monster} tier ${tier}: ${count} fights, ${wins} wins`
+              }}
+              rowGroupBy={(monster) => kingdomsForlornContent.monsterGroupByName.get(monster)}
+              onCellClick={(monster, tier) => {
+                const playIds = uniquePlayIds(monsterTierMatrix().playIds.get(pairKey(monster, tier)) ?? [])
+                if (playIds.length === 0) return
+                props.onOpenPlays({
+                  title: `Kingdoms Forlorn • ${monster} • Tier ${tier}`,
+                  playIds,
+                })
+              }}
+            />
+          </div>
         </Show>
 
         <CountTable
