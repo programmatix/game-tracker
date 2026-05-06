@@ -59,6 +59,70 @@ function chooseMostCommonOrFirst(candidates: string[]): string | undefined {
   return best?.value ?? normalized[0]
 }
 
+const EXPEDITION_STEP_ORDER: KingdomsForlornExpeditionStep[] = ['D1', 'EC', 'D2', 'FC']
+
+function expeditionStepSortValue(step: KingdomsForlornExpeditionStep): number {
+  return EXPEDITION_STEP_ORDER.indexOf(step)
+}
+
+function applyExpeditionMetadata(entries: KingdomsForlornEntry[]): void {
+  let current: KingdomsForlornEntry[] = []
+  let previousStepSort = -1
+
+  function closeCurrent() {
+    if (current.length === 0) return
+    const anchor = current.find((entry) => entry.expeditionStep === 'D1') || current[0]
+    if (!anchor) {
+      current = []
+      previousStepSort = -1
+      return
+    }
+
+    const kingdom = anchor.kingdom || chooseMostCommonOrFirst(current.map((entry) => entry.kingdom))
+    const myKnight = anchor.myKnight || chooseMostCommonOrFirst(current.map((entry) => entry.myKnight || ''))
+    const quest = anchor.quest || chooseMostCommonOrFirst(current.map((entry) => entry.quest || ''))
+    const knights = anchor.knights.some(Boolean)
+      ? anchor.knights.slice()
+      : [
+          ...new Set(
+            current
+              .flatMap((entry) => entry.knights)
+              .map((knight) => knight.trim())
+              .filter(Boolean),
+          ),
+        ]
+
+    for (const entry of current) {
+      if (!entry.kingdom && kingdom) entry.kingdom = kingdom
+      if (!entry.myKnight && myKnight) entry.myKnight = myKnight
+      if (!entry.quest && quest) entry.quest = quest
+      if (entry.knights.length === 0 && knights.length > 0) entry.knights = knights.slice()
+      for (const knight of knights) {
+        if (knight && !entry.knights.includes(knight)) entry.knights.push(knight)
+      }
+      entry.campaign = entry.myKnight || ''
+    }
+
+    current = []
+    previousStepSort = -1
+  }
+
+  for (const entry of entries) {
+    const step = entry.expeditionStep
+    if (!step) {
+      closeCurrent()
+      continue
+    }
+
+    const stepSort = expeditionStepSortValue(step)
+    if (step === 'D1' || (current.length > 0 && stepSort <= previousStepSort)) closeCurrent()
+    current.push(entry)
+    previousStepSort = stepSort
+  }
+
+  closeCurrent()
+}
+
 export function getKingdomsForlornEntries(
   plays: BggPlay[],
   username: string,
@@ -177,6 +241,8 @@ export function getKingdomsForlornEntries(
       }
     }
   }
+
+  applyExpeditionMetadata(result)
 
   for (const entry of result) {
     entry.campaign = entry.myKnight || 'Unknown campaign'

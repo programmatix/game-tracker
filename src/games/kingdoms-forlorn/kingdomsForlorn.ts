@@ -45,6 +45,12 @@ function resolveKnight(value: string): string | undefined {
   return kingdomsForlornContent.knightsById.get(normalizeId(token))
 }
 
+function resolveMonster(value: string): string | undefined {
+  const token = normalizeToken(value)
+  if (!token) return undefined
+  return kingdomsForlornContent.monstersById.get(normalizeId(token))
+}
+
 function normalizeQuestToken(value: string): string {
   const token = normalizeToken(value)
   if (!token) return ''
@@ -80,7 +86,7 @@ function cleanMonsterName(value: string): string | undefined {
   if (!token) return undefined
   const asStep = resolveExpeditionStep(token)
   if (asStep) return undefined
-  return token
+  return resolveMonster(token) || token
 }
 
 function getExpeditionStepFromKeyValues(
@@ -229,7 +235,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
   let expeditionStep = resolveExpeditionStep(
     getBgStatsValue(parsedKv, ['E', 'Expedition', 'Step', 'Session']) || '',
   ) || getExpeditionStepFromKeyValues(parsedKv)
-  const monster = getMonsterFromKeyValues(parsedKv)
+  let monster = getMonsterFromKeyValues(parsedKv)
   let monsterTier = getMonsterTierFromKeyValues(parsedKv)
   let continuePrevious = false
   let continueNext = false
@@ -279,6 +285,12 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
     const monsterTierFromTag = resolveMonsterTier(normalized)
     if (monsterTier === undefined && monsterTierFromTag !== undefined) {
       monsterTier = monsterTierFromTag
+      continue
+    }
+
+    const monsterFromTag = resolveMonster(normalized)
+    if (monsterFromTag) {
+      if (!monster) monster = monsterFromTag
       continue
     }
 

@@ -73,7 +73,104 @@ kingdoms:
     id: PrincipalityOfStone
     group: Core
     box: Collection
-    aliases: [Stone, Principality, PS]
+    aliases: [Stone, Principality, PS, PoS]
+
+monsters:
+  - display: Firstmen Warriors
+    id: FirstmenWarriors
+    group: Core
+    box: Collection
+    aliases: [FirW]
+  - display: Bog Witch
+    id: BogWitch
+    group: Core
+    box: Collection
+    aliases: [BogW]
+  - display: Flower Knight
+    id: FlowerKnight
+    group: Core
+    box: Collection
+    aliases: [FloK]
+  - display: Red Clergyman
+    id: RedClergyman
+    group: Core
+    box: Collection
+    aliases: [RedC]
+  - display: Stonemason Knight
+    id: StonemasonKnight
+    group: Core
+    box: Collection
+    aliases: [StoK]
+  - display: Knight of the Fen
+    id: KnightOfTheFen
+    group: Core
+    box: Collection
+    aliases: [KFen]
+  - display: Devil of the Ancient Dusk
+    id: DevilOfTheAncientDusk
+    group: Core
+    box: Collection
+    aliases: [DAdu]
+  - display: Bloodrenched Devil
+    id: BloodrenchedDevil
+    group: Core
+    box: Collection
+    aliases: [BloD]
+  - display: Holy Dragon
+    id: HolyDragon
+    group: Core
+    box: Collection
+    aliases: [HolD, Holy Dragon of the Ceaseless Hunger]
+  - display: Toadragon
+    id: Toadragon
+    group: Core
+    box: Collection
+    aliases: [Toad, Toadragon of the Great Marsh]
+  - display: Swandra
+    id: Swandra
+    group: Core
+    box: Collection
+    aliases: [Swan]
+  - display: King Laid Low
+    id: KingLaidLow
+    group: Core
+    box: Collection
+    aliases: [King]
+  - display: Pumpkinhead Monstrosity
+    id: PumpkinheadMonstrosity
+    group: Core
+    box: Collection
+    aliases: [Pump, Pumpkinhead Monstrosity Mob]
+  - display: White Ape Troll
+    id: WhiteApeTroll
+    group: Core
+    box: Collection
+    aliases: [WATr]
+  - display: Knighteater
+    id: Knighteater
+    group: Expansion
+    box: Collection
+    aliases: [Knig, Knigheater]
+  - display: Firstmen Lictor Hunters
+    id: FirstmenLictorHunters
+    group: Expansion
+    box: Collection
+    aliases: [FirL]
+  - display: Young Devour Dragon
+    id: YoungDevourDragon
+    group: Expansion
+    box: Collection
+    aliases: [YouD]
+  - display: Hag of Brecht
+    id: HagOfBrecht
+    group: Expansion
+    box: Collection
+    aliases: [HagB]
+  - display: Panzerdragon Veldr
+    id: PanzerdragonVeldr
+    group: Expansion
+    box: Collection
+    aliases: [PanV]
 
 costs:
   currency: "£"

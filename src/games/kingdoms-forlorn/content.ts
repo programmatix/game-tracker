@@ -24,17 +24,21 @@ export type KingdomsForlornContent = {
   knights: string[]
   quests: string[]
   kingdoms: string[]
+  monsters: string[]
   campaignsById: Map<string, string>
   knightsById: Map<string, string>
   questsById: Map<string, string>
   kingdomsById: Map<string, string>
+  monstersById: Map<string, string>
   campaignGroupByName: Map<string, string>
   campaignBoxByName: Map<string, string>
   stepNamesByCampaignName: Map<string, string[]>
   knightGroupByName: Map<string, string>
   kingdomGroupByName: Map<string, string>
+  monsterGroupByName: Map<string, string>
   knightBoxByName: Map<string, string>
   kingdomBoxByName: Map<string, string>
+  monsterBoxByName: Map<string, string>
   costCurrencySymbol: string
   boxCostsByName: Map<string, number>
 }
@@ -104,6 +108,9 @@ export function parseKingdomsForlornContent(text: string): KingdomsForlornConten
   const knights = parseNamedList(yaml.knights as KingdomsForlornYamlItem[])
   const quests = Array.isArray(yaml.quests) ? parseNamedList(yaml.quests as KingdomsForlornYamlItem[]) : parseNamedList([])
   const kingdoms = parseNamedList(yaml.kingdoms as KingdomsForlornYamlItem[])
+  const monsters = Array.isArray(yaml.monsters)
+    ? parseNamedList(yaml.monsters as KingdomsForlornYamlItem[])
+    : parseNamedList([])
   const campaigns = knights.labels.slice()
   const campaignsById = new Map(knights.byId)
   const campaignGroupByName = new Map(knights.groupByLabel)
@@ -117,17 +124,21 @@ export function parseKingdomsForlornContent(text: string): KingdomsForlornConten
     knights: knights.labels,
     quests: quests.labels,
     kingdoms: kingdoms.labels,
+    monsters: monsters.labels,
     campaignsById,
     knightsById: knights.byId,
     questsById: quests.byId,
     kingdomsById: kingdoms.byId,
+    monstersById: monsters.byId,
     campaignGroupByName,
     campaignBoxByName,
     stepNamesByCampaignName,
     knightGroupByName: knights.groupByLabel,
     kingdomGroupByName: kingdoms.groupByLabel,
+    monsterGroupByName: monsters.groupByLabel,
     knightBoxByName: knights.boxByLabel,
     kingdomBoxByName: kingdoms.boxByLabel,
+    monsterBoxByName: monsters.boxByLabel,
     costCurrencySymbol: costs.currencySymbol,
     boxCostsByName: costs.boxCostsByName,
   }

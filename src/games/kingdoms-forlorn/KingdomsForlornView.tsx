@@ -39,6 +39,10 @@ type KingdomsForlornExpeditionSection = {
   key: string
   label: string
   summary: string
+  kingdom: string
+  quest?: string
+  myKnight?: string
+  knights: string[]
   entries: KingdomsForlornEntry[]
 }
 
@@ -122,6 +126,28 @@ function buildExpeditionSummary(entries: KingdomsForlornEntry[]): string {
     .join(' • ')
 }
 
+function buildExpeditionMetadata(entries: KingdomsForlornEntry[]): {
+  kingdom: string
+  quest?: string
+  myKnight?: string
+  knights: string[]
+} {
+  const anchor = entries.find((entry) => entry.expeditionStep === 'D1') || entries[0]
+  const knownKnights = [
+    ...new Set(
+      (anchor?.knights || entries.flatMap((entry) => entry.knights))
+        .map((knight) => knight.trim())
+        .filter((knight) => !isUnknownValue(knight)),
+    ),
+  ]
+  return {
+    kingdom: anchor?.kingdom || 'Unknown kingdom',
+    quest: anchor?.quest,
+    myKnight: anchor?.myKnight,
+    knights: knownKnights,
+  }
+}
+
 function groupKingdomsForlornExpeditions(entries: KingdomsForlornEntry[]): {
   sections: KingdomsForlornExpeditionSection[]
   unknownEntries: KingdomsForlornEntry[]
@@ -135,10 +161,15 @@ function groupKingdomsForlornExpeditions(entries: KingdomsForlornEntry[]): {
   function closeCurrent() {
     if (current.length === 0) return
     const index = sections.length + 1
+    const metadata = buildExpeditionMetadata(current)
     sections.push({
       key: `expedition-${index}-${current[0]!.play.id}`,
       label: buildExpeditionLabel(index, current),
       summary: buildExpeditionSummary(current),
+      kingdom: metadata.kingdom,
+      quest: metadata.quest,
+      myKnight: metadata.myKnight,
+      knights: metadata.knights,
       entries: current,
     })
     current = []
@@ -195,8 +226,12 @@ function KingdomsForlornExtractedBadge(props: {
   )
 }
 
-function KingdomsForlornPlayBadges(props: { entry: KingdomsForlornEntry }) {
+function KingdomsForlornPlayBadges(props: {
+  entry: KingdomsForlornEntry
+  showExpeditionDetails?: boolean
+}) {
   const entry = () => props.entry
+  const showExpeditionDetails = () => props.showExpeditionDetails !== false
   return (
     <div class="kfExtractedBadges">
       <Show
@@ -211,37 +246,39 @@ function KingdomsForlornPlayBadges(props: { entry: KingdomsForlornEntry }) {
         )}
       </Show>
 
-      <Show
-        when={!isUnknownValue(entry().kingdom)}
-        fallback={<KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} tone="unknown" />}
-      >
-        <KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} />
-      </Show>
+      <Show when={showExpeditionDetails()}>
+        <Show
+          when={!isUnknownValue(entry().kingdom)}
+          fallback={<KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} tone="unknown" />}
+        >
+          <KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} />
+        </Show>
 
-      <Show
-        when={entry().quest}
-        fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
-      >
-        {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
-      </Show>
+        <Show
+          when={entry().quest}
+          fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
+        >
+          {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
+        </Show>
 
-      <Show
-        when={!isUnknownValue(entry().myKnight)}
-        fallback={<KingdomsForlornExtractedBadge label="My knight" value="Unknown" tone="unknown" />}
-      >
-        <KingdomsForlornExtractedBadge label="My knight" value={entry().myKnight!} />
-      </Show>
+        <Show
+          when={!isUnknownValue(entry().myKnight)}
+          fallback={<KingdomsForlornExtractedBadge label="My knight" value="Unknown" tone="unknown" />}
+        >
+          <KingdomsForlornExtractedBadge label="My knight" value={entry().myKnight!} />
+        </Show>
 
-      <Show
-        when={hasKnownParty(entry())}
-        fallback={<KingdomsForlornExtractedBadge label="Party" value="Unknown" tone="unknown" />}
-      >
-        <KingdomsForlornExtractedBadge
-          label="Party"
-          value={entry()
-            .knights.filter((knight) => !isUnknownValue(knight))
-            .join(', ')}
-        />
+        <Show
+          when={hasKnownParty(entry())}
+          fallback={<KingdomsForlornExtractedBadge label="Party" value="Unknown" tone="unknown" />}
+        >
+          <KingdomsForlornExtractedBadge
+            label="Party"
+            value={entry()
+              .knights.filter((knight) => !isUnknownValue(knight))
+              .join(', ')}
+          />
+        </Show>
       </Show>
 
       <Show
@@ -289,7 +326,45 @@ function KingdomsForlornPlayBadges(props: { entry: KingdomsForlornEntry }) {
   )
 }
 
-function KingdomsForlornAllPlaysList(props: { entries: KingdomsForlornEntry[] }) {
+function KingdomsForlornExpeditionBadges(props: { section: KingdomsForlornExpeditionSection }) {
+  const section = () => props.section
+  return (
+    <div class="kfExtractedBadges">
+      <Show
+        when={!isUnknownValue(section().kingdom)}
+        fallback={<KingdomsForlornExtractedBadge label="Kingdom" value={section().kingdom} tone="unknown" />}
+      >
+        <KingdomsForlornExtractedBadge label="Kingdom" value={section().kingdom} />
+      </Show>
+
+      <Show
+        when={section().quest}
+        fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
+      >
+        {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
+      </Show>
+
+      <Show
+        when={!isUnknownValue(section().myKnight)}
+        fallback={<KingdomsForlornExtractedBadge label="My knight" value="Unknown" tone="unknown" />}
+      >
+        <KingdomsForlornExtractedBadge label="My knight" value={section().myKnight!} />
+      </Show>
+
+      <Show
+        when={section().knights.length > 0}
+        fallback={<KingdomsForlornExtractedBadge label="Party" value="Unknown" tone="unknown" />}
+      >
+        <KingdomsForlornExtractedBadge label="Party" value={section().knights.join(', ')} />
+      </Show>
+    </div>
+  )
+}
+
+function KingdomsForlornAllPlaysList(props: {
+  entries: KingdomsForlornEntry[]
+  showExpeditionDetails?: boolean
+}) {
   return (
     <div class="kfAllPlaysList">
       <For each={props.entries}>
@@ -302,7 +377,10 @@ function KingdomsForlornAllPlaysList(props: { entries: KingdomsForlornEntry[] })
               <span class="mono">{entry.play.attributes.date || 'No date'}</span>
               <span>{playerSummary(entry.play)}</span>
             </div>
-            <KingdomsForlornPlayBadges entry={entry} />
+            <KingdomsForlornPlayBadges
+              entry={entry}
+              showExpeditionDetails={props.showExpeditionDetails}
+            />
           </div>
         )}
       </For>
@@ -349,7 +427,11 @@ function KingdomsForlornExpeditionsView(props: {
                   </button>
                 </div>
                 <div class="muted">{item.section.summary}</div>
-                <KingdomsForlornAllPlaysList entries={item.section.entries.slice().reverse()} />
+                <KingdomsForlornExpeditionBadges section={item.section} />
+                <KingdomsForlornAllPlaysList
+                  entries={item.section.entries.slice().reverse()}
+                  showExpeditionDetails={false}
+                />
               </div>
             ) : (
               <div class="kfExpeditionGroup kfExpeditionGroupUnknown">
@@ -612,6 +694,10 @@ export default function KingdomsForlornView(props: {
         const knightBox = kingdomsForlornContent.knightBoxByName.get(knight)
         if (knightBox) boxes.add(knightBox)
       }
+      if (entry.monster) {
+        const monsterBox = kingdomsForlornContent.monsterBoxByName.get(entry.monster)
+        if (monsterBox) boxes.add(monsterBox)
+      }
       for (const box of boxes) incrementCount(counts, box, entry.quantity)
     }
     return counts
@@ -626,6 +712,10 @@ export default function KingdomsForlornView(props: {
       for (const knight of entry.knights) {
         const knightBox = kingdomsForlornContent.knightBoxByName.get(knight)
         if (knightBox) boxes.add(knightBox)
+      }
+      if (entry.monster) {
+        const monsterBox = kingdomsForlornContent.monsterBoxByName.get(entry.monster)
+        if (monsterBox) boxes.add(monsterBox)
       }
 
       const resolved = totalPlayMinutesWithAssumption({
@@ -651,6 +741,10 @@ export default function KingdomsForlornView(props: {
       for (const knight of entry.knights) {
         const knightBox = kingdomsForlornContent.knightBoxByName.get(knight)
         if (knightBox) boxes.add(knightBox)
+      }
+      if (entry.monster) {
+        const monsterBox = kingdomsForlornContent.monsterBoxByName.get(entry.monster)
+        if (monsterBox) boxes.add(monsterBox)
       }
       for (const box of boxes) (ids[box] ||= []).push(entry.play.id)
     }
@@ -693,7 +787,9 @@ export default function KingdomsForlornView(props: {
     }
     return counts
   })
-  const monsterKeys = createMemo(() => sortKeysByCountDesc(monsterCounts()))
+  const monsterKeys = createMemo(() =>
+    mergeCanonicalKeys(sortKeysByCountDesc(monsterCounts()), kingdomsForlornContent.monsters),
+  )
   const playIdsByMonster = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
@@ -944,6 +1040,7 @@ export default function KingdomsForlornView(props: {
             title="Monsters"
             plays={monsterCounts()}
             keys={monsterKeys()}
+            groupBy={(monster) => kingdomsForlornContent.monsterGroupByName.get(monster)}
             onPlaysClick={(monster) => {
               const playIds = playIdsByMonster()[monster] ?? []
               if (playIds.length === 0) return
