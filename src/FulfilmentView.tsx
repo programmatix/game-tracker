@@ -1,4 +1,4 @@
-import { For, Show, createMemo } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { CONFIGURABLE_GAME_DEFINITIONS } from './configurableGames'
 import type { ResolvedGamePreferencesById } from './gamePreferences'
 import { formatMonthKey, monthIndexFromKey } from './monthKey'
@@ -8,6 +8,7 @@ type FulfilmentRow = {
   gameId: string
   label: string
   estimatedDeliveryMonth?: string
+  hasProvidedShippingAddress: boolean
   price?: number
 }
 
@@ -26,11 +27,40 @@ const poundsFormatter = new Intl.NumberFormat('en-GB', {
   currency: 'GBP',
 })
 
+type ShippingAddressFilter = 'all' | 'provided' | 'needed'
+
+const SHIPPING_ADDRESS_FILTER_STORAGE_KEY = 'fulfilment.shippingAddressFilter'
+
+const SHIPPING_ADDRESS_FILTER_OPTIONS: ReadonlyArray<{ value: ShippingAddressFilter; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'provided', label: 'Address provided' },
+  { value: 'needed', label: 'Address needed' },
+]
+
+function isShippingAddressFilter(value: unknown): value is ShippingAddressFilter {
+  return value === 'all' || value === 'provided' || value === 'needed'
+}
+
+function readStoredShippingAddressFilter(): ShippingAddressFilter {
+  if (typeof window === 'undefined') return 'all'
+
+  try {
+    const stored = window.localStorage.getItem(SHIPPING_ADDRESS_FILTER_STORAGE_KEY)
+    return isShippingAddressFilter(stored) ? stored : 'all'
+  } catch {
+    return 'all'
+  }
+}
+
 export default function FulfilmentView(props: {
   gamePreferencesById: ResolvedGamePreferencesById
   onOpenGame: (gameId: string) => void
   onOpenGameOptions: (gameId: string) => void
 }) {
+  const [shippingAddressFilter, setShippingAddressFilter] = createSignal<ShippingAddressFilter>(
+    readStoredShippingAddressFilter(),
+  )
+
   const currentMonthIndex = createMemo(() => {
     const now = new Date()
     return now.getFullYear() * 12 + now.getMonth()
@@ -41,7 +71,15 @@ export default function FulfilmentView(props: {
     return monthIndex !== null && monthIndex < currentMonthIndex()
   }
 
-  const rows = createMemo<FulfilmentRow[]>(() =>
+  createEffect(() => {
+    try {
+      window.localStorage.setItem(SHIPPING_ADDRESS_FILTER_STORAGE_KEY, shippingAddressFilter())
+    } catch {
+      // Ignore storage failures; the filter still works for the current session.
+    }
+  })
+
+  const allRows = createMemo<FulfilmentRow[]>(() =>
     CONFIGURABLE_GAME_DEFINITIONS.map<PendingFulfilmentRow>((game) => {
       const preferences = props.gamePreferencesById[game.id]
       const purchaseFamily = purchaseGameFamilyById.get(game.id)
@@ -49,6 +87,7 @@ export default function FulfilmentView(props: {
         gameId: game.id,
         label: game.label,
         estimatedDeliveryMonth: preferences?.estimatedDeliveryMonth,
+        hasProvidedShippingAddress: Boolean(preferences?.hasProvidedShippingAddress),
         price: purchaseFamily?.price,
         status: preferences?.status,
       }
@@ -66,6 +105,14 @@ export default function FulfilmentView(props: {
         if (rightIndex !== null) return 1
         return left.label.localeCompare(right.label)
       }),
+  )
+
+  const rows = createMemo<FulfilmentRow[]>(() =>
+    allRows().filter((row) => {
+      if (shippingAddressFilter() === 'provided') return row.hasProvidedShippingAddress
+      if (shippingAddressFilter() === 'needed') return !row.hasProvidedShippingAddress
+      return true
+    }),
   )
 
   const groupedRows = createMemo<FulfilmentGroup[]>(() => {
@@ -93,6 +140,7 @@ export default function FulfilmentView(props: {
   const totals = createMemo(() => {
     const allRows = rows()
     const withEstimate = allRows.filter((row) => row.estimatedDeliveryMonth).length
+    const withAddress = allRows.filter((row) => row.hasProvidedShippingAddress).length
     const knownMonths = groupedRows()
     const totalValue = allRows.reduce((sum, row) => sum + (row.price || 0), 0)
 
@@ -100,6 +148,8 @@ export default function FulfilmentView(props: {
       total: allRows.length,
       withEstimate,
       withoutEstimate: allRows.length - withEstimate,
+      withAddress,
+      withoutAddress: allRows.length - withAddress,
       nextMonth: knownMonths[0]?.monthLabel || '—',
       totalValue,
     }
@@ -112,7 +162,26 @@ export default function FulfilmentView(props: {
         <div class="muted">Games currently marked as awaiting shipping.</div>
       </div>
 
-      <Show when={rows().length > 0} fallback={<div class="muted">No games are currently awaiting shipping.</div>}>
+      <Show when={allRows().length > 0} fallback={<div class="muted">No games are currently awaiting shipping.</div>}>
+        <div class="costToolbarGroup">
+          <div class="muted">Shipping address</div>
+          <div class="costTargetGroup" role="group" aria-label="Visible games by shipping address state">
+            <For each={SHIPPING_ADDRESS_FILTER_OPTIONS}>
+              {(option) => (
+                <button
+                  type="button"
+                  class="tabButton"
+                  classList={{ tabButtonActive: shippingAddressFilter() === option.value }}
+                  onClick={() => setShippingAddressFilter(option.value)}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+
+        <Show when={rows().length > 0} fallback={<div class="muted">No awaiting-shipping games match this filter.</div>}>
         <div class="monthlySummaryGrid">
           <section class="monthlySummaryCard">
             <div class="monthlySummaryLabel">Awaiting shipping</div>
@@ -129,6 +198,18 @@ export default function FulfilmentView(props: {
               {totals().withoutEstimate > 0
                 ? `${totals().withoutEstimate.toLocaleString()} still need a delivery month.`
                 : 'Every awaiting shipment has an estimated month.'}
+            </div>
+          </section>
+
+          <section class="monthlySummaryCard">
+            <div class="monthlySummaryLabel">Addresses provided</div>
+            <div class="monthlySummaryValue mono">
+              {totals().withAddress.toLocaleString()}/{totals().total.toLocaleString()}
+            </div>
+            <div class="monthlySummarySubtext">
+              {totals().withoutAddress > 0
+                ? `${totals().withoutAddress.toLocaleString()} still need a shipping address.`
+                : 'Every visible shipment has a shipping address recorded.'}
             </div>
           </section>
 
@@ -170,6 +251,9 @@ export default function FulfilmentView(props: {
                           <Show when={isOverdue(row)}>
                             <div class="fulfilmentOverdueLabel">Overdue</div>
                           </Show>
+                          <div class="muted">
+                            {row.hasProvidedShippingAddress ? 'Shipping address provided' : 'Shipping address needed'}
+                          </div>
                         </div>
 
                         <div class="fulfilmentRowAside">
@@ -207,6 +291,9 @@ export default function FulfilmentView(props: {
                         >
                           {row.label}
                         </button>
+                        <div class="muted">
+                          {row.hasProvidedShippingAddress ? 'Shipping address provided' : 'Shipping address needed'}
+                        </div>
                       </div>
 
                       <div class="fulfilmentRowAside">
@@ -224,6 +311,7 @@ export default function FulfilmentView(props: {
             </section>
           </Show>
         </div>
+        </Show>
       </Show>
     </div>
   )

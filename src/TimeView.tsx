@@ -451,26 +451,6 @@ export default function TimeView(props: {
   return (
     <div class="statsBlock">
       <h3 class="statsTitle">Time</h3>
-      <Show when={showTimeEstimateStatus()}>
-        <div class="costLoadingCard">
-          <div class="costLoadingHeader">
-            <div>
-              <div>Estimating missing play times</div>
-              <div class="muted">
-                The table updates as BGG game metadata comes back for plays with no recorded length.
-              </div>
-            </div>
-            <div class="mono muted">{timeEstimateLabel()}</div>
-          </div>
-          <ProgressBar
-            value={props.costTimeEstimateStatus.complete}
-            target={Math.max(1, props.costTimeEstimateStatus.total)}
-            widthPx={320}
-            label={timeEstimateLabel()}
-          />
-          <div class="muted">{timeEstimateSummary()}</div>
-        </div>
-      </Show>
 
       <div class="monthlySummaryGrid costsSummaryGrid">
         <section class="monthlySummaryCard monthlySummaryCardProgress costsSummaryCardChart">

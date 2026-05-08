@@ -140,6 +140,8 @@ export default function GameOptionsView(props: {
                 status,
                 estimatedDeliveryMonth:
                   status === 'waitingOnShipping' ? selectedPreferences().estimatedDeliveryMonth : undefined,
+                hasProvidedShippingAddress:
+                  status === 'waitingOnShipping' ? selectedPreferences().hasProvidedShippingAddress : false,
               })
             }}
           />
@@ -154,6 +156,15 @@ export default function GameOptionsView(props: {
                 props.onUpdateGamePreferences(selectedGameId(), {
                   estimatedDeliveryMonth: estimatedDeliveryMonth || undefined,
                 })
+              }
+            />
+
+            <GameOptionsRow
+              checked={selectedPreferences().hasProvidedShippingAddress}
+              title="Shipping address provided"
+              description="Track whether the fulfilment manager has already received your shipping address."
+              onChange={(checked) =>
+                props.onUpdateGamePreferences(selectedGameId(), { hasProvidedShippingAddress: checked })
               }
             />
           </Show>

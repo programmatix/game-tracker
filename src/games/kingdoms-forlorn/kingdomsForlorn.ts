@@ -8,6 +8,7 @@ export type KingdomsForlornPlayerTags = {
   freeRoam: boolean
   expeditionStep?: KingdomsForlornExpeditionStep
   monster?: string
+  monsters: string[]
   monsterTier?: number
   continuePrevious: boolean
   continueNext: boolean
@@ -108,27 +109,32 @@ function getExpeditionStepFromKeyValues(
   return undefined
 }
 
-function getMonsterFromKeyValues(parsedKv: Record<string, string>): string | undefined {
-  const explicitMonster = getBgStatsValue(parsedKv, [
-    'M',
-    'Monster',
-    'Foe',
-    'Enemy',
-    'Boss',
-    'Clash',
-  ])
-  const explicit = cleanMonsterName(explicitMonster || '')
-  if (explicit) return explicit
+function getMonstersFromSegments(segments: readonly string[]): string[] {
+  const monsters: string[] = []
+  const explicitMonsterKeys = ['m', 'monster', 'foe', 'enemy', 'boss', 'clash']
 
-  for (const [key, value] of Object.entries(parsedKv)) {
+  for (const segment of segments) {
+    const match = segment.match(/[:：]/)
+    if (!match || match.index == null || match.index === 0) continue
+    const key = segment.slice(0, match.index).trim()
+    const value = segment.slice(match.index + match[0].length).trim()
+    if (!key || !value) continue
+
+    const normalizedKey = normalizeId(key)
+    if (explicitMonsterKeys.includes(normalizedKey)) {
+      const monster = cleanMonsterName(value)
+      if (monster) monsters.push(monster)
+      continue
+    }
+
     const stepFromKey = resolveExpeditionStep(key)
     if (stepFromKey !== 'EC' && stepFromKey !== 'FC') continue
 
     const monster = cleanMonsterName(value)
-    if (monster) return monster
+    if (monster) monsters.push(monster)
   }
 
-  return undefined
+  return [...new Set(monsters)]
 }
 
 function resolveMonsterTier(value: string): number | undefined {
@@ -231,8 +237,9 @@ function isContinueNextToken(value: string): boolean {
 }
 
 export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornPlayerTags {
+  const segments = splitBgStatsSegments(color)
   const parsedKv = parseBgStatsKeyValueSegments(color)
-  const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
+  const tags = segments.filter((segment) => !/[:：]/.test(segment))
 
   let kingdom = resolveKingdom(
     getBgStatsValue(parsedKv, ['Kg', 'Kingdom', 'Kdm', 'Region', 'Map']) || '',
@@ -245,7 +252,8 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
   let expeditionStep = resolveExpeditionStep(
     getBgStatsValue(parsedKv, ['E', 'Expedition', 'Step', 'Session']) || '',
   ) || getExpeditionStepFromKeyValues(parsedKv)
-  let monster = getMonsterFromKeyValues(parsedKv)
+  const monsters = getMonstersFromSegments(segments)
+  let monster = monsters[0]
   let monsterTier = getMonsterTierFromKeyValues(parsedKv)
   let continuePrevious = false
   let continueNext = false
@@ -305,6 +313,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
 
     const monsterFromTag = resolveMonster(normalized)
     if (monsterFromTag) {
+      monsters.push(monsterFromTag)
       if (!monster) monster = monsterFromTag
       continue
     }
@@ -319,6 +328,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
     freeRoam,
     expeditionStep,
     monster,
+    monsters: [...new Set(monsters)],
     monsterTier,
     continuePrevious,
     continueNext,

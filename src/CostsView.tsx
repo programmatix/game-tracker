@@ -444,27 +444,6 @@ export default function CostsView(props: {
   return (
     <div class="statsBlock">
       <h3 class="statsTitle">Costs</h3>
-      <Show when={showCostTimeEstimateStatus()}>
-        <div class="costLoadingCard">
-          <div class="costLoadingHeader">
-            <div>
-              <div>Estimating missing play times</div>
-              <div class="muted">
-                The table updates as BGG game metadata comes back for plays with no recorded length.
-              </div>
-            </div>
-            <div class="mono muted">{costTimeEstimateLabel()}</div>
-          </div>
-          <ProgressBar
-            value={props.costTimeEstimateStatus.complete}
-            target={Math.max(1, props.costTimeEstimateStatus.total)}
-            widthPx={320}
-            label={costTimeEstimateLabel()}
-          />
-          <div class="muted">{costTimeEstimateSummary()}</div>
-        </div>
-      </Show>
-
       <Show when={overallProjection()}>
         {(projection) => (
           <div class="monthlySummaryGrid costsSummaryGrid">

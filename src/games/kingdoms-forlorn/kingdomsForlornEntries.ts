@@ -16,6 +16,7 @@ export type KingdomsForlornEntry = {
   freeRoam: boolean
   expeditionStep?: KingdomsForlornExpeditionStep
   monster?: string
+  monsters: string[]
   monsterTier?: number
   unknownTags: string[]
   quantity: number
@@ -121,8 +122,8 @@ function applyExpeditionMetadata(entries: KingdomsForlornEntry[]): void {
     const stepSort = expeditionStepSortValue(step)
     const startsNewExpedition =
       current.length > 0 &&
-      ((step === 'D1' && previousStepSort !== expeditionStepSortValue('D1')) ||
-        (step !== 'D1' && stepSort <= previousStepSort))
+      step === 'D1' &&
+      previousStepSort !== expeditionStepSortValue('D1')
     if (startsNewExpedition) closeCurrent()
     current.push(entry)
     previousStepSort = stepSort
@@ -152,6 +153,7 @@ export function getKingdomsForlornEntries(
           freeRoam: parsed.freeRoam,
           expeditionStep: parsed.expeditionStep,
           monster: parsed.monster,
+          monsters: parsed.monsters,
           monsterTier: parsed.monsterTier,
           extraTags: parsed.extraTags,
           continuePrevious: parsed.continuePrevious,
@@ -177,6 +179,14 @@ export function getKingdomsForlornEntries(
       const monster =
         myPlayer?.monster?.trim() ||
         chooseMostCommonOrFirst(parsedPlayers.map((player) => player.monster).filter(Boolean) as string[])
+      const monsters = [
+        ...new Set(
+          parsedPlayers
+            .flatMap((player) => player.monsters)
+            .map((monster) => monster.trim())
+            .filter(Boolean),
+        ),
+      ]
       const monsterTier =
         myPlayer?.monsterTier ??
         Number(chooseMostCommonOrFirst(
@@ -205,6 +215,7 @@ export function getKingdomsForlornEntries(
         freeRoam,
         expeditionStep: expeditionStep as KingdomsForlornExpeditionStep | undefined,
         monster,
+        monsters,
         monsterTier: Number.isFinite(monsterTier) ? monsterTier : undefined,
         unknownTags,
         quantity: playQuantity(play),

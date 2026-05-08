@@ -688,27 +688,6 @@ export default function ReviewView(props: {
     <div class="statsBlock reviewView">
       <h3 class="statsTitle">Games</h3>
 
-      <Show when={showEstimateStatus()}>
-        <div class="costLoadingCard">
-          <div class="costLoadingHeader">
-            <div>
-              <div>Estimating missing play times</div>
-              <div class="muted">
-                The table updates as BGG game metadata comes back for plays with no recorded length.
-              </div>
-            </div>
-            <div class="mono muted">{estimateLabel()}</div>
-          </div>
-          <ProgressBar
-            value={props.costTimeEstimateStatus.complete}
-            target={Math.max(1, props.costTimeEstimateStatus.total)}
-            widthPx={320}
-            label={estimateLabel()}
-          />
-          <div class="muted">{estimateSummary()}</div>
-        </div>
-      </Show>
-
       <div class="costsToolbar">
         <div class="costToolbarGroup">
           <div class="muted">Cost target</div>

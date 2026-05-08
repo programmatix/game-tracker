@@ -159,7 +159,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   { id: 'radlands', label: "Radlands", spreadsheetFamily: "Radlands", price: 18.00 },
   { id: 'robinsonCrusoe', label: "Robinson Crusoe", spreadsheetFamily: "Robinson Crusoe", price: 51.78 },
   { id: 'rogueAngels', label: "Rogue Angels", spreadsheetFamily: "Rogue Angels", price: 101.00 },
-  { id: 'rove', label: "Rove", spreadsheetFamily: "Rove", price: 45.08 },
+  { id: 'rove', label: "Rove Anchorpoint", spreadsheetFamily: "Rove", price: 45.08 },
   { id: 'scout', label: "Scout", spreadsheetFamily: "Scout", price: 0.00 },
   { id: 'seaSaltAndPaper', label: "Sea Salt and Paper", spreadsheetFamily: "Sea Salt and Paper", price: 0.00 },
   { id: 'skyTeam', label: "Sky Team", spreadsheetFamily: "Sky Team", price: 16.99 },

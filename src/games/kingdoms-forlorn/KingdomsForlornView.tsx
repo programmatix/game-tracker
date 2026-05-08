@@ -94,6 +94,25 @@ function forbidsMonster(entry: KingdomsForlornEntry): boolean {
   return entry.expeditionStep === 'D1' || entry.expeditionStep === 'D2'
 }
 
+function hasMultipleMonsters(entry: KingdomsForlornEntry): boolean {
+  return requiresMonster(entry) && entry.monsters.length > 1
+}
+
+function monsterBadgeValue(entry: KingdomsForlornEntry, monster: string): string {
+  if (!hasMultipleMonsters(entry)) return monster
+  return `${monster} (+${entry.monsters.length - 1} more)`
+}
+
+function monsterWarningTooltip(entry: KingdomsForlornEntry): string | undefined {
+  if (forbidsMonster(entry)) {
+    return 'Delve plays should not have a monster tag; monsters are only expected on clash plays.'
+  }
+  if (hasMultipleMonsters(entry)) {
+    return `Clash plays should have exactly one monster tag. Parsed monsters: ${entry.monsters.join(', ')}.`
+  }
+  return undefined
+}
+
 function buildExpeditionLabel(index: number, entries: KingdomsForlornEntry[]): string {
   const first = entries[0]
   const last = entries[entries.length - 1]
@@ -200,8 +219,8 @@ function groupKingdomsForlornExpeditions(entries: KingdomsForlornEntry[]): {
     const stepSort = expeditionStepSortValue(step)
     const startsNewExpedition =
       current.length > 0 &&
-      ((step === 'D1' && previousStepSort !== expeditionStepSortValue('D1')) ||
-        (step !== 'D1' && stepSort <= previousStepSort))
+      step === 'D1' &&
+      previousStepSort !== expeditionStepSortValue('D1')
     if (startsNewExpedition) closeCurrent()
     current.push(entry)
     previousStepSort = stepSort
@@ -229,7 +248,15 @@ function KingdomsForlornExtractedBadge(props: {
   label: string
   value: string
   tone?: 'normal' | 'missing' | 'unknown'
+  tooltip?: string
 }) {
+  const tooltip = () =>
+    props.tooltip ||
+    (props.tone === 'missing'
+      ? `${props.label} is required for this play but was not found in the BG Stats tags.`
+      : props.tone === 'unknown'
+        ? `${props.label} could not be matched to a known Kingdoms Forlorn value.`
+        : undefined)
   return (
     <span
       class="kfExtractedBadge"
@@ -237,6 +264,8 @@ function KingdomsForlornExtractedBadge(props: {
         kfExtractedBadgeMissing: props.tone === 'missing',
         kfExtractedBadgeUnknown: props.tone === 'unknown',
       }}
+      title={tooltip()}
+      aria-label={tooltip() ? `${props.label}: ${props.value}. ${tooltip()}` : undefined}
     >
       <span class="kfExtractedBadgeLabel">{props.label}</span>
       <span>{props.value}</span>
@@ -254,7 +283,14 @@ function KingdomsForlornPlayBadges(props: {
     <div class="kfExtractedBadges">
       <Show
         when={entry().expeditionStep}
-        fallback={<KingdomsForlornExtractedBadge label="Step" value="Missing" tone="missing" />}
+        fallback={
+          <KingdomsForlornExtractedBadge
+            label="Step"
+            value="Missing"
+            tone="missing"
+            tooltip="This play has no parsed D1, EC, D2, or FC expedition step tag."
+          />
+        }
       >
         {(step) => (
           <KingdomsForlornExtractedBadge
@@ -267,7 +303,14 @@ function KingdomsForlornPlayBadges(props: {
       <Show when={showExpeditionDetails()}>
         <Show
           when={!isUnknownValue(entry().kingdom)}
-          fallback={<KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} tone="unknown" />}
+          fallback={
+            <KingdomsForlornExtractedBadge
+              label="Kingdom"
+              value={entry().kingdom}
+              tone="unknown"
+              tooltip="The kingdom tag is missing or could not be matched to a known Kingdoms Forlorn kingdom."
+            />
+          }
         >
           <KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} />
         </Show>
@@ -275,7 +318,14 @@ function KingdomsForlornPlayBadges(props: {
         <Show when={entry().freeRoam} fallback={
           <Show
             when={entry().quest}
-            fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
+            fallback={
+              <KingdomsForlornExtractedBadge
+                label="Quest"
+                value="Missing"
+                tone="missing"
+                tooltip="This play is not marked as free roam and has no parsed quest tag."
+              />
+            }
           >
             {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
           </Show>
@@ -285,7 +335,14 @@ function KingdomsForlornPlayBadges(props: {
 
         <Show
           when={hasKnownParty(entry())}
-          fallback={<KingdomsForlornExtractedBadge label="Party" value="Unknown" tone="unknown" />}
+          fallback={
+            <KingdomsForlornExtractedBadge
+              label="Party"
+              value="Unknown"
+              tone="unknown"
+              tooltip="No known knight was parsed for this play."
+            />
+          }
         >
           <KingdomsForlornExtractedBadge
             label="Party"
@@ -300,15 +357,21 @@ function KingdomsForlornPlayBadges(props: {
         when={entry().monster}
         fallback={
           <Show when={requiresMonster(entry())}>
-            <KingdomsForlornExtractedBadge label="Monster" value="Missing" tone="missing" />
+            <KingdomsForlornExtractedBadge
+              label="Monster"
+              value="Missing"
+              tone="missing"
+              tooltip="Exhibition clash and full clash plays should have a monster tag."
+            />
           </Show>
         }
       >
         {(monster) => (
           <KingdomsForlornExtractedBadge
             label="Monster"
-            value={monster()}
-            tone={forbidsMonster(entry()) ? 'unknown' : 'normal'}
+            value={monsterBadgeValue(entry(), monster())}
+            tone={forbidsMonster(entry()) || hasMultipleMonsters(entry()) ? 'unknown' : 'normal'}
+            tooltip={monsterWarningTooltip(entry())}
           />
         )}
       </Show>
@@ -317,7 +380,12 @@ function KingdomsForlornPlayBadges(props: {
         when={entry().monsterTier}
         fallback={
           <Show when={requiresMonster(entry())}>
-            <KingdomsForlornExtractedBadge label="Monster tier" value="Missing" tone="missing" />
+            <KingdomsForlornExtractedBadge
+              label="Monster tier"
+              value="Missing"
+              tone="missing"
+              tooltip="Exhibition clash and full clash plays should have a monster tier tag."
+            />
           </Show>
         }
       >
@@ -326,6 +394,11 @@ function KingdomsForlornPlayBadges(props: {
             label="Monster tier"
             value={`Tier ${monsterTier()}`}
             tone={forbidsMonster(entry()) ? 'unknown' : 'normal'}
+            tooltip={
+              forbidsMonster(entry())
+                ? 'Delve plays should not have a monster tier tag; monster tiers are only expected on clash plays.'
+                : undefined
+            }
           />
         )}
       </Show>
@@ -345,7 +418,14 @@ function KingdomsForlornPlayBadges(props: {
       </Show>
 
       <For each={entry().unknownTags}>
-        {(tag) => <KingdomsForlornExtractedBadge label="Raw tag" value={tag} tone="unknown" />}
+        {(tag) => (
+          <KingdomsForlornExtractedBadge
+            label="Raw tag"
+            value={tag}
+            tone="unknown"
+            tooltip="This BG Stats tag was not parsed as a known Kingdoms Forlorn value."
+          />
+        )}
       </For>
     </div>
   )
@@ -357,7 +437,14 @@ function KingdomsForlornExpeditionBadges(props: { section: KingdomsForlornExpedi
     <div class="kfExtractedBadges">
       <Show
         when={!isUnknownValue(section().kingdom)}
-        fallback={<KingdomsForlornExtractedBadge label="Kingdom" value={section().kingdom} tone="unknown" />}
+        fallback={
+          <KingdomsForlornExtractedBadge
+            label="Kingdom"
+            value={section().kingdom}
+            tone="unknown"
+            tooltip="The expedition kingdom is missing or could not be matched to a known Kingdoms Forlorn kingdom."
+          />
+        }
       >
         <KingdomsForlornExtractedBadge label="Kingdom" value={section().kingdom} />
       </Show>
@@ -365,7 +452,14 @@ function KingdomsForlornExpeditionBadges(props: { section: KingdomsForlornExpedi
       <Show when={section().freeRoam} fallback={
         <Show
           when={section().quest}
-          fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
+          fallback={
+            <KingdomsForlornExtractedBadge
+              label="Quest"
+              value="Missing"
+              tone="missing"
+              tooltip="This expedition is not marked as free roam and has no parsed quest tag."
+            />
+          }
         >
           {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
         </Show>
@@ -375,7 +469,14 @@ function KingdomsForlornExpeditionBadges(props: { section: KingdomsForlornExpedi
 
       <Show
         when={section().knights.length > 0}
-        fallback={<KingdomsForlornExtractedBadge label="Party" value="Unknown" tone="unknown" />}
+        fallback={
+          <KingdomsForlornExtractedBadge
+            label="Party"
+            value="Unknown"
+            tone="unknown"
+            tooltip="No known knight was parsed for this expedition."
+          />
+        }
       >
         <KingdomsForlornExtractedBadge label="Party" value={section().knights.join(', ')} />
       </Show>
@@ -1063,62 +1164,6 @@ export default function KingdomsForlornView(props: {
           }}
         />
 
-        <div class="statsBlock">
-          <div class="statsTitleRow">
-            <h3 class="statsTitle">Kingdom × Knight</h3>
-            <div class="tabs">
-              <button
-                type="button"
-                class="tabButton"
-                classList={{ tabButtonActive: matrixDisplayMode() === 'played' }}
-                onClick={() => setMatrixDisplayMode('played')}
-              >
-                Played/Unplayed
-              </button>
-              <button
-                type="button"
-                class="tabButton"
-                classList={{ tabButtonActive: matrixDisplayMode() === 'count' }}
-                onClick={() => setMatrixDisplayMode('count')}
-              >
-                Play counts
-              </button>
-            </div>
-          </div>
-          <div class="muted">Which knight you brought into each kingdom, with drilldown to the matching plays.</div>
-          <HeatmapMatrix
-            rows={kingdomsForlornContent.kingdoms}
-            cols={kingdomsForlornContent.knights}
-            rowHeader="Kingdom"
-            colHeader="Knight"
-            maxCount={pairMatrixMax()}
-            hideCounts={matrixDisplayMode() === 'played'}
-            getCount={(kingdom, knight) => pairMatrix().counts[kingdom]?.[knight] ?? 0}
-            getWinCount={(kingdom, knight) => pairMatrix().wins[kingdom]?.[knight] ?? 0}
-            getCellDisplayText={(kingdom, knight, count) => {
-              if (matrixDisplayMode() === 'count') return count === 0 ? '—' : String(count)
-              const wins = pairMatrix().wins[kingdom]?.[knight] ?? 0
-              if (count === 0) return '—'
-              if (wins <= 0) return '✗'
-              return '✓'
-            }}
-            getCellLabel={(kingdom, knight, count) => {
-              const wins = pairMatrix().wins[kingdom]?.[knight] ?? 0
-              if (count === 0) return `${kingdom} × ${knight}: unplayed`
-              return `${kingdom} × ${knight}: ${count} plays, ${wins} wins`
-            }}
-            rowGroupBy={(kingdom) => kingdomsForlornContent.kingdomGroupByName.get(kingdom)}
-            colGroupBy={(knight) => kingdomsForlornContent.knightGroupByName.get(knight)}
-            onCellClick={(kingdom, knight) => {
-              const playIds = pairMatrix().playIds.get(pairKey(kingdom, knight)) ?? []
-              if (playIds.length === 0) return
-              props.onOpenPlays({
-                title: `Kingdoms Forlorn • ${kingdom} × ${knight}`,
-                playIds,
-              })
-            }}
-          />
-        </div>
       </Show>
 
       <AchievementsPanel

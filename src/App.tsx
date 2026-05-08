@@ -74,6 +74,10 @@ const FEEDBACK_ADMIN_EMAIL = 'grahampople@gmail.com'
 const PLAYS_PER_PAGE = 25
 const PLAYS_CACHE_KEY = `bggPlaysCache:v1:${USERNAME}`
 const PLAYS_CACHE_TTL_MS = 30 * 60 * 1000
+const DEFAULT_ASSUMED_MINUTES_BY_OBJECT_ID = new Map<string, number>([
+  // Kinfire Chronicles: Night's Fall has BG Stats imports with length=0; use BGG's playing time as the fallback.
+  ['364655', 60],
+])
 
 type PlaysDrilldownReturn = {
   mainTab: MainTab
@@ -122,7 +126,7 @@ function App() {
   const [pinnedAchievementsLoading, setPinnedAchievementsLoading] = createSignal(false)
   const [thumbnailsByObjectId, setThumbnailsByObjectId] = createSignal(new Map<string, string>())
   const [assumedMinutesByObjectId, setAssumedMinutesByObjectId] = createSignal(
-    new Map<string, number>(),
+    new Map(DEFAULT_ASSUMED_MINUTES_BY_OBJECT_ID),
   )
   const [thingSummaryStatusVersion, setThingSummaryStatusVersion] = createSignal(0)
 
@@ -405,7 +409,7 @@ function App() {
     thingSummaryResolved.clear()
     queuedThingSummaryObjectIds.clear()
     setThumbnailsByObjectId(new Map())
-    setAssumedMinutesByObjectId(new Map())
+    setAssumedMinutesByObjectId(new Map(DEFAULT_ASSUMED_MINUTES_BY_OBJECT_ID))
     bumpThingSummaryStatusVersion()
     return removed
   }
@@ -682,6 +686,7 @@ function App() {
       selectedMonthKey: selectedMonthKey(),
     }
     pushNavState(next)
+    setMainTab('plays')
     setSelectedGameKey(gameKey)
     setPlaysView('gameDetail')
     resetPage()

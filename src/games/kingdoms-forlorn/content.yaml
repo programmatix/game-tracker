@@ -46,16 +46,6 @@ quests:
     id: Q5
 
 kingdoms:
-  - display: Barony of Bountiful Harvest
-    id: Barony
-    group: Core
-    box: Collection
-    aliases: [Bountiful Harvest, BH]
-  - display: Red Kingdom
-    id: RedKingdom
-    group: Core
-    box: Collection
-    aliases: [Red, RK]
   - display: Sunken Kingdom
     id: SunkenKingdom
     group: Core

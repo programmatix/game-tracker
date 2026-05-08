@@ -29,6 +29,7 @@ export type GamePreferences = {
   isScenarioGame: boolean
   status: GameStatus
   estimatedDeliveryMonth?: string
+  hasProvidedShippingAddress: boolean
 }
 
 export type StoredGamePreferences = Partial<GamePreferences>
@@ -64,6 +65,7 @@ export function defaultGamePreferencesFor(gameId: string): GamePreferences {
     isCampaignGame: game.defaultIsCampaignGame,
     isScenarioGame: game.defaultIsScenarioGame,
     status: 'active',
+    hasProvidedShippingAddress: false,
   }
 }
 
@@ -100,6 +102,10 @@ export function resolveGamePreferences(
     estimatedDeliveryMonth: raw?.status === 'waitingOnShipping'
       ? normalizeEstimatedDeliveryMonth(raw?.estimatedDeliveryMonth)
       : undefined,
+    hasProvidedShippingAddress:
+      raw?.status === 'waitingOnShipping' && typeof raw?.hasProvidedShippingAddress === 'boolean'
+        ? raw.hasProvidedShippingAddress
+        : false,
   }
 }
 
@@ -151,6 +157,9 @@ export function normalizeStoredGamePreferencesById(input: unknown): StoredGamePr
       next.status === 'waitingOnShipping' ? normalizeEstimatedDeliveryMonth(rawRecord.estimatedDeliveryMonth) : undefined
     if (estimatedDeliveryMonth) {
       next.estimatedDeliveryMonth = estimatedDeliveryMonth
+    }
+    if (next.status === 'waitingOnShipping' && typeof rawRecord.hasProvidedShippingAddress === 'boolean') {
+      next.hasProvidedShippingAddress = rawRecord.hasProvidedShippingAddress
     }
 
     if (Object.keys(next).length > 0) normalized[game.id] = next
