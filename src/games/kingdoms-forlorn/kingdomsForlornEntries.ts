@@ -13,6 +13,7 @@ export type KingdomsForlornEntry = {
   knights: string[]
   myKnight?: string
   quest?: string
+  freeRoam: boolean
   expeditionStep?: KingdomsForlornExpeditionStep
   monster?: string
   monsterTier?: number
@@ -80,7 +81,10 @@ function applyExpeditionMetadata(entries: KingdomsForlornEntry[]): void {
 
     const kingdom = anchor.kingdom || chooseMostCommonOrFirst(current.map((entry) => entry.kingdom))
     const myKnight = anchor.myKnight || chooseMostCommonOrFirst(current.map((entry) => entry.myKnight || ''))
-    const quest = anchor.quest || chooseMostCommonOrFirst(current.map((entry) => entry.quest || ''))
+    const isFreeRoam = current.some((entry) => entry.freeRoam) && !current.some((entry) => entry.quest)
+    const quest = isFreeRoam
+      ? undefined
+      : anchor.quest || chooseMostCommonOrFirst(current.map((entry) => entry.quest || ''))
     const knights = anchor.knights.some(Boolean)
       ? anchor.knights.slice()
       : [
@@ -95,7 +99,7 @@ function applyExpeditionMetadata(entries: KingdomsForlornEntry[]): void {
     for (const entry of current) {
       if (!entry.kingdom && kingdom) entry.kingdom = kingdom
       if (!entry.myKnight && myKnight) entry.myKnight = myKnight
-      if (!entry.quest && quest) entry.quest = quest
+      if (!entry.freeRoam && !entry.quest && quest) entry.quest = quest
       if (entry.knights.length === 0 && knights.length > 0) entry.knights = knights.slice()
       for (const knight of knights) {
         if (knight && !entry.knights.includes(knight)) entry.knights.push(knight)
@@ -115,7 +119,11 @@ function applyExpeditionMetadata(entries: KingdomsForlornEntry[]): void {
     }
 
     const stepSort = expeditionStepSortValue(step)
-    if (step === 'D1' || (current.length > 0 && stepSort <= previousStepSort)) closeCurrent()
+    const startsNewExpedition =
+      current.length > 0 &&
+      ((step === 'D1' && previousStepSort !== expeditionStepSortValue('D1')) ||
+        (step !== 'D1' && stepSort <= previousStepSort))
+    if (startsNewExpedition) closeCurrent()
     current.push(entry)
     previousStepSort = stepSort
   }
@@ -141,6 +149,7 @@ export function getKingdomsForlornEntries(
           kingdom: parsed.kingdom,
           knight: parsed.knight,
           quest: parsed.quest,
+          freeRoam: parsed.freeRoam,
           expeditionStep: parsed.expeditionStep,
           monster: parsed.monster,
           monsterTier: parsed.monsterTier,
@@ -151,10 +160,15 @@ export function getKingdomsForlornEntries(
       })
 
       const myPlayer = parsedPlayers.find((player) => player.username === user)
+      const questingPlayer =
+        parsedPlayers.find((player) => player.quest && player.knight) ||
+        parsedPlayers.find((player) => player.quest)
+      const primaryPlayer = questingPlayer || myPlayer
       const kingdomCandidates = parsedPlayers.map((player) => player.kingdom).filter(Boolean) as string[]
       const knightCandidates = parsedPlayers.map((player) => player.knight).filter(Boolean) as string[]
-      const myKnight = myPlayer?.knight?.trim() || undefined
-      const quest = myPlayer?.quest?.trim() || undefined
+      const myKnight = questingPlayer?.knight?.trim() || myPlayer?.knight?.trim() || undefined
+      const freeRoam = parsedPlayers.some((player) => player.freeRoam)
+      const quest = freeRoam ? undefined : questingPlayer?.quest?.trim() || myPlayer?.quest?.trim() || undefined
       const expeditionStep =
         myPlayer?.expeditionStep ||
         chooseMostCommonOrFirst(
@@ -184,16 +198,17 @@ export function getKingdomsForlornEntries(
       return {
         play,
         campaign: myKnight || '',
-        kingdom: myPlayer?.kingdom?.trim() || chooseMostCommonOrFirst(kingdomCandidates) || '',
+        kingdom: primaryPlayer?.kingdom?.trim() || chooseMostCommonOrFirst(kingdomCandidates) || '',
         knights,
         myKnight,
         quest,
+        freeRoam,
         expeditionStep: expeditionStep as KingdomsForlornExpeditionStep | undefined,
         monster,
         monsterTier: Number.isFinite(monsterTier) ? monsterTier : undefined,
         unknownTags,
         quantity: playQuantity(play),
-        isWin: myPlayer?.win === true,
+        isWin: primaryPlayer?.win === true,
         continuedFromPrevious: parsedPlayers.some((player) => player.continuePrevious),
         continuedToNext: parsedPlayers.some((player) => player.continueNext),
       }
@@ -204,7 +219,7 @@ export function getKingdomsForlornEntries(
     if (entry.continuedFromPrevious && previousResolved) {
       if (!entry.kingdom && previousResolved.kingdom) entry.kingdom = previousResolved.kingdom
       if (!entry.myKnight && previousResolved.myKnight) entry.myKnight = previousResolved.myKnight
-      if (!entry.quest && previousResolved.quest) entry.quest = previousResolved.quest
+      if (!entry.freeRoam && !entry.quest && previousResolved.quest) entry.quest = previousResolved.quest
     }
     entry.campaign = entry.myKnight || ''
     if (entry.myKnight && !entry.knights.includes(entry.myKnight)) entry.knights.push(entry.myKnight)
@@ -226,7 +241,7 @@ export function getKingdomsForlornEntries(
     if (entry.continuedToNext && nextResolved) {
       if (!entry.kingdom && nextResolved.kingdom) entry.kingdom = nextResolved.kingdom
       if (!entry.myKnight && nextResolved.myKnight) entry.myKnight = nextResolved.myKnight
-      if (!entry.quest && nextResolved.quest) entry.quest = nextResolved.quest
+      if (!entry.freeRoam && !entry.quest && nextResolved.quest) entry.quest = nextResolved.quest
     }
     entry.campaign = entry.myKnight || ''
     if (entry.myKnight && !entry.knights.includes(entry.myKnight)) entry.knights.push(entry.myKnight)

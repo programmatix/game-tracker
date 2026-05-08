@@ -5,6 +5,7 @@ export type KingdomsForlornPlayerTags = {
   kingdom?: string
   knight?: string
   quest?: string
+  freeRoam: boolean
   expeditionStep?: KingdomsForlornExpeditionStep
   monster?: string
   monsterTier?: number
@@ -65,6 +66,11 @@ function resolveQuest(value: string): string | undefined {
   const token = normalizeQuestToken(value)
   if (!token) return undefined
   return kingdomsForlornContent.questsById.get(normalizeId(token))
+}
+
+function isFreeRoamToken(value: string): boolean {
+  const normalized = normalizeId(value)
+  return normalized === 'freeroam' || normalized === 'roam'
 }
 
 export function kingdomForlornExpeditionStepLabel(step: KingdomsForlornExpeditionStep): string {
@@ -179,7 +185,10 @@ function isRecognizedKeyValueSegment(key: string, value: string): boolean {
     return true
   }
 
-  if (['q', 'quest', 'scenario'].includes(normalizedKey) && resolveQuest(value)) {
+  if (
+    ['q', 'quest', 'scenario'].includes(normalizedKey) &&
+    (resolveQuest(value) || isFreeRoamToken(value))
+  ) {
     return true
   }
 
@@ -232,6 +241,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
     getBgStatsValue(parsedKv, ['K', 'Knight', 'Char', 'Character', 'Hero', 'Player']) || '',
   )
   let quest = resolveQuest(getBgStatsValue(parsedKv, ['Q', 'Quest', 'Scenario']) || '')
+  let freeRoam = isFreeRoamToken(getBgStatsValue(parsedKv, ['Q', 'Quest', 'Scenario']) || '')
   let expeditionStep = resolveExpeditionStep(
     getBgStatsValue(parsedKv, ['E', 'Expedition', 'Step', 'Session']) || '',
   ) || getExpeditionStepFromKeyValues(parsedKv)
@@ -276,6 +286,11 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
       continue
     }
 
+    if (!quest && isFreeRoamToken(normalized)) {
+      freeRoam = true
+      continue
+    }
+
     const expeditionStepFromTag = resolveExpeditionStep(normalized)
     if (!expeditionStep && expeditionStepFromTag) {
       expeditionStep = expeditionStepFromTag
@@ -301,6 +316,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
     kingdom,
     knight,
     quest,
+    freeRoam,
     expeditionStep,
     monster,
     monsterTier,

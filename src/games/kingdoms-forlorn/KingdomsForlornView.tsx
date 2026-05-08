@@ -34,7 +34,8 @@ function pairKey(left: string, right: string): string {
 }
 
 const EXPEDITION_STEP_ORDER: KingdomsForlornExpeditionStep[] = ['D1', 'EC', 'D2', 'FC']
-const MONSTER_TIER_KEYS = ['1', '2', '3', '4']
+const UNKNOWN_MONSTER_TIER_KEY = 'Unknown'
+const MONSTER_TIER_KEYS = ['1', '2', '3', '4', UNKNOWN_MONSTER_TIER_KEY]
 
 type KingdomsForlornExpeditionSection = {
   key: string
@@ -42,6 +43,7 @@ type KingdomsForlornExpeditionSection = {
   summary: string
   kingdom: string
   quest?: string
+  freeRoam: boolean
   myKnight?: string
   knights: string[]
   entries: KingdomsForlornEntry[]
@@ -86,6 +88,10 @@ function hasKnownParty(entry: KingdomsForlornEntry): boolean {
 
 function requiresMonster(entry: KingdomsForlornEntry): boolean {
   return entry.expeditionStep === 'EC' || entry.expeditionStep === 'FC'
+}
+
+function forbidsMonster(entry: KingdomsForlornEntry): boolean {
+  return entry.expeditionStep === 'D1' || entry.expeditionStep === 'D2'
 }
 
 function buildExpeditionLabel(index: number, entries: KingdomsForlornEntry[]): string {
@@ -134,6 +140,7 @@ function buildExpeditionSummary(entries: KingdomsForlornEntry[]): string {
 function buildExpeditionMetadata(entries: KingdomsForlornEntry[]): {
   kingdom: string
   quest?: string
+  freeRoam: boolean
   myKnight?: string
   knights: string[]
 } {
@@ -148,6 +155,7 @@ function buildExpeditionMetadata(entries: KingdomsForlornEntry[]): {
   return {
     kingdom: anchor?.kingdom || 'Unknown kingdom',
     quest: anchor?.quest,
+    freeRoam: !anchor?.quest && entries.some((entry) => entry.freeRoam),
     myKnight: anchor?.myKnight,
     knights: knownKnights,
   }
@@ -173,6 +181,7 @@ function groupKingdomsForlornExpeditions(entries: KingdomsForlornEntry[]): {
       summary: buildExpeditionSummary(current),
       kingdom: metadata.kingdom,
       quest: metadata.quest,
+      freeRoam: metadata.freeRoam,
       myKnight: metadata.myKnight,
       knights: metadata.knights,
       entries: current,
@@ -189,7 +198,11 @@ function groupKingdomsForlornExpeditions(entries: KingdomsForlornEntry[]): {
     }
 
     const stepSort = expeditionStepSortValue(step)
-    if (step === 'D1' || (current.length > 0 && stepSort <= previousStepSort)) closeCurrent()
+    const startsNewExpedition =
+      current.length > 0 &&
+      ((step === 'D1' && previousStepSort !== expeditionStepSortValue('D1')) ||
+        (step !== 'D1' && stepSort <= previousStepSort))
+    if (startsNewExpedition) closeCurrent()
     current.push(entry)
     previousStepSort = stepSort
   }
@@ -259,18 +272,15 @@ function KingdomsForlornPlayBadges(props: {
           <KingdomsForlornExtractedBadge label="Kingdom" value={entry().kingdom} />
         </Show>
 
-        <Show
-          when={entry().quest}
-          fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
-        >
-          {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
-        </Show>
-
-        <Show
-          when={!isUnknownValue(entry().myKnight)}
-          fallback={<KingdomsForlornExtractedBadge label="My knight" value="Unknown" tone="unknown" />}
-        >
-          <KingdomsForlornExtractedBadge label="My knight" value={entry().myKnight!} />
+        <Show when={entry().freeRoam} fallback={
+          <Show
+            when={entry().quest}
+            fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
+          >
+            {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
+          </Show>
+        }>
+          <KingdomsForlornExtractedBadge label="Quest" value="Free roam" />
         </Show>
 
         <Show
@@ -294,7 +304,13 @@ function KingdomsForlornPlayBadges(props: {
           </Show>
         }
       >
-        {(monster) => <KingdomsForlornExtractedBadge label="Monster" value={monster()} />}
+        {(monster) => (
+          <KingdomsForlornExtractedBadge
+            label="Monster"
+            value={monster()}
+            tone={forbidsMonster(entry()) ? 'unknown' : 'normal'}
+          />
+        )}
       </Show>
 
       <Show
@@ -306,11 +322,15 @@ function KingdomsForlornPlayBadges(props: {
         }
       >
         {(monsterTier) => (
-          <KingdomsForlornExtractedBadge label="Monster tier" value={`Tier ${monsterTier()}`} />
+          <KingdomsForlornExtractedBadge
+            label="Monster tier"
+            value={`Tier ${monsterTier()}`}
+            tone={forbidsMonster(entry()) ? 'unknown' : 'normal'}
+          />
         )}
       </Show>
 
-      <KingdomsForlornExtractedBadge label="Result" value={entry().isWin ? 'Win' : 'Loss'} />
+      {/* <KingdomsForlornExtractedBadge label="Result" value={entry().isWin ? 'Win' : 'Loss'} /> */}
 
       <Show when={entry().continuedFromPrevious || entry().continuedToNext}>
         <KingdomsForlornExtractedBadge
@@ -342,18 +362,15 @@ function KingdomsForlornExpeditionBadges(props: { section: KingdomsForlornExpedi
         <KingdomsForlornExtractedBadge label="Kingdom" value={section().kingdom} />
       </Show>
 
-      <Show
-        when={section().quest}
-        fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
-      >
-        {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
-      </Show>
-
-      <Show
-        when={!isUnknownValue(section().myKnight)}
-        fallback={<KingdomsForlornExtractedBadge label="My knight" value="Unknown" tone="unknown" />}
-      >
-        <KingdomsForlornExtractedBadge label="My knight" value={section().myKnight!} />
+      <Show when={section().freeRoam} fallback={
+        <Show
+          when={section().quest}
+          fallback={<KingdomsForlornExtractedBadge label="Quest" value="Missing" tone="missing" />}
+        >
+          {(quest) => <KingdomsForlornExtractedBadge label="Quest" value={quest()} />}
+        </Show>
+      }>
+        <KingdomsForlornExtractedBadge label="Quest" value="Free roam" />
       </Show>
 
       <Show
@@ -632,7 +649,8 @@ export default function KingdomsForlornView(props: {
   )
   const taggedPlays = createMemo(() =>
     entries().reduce(
-      (sum, entry) => sum + (entry.campaign === 'Unknown campaign' && !entry.quest ? 0 : entry.quantity),
+      (sum, entry) =>
+        sum + (entry.campaign === 'Unknown campaign' && !entry.quest && !entry.freeRoam ? 0 : entry.quantity),
       0,
     ),
   )
@@ -759,8 +777,8 @@ export default function KingdomsForlornView(props: {
     const playIds = new Map<string, number[]>()
 
     for (const entry of entries()) {
-      if (!entry.monster || entry.monsterTier === undefined) continue
-      const tier = String(entry.monsterTier)
+      if (!entry.monster) continue
+      const tier = entry.monsterTier === undefined ? UNKNOWN_MONSTER_TIER_KEY : String(entry.monsterTier)
       if (!MONSTER_TIER_KEYS.includes(tier)) continue
       ;(counts[entry.monster] ||= {})
       incrementCount(counts[entry.monster]!, tier, entry.quantity)
@@ -990,6 +1008,7 @@ export default function KingdomsForlornView(props: {
               hideCounts
               getCount={(monster, tier) => monsterTierMatrix().counts[monster]?.[tier] ?? 0}
               getWinCount={(monster, tier) => monsterTierMatrix().wins[monster]?.[tier] ?? 0}
+              getColLabel={(tier) => (tier === UNKNOWN_MONSTER_TIER_KEY ? '?' : tier)}
               getCellDisplayText={(monster, tier, count) => {
                 if (count === 0) return '—'
                 const wins = monsterTierMatrix().wins[monster]?.[tier] ?? 0
@@ -997,15 +1016,18 @@ export default function KingdomsForlornView(props: {
               }}
               getCellLabel={(monster, tier, count) => {
                 const wins = monsterTierMatrix().wins[monster]?.[tier] ?? 0
-                if (count === 0) return `${monster} tier ${tier}: unplayed`
-                return `${monster} tier ${tier}: ${count} fights, ${wins} wins`
+                const tierLabel = tier === UNKNOWN_MONSTER_TIER_KEY ? 'unknown tier' : `tier ${tier}`
+                if (count === 0) return `${monster} ${tierLabel}: unplayed`
+                return `${monster} ${tierLabel}: ${count} fights, ${wins} wins`
               }}
               rowGroupBy={(monster) => kingdomsForlornContent.monsterGroupByName.get(monster)}
               onCellClick={(monster, tier) => {
                 const playIds = uniquePlayIds(monsterTierMatrix().playIds.get(pairKey(monster, tier)) ?? [])
                 if (playIds.length === 0) return
                 props.onOpenPlays({
-                  title: `Kingdoms Forlorn • ${monster} • Tier ${tier}`,
+                  title: `Kingdoms Forlorn • ${monster} • ${
+                    tier === UNKNOWN_MONSTER_TIER_KEY ? 'Unknown tier' : `Tier ${tier}`
+                  }`,
                   playIds,
                 })
               }}
