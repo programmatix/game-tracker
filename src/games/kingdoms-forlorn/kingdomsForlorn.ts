@@ -4,6 +4,7 @@ import { kingdomsForlornContent } from './content'
 export type KingdomsForlornPlayerTags = {
   kingdom?: string
   knight?: string
+  knights: string[]
   quest?: string
   freeRoam: boolean
   expeditionStep?: KingdomsForlornExpeditionStep
@@ -247,6 +248,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
   let knight = resolveKnight(
     getBgStatsValue(parsedKv, ['K', 'Knight', 'Char', 'Character', 'Hero', 'Player']) || '',
   )
+  const knights = knight ? [knight] : []
   let quest = resolveQuest(getBgStatsValue(parsedKv, ['Q', 'Quest', 'Scenario']) || '')
   let freeRoam = isFreeRoamToken(getBgStatsValue(parsedKv, ['Q', 'Quest', 'Scenario']) || '')
   let expeditionStep = resolveExpeditionStep(
@@ -283,8 +285,9 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
     }
 
     const knightFromTag = resolveKnight(normalized)
-    if (!knight && knightFromTag) {
-      knight = knightFromTag
+    if (knightFromTag) {
+      if (!knight) knight = knightFromTag
+      knights.push(knightFromTag)
       continue
     }
 
@@ -324,6 +327,7 @@ export function parseKingdomsForlornPlayerColor(color: string): KingdomsForlornP
   return {
     kingdom,
     knight,
+    knights: [...new Set(knights)],
     quest,
     freeRoam,
     expeditionStep,

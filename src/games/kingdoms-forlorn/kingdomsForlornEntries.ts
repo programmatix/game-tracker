@@ -149,6 +149,7 @@ export function getKingdomsForlornEntries(
           win: player.attributes.win === '1',
           kingdom: parsed.kingdom,
           knight: parsed.knight,
+          knights: parsed.knights,
           quest: parsed.quest,
           freeRoam: parsed.freeRoam,
           expeditionStep: parsed.expeditionStep,
@@ -167,7 +168,7 @@ export function getKingdomsForlornEntries(
         parsedPlayers.find((player) => player.quest)
       const primaryPlayer = questingPlayer || myPlayer
       const kingdomCandidates = parsedPlayers.map((player) => player.kingdom).filter(Boolean) as string[]
-      const knightCandidates = parsedPlayers.map((player) => player.knight).filter(Boolean) as string[]
+      const knightCandidates = parsedPlayers.flatMap((player) => player.knights)
       const myKnight = questingPlayer?.knight?.trim() || myPlayer?.knight?.trim() || undefined
       const freeRoam = parsedPlayers.some((player) => player.freeRoam)
       const quest = freeRoam ? undefined : questingPlayer?.quest?.trim() || myPlayer?.quest?.trim() || undefined

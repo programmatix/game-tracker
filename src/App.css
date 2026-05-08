@@ -666,6 +666,16 @@
   color: rgba(254, 202, 202, 0.78);
 }
 
+.kfExtractedBadgeMuted {
+  border-color: rgba(148, 163, 184, 0.32);
+  background: rgba(148, 163, 184, 0.11);
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.kfExtractedBadgeMuted .kfExtractedBadgeLabel {
+  color: rgba(203, 213, 225, 0.66);
+}
+
 .gameOptionsView {
   gap: 14px;
 }

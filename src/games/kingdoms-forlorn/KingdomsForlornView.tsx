@@ -105,7 +105,7 @@ function monsterBadgeValue(entry: KingdomsForlornEntry, monster: string): string
 
 function monsterWarningTooltip(entry: KingdomsForlornEntry): string | undefined {
   if (forbidsMonster(entry)) {
-    return 'Delve plays should not have a monster tag; monsters are only expected on clash plays.'
+    return 'Monster tags on delve plays are shown for reference but are only validated on clash plays.'
   }
   if (hasMultipleMonsters(entry)) {
     return `Clash plays should have exactly one monster tag. Parsed monsters: ${entry.monsters.join(', ')}.`
@@ -247,7 +247,7 @@ function groupKingdomsForlornExpeditions(entries: KingdomsForlornEntry[]): {
 function KingdomsForlornExtractedBadge(props: {
   label: string
   value: string
-  tone?: 'normal' | 'missing' | 'unknown'
+  tone?: 'normal' | 'missing' | 'unknown' | 'muted'
   tooltip?: string
 }) {
   const tooltip = () =>
@@ -263,6 +263,7 @@ function KingdomsForlornExtractedBadge(props: {
       classList={{
         kfExtractedBadgeMissing: props.tone === 'missing',
         kfExtractedBadgeUnknown: props.tone === 'unknown',
+        kfExtractedBadgeMuted: props.tone === 'muted',
       }}
       title={tooltip()}
       aria-label={tooltip() ? `${props.label}: ${props.value}. ${tooltip()}` : undefined}
@@ -370,7 +371,9 @@ function KingdomsForlornPlayBadges(props: {
           <KingdomsForlornExtractedBadge
             label="Monster"
             value={monsterBadgeValue(entry(), monster())}
-            tone={forbidsMonster(entry()) || hasMultipleMonsters(entry()) ? 'unknown' : 'normal'}
+            tone={
+              forbidsMonster(entry()) ? 'muted' : hasMultipleMonsters(entry()) ? 'unknown' : 'normal'
+            }
             tooltip={monsterWarningTooltip(entry())}
           />
         )}
@@ -393,10 +396,10 @@ function KingdomsForlornPlayBadges(props: {
           <KingdomsForlornExtractedBadge
             label="Monster tier"
             value={`Tier ${monsterTier()}`}
-            tone={forbidsMonster(entry()) ? 'unknown' : 'normal'}
+            tone={forbidsMonster(entry()) ? 'muted' : 'normal'}
             tooltip={
               forbidsMonster(entry())
-                ? 'Delve plays should not have a monster tier tag; monster tiers are only expected on clash plays.'
+                ? 'Monster tier tags on delve plays are shown for reference but are only validated on clash plays.'
                 : undefined
             }
           />
