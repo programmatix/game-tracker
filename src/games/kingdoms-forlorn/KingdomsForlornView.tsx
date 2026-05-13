@@ -11,6 +11,7 @@ import {
   pickBestAvailableAchievementForTrackIds,
   slugifyAchievementItemId,
 } from '../../achievements/nextAchievement'
+import { formatDurationHoursMinutes } from '../../costsShared'
 import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from '../../playDuration'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
 import { BGG_LINK_TOOLTIP, bggPlayUrl } from '../../playsHelpers'
@@ -36,6 +37,22 @@ function pairKey(left: string, right: string): string {
 const EXPEDITION_STEP_ORDER: KingdomsForlornExpeditionStep[] = ['D1', 'EC', 'D2', 'FC']
 const UNKNOWN_MONSTER_TIER_KEY = 'Unknown'
 const MONSTER_TIER_KEYS = ['1', '2', '3', '4', UNKNOWN_MONSTER_TIER_KEY]
+const MONSTER_TIER_LABELS: Record<string, string> = {
+  '1': 'Mob',
+  '2': 'Vassal',
+  '3': 'King',
+  '4': 'Tier 4',
+  [UNKNOWN_MONSTER_TIER_KEY]: 'Unknown tier',
+}
+
+type KingdomsForlornTierTimeRow = {
+  tier: string
+  label: string
+  plays: number
+  hours: number
+  hasAssumedHours: boolean
+  playIds: number[]
+}
 
 type KingdomsForlornExpeditionSection = {
   key: string
@@ -74,6 +91,17 @@ function playerSummary(play: BggPlay): string {
 
 function playLengthLabel(play: BggPlay): string {
   return formatPlayLength(play.attributes.length) || 'No length'
+}
+
+function monsterTierKey(entry: KingdomsForlornEntry): string {
+  return entry.monsterTier === undefined ? UNKNOWN_MONSTER_TIER_KEY : String(entry.monsterTier)
+}
+
+function monsterTierLabel(tier: string): string {
+  const label = MONSTER_TIER_LABELS[tier]
+  if (!label) return `Tier ${tier}`
+  if (tier === UNKNOWN_MONSTER_TIER_KEY || label === `Tier ${tier}`) return label
+  return `${label} (tier ${tier})`
 }
 
 function isUnknownValue(value: string | undefined): boolean {
@@ -751,6 +779,45 @@ export default function KingdomsForlornView(props: {
       0,
     ),
   )
+  const monsterTierTimeRows = createMemo<KingdomsForlornTierTimeRow[]>(() => {
+    const rowsByTier = new Map<string, KingdomsForlornTierTimeRow>()
+    const ensureRow = (tier: string) => {
+      let row = rowsByTier.get(tier)
+      if (!row) {
+        row = {
+          tier,
+          label: monsterTierLabel(tier),
+          plays: 0,
+          hours: 0,
+          hasAssumedHours: false,
+          playIds: [],
+        }
+        rowsByTier.set(tier, row)
+      }
+      return row
+    }
+
+    for (const tier of MONSTER_TIER_KEYS) ensureRow(tier)
+
+    for (const entry of entries()) {
+      if (!requiresMonster(entry)) continue
+      const tier = monsterTierKey(entry)
+      const row = ensureRow(tier)
+      const resolved = totalPlayMinutesWithAssumption({
+        attributes: entry.play.attributes,
+        quantity: entry.quantity,
+        assumedMinutesPerPlay: assumedMinutesPerPlay(),
+      })
+      row.plays += entry.quantity
+      row.hours += resolved.minutes / 60
+      row.hasAssumedHours ||= resolved.assumed
+      row.playIds.push(entry.play.id)
+    }
+
+    return MONSTER_TIER_KEYS
+      .map((tier) => rowsByTier.get(tier)!)
+      .filter((row) => row.plays > 0 || row.tier !== UNKNOWN_MONSTER_TIER_KEY)
+  })
   const taggedPlays = createMemo(() =>
     entries().reduce(
       (sum, entry) =>
@@ -882,7 +949,7 @@ export default function KingdomsForlornView(props: {
 
     for (const entry of entries()) {
       if (!entry.monster) continue
-      const tier = entry.monsterTier === undefined ? UNKNOWN_MONSTER_TIER_KEY : String(entry.monsterTier)
+      const tier = monsterTierKey(entry)
       if (!MONSTER_TIER_KEYS.includes(tier)) continue
       ;(counts[entry.monster] ||= {})
       incrementCount(counts[entry.monster]!, tier, entry.quantity)
@@ -1043,6 +1110,56 @@ export default function KingdomsForlornView(props: {
         <Show when={totalHoursHasAssumed()}>
           <div class="muted">
             <span class="mono">*</span> Estimated time from BGG game data (playing time) when a play has no recorded length.
+          </div>
+        </Show>
+
+        <Show when={monsterTierTimeRows().some((row) => row.plays > 0)}>
+          <div class="statsBlock">
+            <h3 class="statsTitle">Monster Tier Time</h3>
+            <div class="tableWrap compact">
+              <table class="table compactTable mobileCardTable">
+                <thead>
+                  <tr>
+                    <th>Tier</th>
+                    <th class="mono">Plays</th>
+                    <th class="mono">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <For each={monsterTierTimeRows()}>
+                    {(row) => (
+                      <tr>
+                        <td data-label="Tier">{row.label}</td>
+                        <td class="mono" data-label="Plays">
+                          <Show
+                            when={row.playIds.length > 0}
+                            fallback={row.plays.toLocaleString()}
+                          >
+                            <button
+                              type="button"
+                              class="countLink"
+                              onClick={() =>
+                                props.onOpenPlays({
+                                  title: `Kingdoms Forlorn • ${row.label}`,
+                                  playIds: uniquePlayIds(row.playIds),
+                                })
+                              }
+                              title="View plays"
+                            >
+                              {row.plays.toLocaleString()}
+                            </button>
+                          </Show>
+                        </td>
+                        <td class="mono" data-label="Time">
+                          {formatDurationHoursMinutes(row.hours)}
+                          {row.hasAssumedHours ? '*' : ''}
+                        </td>
+                      </tr>
+                    )}
+                  </For>
+                </tbody>
+              </table>
+            </div>
           </div>
         </Show>
 
