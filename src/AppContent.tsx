@@ -34,6 +34,9 @@ import PlaysView, { PlaysPager } from './PlaysView'
 import type { SpiritIslandSession } from './games/spirit-island/mindwanderer'
 import type { GamePreferences, ResolvedGamePreferencesById } from './gamePreferences'
 
+const AeonTrespassOdysseyView = lazy(
+  () => import('./games/aeon-trespass-odyssey/AeonTrespassOdysseyView'),
+)
 const FinalGirlView = lazy(() => import('./games/final-girl/FinalGirlView'))
 const DeathMayDieView = lazy(() => import('./games/death-may-die/DeathMayDieView'))
 const MistfallView = lazy(() => import('./games/mistfall/MistfallView'))
@@ -144,6 +147,8 @@ function GameViewLoadingFallback() {
 
 function renderSharedGameView(tab: MainTab, props: SharedGameViewProps) {
   switch (tab) {
+    case 'aeonTrespassOdyssey':
+      return <AeonTrespassOdysseyView {...props} />
     case 'finalGirl':
       return <FinalGirlView {...props} />
     case 'skytearHorde':

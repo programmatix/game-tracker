@@ -1,4 +1,8 @@
 import type { BggPlay } from './bgg'
+import {
+  getAeonTrespassOdysseyEntries,
+} from './games/aeon-trespass-odyssey/aeonTrespassOdysseyEntries'
+import { aeonTrespassOdysseyContent } from './games/aeon-trespass-odyssey/content'
 import { getArkhamHorrorLcgEntries } from './games/arkham-horror-lcg/arkhamHorrorLcgEntries'
 import { arkhamHorrorLcgContent } from './games/arkham-horror-lcg/content'
 import {
@@ -80,6 +84,8 @@ function sumQuantities<T extends { quantity: number }>(entries: readonly T[]): n
 
 function getEntriesForTrackedGame(plays: BggPlay[], username: string, gameId: ProgressTrackedGameId) {
   switch (gameId) {
+    case 'aeonTrespassOdyssey':
+      return getAeonTrespassOdysseyEntries(plays, username)
     case 'arkhamHorrorLcg':
       return getArkhamHorrorLcgEntries(plays, username)
     case 'earthborneRangers':
@@ -174,6 +180,22 @@ function buildCampaignDefinitionProgressRows<T extends { play: BggPlay; quantity
 }
 
 const CAMPAIGN_PROGRESS_DEFINITIONS: ReadonlyArray<CampaignProgressDefinition> = [
+  {
+    id: 'aeonTrespassOdyssey',
+    name: 'Aeon Trespass: Odyssey',
+    unitLabel: 'days',
+    build: (plays, username) => {
+      const entries = getAeonTrespassOdysseyEntries(plays, username)
+      return {
+        plays: sumQuantities(entries),
+        completedCount: countKnownCoverage(
+          entries.map((entry) => entry.day),
+          aeonTrespassOdysseyContent.days,
+        ),
+        totalCount: aeonTrespassOdysseyContent.days.length,
+      }
+    },
+  },
   {
     id: 'arkhamHorrorLcg',
     name: 'Arkham Horror LCG',
@@ -404,6 +426,17 @@ export function buildCampaignProgressRowsWithCampaignBreakdown(
 ): CampaignProgressRow[] {
   const rowsByGameId = new Map(buildCampaignProgressRows(plays, username, assumedMinutesByObjectId).map((row) => [row.gameId, row]))
 
+  const aeonTrespassRows = buildCampaignDefinitionProgressRows({
+    id: 'aeonTrespassOdyssey',
+    name: 'Aeon Trespass: Odyssey',
+    unitLabel: 'days',
+    campaigns: aeonTrespassOdysseyContent.cycles,
+    stepsByCampaign: aeonTrespassOdysseyContent.dayNamesByCycleName,
+    entries: getAeonTrespassOdysseyEntries(plays, username),
+    getStep: (entry) => entry.day,
+    assumedMinutesByObjectId,
+  })
+
   const arkhamRows = buildCampaignDefinitionProgressRows({
     id: 'arkhamHorrorLcg',
     name: 'Arkham Horror LCG',
@@ -456,11 +489,12 @@ export function buildCampaignProgressRowsWithCampaignBreakdown(
     assumedMinutesByObjectId,
   })
 
-  for (const row of [...arkhamRows, ...isofarianRows, ...kingdomsRows, ...taintedRows]) {
+  for (const row of [...aeonTrespassRows, ...arkhamRows, ...isofarianRows, ...kingdomsRows, ...taintedRows]) {
     rowsByGameId.delete(row.gameId)
   }
 
   return [
+    ...aeonTrespassRows,
     ...arkhamRows,
     ...isofarianRows,
     ...kingdomsRows,

@@ -1,4 +1,5 @@
 import type { BoxCostConfig } from './contentCosts'
+import { aeonTrespassOdysseyContent } from './games/aeon-trespass-odyssey/content'
 import { bulletContent } from './games/bullet/content'
 import { burncycleContent } from './games/burncycle/content'
 import { cloudspireContent } from './games/cloudspire/content'
@@ -84,6 +85,12 @@ function familyCostConfig(gameId: string, fallback: BoxCostConfig): BoxCostConfi
 }
 
 const legacyCostRegistry: ReadonlyArray<CostRegistryEntry> = [
+  {
+    id: 'aeonTrespassOdyssey',
+    label: 'Aeon Trespass: Odyssey',
+    aliases: ['Aeon Trespass: Odyssey', 'Aeon Trespass Odyssey'],
+    costs: familyCostConfig('aeonTrespassOdyssey', toBoxCostConfig(aeonTrespassOdysseyContent)),
+  },
   {
     id: 'arkhamHorrorLcg',
     label: 'Arkham Horror LCG',

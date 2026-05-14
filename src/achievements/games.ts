@@ -1,5 +1,6 @@
 import type { BggPlay } from '../bgg'
 import type { Achievement } from './types'
+import { computeAeonTrespassOdysseyAchievements } from '../games/aeon-trespass-odyssey/achievements'
 import { computeDeathMayDieAchievements } from '../games/death-may-die/achievements'
 import { computeFinalGirlAchievements } from '../games/final-girl/achievements'
 import { computeMistfallAchievements } from '../games/mistfall/achievements'
@@ -31,6 +32,7 @@ import { shouldCalculateAchievementsForGame } from '../gamePreferences'
 import { computeStandardAchievementsForGame } from './standard'
 
 export type GameId =
+  | 'aeonTrespassOdyssey'
   | 'finalGirl'
   | 'spiritIsland'
   | 'mistfall'
@@ -92,6 +94,13 @@ export function computeGameAchievements(
 ) {
   if (!shouldCalculateAchievementsForGame(gameId)) return []
 
+  if (gameId === 'aeonTrespassOdyssey')
+    return withStandardAchievements(
+      gameId,
+      'Aeon Trespass: Odyssey',
+      plays,
+      computeAeonTrespassOdysseyAchievements(plays, username),
+    )
   if (gameId === 'finalGirl')
     return withStandardAchievements(gameId, 'Final Girl', plays, computeFinalGirlAchievements(plays, username))
   if (gameId === 'spiritIsland')
@@ -261,6 +270,9 @@ export function computeAllGameAchievementSummaries(
     })
   }
 
+  maybePush('aeonTrespassOdyssey', 'Aeon Trespass: Odyssey', () =>
+    computeAeonTrespassOdysseyAchievements(plays, username),
+  )
   maybePush('finalGirl', 'Final Girl', () => computeFinalGirlAchievements(plays, username))
   maybePush('spiritIsland', 'Spirit Island', () =>
     computeSpiritIslandAchievements(plays, username, options?.spiritIslandSessions),

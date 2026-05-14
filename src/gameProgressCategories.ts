@@ -1,6 +1,7 @@
 import type { GameTab } from './gameCatalog'
 
 export const DEFAULT_CAMPAIGN_GAME_IDS = [
+  'aeonTrespassOdyssey',
   'arkhamHorrorLcg',
   'earthborneRangers',
   'isofarianGuard',

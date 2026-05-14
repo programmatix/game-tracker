@@ -8,6 +8,13 @@ export type GameDefinition = {
 
 export const GAME_DEFINITIONS = [
   {
+    id: 'aeonTrespassOdyssey',
+    label: 'Aeon Trespass: Odyssey',
+    supportsMonthlyChecklist: true,
+    supportsCostsTable: true,
+    supportsAchievements: true,
+  },
+  {
     id: 'arkhamHorrorLcg',
     label: 'Arkham Horror LCG',
     supportsMonthlyChecklist: true,

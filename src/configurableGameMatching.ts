@@ -48,6 +48,10 @@ function matchesNormalizedAlias(normalizedName: string, normalizedAlias: string)
 }
 
 const MATCH_OVERRIDES: Readonly<Record<string, ConfigurableGameMatchOverrides>> = {
+  aeonTrespassOdyssey: {
+    aliases: ['Aeon Trespass: Odyssey', 'Aeon Trespass Odyssey', 'Aeon Tresspass Odysey'],
+    objectIds: ['242705'],
+  },
   arkhamHorrorLcg: {
     aliases: [
       'Arkham Horror LCG',
