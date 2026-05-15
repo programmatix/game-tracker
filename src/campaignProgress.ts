@@ -139,6 +139,12 @@ function countKnownCoverage(values: readonly string[], knownValues: readonly str
   return new Set(values.map((value) => value.trim()).filter((value) => known.has(value))).size
 }
 
+function maxAeonTrespassOdysseyEndDay(
+  entries: ReadonlyArray<ReturnType<typeof getAeonTrespassOdysseyEntries>[number]>,
+): number {
+  return entries.reduce((max, entry) => Math.max(max, entry.endDayNumber ?? 0), 0)
+}
+
 function buildProgressLabel(completedCount: number, totalCount: number, unitLabel: string): string {
   return `${completedCount.toLocaleString()} / ${totalCount.toLocaleString()} ${unitLabel}`
 }
@@ -188,10 +194,7 @@ const CAMPAIGN_PROGRESS_DEFINITIONS: ReadonlyArray<CampaignProgressDefinition> =
       const entries = getAeonTrespassOdysseyEntries(plays, username)
       return {
         plays: sumQuantities(entries),
-        completedCount: countKnownCoverage(
-          entries.map((entry) => entry.day),
-          aeonTrespassOdysseyContent.days,
-        ),
+        completedCount: maxAeonTrespassOdysseyEndDay(entries),
         totalCount: aeonTrespassOdysseyContent.days.length,
       }
     },
@@ -426,15 +429,34 @@ export function buildCampaignProgressRowsWithCampaignBreakdown(
 ): CampaignProgressRow[] {
   const rowsByGameId = new Map(buildCampaignProgressRows(plays, username, assumedMinutesByObjectId).map((row) => [row.gameId, row]))
 
-  const aeonTrespassRows = buildCampaignDefinitionProgressRows({
-    id: 'aeonTrespassOdyssey',
-    name: 'Aeon Trespass: Odyssey',
-    unitLabel: 'days',
-    campaigns: aeonTrespassOdysseyContent.cycles,
-    stepsByCampaign: aeonTrespassOdysseyContent.dayNamesByCycleName,
-    entries: getAeonTrespassOdysseyEntries(plays, username),
-    getStep: (entry) => entry.day,
-    assumedMinutesByObjectId,
+  const aeonTrespassEntries = getAeonTrespassOdysseyEntries(plays, username)
+  const aeonTrespassKnownCycles = new Set(aeonTrespassOdysseyContent.cycles)
+  const aeonTrespassCycles = aeonTrespassOdysseyContent.cycles.slice()
+  for (const entry of aeonTrespassEntries) {
+    const cycle = entry.campaign.trim()
+    if (!cycle || aeonTrespassKnownCycles.has(cycle)) continue
+    aeonTrespassKnownCycles.add(cycle)
+    aeonTrespassCycles.push(cycle)
+  }
+  const aeonTrespassRows = aeonTrespassCycles.map((cycle) => {
+    const entries = aeonTrespassEntries.filter((entry) => entry.campaign.trim() === cycle)
+    const totalCount = aeonTrespassOdysseyContent.dayNamesByCycleName.get(cycle)?.length ?? 0
+    const completedCount = Math.min(maxAeonTrespassOdysseyEndDay(entries), totalCount)
+    const hoursSummary = summarizePlayHours(entries, assumedMinutesByObjectId)
+
+    return {
+      id: `aeonTrespassOdyssey:${cycle}`,
+      gameId: 'aeonTrespassOdyssey' as const,
+      name: `Aeon Trespass: Odyssey • ${cycle}`,
+      plays: sumQuantities(entries),
+      hours: hoursSummary.hours,
+      hasAssumedHours: hoursSummary.hasAssumedHours,
+      completedCount,
+      totalCount,
+      remainingCount: Math.max(0, totalCount - completedCount),
+      progress: totalCount > 0 ? completedCount / totalCount : 0,
+      progressLabel: buildProgressLabel(completedCount, totalCount, 'days'),
+    }
   })
 
   const arkhamRows = buildCampaignDefinitionProgressRows({

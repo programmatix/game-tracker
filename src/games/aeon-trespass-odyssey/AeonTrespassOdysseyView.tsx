@@ -1,23 +1,41 @@
-import { Show, createMemo, createResource } from 'solid-js'
+import { For, Show, createMemo, createResource } from 'solid-js'
 import type { BggPlay } from '../../bgg'
 import { fetchThingSummary } from '../../bgg'
 import AchievementsPanel from '../../components/AchievementsPanel'
-import CampaignProgressTable from '../../components/CampaignProgressTable'
 import CostPerPlayTable from '../../components/CostPerPlayTable'
-import CountTable from '../../components/CountTable'
 import GameThingThumb from '../../components/GameThingThumb'
+import ProgressBar from '../../components/ProgressBar'
 import { computeGameAchievements } from '../../achievements/games'
 import type { PlaysDrilldownRequest } from '../../playsDrilldown'
-import { incrementCount, mergeCanonicalKeys, sortKeysByCountDesc } from '../../stats'
+import { incrementCount } from '../../stats'
 import { thingAssumedPlayTimeMinutes, totalPlayMinutesWithAssumption } from '../../playDuration'
 import { aeonTrespassOdysseyContent } from './content'
 import {
   AEON_TRESPASS_ODYSSEY_OBJECT_ID,
   getAeonTrespassOdysseyEntries,
+  type AeonTrespassOdysseyEntry,
 } from './aeonTrespassOdysseyEntries'
 
 function uniquePlayIds(values: readonly number[]): number[] {
   return [...new Set(values)]
+}
+
+function dayCode(day: string): string {
+  const number = aeonTrespassOdysseyContent.dayNumberByName.get(day)
+  if (number !== undefined) return `D${number}`
+  return aeonTrespassOdysseyContent.dayShortLabelByName.get(day) ?? day
+}
+
+function sessionRangeLabel(entry: AeonTrespassOdysseyEntry): string {
+  const start = dayCode(entry.startDay)
+  const end = dayCode(entry.endDay)
+  if (start === end) return end
+  return `${start}-${end}`
+}
+
+function completedDaysInSession(entry: AeonTrespassOdysseyEntry): number | undefined {
+  if (entry.startDayNumber === undefined || entry.endDayNumber === undefined) return undefined
+  return Math.max(1, entry.endDayNumber - entry.startDayNumber + 1)
 }
 
 export default function AeonTrespassOdysseyView(props: {
@@ -40,6 +58,7 @@ export default function AeonTrespassOdysseyView(props: {
     computeGameAchievements('aeonTrespassOdyssey', props.plays, props.username),
   )
   const assumedMinutesPerPlay = createMemo(() => thingAssumedPlayTimeMinutes(thing()?.raw) ?? undefined)
+  const totalCampaignDays = createMemo(() => aeonTrespassOdysseyContent.days.length)
 
   const totalPlays = createMemo(() => entries().reduce((sum, entry) => sum + entry.quantity, 0))
   const totalHours = createMemo(() =>
@@ -74,41 +93,13 @@ export default function AeonTrespassOdysseyView(props: {
     return hours / plays
   })
 
-  const cycleCounts = createMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.campaign, entry.quantity)
-    return counts
-  })
-
-  const dayCounts = createMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const entry of entries()) incrementCount(counts, entry.day, entry.quantity)
-    return counts
-  })
-
-  const dayWins = createMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const entry of entries()) {
-      if (!entry.isWin) continue
-      incrementCount(counts, entry.day, entry.quantity)
-    }
-    return counts
-  })
-
-  const playIdsByCycle = createMemo(() => {
-    const ids: Record<string, number[]> = {}
-    for (const entry of entries()) {
-      ;(ids[entry.campaign] ||= []).push(entry.play.id)
-    }
-    return ids
-  })
-
-  const playIdsByDay = createMemo(() => {
-    const ids: Record<string, number[]> = {}
-    for (const entry of entries()) {
-      ;(ids[entry.day] ||= []).push(entry.play.id)
-    }
-    return ids
+  const currentProgressDay = createMemo(() =>
+    entries().reduce((max, entry) => Math.max(max, entry.endDayNumber ?? 0), 0),
+  )
+  const completionPercent = createMemo(() => {
+    const totalDays = totalCampaignDays()
+    if (totalDays <= 0) return 0
+    return (currentProgressDay() / totalDays) * 100
   })
 
   const continuationCount = createMemo(() =>
@@ -122,7 +113,12 @@ export default function AeonTrespassOdysseyView(props: {
   const taggedPlays = createMemo(() =>
     entries().reduce(
       (sum, entry) =>
-        sum + (entry.campaign === 'Unknown cycle' && entry.day === 'Unknown day' ? 0 : entry.quantity),
+        sum +
+        (entry.campaign === 'Unknown cycle' &&
+        entry.startDay === 'Unknown day' &&
+        entry.endDay === 'Unknown day'
+          ? 0
+          : entry.quantity),
       0,
     ),
   )
@@ -131,7 +127,7 @@ export default function AeonTrespassOdysseyView(props: {
   const boxPlayCounts = createMemo(() => {
     const counts: Record<string, number> = {}
     for (const entry of entries()) {
-      const box = aeonTrespassOdysseyContent.dayBoxByName.get(entry.day)
+      const box = aeonTrespassOdysseyContent.dayBoxByName.get(entry.endDay)
       if (!box) continue
       incrementCount(counts, box, entry.quantity)
     }
@@ -142,7 +138,7 @@ export default function AeonTrespassOdysseyView(props: {
     const hoursByBox: Record<string, number> = {}
     const hasAssumedHoursByBox: Record<string, boolean> = {}
     for (const entry of entries()) {
-      const box = aeonTrespassOdysseyContent.dayBoxByName.get(entry.day)
+      const box = aeonTrespassOdysseyContent.dayBoxByName.get(entry.endDay)
       if (!box) continue
       const resolved = totalPlayMinutesWithAssumption({
         attributes: entry.play.attributes,
@@ -155,25 +151,10 @@ export default function AeonTrespassOdysseyView(props: {
     return { hoursByBox, hasAssumedHoursByBox }
   })
 
-  const dayPlayHours = createMemo(() => {
-    const hoursByDay: Record<string, number> = {}
-    const hasAssumedHoursByDay: Record<string, boolean> = {}
-    for (const entry of entries()) {
-      const resolved = totalPlayMinutesWithAssumption({
-        attributes: entry.play.attributes,
-        quantity: entry.quantity,
-        assumedMinutesPerPlay: assumedMinutesPerPlay(),
-      })
-      incrementCount(hoursByDay, entry.day, resolved.minutes / 60)
-      if (resolved.assumed) hasAssumedHoursByDay[entry.day] = true
-    }
-    return { hoursByDay, hasAssumedHoursByDay }
-  })
-
   const playIdsByBox = createMemo(() => {
     const ids: Record<string, number[]> = {}
     for (const entry of entries()) {
-      const box = aeonTrespassOdysseyContent.dayBoxByName.get(entry.day)
+      const box = aeonTrespassOdysseyContent.dayBoxByName.get(entry.endDay)
       if (!box) continue
       ;(ids[box] ||= []).push(entry.play.id)
     }
@@ -202,41 +183,28 @@ export default function AeonTrespassOdysseyView(props: {
       aeonTrespassOdysseyContent.boxCostsByName.size > 0,
   )
 
-  const cycleKeys = createMemo(() =>
-    mergeCanonicalKeys(sortKeysByCountDesc(cycleCounts()), aeonTrespassOdysseyContent.cycles),
-  )
-
-  const playedDayCount = createMemo(
-    () => aeonTrespassOdysseyContent.days.filter((day) => (dayCounts()[day] ?? 0) > 0).length,
-  )
-  const completionPercent = createMemo(() => {
-    const totalDays = aeonTrespassOdysseyContent.days.length
-    if (totalDays <= 0) return 0
-    return (playedDayCount() / totalDays) * 100
-  })
-
-  const cycleSections = createMemo(() =>
-    aeonTrespassOdysseyContent.cycles.map((cycle) => {
-      const days = aeonTrespassOdysseyContent.dayNamesByCycleName.get(cycle) ?? []
-      const playedCount = days.filter((day) => (dayCounts()[day] ?? 0) > 0).length
-
-      return {
-        key: cycle,
-        label: cycle,
-        group: aeonTrespassOdysseyContent.cycleGroupByName.get(cycle),
-        summary: `${playedCount.toLocaleString()} / ${days.length.toLocaleString()} days played`,
-        playIds: uniquePlayIds(playIdsByCycle()[cycle] ?? []),
-        steps: days.map((day) => ({
-          key: day,
-          label: aeonTrespassOdysseyContent.dayShortLabelByName.get(day) ?? day,
-          plays: dayCounts()[day] ?? 0,
-          wins: dayWins()[day] ?? 0,
-          hours: dayPlayHours().hoursByDay[day] ?? 0,
-          hasAssumedHours: dayPlayHours().hasAssumedHoursByDay[day] === true,
-          playIds: uniquePlayIds(playIdsByDay()[day] ?? []),
-        })),
-      }
-    }),
+  const sessionRows = createMemo(() =>
+    entries()
+      .slice()
+      .sort((left, right) => {
+        const dateCompare = (right.play.attributes.date || '').localeCompare(left.play.attributes.date || '')
+        if (dateCompare !== 0) return dateCompare
+        return right.play.id - left.play.id
+      })
+      .map((entry) => {
+        const resolved = totalPlayMinutesWithAssumption({
+          attributes: entry.play.attributes,
+          quantity: entry.quantity,
+          assumedMinutesPerPlay: assumedMinutesPerPlay(),
+        })
+        return {
+          entry,
+          rangeLabel: sessionRangeLabel(entry),
+          completedDays: completedDaysInSession(entry),
+          hours: resolved.minutes / 60,
+          hasAssumedHours: resolved.assumed,
+        }
+      }),
   )
 
   return (
@@ -253,7 +221,7 @@ export default function AeonTrespassOdysseyView(props: {
           <div class="metaTitleRow">
             <div class="metaTitle">Aeon Trespass: Odyssey</div>
             <div class="metaPlays">
-              Plays: <span class="mono">{totalPlays().toLocaleString()}</span>
+              Sessions: <span class="mono">{totalPlays().toLocaleString()}</span>
             </div>
             <button
               class="linkButton"
@@ -271,16 +239,16 @@ export default function AeonTrespassOdysseyView(props: {
           </div>
           <div class="muted">
             Track Cycle 1 as an 80-day campaign. Use BG Stats tags like{' '}
-            <span class="mono">C1／D1</span> or <span class="mono">D1</span>.
+            <span class="mono">C1／D10／D13</span> or <span class="mono">D10／D13</span>.
           </div>
         </div>
       </div>
 
       <div class="finalGirlMetaRow">
         <div class="meta">
-          <div class="metaLabel">Days played</div>
+          <div class="metaLabel">Latest day</div>
           <div class="metaValue mono">
-            {playedDayCount().toLocaleString()} / {aeonTrespassOdysseyContent.days.length.toLocaleString()}
+            {currentProgressDay().toLocaleString()} / {totalCampaignDays().toLocaleString()}
           </div>
         </div>
         <div class="meta">
@@ -295,7 +263,7 @@ export default function AeonTrespassOdysseyView(props: {
           </div>
         </div>
         <div class="meta">
-          <div class="metaLabel">Avg hours / play</div>
+          <div class="metaLabel">Avg hours / session</div>
           <div class="metaValue mono">
             <Show when={averageHoursPerPlay() !== undefined} fallback="—">
               {averageHoursPerPlay()!.toLocaleString(undefined, {
@@ -307,11 +275,11 @@ export default function AeonTrespassOdysseyView(props: {
           </div>
         </div>
         <div class="meta">
-          <div class="metaLabel">Tagged plays</div>
+          <div class="metaLabel">Tagged sessions</div>
           <div class="metaValue mono">{taggedPlays().toLocaleString()}</div>
         </div>
         <div class="meta">
-          <div class="metaLabel">Untagged plays</div>
+          <div class="metaLabel">Untagged sessions</div>
           <div class="metaValue mono">{untaggedPlays().toLocaleString()}</div>
         </div>
         <div class="meta">
@@ -326,42 +294,78 @@ export default function AeonTrespassOdysseyView(props: {
         </div>
       </Show>
 
-      <CampaignProgressTable
-        title="Cycle Days"
-        stepLabel="Day"
-        sections={cycleSections()}
-        onCampaignPlaysClick={(cycle) => {
-          const playIds = uniquePlayIds(playIdsByCycle()[cycle] ?? [])
-          if (playIds.length === 0) return
-          props.onOpenPlays({
-            title: `Aeon Trespass: Odyssey • ${cycle}`,
-            playIds,
-          })
-        }}
-        onStepPlaysClick={(_cycle, day) => {
-          const playIds = uniquePlayIds(playIdsByDay()[day] ?? [])
-          if (playIds.length === 0) return
-          props.onOpenPlays({
-            title: `Aeon Trespass: Odyssey • ${day}`,
-            playIds,
-          })
-        }}
-      />
+      <div class="statsBlock">
+        <h3 class="statsTitle">Cycle Progress</h3>
+        <ProgressBar
+          value={currentProgressDay()}
+          target={totalCampaignDays()}
+          label={`${currentProgressDay().toLocaleString()} / ${totalCampaignDays().toLocaleString()} days`}
+        />
+        <div class="muted">
+          Progress is based on the ending day of each recorded session.
+        </div>
+      </div>
 
-      <CountTable
-        title="Cycles"
-        plays={cycleCounts()}
-        keys={cycleKeys()}
-        groupBy={(cycle) => aeonTrespassOdysseyContent.cycleGroupByName.get(cycle)}
-        onPlaysClick={(cycle) => {
-          const playIds = uniquePlayIds(playIdsByCycle()[cycle] ?? [])
-          if (playIds.length === 0) return
-          props.onOpenPlays({
-            title: `Aeon Trespass: Odyssey • ${cycle}`,
-            playIds,
-          })
-        }}
-      />
+      <div class="statsBlock">
+        <h3 class="statsTitle">Sessions</h3>
+        <Show
+          when={sessionRows().length > 0}
+          fallback={<div class="muted">No Aeon Trespass: Odyssey sessions yet.</div>}
+        >
+          <div class="tableWrap compact">
+            <table class="table compactTable mobileCardTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Cycle</th>
+                  <th>Range</th>
+                  <th class="mono">Days</th>
+                  <th class="mono">Hours</th>
+                  <th class="mono">Plays</th>
+                </tr>
+              </thead>
+              <tbody>
+                <For each={sessionRows()}>
+                  {(row) => (
+                    <tr>
+                      <td data-label="Date">{row.entry.play.attributes.date || 'Unknown date'}</td>
+                      <td data-label="Cycle">{row.entry.campaign}</td>
+                      <td data-label="Range">{row.rangeLabel}</td>
+                      <td class="mono" data-label="Days">
+                        <Show when={row.completedDays !== undefined} fallback="—">
+                          {row.completedDays!.toLocaleString()}
+                        </Show>
+                      </td>
+                      <td class="mono" data-label="Hours">
+                        {row.hours.toLocaleString(undefined, {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        })}
+                        {row.hasAssumedHours ? '*' : ''}
+                      </td>
+                      <td class="mono" data-label="Plays">
+                        <button
+                          type="button"
+                          class="countLink"
+                          onClick={() =>
+                            props.onOpenPlays({
+                              title: `Aeon Trespass: Odyssey • ${row.rangeLabel}`,
+                              playIds: [row.entry.play.id],
+                            })
+                          }
+                          title="View play"
+                        >
+                          {row.entry.quantity.toLocaleString()}
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+          </div>
+        </Show>
+      </div>
 
       <Show when={hasCostTable()}>
         <CostPerPlayTable

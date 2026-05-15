@@ -3,7 +3,10 @@ import { aeonTrespassOdysseyContent } from './content'
 
 export type AeonTrespassOdysseyPlayerTags = {
   cycle?: string
-  day?: string
+  startDay?: string
+  endDay?: string
+  days: string[]
+  learnToPlay: boolean
   continuePrevious: boolean
   continueNext: boolean
   extraTags: string[]
@@ -73,6 +76,47 @@ function resolveDay(value: string, cycle?: string): string | undefined {
   return undefined
 }
 
+function dayNumber(day: string | undefined): number | undefined {
+  if (!day) return undefined
+  return aeonTrespassOdysseyContent.dayNumberByName.get(day)
+}
+
+function orderDays(days: readonly string[]): string[] {
+  return days
+    .filter(Boolean)
+    .slice()
+    .sort((left, right) => (dayNumber(left) ?? 0) - (dayNumber(right) ?? 0))
+}
+
+function addUniqueDay(days: string[], day: string | undefined): void {
+  if (!day || days.includes(day)) return
+  days.push(day)
+}
+
+function isCycleKey(key: string): boolean {
+  return ['c', 'cycle', 'campaign'].includes(normalizeId(key))
+}
+
+function isDayKey(key: string): boolean {
+  return ['d', 'day'].includes(normalizeId(key))
+}
+
+function isStartDayKey(key: string): boolean {
+  return ['start', 'from', 'startday', 'daystart'].includes(normalizeId(key))
+}
+
+function isEndDayKey(key: string): boolean {
+  return ['end', 'to', 'endday', 'dayend'].includes(normalizeId(key))
+}
+
+function isLearnToPlayKey(key: string): boolean {
+  return ['ltp', 'learntoplay', 'learningtoplay', 'mode', 'type', 'session', 'kind'].includes(normalizeId(key))
+}
+
+function isLearnToPlayToken(value: string): boolean {
+  return ['ltp', 'learntoplay', 'learningtoplay', 'tutorial', 'teach', 'teaching'].includes(normalizeId(value))
+}
+
 function isContinuePreviousToken(value: string): boolean {
   const normalized = normalizeId(value)
   return normalized === 'contprev' || normalized === 'continueprevious' || normalized === 'continue'
@@ -84,32 +128,20 @@ function isContinueNextToken(value: string): boolean {
 }
 
 export function parseAeonTrespassOdysseyPlayerColor(color: string): AeonTrespassOdysseyPlayerTags {
+  const segments = splitBgStatsSegments(color)
   const parsedKv = parseBgStatsKeyValueSegments(color)
-  const tags = splitBgStatsSegments(color).filter((segment) => !/[:：]/.test(segment))
-
   const cycleKv = getBgStatsValue(parsedKv, ['C', 'Cycle', 'Campaign'])
   let cycle = cycleKv ? resolveCycle(cycleKv) : undefined
-  const dayKv = getBgStatsValue(parsedKv, ['D', 'Day'])
-  let day = dayKv ? resolveDay(dayKv, cycle) : undefined
+  const days: string[] = []
+  let explicitStartDay: string | undefined
+  let explicitEndDay: string | undefined
+  let learnToPlay = false
   let continuePrevious = false
   let continueNext = false
 
   const used = new Set<string>()
-  if (!cycle) {
-    for (const tag of tags) {
-      const normalized = normalizeToken(tag)
-      if (!normalized) continue
-      const resolvedCycle = resolveCycle(normalized)
-      if (!resolvedCycle) continue
-      cycle = resolvedCycle
-      used.add(normalized)
-      if (dayKv && !day) day = resolveDay(dayKv, cycle)
-      break
-    }
-  }
-
-  for (const tag of tags) {
-    const normalized = normalizeToken(tag)
+  for (const segment of segments) {
+    const normalized = normalizeToken(segment)
     if (!normalized) continue
 
     if (isContinuePreviousToken(normalized)) {
@@ -124,32 +156,90 @@ export function parseAeonTrespassOdysseyPlayerColor(color: string): AeonTrespass
       continue
     }
 
-    if (!cycle) {
-      const resolvedCycle = resolveCycle(normalized)
-      if (resolvedCycle) {
-        cycle = resolvedCycle
+    if (isLearnToPlayToken(normalized)) {
+      learnToPlay = true
+      used.add(normalized)
+      continue
+    }
+
+    const match = segment.match(/[:：]/)
+    if (match?.index != null && match.index > 0) {
+      const key = normalizeToken(segment.slice(0, match.index))
+      const value = normalizeToken(segment.slice(match.index + match[0].length))
+      if (!key || !value) continue
+
+      if ((isLearnToPlayKey(key) && isLearnToPlayToken(value)) || isLearnToPlayToken(key)) {
+        learnToPlay = true
         used.add(normalized)
-        if (dayKv && !day) day = resolveDay(dayKv, cycle)
+        continue
+      }
+
+      if (isCycleKey(key)) {
+        const resolvedCycle = resolveCycle(value)
+        if (resolvedCycle) {
+          cycle = resolvedCycle
+          used.add(normalized)
+        }
+        continue
+      }
+
+      if (isStartDayKey(key)) {
+        explicitStartDay = resolveDay(value, cycle)
+        addUniqueDay(days, explicitStartDay)
+        if (explicitStartDay) used.add(normalized)
+        continue
+      }
+
+      if (isEndDayKey(key)) {
+        explicitEndDay = resolveDay(value, cycle)
+        addUniqueDay(days, explicitEndDay)
+        if (explicitEndDay) used.add(normalized)
+        continue
+      }
+
+      if (isDayKey(key)) {
+        const resolvedDay = resolveDay(value, cycle)
+        addUniqueDay(days, resolvedDay)
+        if (resolvedDay) used.add(normalized)
         continue
       }
     }
 
-    if (!day) {
-      const resolvedDay = resolveDay(normalized, cycle)
-      if (resolvedDay) {
-        day = resolvedDay
-        used.add(normalized)
-      }
+    const resolvedCycle = resolveCycle(normalized)
+    if (!cycle && resolvedCycle) {
+      cycle = resolvedCycle
+      used.add(normalized)
+      continue
+    }
+
+    const resolvedDay = resolveDay(normalized, cycle)
+    if (resolvedDay) {
+      addUniqueDay(days, resolvedDay)
+      used.add(normalized)
     }
   }
 
-  if (!cycle && day) cycle = aeonTrespassOdysseyContent.dayCycleByName.get(day)
+  const orderedDays = orderDays(days)
+  const startDay = explicitStartDay || orderedDays[0]
+  const endDay = explicitEndDay || orderedDays[orderedDays.length - 1] || startDay
+
+  if (!cycle && endDay) cycle = aeonTrespassOdysseyContent.dayCycleByName.get(endDay)
+  if (!cycle && startDay) cycle = aeonTrespassOdysseyContent.dayCycleByName.get(startDay)
   if (!cycle) cycle = defaultCycle()
 
-  const extraTags = tags
+  const extraTags = segments
     .map(normalizeToken)
     .filter(Boolean)
     .filter((tag) => !used.has(tag))
 
-  return { cycle, day, continuePrevious, continueNext, extraTags }
+  return {
+    cycle,
+    startDay,
+    endDay,
+    days: orderedDays,
+    learnToPlay,
+    continuePrevious,
+    continueNext,
+    extraTags,
+  }
 }

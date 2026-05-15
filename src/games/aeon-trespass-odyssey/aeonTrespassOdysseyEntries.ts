@@ -7,7 +7,12 @@ export const AEON_TRESPASS_ODYSSEY_OBJECT_ID = '242705'
 export type AeonTrespassOdysseyEntry = {
   play: BggPlay
   campaign: string
+  startDay: string
+  endDay: string
   day: string
+  startDayNumber?: number
+  endDayNumber?: number
+  isLearnToPlay: boolean
   quantity: number
   isWin: boolean
   continuedFromPrevious: boolean
@@ -51,9 +56,17 @@ function chooseMostCommonOrFirst(candidates: string[]): string | undefined {
 }
 
 function fillCycleFromDay(entry: AeonTrespassOdysseyEntry): void {
-  if (!entry.campaign && entry.day) {
-    entry.campaign = aeonTrespassOdysseyContent.dayCycleByName.get(entry.day) || ''
+  if (!entry.campaign && entry.endDay) {
+    entry.campaign = aeonTrespassOdysseyContent.dayCycleByName.get(entry.endDay) || ''
   }
+  if (!entry.campaign && entry.startDay) {
+    entry.campaign = aeonTrespassOdysseyContent.dayCycleByName.get(entry.startDay) || ''
+  }
+}
+
+function fillDayNumbers(entry: AeonTrespassOdysseyEntry): void {
+  entry.startDayNumber = aeonTrespassOdysseyContent.dayNumberByName.get(entry.startDay)
+  entry.endDayNumber = aeonTrespassOdysseyContent.dayNumberByName.get(entry.endDay)
 }
 
 export function getAeonTrespassOdysseyEntries(
@@ -72,7 +85,9 @@ export function getAeonTrespassOdysseyEntries(
           username: (player.attributes.username || '').toLowerCase(),
           win: player.attributes.win === '1',
           cycle: parsed.cycle,
-          day: parsed.day,
+          startDay: parsed.startDay,
+          endDay: parsed.endDay,
+          learnToPlay: parsed.learnToPlay,
           continuePrevious: parsed.continuePrevious,
           continueNext: parsed.continueNext,
         }
@@ -80,78 +95,105 @@ export function getAeonTrespassOdysseyEntries(
 
       const myPlayer = parsedPlayers.find((player) => player.username === user)
       const cycleCandidates = parsedPlayers.map((player) => player.cycle).filter(Boolean) as string[]
-      const dayCandidates = parsedPlayers.map((player) => player.day).filter(Boolean) as string[]
-      const day = myPlayer?.day?.trim() || chooseMostCommonOrFirst(dayCandidates) || ''
+      const startDayCandidates = parsedPlayers.map((player) => player.startDay).filter(Boolean) as string[]
+      const endDayCandidates = parsedPlayers.map((player) => player.endDay).filter(Boolean) as string[]
+      const startDay = myPlayer?.startDay?.trim() || chooseMostCommonOrFirst(startDayCandidates) || ''
+      const endDay = myPlayer?.endDay?.trim() || chooseMostCommonOrFirst(endDayCandidates) || startDay
+      const isLearnToPlay = parsedPlayers.some((player) => player.learnToPlay)
       const campaign =
         myPlayer?.cycle?.trim() ||
         chooseMostCommonOrFirst(cycleCandidates) ||
-        (day ? aeonTrespassOdysseyContent.dayCycleByName.get(day) : undefined) ||
+        (endDay ? aeonTrespassOdysseyContent.dayCycleByName.get(endDay) : undefined) ||
+        (startDay ? aeonTrespassOdysseyContent.dayCycleByName.get(startDay) : undefined) ||
         ''
 
-      return {
+      const entry: AeonTrespassOdysseyEntry = {
         play,
         campaign,
-        day,
+        startDay,
+        endDay,
+        day: endDay,
+        isLearnToPlay,
         quantity: playQuantity(play),
         isWin: myPlayer?.win === true,
         continuedFromPrevious: parsedPlayers.some((player) => player.continuePrevious),
         continuedToNext: parsedPlayers.some((player) => player.continueNext),
       }
+      fillDayNumbers(entry)
+      return entry
     })
 
-  let previousResolved: { campaign?: string; day?: string } | undefined
+  let previousResolved: { campaign?: string; startDay?: string; endDay?: string } | undefined
   for (const entry of result) {
     if (entry.continuedFromPrevious && previousResolved) {
       if (!entry.campaign && previousResolved.campaign) entry.campaign = previousResolved.campaign
-      const previousDayCampaign = previousResolved.day
-        ? aeonTrespassOdysseyContent.dayCycleByName.get(previousResolved.day)
+      const previousDayCampaign = previousResolved.endDay
+        ? aeonTrespassOdysseyContent.dayCycleByName.get(previousResolved.endDay)
         : undefined
       if (
-        !entry.day &&
-        previousResolved.day &&
+        !entry.endDay &&
+        previousResolved.endDay &&
         (!entry.campaign || !previousDayCampaign || previousDayCampaign === entry.campaign)
       ) {
-        entry.day = previousResolved.day
+        entry.endDay = previousResolved.endDay
+        entry.day = entry.endDay
+      }
+      if (!entry.startDay && previousResolved.startDay) {
+        entry.startDay = previousResolved.startDay
       }
     }
     fillCycleFromDay(entry)
-    if (entry.campaign || entry.day) {
+    fillDayNumbers(entry)
+    if (entry.campaign || entry.endDay || entry.startDay) {
       previousResolved = {
         campaign: entry.campaign || previousResolved?.campaign,
-        day: entry.day || previousResolved?.day,
+        startDay: entry.startDay || previousResolved?.startDay,
+        endDay: entry.endDay || previousResolved?.endDay,
       }
     }
   }
 
-  let nextResolved: { campaign?: string; day?: string } | undefined
+  let nextResolved: { campaign?: string; startDay?: string; endDay?: string } | undefined
   for (let index = result.length - 1; index >= 0; index -= 1) {
     const entry = result[index]!
     if (entry.continuedToNext && nextResolved) {
       if (!entry.campaign && nextResolved.campaign) entry.campaign = nextResolved.campaign
-      const nextDayCampaign = nextResolved.day
-        ? aeonTrespassOdysseyContent.dayCycleByName.get(nextResolved.day)
+      const nextDayCampaign = nextResolved.endDay
+        ? aeonTrespassOdysseyContent.dayCycleByName.get(nextResolved.endDay)
         : undefined
       if (
-        !entry.day &&
-        nextResolved.day &&
+        !entry.endDay &&
+        nextResolved.endDay &&
         (!entry.campaign || !nextDayCampaign || nextDayCampaign === entry.campaign)
       ) {
-        entry.day = nextResolved.day
+        entry.endDay = nextResolved.endDay
+        entry.day = entry.endDay
+      }
+      if (!entry.startDay && nextResolved.startDay) {
+        entry.startDay = nextResolved.startDay
       }
     }
     fillCycleFromDay(entry)
-    if (entry.campaign || entry.day) {
+    fillDayNumbers(entry)
+    if (entry.campaign || entry.endDay || entry.startDay) {
       nextResolved = {
         campaign: entry.campaign || nextResolved?.campaign,
-        day: entry.day || nextResolved?.day,
+        startDay: entry.startDay || nextResolved?.startDay,
+        endDay: entry.endDay || nextResolved?.endDay,
       }
     }
   }
 
   for (const entry of result) {
     fillCycleFromDay(entry)
+    if (!entry.startDay && entry.endDay) entry.startDay = entry.endDay
+    if (!entry.endDay && entry.startDay) entry.endDay = entry.startDay
+    entry.day = entry.endDay
+    fillDayNumbers(entry)
     if (!entry.campaign) entry.campaign = 'Unknown cycle'
-    if (!entry.day) entry.day = 'Unknown day'
+    if (!entry.startDay) entry.startDay = 'Unknown day'
+    if (!entry.endDay) entry.endDay = 'Unknown day'
+    entry.day = entry.endDay
   }
 
   return result

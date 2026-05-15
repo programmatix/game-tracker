@@ -12,6 +12,7 @@ export type AeonTrespassOdysseyContent = {
   days: string[]
   daysById: Map<string, string>
   dayShortLabelByName: Map<string, string>
+  dayNumberByName: Map<string, number>
   dayCycleByName: Map<string, string>
   dayGroupByName: Map<string, string>
   dayBoxByName: Map<string, string>
@@ -91,6 +92,7 @@ export function parseAeonTrespassOdysseyContent(text: string): AeonTrespassOdyss
   const days: string[] = []
   const daysById = new Map<string, string>()
   const dayShortLabelByName = new Map<string, string>()
+  const dayNumberByName = new Map<string, number>()
   const dayCycleByName = new Map<string, string>()
   const dayGroupByName = new Map<string, string>()
   const dayBoxByName = new Map<string, string>()
@@ -144,6 +146,8 @@ export function parseAeonTrespassOdysseyContent(text: string): AeonTrespassOdyss
       days.push(dayDisplay)
       cycleDays.push(dayDisplay)
       dayShortLabelByName.set(dayDisplay, shortLabel)
+      const dayNumberMatch = shortLabel.match(/\b([0-9]+)$/)
+      if (dayNumberMatch?.[1]) dayNumberByName.set(dayDisplay, Number(dayNumberMatch[1]))
       dayCycleByName.set(dayDisplay, cycleDisplay)
       if (dayGroup) dayGroupByName.set(dayDisplay, dayGroup)
       if (dayBox) dayBoxByName.set(dayDisplay, dayBox)
@@ -172,6 +176,7 @@ export function parseAeonTrespassOdysseyContent(text: string): AeonTrespassOdyss
     days,
     daysById,
     dayShortLabelByName,
+    dayNumberByName,
     dayCycleByName,
     dayGroupByName,
     dayBoxByName,
