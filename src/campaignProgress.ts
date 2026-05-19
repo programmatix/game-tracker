@@ -85,7 +85,7 @@ function sumQuantities<T extends { quantity: number }>(entries: readonly T[]): n
 function getEntriesForTrackedGame(plays: BggPlay[], username: string, gameId: ProgressTrackedGameId) {
   switch (gameId) {
     case 'aeonTrespassOdyssey':
-      return getAeonTrespassOdysseyEntries(plays, username)
+      return getAeonTrespassOdysseyEntries(plays, username).filter((entry) => !entry.isLearnToPlay)
     case 'arkhamHorrorLcg':
       return getArkhamHorrorLcgEntries(plays, username)
     case 'earthborneRangers':
@@ -191,7 +191,7 @@ const CAMPAIGN_PROGRESS_DEFINITIONS: ReadonlyArray<CampaignProgressDefinition> =
     name: 'Aeon Trespass: Odyssey',
     unitLabel: 'days',
     build: (plays, username) => {
-      const entries = getAeonTrespassOdysseyEntries(plays, username)
+      const entries = getAeonTrespassOdysseyEntries(plays, username).filter((entry) => !entry.isLearnToPlay)
       return {
         plays: sumQuantities(entries),
         completedCount: maxAeonTrespassOdysseyEndDay(entries),
@@ -429,7 +429,9 @@ export function buildCampaignProgressRowsWithCampaignBreakdown(
 ): CampaignProgressRow[] {
   const rowsByGameId = new Map(buildCampaignProgressRows(plays, username, assumedMinutesByObjectId).map((row) => [row.gameId, row]))
 
-  const aeonTrespassEntries = getAeonTrespassOdysseyEntries(plays, username)
+  const aeonTrespassEntries = getAeonTrespassOdysseyEntries(plays, username).filter(
+    (entry) => !entry.isLearnToPlay,
+  )
   const aeonTrespassKnownCycles = new Set(aeonTrespassOdysseyContent.cycles)
   const aeonTrespassCycles = aeonTrespassOdysseyContent.cycles.slice()
   for (const entry of aeonTrespassEntries) {

@@ -1806,6 +1806,123 @@
   white-space: normal;
 }
 
+.aeonProgressBlock {
+  width: 100%;
+  gap: 14px;
+}
+
+.aeonProgressHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.aeonProgressPercent {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.aeonProgressTrack {
+  position: relative;
+  width: 100%;
+  height: 34px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04)),
+    rgba(8, 12, 20, 0.76);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 16px 34px rgba(0, 0, 0, 0.18);
+}
+
+.aeonProgressFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22d3ee 0%, #34d399 52%, #f59e0b 100%);
+  box-shadow:
+    0 0 22px rgba(52, 211, 153, 0.42),
+    0 0 34px rgba(245, 158, 11, 0.18);
+  transition: width 240ms ease;
+}
+
+.aeonProgressFill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.04) 46%, transparent 100%),
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.12) 0,
+      rgba(255, 255, 255, 0.12) 8px,
+      transparent 8px,
+      transparent 18px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+.aeonProgressBarLabel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 13px;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+  white-space: nowrap;
+}
+
+.aeonProgressTicks {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.aeonProgressTicks span {
+  text-align: center;
+}
+
+.aeonProgressTicks span:first-child {
+  text-align: left;
+}
+
+.aeonProgressTicks span:last-child {
+  text-align: right;
+}
+
+.aeonProgressStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.aeonProgressStat {
+  min-width: 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.aeonProgressUnit {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .table th {
   position: sticky;
   top: 0;
