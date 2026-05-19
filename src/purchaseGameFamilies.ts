@@ -8,11 +8,11 @@ export type PurchaseGameFamily = {
   price: number
 }
 
-// Aggregated from the purchase spreadsheet Net column (F).
+// Aggregated from the purchase spreadsheet Net column (G).
 export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   { id: '20Strong', label: "20 Strong", spreadsheetFamily: "20 Strong", price: 55.10 },
-  { id: '7thCitadel', label: "7th Citadel", spreadsheetFamily: "7th Citadel", price: 75.49 },
-  { id: 'agemonia', label: "Agemonia", spreadsheetFamily: "Agemonia", price: 130.48 },
+  { id: '7thCitadel', label: "7th Citadel", spreadsheetFamily: "7th Citadel", price: 132.49 },
+  { id: 'agemonia', label: "Agemonia", spreadsheetFamily: "Agemonia", price: 37.48 },
   {
     id: 'aeonTrespassOdyssey',
     label: "Aeon Trespass: Odyssey",
@@ -21,7 +21,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
     objectIds: ["242705"],
     price: 222.00,
   },
-  { id: 'arkhamHorrorLcg', label: "Arkham Horror LCG", spreadsheetFamily: "Arkham Horror LCG", price: 781.19 },
+  { id: 'arkhamHorrorLcg', label: "Arkham Horror LCG", spreadsheetFamily: "Arkham Horror LCG", price: 592.19 },
   { id: 'arydia', label: "Arydia", spreadsheetFamily: "Arydia", price: 179.45 },
   { id: 'assaultOnDoomrockExpansion', label: "Assault on Doomrock + Expansion", spreadsheetFamily: "Assault on Doomrock + Expansion", price: 42.30 },
   { id: 'bombBusters', label: "Bomb Busters", spreadsheetFamily: "Bomb Busters", price: 22.94 },
@@ -34,7 +34,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
     label: "Corp of Discovery",
     spreadsheetFamily: "Corp of Discovery",
     aliases: ["Corps of Discovery", "Corps of Discovery: A Game Set in the World of Manifest Destiny"],
-    price: 40.50,
+    price: -25.98,
   },
   { id: 'cyberpunkLegends', label: "Cyberpunk Legends", spreadsheetFamily: "Cyberpunk Legends", price: 30.06 },
   { id: 'deadCells', label: "Dead Cells", spreadsheetFamily: "Dead Cells", price: 45.20 },
@@ -125,6 +125,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
     price: 13.59,
   },
   { id: 'kingdomsForlorn', label: "Kingdoms Forlorn", spreadsheetFamily: "Kingdom Forlorn", price: 365.97 },
+  { id: 'landsOfEvershade', label: "Lands of Evershade", spreadsheetFamily: "Lands of Evershade", price: 313.63 },
   { id: 'leviathanWilds', label: "Leviathan Wilds", spreadsheetFamily: "Leviathan Wilds", price: 89.23 },
   { id: 'mageKnight', label: "Mage Knight", spreadsheetFamily: "Mage Knight", price: 149.95 },
   { id: 'mandalorianAdventures', label: "Mandalorian Adventures", spreadsheetFamily: "Mandalorian Adventures", price: 67.00 },
@@ -167,6 +168,7 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   { id: 'radlands', label: "Radlands", spreadsheetFamily: "Radlands", price: 18.00 },
   { id: 'robinsonCrusoe', label: "Robinson Crusoe", spreadsheetFamily: "Robinson Crusoe", price: 51.78 },
   { id: 'rogueAngels', label: "Rogue Angels", spreadsheetFamily: "Rogue Angels", price: 101.00 },
+  { id: 'rollPlayerAdventures', label: "Roll Player Adventures", spreadsheetFamily: "Roll Player Adventures", price: 68.13 },
   { id: 'rove', label: "Rove Anchorpoint", spreadsheetFamily: "Rove", price: 45.08 },
   { id: 'scout', label: "Scout", spreadsheetFamily: "Scout", price: 0.00 },
   { id: 'seaSaltAndPaper', label: "Sea Salt and Paper", spreadsheetFamily: "Sea Salt and Paper", price: 0.00 },
@@ -223,6 +225,8 @@ export const PURCHASE_GAME_FAMILIES: ReadonlyArray<PurchaseGameFamily> = [
   { id: 'vantage', label: "Vantage", spreadsheetFamily: "Vantage", price: 56.18 },
   { id: 'wanderingGalaxy', label: "Wandering Galaxy", spreadsheetFamily: "Wandering Galaxy", price: 40.21 },
   { id: 'warpsEdge', label: "Warps Edge", spreadsheetFamily: "Warps Edge", price: 25.66 },
+  { id: 'witchHunter', label: "Witch Hunter", spreadsheetFamily: "Witch Hunter", price: 28.49 },
+  { id: 'witcherLegacy', label: "Witcher Legacy", spreadsheetFamily: "Witcher Legacy", price: 140.36 },
 ]
 
 export const purchaseGameFamilyById = new Map(
