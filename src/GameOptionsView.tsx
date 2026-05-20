@@ -208,8 +208,8 @@ export default function GameOptionsView(props: {
             />
 
             <GameOptionsInputRow
-              title="Shipping availability checked"
-              description="Record when you last checked whether shipping details could be provided."
+              title="Shipping checking"
+              description="Record when you last checked shipping status, including shipping dates or whether details could be provided."
               type="date"
               value={selectedPreferences().shippingAddressLastCheckedDate || ''}
               action={
@@ -233,8 +233,8 @@ export default function GameOptionsView(props: {
             />
 
             <GameOptionsTextareaRow
-              title="Shipping check note"
-              description="Optional note about the shipping address request, pledge manager, or blocker."
+              title="Shipping checking note"
+              description="Optional note about the shipping date, address request, pledge manager, or blocker."
               value={selectedPreferences().shippingAddressCheckNote || ''}
               onChange={(shippingAddressCheckNote) =>
                 props.onUpdateGamePreferences(selectedGameId(), {

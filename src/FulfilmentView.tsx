@@ -1,8 +1,10 @@
 import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { CONFIGURABLE_GAME_DEFINITIONS } from './configurableGames'
+import { getConfigurableGameMatchDefinition } from './configurableGameMatching'
 import type { ResolvedGamePreferencesById } from './gamePreferences'
 import { formatMonthKey, monthIndexFromKey } from './monthKey'
 import { purchaseGameFamilyById } from './purchaseGameFamilies'
+import GameThingThumb from './components/GameThingThumb'
 
 type FulfilmentRow = {
   gameId: string
@@ -11,6 +13,8 @@ type FulfilmentRow = {
   hasProvidedShippingAddress: boolean
   shippingAddressLastCheckedDate?: string
   shippingAddressCheckNote?: string
+  objectId?: string
+  thumbnail?: string
   price?: number
 }
 
@@ -37,7 +41,7 @@ const SHIPPING_ADDRESS_FILTER_OPTIONS: ReadonlyArray<{ value: ShippingAddressFil
   { value: 'all', label: 'All' },
   { value: 'provided', label: 'Address provided' },
   { value: 'needed', label: 'Address needed' },
-  { value: 'staleCheck', label: 'Not checked 30 days' },
+  { value: 'staleCheck', label: 'No shipping check 30 days' },
 ]
 
 function isShippingAddressFilter(value: unknown): value is ShippingAddressFilter {
@@ -89,6 +93,7 @@ function formatDateKey(dateKey: string | undefined): string {
 
 export default function FulfilmentView(props: {
   gamePreferencesById: ResolvedGamePreferencesById
+  thumbnailsByObjectId: ReadonlyMap<string, string>
   onOpenGame: (gameId: string) => void
   onOpenGameOptions: (gameId: string) => void
 }) {
@@ -111,6 +116,7 @@ export default function FulfilmentView(props: {
   }
 
   const isShippingCheckStale = (row: FulfilmentRow) => {
+    if (row.hasProvidedShippingAddress && row.estimatedDeliveryMonth) return false
     const threshold = staleCheckThresholdDateIndex()
     if (threshold === null) return false
     const checkedIndex = row.shippingAddressLastCheckedDate
@@ -131,6 +137,7 @@ export default function FulfilmentView(props: {
     CONFIGURABLE_GAME_DEFINITIONS.map<PendingFulfilmentRow>((game) => {
       const preferences = props.gamePreferencesById[game.id]
       const purchaseFamily = purchaseGameFamilyById.get(game.id)
+      const objectId = getConfigurableGameMatchDefinition(game.id)?.objectIds[0]
       return {
         gameId: game.id,
         label: game.label,
@@ -138,6 +145,8 @@ export default function FulfilmentView(props: {
         hasProvidedShippingAddress: Boolean(preferences?.hasProvidedShippingAddress),
         shippingAddressLastCheckedDate: preferences?.shippingAddressLastCheckedDate,
         shippingAddressCheckNote: preferences?.shippingAddressCheckNote,
+        objectId,
+        thumbnail: objectId ? props.thumbnailsByObjectId.get(objectId) : undefined,
         price: purchaseFamily?.price,
         status: preferences?.status,
       }
@@ -224,7 +233,7 @@ export default function FulfilmentView(props: {
           class="fulfilmentCheckBadge"
           classList={{ fulfilmentCheckBadgeStale: isShippingCheckStale(props.row) }}
         >
-          Checked: {formatDateKey(props.row.shippingAddressLastCheckedDate)}
+          Shipping checking: {formatDateKey(props.row.shippingAddressLastCheckedDate)}
         </span>
       </div>
     )
@@ -300,9 +309,9 @@ export default function FulfilmentView(props: {
           </section>
 
           <section class="monthlySummaryCard">
-            <div class="monthlySummaryLabel">Checks stale</div>
+            <div class="monthlySummaryLabel">Shipping checks due</div>
             <div class="monthlySummaryValue mono">{totals().staleChecks.toLocaleString()}</div>
-            <div class="monthlySummarySubtext">Visible games not checked in the last 30 days.</div>
+            <div class="monthlySummarySubtext">Visible games needing a shipping check after 30 days.</div>
           </section>
 
           <section class="monthlySummaryCard">
@@ -331,19 +340,30 @@ export default function FulfilmentView(props: {
                   <For each={group.rows}>
                     {(row) => (
                       <div class="gameOptionRow" classList={{ fulfilmentOverdue: isOverdue(row) }}>
-                        <div class="gameOptionCopy">
-                          <button
-                            class="linkButton fulfilmentGameLink"
-                            classList={{ fulfilmentGameLinkOverdue: isOverdue(row) }}
-                            type="button"
-                            onClick={() => props.onOpenGame(row.gameId)}
-                          >
-                            {row.label}
-                          </button>
-                          <Show when={isOverdue(row)}>
-                            <div class="fulfilmentOverdueLabel">Overdue</div>
+                        <div class="fulfilmentGameMain">
+                          <Show when={row.objectId && row.thumbnail}>
+                            <div class="fulfilmentGameMedia">
+                              <GameThingThumb
+                                objectId={row.objectId!}
+                                thumbnail={row.thumbnail}
+                                alt={`${row.label} box`}
+                              />
+                            </div>
                           </Show>
-                          <FulfilmentShippingMeta row={row} />
+                          <div class="gameOptionCopy">
+                            <button
+                              class="linkButton fulfilmentGameLink"
+                              classList={{ fulfilmentGameLinkOverdue: isOverdue(row) }}
+                              type="button"
+                              onClick={() => props.onOpenGame(row.gameId)}
+                            >
+                              {row.label}
+                            </button>
+                            <Show when={isOverdue(row)}>
+                              <div class="fulfilmentOverdueLabel">Overdue</div>
+                            </Show>
+                            <FulfilmentShippingMeta row={row} />
+                          </div>
                         </div>
 
                         <div class="fulfilmentRowAside">
@@ -373,15 +393,26 @@ export default function FulfilmentView(props: {
                 <For each={rowsWithoutEstimate()}>
                   {(row) => (
                     <div class="gameOptionRow">
-                      <div class="gameOptionCopy">
-                        <button
-                          class="linkButton fulfilmentGameLink"
-                          type="button"
-                          onClick={() => props.onOpenGame(row.gameId)}
-                        >
-                          {row.label}
-                        </button>
-                        <FulfilmentShippingMeta row={row} />
+                      <div class="fulfilmentGameMain">
+                        <Show when={row.objectId && row.thumbnail}>
+                          <div class="fulfilmentGameMedia">
+                            <GameThingThumb
+                              objectId={row.objectId!}
+                              thumbnail={row.thumbnail}
+                              alt={`${row.label} box`}
+                            />
+                          </div>
+                        </Show>
+                        <div class="gameOptionCopy">
+                          <button
+                            class="linkButton fulfilmentGameLink"
+                            type="button"
+                            onClick={() => props.onOpenGame(row.gameId)}
+                          >
+                            {row.label}
+                          </button>
+                          <FulfilmentShippingMeta row={row} />
+                        </div>
                       </div>
 
                       <div class="fulfilmentRowAside">

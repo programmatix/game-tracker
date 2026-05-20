@@ -758,6 +758,27 @@
   flex: 0 0 auto;
 }
 
+.fulfilmentGameMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.fulfilmentGameMedia {
+  flex: 0 0 auto;
+}
+
+.fulfilmentGameMedia .gameThingThumbLink {
+  border-radius: 8px;
+}
+
+.fulfilmentGameMedia .gameThingThumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+}
+
 .fulfilmentGameLink {
   justify-self: start;
   padding: 0;
@@ -2329,6 +2350,20 @@
 
   .fulfilmentRowAside {
     justify-items: start;
+  }
+
+  .fulfilmentGameMain {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .fulfilmentGameMedia .gameThingThumbLink {
+    width: auto;
+  }
+
+  .fulfilmentGameMedia .gameThingThumb {
+    width: 56px;
+    height: 56px;
   }
 
   .table {

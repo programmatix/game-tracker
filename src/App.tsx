@@ -44,6 +44,8 @@ import {
   shouldShowGameTab,
   type GamePreferences,
 } from './gamePreferences'
+import { CONFIGURABLE_GAME_DEFINITIONS } from './configurableGames'
+import { getConfigurableGameMatchDefinition } from './configurableGameMatching'
 import {
   isGameMainTab,
   MAIN_TAB_GROUPS,
@@ -536,14 +538,31 @@ function App() {
     void pumpThingSummaryQueue()
   }
 
+  const fulfilmentThumbnailObjectIds = createMemo(() =>
+    CONFIGURABLE_GAME_DEFINITIONS.filter(
+      (game) => resolvedGamePreferencesById()[game.id]?.status === 'waitingOnShipping',
+    )
+      .map((game) => getConfigurableGameMatchDefinition(game.id)?.objectIds[0] || '')
+      .filter((id): id is string => Boolean(id)),
+  )
+
   createEffect(() => {
-    thumbnailsEnabled = playsView() === 'byGame' && Boolean(bggAuthToken())
-    if (!thumbnailsEnabled) return
+    const canLoadThumbnails = Boolean(bggAuthToken())
+    const shouldLoadPlayThumbnails = playsView() === 'byGame' && canLoadThumbnails
+    const shouldLoadFulfilmentThumbnails = mainTab() === 'fulfilment' && canLoadThumbnails
+    thumbnailsEnabled = shouldLoadPlayThumbnails || shouldLoadFulfilmentThumbnails
+
+    if (!shouldLoadPlayThumbnails) return
     enqueueThingSummaries(
       playsByGame()
         .map((row) => row.objectid)
         .filter((id): id is string => Boolean(id)),
     )
+  })
+
+  createEffect(() => {
+    if (mainTab() !== 'fulfilment' || !bggAuthToken()) return
+    enqueueThingSummaries(fulfilmentThumbnailObjectIds())
   })
 
   const visiblePlaysMissingLength = createMemo(() => {

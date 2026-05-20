@@ -447,6 +447,7 @@ export default function AppContent(props: AppContentProps) {
       <Show when={props.mainTab === 'fulfilment'}>
         <FulfilmentView
           gamePreferencesById={props.gamePreferencesById}
+          thumbnailsByObjectId={props.thumbnailsByObjectId}
           onOpenGame={(gameId) => {
             if (isGameTab(gameId)) {
               props.onSwitchMainTab(gameId)
