@@ -9,6 +9,8 @@ type FulfilmentRow = {
   label: string
   estimatedDeliveryMonth?: string
   hasProvidedShippingAddress: boolean
+  shippingAddressLastCheckedDate?: string
+  shippingAddressCheckNote?: string
   price?: number
 }
 
@@ -27,7 +29,7 @@ const poundsFormatter = new Intl.NumberFormat('en-GB', {
   currency: 'GBP',
 })
 
-type ShippingAddressFilter = 'all' | 'provided' | 'needed'
+type ShippingAddressFilter = 'all' | 'provided' | 'needed' | 'staleCheck'
 
 const SHIPPING_ADDRESS_FILTER_STORAGE_KEY = 'fulfilment.shippingAddressFilter'
 
@@ -35,10 +37,11 @@ const SHIPPING_ADDRESS_FILTER_OPTIONS: ReadonlyArray<{ value: ShippingAddressFil
   { value: 'all', label: 'All' },
   { value: 'provided', label: 'Address provided' },
   { value: 'needed', label: 'Address needed' },
+  { value: 'staleCheck', label: 'Not checked 30 days' },
 ]
 
 function isShippingAddressFilter(value: unknown): value is ShippingAddressFilter {
-  return value === 'all' || value === 'provided' || value === 'needed'
+  return value === 'all' || value === 'provided' || value === 'needed' || value === 'staleCheck'
 }
 
 function readStoredShippingAddressFilter(): ShippingAddressFilter {
@@ -50,6 +53,38 @@ function readStoredShippingAddressFilter(): ShippingAddressFilter {
   } catch {
     return 'all'
   }
+}
+
+function dateKeyFromDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function dateIndexFromKey(dateKey: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey)
+  if (!match) return null
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const timestamp = Date.UTC(year, month - 1, day)
+  const date = new Date(timestamp)
+  if (
+    Number.isNaN(timestamp) ||
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null
+  }
+  return Math.floor(timestamp / 86_400_000)
+}
+
+function formatDateKey(dateKey: string | undefined): string {
+  if (!dateKey) return 'Never checked'
+  return dateKey
 }
 
 export default function FulfilmentView(props: {
@@ -65,10 +100,23 @@ export default function FulfilmentView(props: {
     const now = new Date()
     return now.getFullYear() * 12 + now.getMonth()
   })
+  const staleCheckThresholdDateIndex = createMemo(() => {
+    const todayIndex = dateIndexFromKey(dateKeyFromDate(new Date()))
+    return todayIndex === null ? null : todayIndex - 30
+  })
 
   const isOverdue = (row: FulfilmentRow) => {
     const monthIndex = row.estimatedDeliveryMonth ? monthIndexFromKey(row.estimatedDeliveryMonth) : null
     return monthIndex !== null && monthIndex < currentMonthIndex()
+  }
+
+  const isShippingCheckStale = (row: FulfilmentRow) => {
+    const threshold = staleCheckThresholdDateIndex()
+    if (threshold === null) return false
+    const checkedIndex = row.shippingAddressLastCheckedDate
+      ? dateIndexFromKey(row.shippingAddressLastCheckedDate)
+      : null
+    return checkedIndex === null || checkedIndex <= threshold
   }
 
   createEffect(() => {
@@ -88,6 +136,8 @@ export default function FulfilmentView(props: {
         label: game.label,
         estimatedDeliveryMonth: preferences?.estimatedDeliveryMonth,
         hasProvidedShippingAddress: Boolean(preferences?.hasProvidedShippingAddress),
+        shippingAddressLastCheckedDate: preferences?.shippingAddressLastCheckedDate,
+        shippingAddressCheckNote: preferences?.shippingAddressCheckNote,
         price: purchaseFamily?.price,
         status: preferences?.status,
       }
@@ -111,6 +161,7 @@ export default function FulfilmentView(props: {
     allRows().filter((row) => {
       if (shippingAddressFilter() === 'provided') return row.hasProvidedShippingAddress
       if (shippingAddressFilter() === 'needed') return !row.hasProvidedShippingAddress
+      if (shippingAddressFilter() === 'staleCheck') return isShippingCheckStale(row)
       return true
     }),
   )
@@ -141,6 +192,7 @@ export default function FulfilmentView(props: {
     const allRows = rows()
     const withEstimate = allRows.filter((row) => row.estimatedDeliveryMonth).length
     const withAddress = allRows.filter((row) => row.hasProvidedShippingAddress).length
+    const staleChecks = allRows.filter(isShippingCheckStale).length
     const knownMonths = groupedRows()
     const totalValue = allRows.reduce((sum, row) => sum + (row.price || 0), 0)
 
@@ -150,10 +202,44 @@ export default function FulfilmentView(props: {
       withoutEstimate: allRows.length - withEstimate,
       withAddress,
       withoutAddress: allRows.length - withAddress,
+      staleChecks,
       nextMonth: knownMonths[0]?.monthLabel || '—',
       totalValue,
     }
   })
+
+  function FulfilmentShippingStatus(props: { row: FulfilmentRow }) {
+    return (
+      <div class="fulfilmentStatusStack">
+        <span
+          class="fulfilmentShippingBadge"
+          classList={{
+            fulfilmentShippingBadgeProvided: props.row.hasProvidedShippingAddress,
+            fulfilmentShippingBadgeNeeded: !props.row.hasProvidedShippingAddress,
+          }}
+        >
+          {props.row.hasProvidedShippingAddress ? 'Shipping provided' : 'Shipping not provided'}
+        </span>
+        <span
+          class="fulfilmentCheckBadge"
+          classList={{ fulfilmentCheckBadgeStale: isShippingCheckStale(props.row) }}
+        >
+          Checked: {formatDateKey(props.row.shippingAddressLastCheckedDate)}
+        </span>
+      </div>
+    )
+  }
+
+  function FulfilmentShippingMeta(props: { row: FulfilmentRow }) {
+    return (
+      <>
+        <FulfilmentShippingStatus row={props.row} />
+        <Show when={props.row.shippingAddressCheckNote}>
+          <div class="muted fulfilmentShippingNote">{props.row.shippingAddressCheckNote}</div>
+        </Show>
+      </>
+    )
+  }
 
   return (
     <div class="statsBlock fulfilmentView">
@@ -214,6 +300,12 @@ export default function FulfilmentView(props: {
           </section>
 
           <section class="monthlySummaryCard">
+            <div class="monthlySummaryLabel">Checks stale</div>
+            <div class="monthlySummaryValue mono">{totals().staleChecks.toLocaleString()}</div>
+            <div class="monthlySummarySubtext">Visible games not checked in the last 30 days.</div>
+          </section>
+
+          <section class="monthlySummaryCard">
             <div class="monthlySummaryLabel">Next estimated month</div>
             <div class="monthlySummaryValue">{totals().nextMonth}</div>
             <div class="monthlySummarySubtext">Earliest delivery month currently recorded.</div>
@@ -251,9 +343,7 @@ export default function FulfilmentView(props: {
                           <Show when={isOverdue(row)}>
                             <div class="fulfilmentOverdueLabel">Overdue</div>
                           </Show>
-                          <div class="muted">
-                            {row.hasProvidedShippingAddress ? 'Shipping address provided' : 'Shipping address needed'}
-                          </div>
+                          <FulfilmentShippingMeta row={row} />
                         </div>
 
                         <div class="fulfilmentRowAside">
@@ -291,9 +381,7 @@ export default function FulfilmentView(props: {
                         >
                           {row.label}
                         </button>
-                        <div class="muted">
-                          {row.hasProvidedShippingAddress ? 'Shipping address provided' : 'Shipping address needed'}
-                        </div>
+                        <FulfilmentShippingMeta row={row} />
                       </div>
 
                       <div class="fulfilmentRowAside">

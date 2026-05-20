@@ -1,4 +1,5 @@
 import { Show, createMemo } from 'solid-js'
+import type { JSX } from 'solid-js'
 import {
   CONFIGURABLE_GAME_DEFINITIONS,
   CONFIGURABLE_GAME_OPTIONS,
@@ -70,8 +71,9 @@ type GameOptionsInputRowProps = {
   title: string
   description: string
   value: string
-  type?: 'month'
+  type?: 'date' | 'month'
   onChange: (value: string) => void
+  action?: JSX.Element
 }
 
 function GameOptionsInputRow(props: GameOptionsInputRowProps) {
@@ -87,8 +89,41 @@ function GameOptionsInputRow(props: GameOptionsInputRowProps) {
         value={props.value}
         onChange={(event) => props.onChange(event.currentTarget.value)}
       />
+      {props.action}
     </label>
   )
+}
+
+type GameOptionsTextareaRowProps = {
+  title: string
+  description: string
+  value: string
+  onChange: (value: string) => void
+}
+
+function GameOptionsTextareaRow(props: GameOptionsTextareaRowProps) {
+  return (
+    <label class="gameOptionRow">
+      <div class="gameOptionCopy">
+        <div class="gameOptionTitle">{props.title}</div>
+        <div class="muted">{props.description}</div>
+      </div>
+      <textarea
+        class="gameOptionTextArea"
+        value={props.value}
+        rows={3}
+        onChange={(event) => props.onChange(event.currentTarget.value)}
+      />
+    </label>
+  )
+}
+
+function todayKey(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export default function GameOptionsView(props: {
@@ -142,6 +177,10 @@ export default function GameOptionsView(props: {
                   status === 'waitingOnShipping' ? selectedPreferences().estimatedDeliveryMonth : undefined,
                 hasProvidedShippingAddress:
                   status === 'waitingOnShipping' ? selectedPreferences().hasProvidedShippingAddress : false,
+                shippingAddressLastCheckedDate:
+                  status === 'waitingOnShipping' ? selectedPreferences().shippingAddressLastCheckedDate : undefined,
+                shippingAddressCheckNote:
+                  status === 'waitingOnShipping' ? selectedPreferences().shippingAddressCheckNote : undefined,
               })
             }}
           />
@@ -165,6 +204,42 @@ export default function GameOptionsView(props: {
               description="Track whether the fulfilment manager has already received your shipping address."
               onChange={(checked) =>
                 props.onUpdateGamePreferences(selectedGameId(), { hasProvidedShippingAddress: checked })
+              }
+            />
+
+            <GameOptionsInputRow
+              title="Shipping availability checked"
+              description="Record when you last checked whether shipping details could be provided."
+              type="date"
+              value={selectedPreferences().shippingAddressLastCheckedDate || ''}
+              action={
+                <button
+                  class="button gameOptionInlineButton"
+                  type="button"
+                  onClick={() =>
+                    props.onUpdateGamePreferences(selectedGameId(), {
+                      shippingAddressLastCheckedDate: todayKey(),
+                    })
+                  }
+                >
+                  Today
+                </button>
+              }
+              onChange={(shippingAddressLastCheckedDate) =>
+                props.onUpdateGamePreferences(selectedGameId(), {
+                  shippingAddressLastCheckedDate: shippingAddressLastCheckedDate || undefined,
+                })
+              }
+            />
+
+            <GameOptionsTextareaRow
+              title="Shipping check note"
+              description="Optional note about the shipping address request, pledge manager, or blocker."
+              value={selectedPreferences().shippingAddressCheckNote || ''}
+              onChange={(shippingAddressCheckNote) =>
+                props.onUpdateGamePreferences(selectedGameId(), {
+                  shippingAddressCheckNote: shippingAddressCheckNote || undefined,
+                })
               }
             />
           </Show>

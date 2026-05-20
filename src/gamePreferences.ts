@@ -30,6 +30,8 @@ export type GamePreferences = {
   status: GameStatus
   estimatedDeliveryMonth?: string
   hasProvidedShippingAddress: boolean
+  shippingAddressLastCheckedDate?: string
+  shippingAddressCheckNote?: string
 }
 
 export type StoredGamePreferences = Partial<GamePreferences>
@@ -45,6 +47,22 @@ function normalizeEstimatedDeliveryMonth(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined
   const trimmed = value.trim()
   return isMonthKey(trimmed) ? trimmed : undefined
+}
+
+function normalizeDateKey(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return undefined
+
+  const date = new Date(`${trimmed}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return undefined
+  return date.toISOString().slice(0, 10) === trimmed ? trimmed : undefined
+}
+
+function normalizeOptionalText(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed || undefined
 }
 
 export function isGameStatus(value: unknown): value is GameStatus {
@@ -106,6 +124,14 @@ export function resolveGamePreferences(
       raw?.status === 'waitingOnShipping' && typeof raw?.hasProvidedShippingAddress === 'boolean'
         ? raw.hasProvidedShippingAddress
         : false,
+    shippingAddressLastCheckedDate:
+      raw?.status === 'waitingOnShipping'
+        ? normalizeDateKey(raw?.shippingAddressLastCheckedDate)
+        : undefined,
+    shippingAddressCheckNote:
+      raw?.status === 'waitingOnShipping'
+        ? normalizeOptionalText(raw?.shippingAddressCheckNote)
+        : undefined,
   }
 }
 
@@ -160,6 +186,18 @@ export function normalizeStoredGamePreferencesById(input: unknown): StoredGamePr
     }
     if (next.status === 'waitingOnShipping' && typeof rawRecord.hasProvidedShippingAddress === 'boolean') {
       next.hasProvidedShippingAddress = rawRecord.hasProvidedShippingAddress
+    }
+    const shippingAddressLastCheckedDate =
+      next.status === 'waitingOnShipping'
+        ? normalizeDateKey(rawRecord.shippingAddressLastCheckedDate)
+        : undefined
+    if (shippingAddressLastCheckedDate) {
+      next.shippingAddressLastCheckedDate = shippingAddressLastCheckedDate
+    }
+    const shippingAddressCheckNote =
+      next.status === 'waitingOnShipping' ? normalizeOptionalText(rawRecord.shippingAddressCheckNote) : undefined
+    if (shippingAddressCheckNote) {
+      next.shippingAddressCheckNote = shippingAddressCheckNote
     }
 
     if (Object.keys(next).length > 0) normalized[game.id] = next
